@@ -1,4 +1,4 @@
-package com.smartapp.smartapp
+package com.talkingcards.app
 
 import io.flutter.embedding.android.FlutterActivity
 

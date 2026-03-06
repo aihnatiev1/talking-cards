@@ -1,6 +1,6 @@
-# smartapp
+# Talking Cards — Картки-розмовлялки
 
-A new Flutter project.
+Дитячі картки-розмовлялки — картки зі звуками та реченнями для дітей.
 
 ## Getting Started
 

@@ -1,11 +1,11 @@
 {
-    "name": "smartapp",
-    "short_name": "smartapp",
+    "name": "Картки-розмовлялки",
+    "short_name": "Розмовлялки",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Дитячі картки-розмовлялки — картки зі звуками та реченнями для дітей.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

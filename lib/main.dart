@@ -9,11 +9,11 @@ import 'screens/splash_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  runApp(const ProviderScope(child: SmartApp()));
+  runApp(const ProviderScope(child: TalkingCardsApp()));
 }
 
-class SmartApp extends ConsumerWidget {
-  const SmartApp({super.key});
+class TalkingCardsApp extends ConsumerWidget {
+  const TalkingCardsApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
