@@ -127,7 +127,7 @@ class _FlashCardState extends ConsumerState<FlashCard>
                             ? Padding(
                                 padding: const EdgeInsets.all(12),
                                 child: Image.asset(
-                                  'assets/images/png/${widget.card.image}.png',
+                                  'assets/images/webp/${widget.card.image}.webp',
                                   fit: BoxFit.contain,
                                   width: double.infinity,
                                   height: double.infinity,

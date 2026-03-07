@@ -41,5 +41,5 @@ flutter:
   uses-material-design: true
   assets:
     - assets/data/
-    - assets/images/png/
-    - assets/audio_wav/
+    - assets/images/webp/
+    - assets/audio_mp3/

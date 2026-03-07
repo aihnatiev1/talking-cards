@@ -93,7 +93,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
       for (final card in widget.pack.cards) {
         if (card.image != null) {
           precacheImage(
-            AssetImage('assets/images/png/${card.image}.png'),
+            AssetImage('assets/images/webp/${card.image}.webp'),
             context,
           );
         }

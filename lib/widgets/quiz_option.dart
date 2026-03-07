@@ -127,7 +127,7 @@ class _QuizOptionState extends State<QuizOption>
                       ? Padding(
                           padding: const EdgeInsets.all(4),
                           child: Image.asset(
-                            'assets/images/png/${widget.card.image}.png',
+                            'assets/images/webp/${widget.card.image}.webp',
                             fit: BoxFit.contain,
                           ),
                         )

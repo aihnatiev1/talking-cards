@@ -104,7 +104,7 @@ class AudioService {
     // 3. Load all sounds into RAM
     for (final entry in _audioMap.entries) {
       try {
-        final source = await _soloud.loadAsset('assets/audio_wav/${entry.value}.wav');
+        final source = await _soloud.loadAsset('assets/audio_mp3/${entry.value}.mp3');
         _sources[entry.key] = source;
       } catch (e) {
         if (kDebugMode) debugPrint('AudioService: failed to load ${entry.key}: $e');

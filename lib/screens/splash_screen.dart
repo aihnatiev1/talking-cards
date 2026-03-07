@@ -20,6 +20,7 @@ class _SplashScreenState extends State<SplashScreen>
   late final Animation<double> _scaleAnim;
   bool _loadingDone = false;
   bool _animDone = false;
+  bool _imageReady = false;
 
   @override
   void initState() {
@@ -33,16 +34,27 @@ class _SplashScreenState extends State<SplashScreen>
       CurvedAnimation(parent: _ctrl, curve: Curves.easeOutBack),
     );
 
-    _ctrl.forward();
-
     // Start loading in background
     _initServices();
+  }
 
-    // Minimum splash time so animation is visible
-    Future.delayed(const Duration(milliseconds: 1200), () {
-      _animDone = true;
-      _navigateIfReady();
-    });
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_imageReady) {
+      precacheImage(
+        const AssetImage('assets/images/webp/splash.webp'),
+        context,
+      ).then((_) {
+        if (!mounted) return;
+        setState(() => _imageReady = true);
+        _ctrl.forward();
+        Future.delayed(const Duration(milliseconds: 1200), () {
+          _animDone = true;
+          _navigateIfReady();
+        });
+      });
+    }
   }
 
   Future<void> _initServices() async {
@@ -78,7 +90,8 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: FadeTransition(
+        child: _imageReady
+            ? FadeTransition(
           opacity: _fadeAnim,
           child: ScaleTransition(
             scale: _scaleAnim,
@@ -86,7 +99,7 @@ class _SplashScreenState extends State<SplashScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Image.asset(
-                  'assets/images/png/splash.png',
+                  'assets/images/webp/splash.webp',
                   width: 280,
                   height: 280,
                   fit: BoxFit.contain,
@@ -112,7 +125,8 @@ class _SplashScreenState extends State<SplashScreen>
               ],
             ),
           ),
-        ),
+        )
+            : const SizedBox.shrink(),
       ),
     );
   }
