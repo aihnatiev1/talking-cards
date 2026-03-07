@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/card_model.dart';
@@ -135,12 +136,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               const SizedBox(height: 20),
               TextButton.icon(
-                onPressed: () => Navigator.of(ctx).pop(),
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  _showPrivacyPolicy();
+                },
                 icon: const Icon(Icons.privacy_tip_outlined, size: 18),
                 label: const Text('Політика конфіденційності'),
               ),
               TextButton.icon(
-                onPressed: () => Navigator.of(ctx).pop(),
+                onPressed: () async {
+                  final uri = Uri.parse('mailto:skillar.app@gmail.com');
+                  if (await canLaunchUrl(uri)) {
+                    launchUrl(uri);
+                  } else if (mounted) {
+                    Navigator.of(ctx).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('skillar.app@gmail.com')),
+                    );
+                  }
+                },
                 icon: const Icon(Icons.mail_outline, size: 18),
                 label: const Text('Підтримка'),
               ),
@@ -150,6 +164,56 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 onPressed: () => Navigator.of(ctx).pop(),
                 child:
                     Text('Закрити', style: TextStyle(color: Colors.grey[400])),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showPrivacyPolicy() {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Політика конфіденційності',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              const SizedBox(
+                height: 350,
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Додаток Картки-розмовлялки розроблений для дітей та їхніх батьків. Ми серйозно ставимось до конфіденційності наших користувачів.\n'),
+                      Text('1. Збір даних', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text('Додаток не збирає, не передає та не зберігає персональні дані користувачів. Ми не використовуємо аналітику, рекламні SDK чи трекери.\n'),
+                      Text('2. Локальне зберігання', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text('Додаток зберігає на пристрої лише: налаштування звуку, прогрес проходження карток, стрік, статус підписки та налаштування сповіщень. Ці дані зберігаються тільки на вашому пристрої.\n'),
+                      Text('3. Покупки в додатку', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text('Покупки обробляються через Apple App Store або Google Play Store відповідно до їхніх політик конфіденційності.\n'),
+                      Text('4. Сповіщення', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text('Додаток може надсилати локальні сповіщення, якщо користувач увімкнув цю функцію.\n'),
+                      Text('5. Діти', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text('Додаток призначений для використання дітьми під наглядом батьків. Ми не збираємо жодних даних від дітей.\n'),
+                      Text('6. Контакти', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text('skillar.app@gmail.com'),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: Text('Закрити', style: TextStyle(color: Colors.grey[400])),
               ),
             ],
           ),

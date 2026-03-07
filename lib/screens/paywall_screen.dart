@@ -14,12 +14,11 @@ class PaywallScreen extends ConsumerStatefulWidget {
 
 class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   bool _loading = false;
-  int _selectedPlan = 1; // 0=weekly, 1=yearly (best), 2=monthly
+  int _selectedPlan = 0; // 0=yearly (best), 1=monthly
 
   static const _plans = [
-    _Plan('Тижнева', '39 грн', '/тиждень', null),
-    _Plan('Річна', '499 грн', '/рік', 'Найвигідніше'),
-    _Plan('Місячна', '99 грн', '/місяць', null),
+    _Plan('Річна', '449 грн', '/рік', 'Найвигідніше'),
+    _Plan('Місячна', '79 грн', '/місяць', null),
   ];
 
   Future<void> _purchase() async {
