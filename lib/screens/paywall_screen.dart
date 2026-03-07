@@ -14,21 +14,41 @@ class PaywallScreen extends ConsumerStatefulWidget {
 
 class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   bool _loading = false;
-  int _selectedPlan = 0; // 0=yearly (best), 1=monthly
+  int _selectedPlan = 0;
 
-  static const _plans = [
-    _Plan('Річна', '449 грн', '/рік', 'Найвигідніше'),
-    _Plan('Місячна', '79 грн', '/місяць', null),
-  ];
+  List<_Plan> get _plans {
+    final products = PurchaseService.instance.products;
+    if (products.isEmpty) {
+      return [
+        const _Plan('Річна', '449 грн', '/рік', 'Найвигідніше'),
+        const _Plan('Місячна', '79 грн', '/місяць', null),
+      ];
+    }
+    return products.map((p) {
+      final isYearly = p.id == 'yearly_premium';
+      return _Plan(
+        isYearly ? 'Річна' : 'Місячна',
+        p.price,
+        isYearly ? '/рік' : '/місяць',
+        isYearly ? 'Найвигідніше' : null,
+      );
+    }).toList();
+  }
 
   Future<void> _purchase() async {
     setState(() => _loading = true);
-    // TODO: pass _selectedPlan to RevenueCat when integrating real purchases
     final success = await PurchaseService.instance.purchase(planIndex: _selectedPlan);
+    if (!mounted) return;
+    if (!success) {
+      setState(() => _loading = false);
+      return;
+    }
+    // Wait for purchase stream to update isPro
+    await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
     setState(() => _loading = false);
 
-    if (success) {
+    if (PurchaseService.instance.isPro.value) {
       ref.read(isProProvider.notifier).state = true;
       Navigator.of(context).pop(true);
     }
@@ -52,6 +72,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final plans = _plans;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
@@ -92,15 +113,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                     const SizedBox(height: 8),
                     _benefit('✓  3 дні безкоштовно'),
                     const SizedBox(height: 28),
-                    // Plan selector
-                    ...List.generate(_plans.length, (i) {
+                    ...List.generate(plans.length, (i) {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 10),
-                        child: _planTile(i),
+                        child: _planTile(i, plans),
                       );
                     }),
                     const SizedBox(height: 20),
-                    // CTA
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -134,7 +153,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Потім ${_plans[_selectedPlan].price}${_plans[_selectedPlan].period}',
+                      'Потім ${plans[_selectedPlan].price}${plans[_selectedPlan].period}',
                       style: TextStyle(fontSize: 13, color: Colors.grey[500]),
                     ),
                     const SizedBox(height: 16),
@@ -163,8 +182,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     );
   }
 
-  Widget _planTile(int index) {
-    final plan = _plans[index];
+  Widget _planTile(int index, List<_Plan> plans) {
+    final plan = plans[index];
     final selected = _selectedPlan == index;
     const accent = kAccent;
 
@@ -183,7 +202,6 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         ),
         child: Row(
           children: [
-            // Radio circle
             Container(
               width: 24,
               height: 24,

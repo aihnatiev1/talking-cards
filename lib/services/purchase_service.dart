@@ -1,4 +1,8 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PurchaseService {
@@ -6,37 +10,83 @@ class PurchaseService {
   static final PurchaseService instance = PurchaseService._();
 
   static const _prefKey = 'is_pro';
+  static const _yearlyId = 'yearly_premium';
+  static const _monthlyId = 'monthly_premium';
+  static const _productIds = {_yearlyId, _monthlyId};
 
   final ValueNotifier<bool> isPro = ValueNotifier(false);
   bool _initialized = false;
 
+  final InAppPurchase _iap = InAppPurchase.instance;
+  StreamSubscription<List<PurchaseDetails>>? _sub;
+  List<ProductDetails> products = [];
+
   Future<void> init() async {
     if (_initialized) return;
+
     final prefs = await SharedPreferences.getInstance();
     isPro.value = prefs.getBool(_prefKey) ?? false;
+
+    final available = await _iap.isAvailable();
+    if (!available) {
+      _initialized = true;
+      return;
+    }
+
+    _sub = _iap.purchaseStream.listen(
+      _onPurchaseUpdate,
+      onDone: () => _sub?.cancel(),
+      onError: (_) {},
+    );
+
+    final response = await _iap.queryProductDetails(_productIds);
+    products = response.productDetails;
+
+    // Sort: yearly first
+    products.sort((a, b) {
+      if (a.id == _yearlyId) return -1;
+      if (b.id == _yearlyId) return 1;
+      return 0;
+    });
+
     _initialized = true;
   }
 
-  /// Mock purchase — always succeeds.
-  /// Replace this file with RevenueCat integration later.
-  /// [planIndex] 0=weekly, 1=yearly, 2=monthly — reserved for RevenueCat.
-  Future<bool> purchase({int planIndex = 1}) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    isPro.value = true;
-    await _persist();
-    return true;
+  Future<bool> purchase({int planIndex = 0}) async {
+    if (products.isEmpty) return false;
+
+    final product = products[planIndex.clamp(0, products.length - 1)];
+    final param = PurchaseParam(productDetails: product);
+
+    return _iap.buyNonConsumable(purchaseParam: param);
   }
 
-  /// Mock restore — checks local storage.
   Future<bool> restore() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    final prefs = await SharedPreferences.getInstance();
-    final restored = prefs.getBool(_prefKey) ?? false;
-    isPro.value = restored;
-    return restored;
+    await _iap.restorePurchases();
+    // Result comes through purchaseStream
+    await Future.delayed(const Duration(seconds: 2));
+    return isPro.value;
   }
 
-  /// Debug: reset purchase state
+  void _onPurchaseUpdate(List<PurchaseDetails> purchaseDetailsList) {
+    for (final purchase in purchaseDetailsList) {
+      if (purchase.status == PurchaseStatus.purchased ||
+          purchase.status == PurchaseStatus.restored) {
+        _verifyAndDeliver(purchase);
+      }
+      if (purchase.pendingCompletePurchase) {
+        _iap.completePurchase(purchase);
+      }
+    }
+  }
+
+  Future<void> _verifyAndDeliver(PurchaseDetails purchase) async {
+    if (_productIds.contains(purchase.productID)) {
+      isPro.value = true;
+      await _persist();
+    }
+  }
+
   Future<void> resetPurchase() async {
     if (!kDebugMode) return;
     isPro.value = false;
@@ -47,5 +97,9 @@ class PurchaseService {
   Future<void> _persist() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_prefKey, isPro.value);
+  }
+
+  void dispose() {
+    _sub?.cancel();
   }
 }
