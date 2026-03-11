@@ -1,0 +1,3 @@
+CFBundleDisplayName = "Картки-розмовлялки";
+CFBundleName = "Розмовлялки";
+NSMicrophoneUsageDescription = "Цей додаток не використовує мікрофон.";
