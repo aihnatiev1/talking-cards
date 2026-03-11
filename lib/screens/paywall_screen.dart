@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../providers/packs_provider.dart';
 import '../utils/constants.dart';
@@ -95,13 +96,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   children: [
                     const Text('🌟', style: TextStyle(fontSize: 72)),
                     const SizedBox(height: 16),
-                    const Text(
+                    Text(
                       'Розблокуй всі картки!',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF2D3436),
+                        color: Theme.of(context).textTheme.headlineSmall?.color,
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -170,6 +171,44 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                         'Може пізніше',
                         style: TextStyle(color: Colors.grey[400], fontSize: 14),
                       ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        GestureDetector(
+                          onTap: () => launchUrl(
+                            Uri.parse('https://aihnatiev1.github.io/talking-cards/terms.html'),
+                            mode: LaunchMode.externalApplication,
+                          ),
+                          child: Text(
+                            'Умови використання',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[400],
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Text('•', style: TextStyle(fontSize: 12, color: Colors.grey[400])),
+                        ),
+                        GestureDetector(
+                          onTap: () => launchUrl(
+                            Uri.parse('https://aihnatiev1.github.io/talking-cards/privacy-policy.html'),
+                            mode: LaunchMode.externalApplication,
+                          ),
+                          child: Text(
+                            'Політика конфіденційності',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[400],
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
                   ],

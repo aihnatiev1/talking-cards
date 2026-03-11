@@ -370,7 +370,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             const SizedBox(height: 8),
             TextButton(
               onPressed: () {
-                AudioService.instance.stop();
                 Navigator.of(ctx).pop();
               },
               child: Text('Закрити',
@@ -379,7 +378,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ],
         ),
       ),
-    );
+    ).whenComplete(() {
+      AudioService.instance.stop();
+    });
   }
 
   void _showFavUpsell(CardModel card) {
