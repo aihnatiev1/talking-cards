@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
 import '../providers/quiz_provider.dart';
+import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../utils/constants.dart';
 import '../widgets/confetti_burst.dart';
@@ -52,6 +53,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
 
     AudioService.instance.isSpeaking.addListener(_onSpeakingChanged);
 
+    AnalyticsService.instance.logQuizStart();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(_provider.notifier).start();
       Future.delayed(const Duration(milliseconds: 300), () {
@@ -217,6 +219,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
   Widget _buildResults(QuizState state) {
     final score = state.score;
     final total = state.totalRounds;
+    AnalyticsService.instance.logQuizComplete(score, total);
     final ratio = total > 0 ? score / total : 0.0;
 
     String emoji;

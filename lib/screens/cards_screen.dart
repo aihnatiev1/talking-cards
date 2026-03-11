@@ -14,6 +14,7 @@ import '../providers/daily_stats_provider.dart';
 import '../providers/packs_provider.dart';
 import '../providers/review_provider.dart';
 import '../providers/streak_provider.dart';
+import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../utils/constants.dart';
 import '../services/paywall_flow.dart';
@@ -67,6 +68,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     };
     AudioService.instance.autoSpeak.addListener(_muteListener!);
 
+    AnalyticsService.instance.logPackOpen(widget.pack.id);
     _loadPrefs();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref
@@ -229,6 +231,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     AudioService.instance.stop();
     // Don't mark virtual packs (favorites, review) as completed
     if (!widget.pack.id.startsWith('_')) {
+      AnalyticsService.instance.logPackComplete(widget.pack.id);
       ref.read(completedPacksProvider.notifier).markCompleted(widget.pack.id);
     }
     Navigator.of(context).push(
@@ -542,6 +545,8 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                         final isLastCard =
                             prevIndex == cards.length - 1;
                         if (!isLastCard) {
+                          AnalyticsService.instance.logCardView(
+                              cards[currentIndex].id, widget.pack.id);
                           ref
                               .read(packProgressProvider.notifier)
                               .updateProgress(

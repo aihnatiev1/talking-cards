@@ -13,7 +13,9 @@ import '../providers/packs_provider.dart';
 import '../providers/review_provider.dart';
 import '../providers/streak_provider.dart';
 import '../providers/theme_provider.dart';
+import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
+import '../services/widget_service.dart';
 import '../utils/constants.dart';
 import '../services/paywall_flow.dart';
 import '../services/notification_service.dart';
@@ -251,6 +253,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _showCardOfDayPopup(CardModel card, bool isFromLockedPack) {
+    AnalyticsService.instance.logCardOfDayTap(card.id);
     AudioService.instance.speakCard(card.audioKey, card.sound, card.text);
     final isPro = ref.read(isProProvider);
     final isFav = ref.read(favoritesProvider).contains(card.id);
@@ -481,6 +484,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             final cotdResult = _cardOfTheDay(packs);
             final cotd = cotdResult?.$1;
             final cotdLocked = cotdResult?.$2 ?? false;
+            if (cotd != null) {
+              WidgetService.instance.updateCardOfDay(cotd);
+            }
             final reviewCardIds =
                 ref.watch(reviewProvider.notifier).reviewCardIds;
 

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../services/audio_service.dart';
+import '../services/remote_config_service.dart';
+import '../services/widget_service.dart';
 import '../utils/constants.dart';
 import '../services/notification_service.dart';
 import '../services/purchase_service.dart';
@@ -59,6 +61,8 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _initServices() async {
     await Future.wait([
+      RemoteConfigService.instance.init(),
+      WidgetService.instance.init(),
       PurchaseService.instance.init(),
       AudioService.instance.precache(),
       NotificationService.instance.init(),

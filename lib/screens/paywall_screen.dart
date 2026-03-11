@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../providers/packs_provider.dart';
+import '../services/analytics_service.dart';
+import '../services/remote_config_service.dart';
 import '../utils/constants.dart';
 import '../services/purchase_service.dart';
 
@@ -16,6 +18,12 @@ class PaywallScreen extends ConsumerStatefulWidget {
 class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   bool _loading = false;
   int _selectedPlan = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    AnalyticsService.instance.logPaywallView('paywall_screen');
+  }
 
   List<_Plan> get _plans {
     final products = PurchaseService.instance.products;
@@ -37,6 +45,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   }
 
   Future<void> _purchase() async {
+    final productId = _selectedPlan == 0 ? 'yearly_premium' : 'monthly_premium';
+    AnalyticsService.instance.logPurchaseStart(productId);
     setState(() => _loading = true);
     final success = await PurchaseService.instance.purchase(planIndex: _selectedPlan);
     if (!mounted) return;
@@ -50,12 +60,14 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     setState(() => _loading = false);
 
     if (PurchaseService.instance.isPro.value) {
+      AnalyticsService.instance.logPurchaseSuccess(productId);
       ref.read(isProProvider.notifier).state = true;
       Navigator.of(context).pop(true);
     }
   }
 
   Future<void> _restore() async {
+    AnalyticsService.instance.logPurchaseRestore();
     setState(() => _loading = true);
     final restored = await PurchaseService.instance.restore();
     if (!mounted) return;
@@ -97,7 +109,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                     const Text('🌟', style: TextStyle(fontSize: 72)),
                     const SizedBox(height: 16),
                     Text(
-                      'Розблокуй всі картки!',
+                      RemoteConfigService.instance.paywallTitle,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 28,
@@ -143,9 +155,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                                   strokeWidth: 2.5,
                                 ),
                               )
-                            : const Text(
-                                'Спробувати 3 дні безкоштовно',
-                                style: TextStyle(
+                            : Text(
+                                RemoteConfigService.instance.paywallCta,
+                                style: const TextStyle(
                                   fontSize: 17,
                                   fontWeight: FontWeight.bold,
                                 ),

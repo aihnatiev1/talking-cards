@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "434472415626",
+    "project_id": "smartapp-b109a",
+    "storage_bucket": "smartapp-b109a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:434472415626:android:adf0d13d157c3c1ecbd873",
+        "android_client_info": {
+          "package_name": "com.talkingcards.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjpt1cgzVZDfWC6BN5st7fHyUfLV1JtEE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
