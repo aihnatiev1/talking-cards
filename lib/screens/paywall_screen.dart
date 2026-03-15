@@ -166,68 +166,54 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Потім ${plans[_selectedPlan].price}${plans[_selectedPlan].period}',
-                      style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+                      '3 дні безкоштовно, потім ${plans[_selectedPlan].price}${plans[_selectedPlan].period}',
+                      style: TextStyle(fontSize: 13, color: Colors.grey[600], fontWeight: FontWeight.w500),
                     ),
                     const SizedBox(height: 16),
                     TextButton(
                       onPressed: _loading ? null : _restore,
                       child: Text(
                         'Відновити покупки',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 15),
+                        style: TextStyle(color: Colors.grey[700], fontSize: 15, fontWeight: FontWeight.w500),
                       ),
                     ),
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(false),
-                      child: Text(
-                        'Може пізніше',
-                        style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                    const SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 12,
+                        runSpacing: 8,
+                        children: [
+                          _legalLink('Умови використання', 'https://aihnatiev1.github.io/talking-cards/terms.html'),
+                          _legalLink('EULA', 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/'),
+                          _legalLink('Конфіденційність', 'https://aihnatiev1.github.io/talking-cards/privacy-policy.html'),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        GestureDetector(
-                          onTap: () => launchUrl(
-                            Uri.parse('https://aihnatiev1.github.io/talking-cards/terms.html'),
-                            mode: LaunchMode.externalApplication,
-                          ),
-                          child: Text(
-                            'Умови використання',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[400],
-                              decoration: TextDecoration.underline,
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: Text('•', style: TextStyle(fontSize: 12, color: Colors.grey[400])),
-                        ),
-                        GestureDetector(
-                          onTap: () => launchUrl(
-                            Uri.parse('https://aihnatiev1.github.io/talking-cards/privacy-policy.html'),
-                            mode: LaunchMode.externalApplication,
-                          ),
-                          child: Text(
-                            'Політика конфіденційності',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[400],
-                              decoration: TextDecoration.underline,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _legalLink(String title, String url) {
+    return GestureDetector(
+      onTap: () => launchUrl(
+        Uri.parse(url),
+        mode: LaunchMode.externalApplication,
+      ),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 13,
+          color: Colors.grey[500],
+          decoration: TextDecoration.underline,
         ),
       ),
     );
