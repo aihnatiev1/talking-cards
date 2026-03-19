@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -48,22 +50,44 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     final productId = _selectedPlan == 0 ? 'yearly_premium' : 'monthly_premium';
     AnalyticsService.instance.logPurchaseStart(productId);
     setState(() => _loading = true);
-    final success = await PurchaseService.instance.purchase(planIndex: _selectedPlan);
-    if (!mounted) return;
-    if (!success) {
+    try {
+      final success = await PurchaseService.instance.purchase(planIndex: _selectedPlan);
+      if (!mounted) return;
+      if (!success) {
+        setState(() => _loading = false);
+        return;
+      }
+      // Listen for purchase stream to update isPro instead of blind delay
+      await _waitForPro();
+      if (!mounted) return;
       setState(() => _loading = false);
-      return;
-    }
-    // Wait for purchase stream to update isPro
-    await Future.delayed(const Duration(seconds: 2));
-    if (!mounted) return;
-    setState(() => _loading = false);
 
-    if (PurchaseService.instance.isPro.value) {
-      AnalyticsService.instance.logPurchaseSuccess(productId);
-      ref.read(isProProvider.notifier).state = true;
-      Navigator.of(context).pop(true);
+      if (PurchaseService.instance.isPro.value) {
+        AnalyticsService.instance.logPurchaseSuccess(productId);
+        ref.read(isProProvider.notifier).state = true;
+        Navigator.of(context).pop(true);
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loading = false);
     }
+  }
+
+  /// Waits for isPro to become true, or times out after 10 seconds.
+  Future<void> _waitForPro() async {
+    if (PurchaseService.instance.isPro.value) return;
+    final completer = Completer<void>();
+    void listener() {
+      if (PurchaseService.instance.isPro.value && !completer.isCompleted) {
+        completer.complete();
+      }
+    }
+    PurchaseService.instance.isPro.addListener(listener);
+    await completer.future.timeout(
+      const Duration(seconds: 10),
+      onTimeout: () {},
+    );
+    PurchaseService.instance.isPro.removeListener(listener);
   }
 
   Future<void> _restore() async {

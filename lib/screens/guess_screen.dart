@@ -25,6 +25,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
     with SingleTickerProviderStateMixin {
   String? _answeredCardId;
   bool _waitingNext = false;
+  bool _resultsLogged = false;
   OverlayEntry? _confettiEntry;
 
   late final AutoDisposeStateNotifierProvider<QuizNotifier, QuizState?> _provider;
@@ -117,6 +118,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
     setState(() {
       _answeredCardId = null;
       _waitingNext = false;
+      _resultsLogged = false;
     });
     Future.delayed(const Duration(milliseconds: 300), () {
       if (mounted) _playCurrentSound();
@@ -219,7 +221,10 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
   Widget _buildResults(QuizState state) {
     final score = state.score;
     final total = state.totalRounds;
-    AnalyticsService.instance.logQuizComplete(score, total);
+    if (!_resultsLogged) {
+      _resultsLogged = true;
+      AnalyticsService.instance.logQuizComplete(score, total);
+    }
     final ratio = total > 0 ? score / total : 0.0;
 
     String emoji;

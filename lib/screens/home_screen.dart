@@ -471,10 +471,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final themeMode = ref.watch(themeModeProvider);
     final isDark = themeMode == ThemeMode.dark;
     final streak = ref.watch(streakProvider);
+    final topPadding = MediaQuery.of(context).padding.top;
+    final screenWidth = MediaQuery.of(context).size.width;
+    // Scale factor relative to a 375pt-wide reference device (iPhone SE/8)
+    final scale = (screenWidth / 375).clamp(0.85, 1.3);
 
     return Scaffold(
-      body: SafeArea(
-        child: packsAsync.when(
+      body: packsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(child: Text('Помилка: $e')),
           data: (packs) {
@@ -559,10 +562,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
             return Column(
               children: [
+                // Status bar spacing (replaces SafeArea top)
+                SizedBox(height: topPadding),
                 // Top bar
                 Padding(
                   padding:
-                      const EdgeInsets.only(top: 12, left: 12, right: 12),
+                      EdgeInsets.only(top: 4 * scale, left: 12, right: 12),
                   child: Row(
                     children: [
                       IconButton(
@@ -585,12 +590,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ],
                   ),
                 ),
-                const Text(
+                Text(
                   '🗣️ Картки-розмовлялки',
                   style:
-                      TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                      TextStyle(fontSize: 28 * scale, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 6),
+                SizedBox(height: 6 * scale),
 
                 // Subtitle with inline streak
                 _buildSubtitle(
@@ -650,13 +655,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 // Grid
                 Expanded(
                   child: GridView.builder(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 4),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 16 * scale, vertical: 4),
                     gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
+                        SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
-                      mainAxisSpacing: 12,
-                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12 * scale,
+                      crossAxisSpacing: 12 * scale,
                       childAspectRatio: 0.95,
                     ),
                     itemCount: gridItems.length,
@@ -680,7 +685,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             );
           },
         ),
-      ),
     );
   }
 

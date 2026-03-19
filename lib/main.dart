@@ -13,6 +13,11 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarBrightness: Brightness.light,
+    statusBarIconBrightness: Brightness.dark,
+  ));
   runApp(const ProviderScope(child: TalkingCardsApp()));
 }
 
@@ -31,6 +36,7 @@ class TalkingCardsApp extends ConsumerWidget {
         colorSchemeSeed: kAccent,
         useMaterial3: true,
         fontFamily: 'Roboto',
+        scaffoldBackgroundColor: const Color(0xFFFAF8F5),
       ),
       darkTheme: ThemeData(
         colorSchemeSeed: kAccent,

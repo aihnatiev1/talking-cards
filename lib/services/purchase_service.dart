@@ -63,8 +63,21 @@ class PurchaseService {
 
   Future<bool> restore() async {
     await _iap.restorePurchases();
-    // Result comes through purchaseStream
-    await Future.delayed(const Duration(seconds: 2));
+    // Wait for purchaseStream to deliver result, timeout after 10s
+    if (!isPro.value) {
+      final completer = Completer<void>();
+      void listener() {
+        if (isPro.value && !completer.isCompleted) {
+          completer.complete();
+        }
+      }
+      isPro.addListener(listener);
+      await completer.future.timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {},
+      );
+      isPro.removeListener(listener);
+    }
     return isPro.value;
   }
 
