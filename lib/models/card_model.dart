@@ -23,6 +23,8 @@ class CardModel {
     this.audioKey,
   });
 
+  static String? _nonEmpty(String? s) => (s == null || s.isEmpty) ? null : s;
+
   factory CardModel.fromJson(Map<String, dynamic> json) {
     final image = json['image'] as String?;
     return CardModel(
@@ -33,7 +35,7 @@ class CardModel {
       colorBg: colorFromHex(json['colorBg'] as String),
       colorAccent: colorFromHex(json['colorAccent'] as String),
       image: image,
-      audioKey: (json['audio'] as String?) ?? image,
+      audioKey: _nonEmpty(json['audio'] as String?) ?? image,
     );
   }
 }

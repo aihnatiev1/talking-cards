@@ -18,8 +18,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Розблокуй всі картки!'), findsOneWidget);
-      expect(find.textContaining('6 розділів'), findsOneWidget);
-      expect(find.textContaining('174 яскраві картки'), findsOneWidget);
+      expect(find.textContaining('8 розділів'), findsOneWidget);
+      expect(find.textContaining('234 яскраві картки'), findsOneWidget);
       expect(find.textContaining('Нові розділи'), findsOneWidget);
       expect(find.textContaining('3 дні безкоштовно'), findsAtLeast(1));
     });

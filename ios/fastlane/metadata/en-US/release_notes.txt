@@ -1,0 +1,7 @@
+Hi! Here's what's new:
+
+- Improved home screen design
+- Better adaptation for different screen sizes
+- Minor bug fixes
+
+Thank you for using Talking Cards!

@@ -441,11 +441,15 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            Text(
-              widget.pack.title,
-              style: TextStyle(
-                color: widget.pack.color,
-                fontWeight: FontWeight.bold,
+            Flexible(
+              child: Text(
+                widget.pack.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: widget.pack.color,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],

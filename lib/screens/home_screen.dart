@@ -33,6 +33,8 @@ const _packCategories = <String, String>{
   'home': 'Побут',
   'food': 'Побут',
   'emotions': 'Розвиток',
+  'colors': 'Розвиток',
+  'body': 'Розвиток',
 };
 
 const _allCategories = ['Все', 'Мовлення', 'Світ навколо', 'Побут', 'Розвиток'];
@@ -118,6 +120,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           padding: const EdgeInsets.all(28),
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text('🗣️', style: TextStyle(fontSize: 48)),
               const SizedBox(height: 12),
@@ -132,7 +135,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               Text(
                 'Яскраві картки зі звуками для найменших. '
                 'Слухай — вивчай — повторюй!',
-                textAlign: TextAlign.center,
                 style: TextStyle(
                     fontSize: 14, color: Colors.grey[600], height: 1.4),
               ),
@@ -165,10 +167,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               const _NotificationToggle(),
               const SizedBox(height: 8),
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child:
-                    Text('Закрити', style: TextStyle(color: Colors.grey[400])),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    backgroundColor: Colors.grey[100],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child:
+                      Text('Закрити', style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.w600)),
+                ),
               ),
             ],
           ),
@@ -592,8 +604,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 Text(
                   '🗣️ Картки-розмовлялки',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style:
-                      TextStyle(fontSize: 28 * scale, fontWeight: FontWeight.bold),
+                      TextStyle(fontSize: 24 * scale, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 6 * scale),
 
@@ -616,7 +630,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 // Category filter chips
                 SizedBox(
                   height: 38,
-                  child: ListView.separated(
+                  child: ShaderMask(
+                    shaderCallback: (bounds) => const LinearGradient(
+                      begin: Alignment(0.85, 0),
+                      end: Alignment.centerRight,
+                      colors: [Colors.white, Colors.transparent],
+                    ).createShader(bounds),
+                    blendMode: BlendMode.dstIn,
+                    child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: _allCategories.length,
@@ -647,6 +668,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             setState(() => _selectedCategory = cat),
                       );
                     },
+                  ),
                   ),
                 ),
 
