@@ -243,6 +243,8 @@
       {
         "id": "a01",
         "sound": "КОТИК",
+        "soundEn": "CAT",
+        "transcription": "[kæt]",
         "text": "Котик муркоче: мур-мур!",
         "emoji": "🐱",
         "colorBg": "#FFF5E6",
@@ -252,6 +254,8 @@
       {
         "id": "a02",
         "sound": "СОБАЧКА",
+        "soundEn": "DOG",
+        "transcription": "[dɒɡ]",
         "text": "Собачка гавкає: гав-гав!",
         "emoji": "🐕",
         "colorBg": "#FFF0E6",
@@ -261,6 +265,8 @@
       {
         "id": "a03",
         "sound": "КОРОВА",
+        "soundEn": "COW",
+        "transcription": "[kaʊ]",
         "text": "Корова дає молоко: му-у!",
         "emoji": "🐄",
         "colorBg": "#F0FFF0",
@@ -270,6 +276,8 @@
       {
         "id": "a04",
         "sound": "КОНИК",
+        "soundEn": "HORSE",
+        "transcription": "[hɔːrs]",
         "text": "Коник каже: іго-го!",
         "emoji": "🐴",
         "colorBg": "#FFF5E6",
@@ -279,6 +287,8 @@
       {
         "id": "a05",
         "sound": "СВИНКА",
+        "soundEn": "PIG",
+        "transcription": "[pɪɡ]",
         "text": "Свинка хрюкає: хрю-хрю!",
         "emoji": "🐷",
         "colorBg": "#FFE6F0",
@@ -288,6 +298,8 @@
       {
         "id": "a06",
         "sound": "КУРОЧКА",
+        "soundEn": "CHICKEN",
+        "transcription": "[ˈtʃɪkɪn]",
         "text": "Курочка кудкудаче: ко-ко!",
         "emoji": "🐔",
         "colorBg": "#FFFFF0",
@@ -297,6 +309,8 @@
       {
         "id": "a07",
         "sound": "ПІВНИК",
+        "soundEn": "ROOSTER",
+        "transcription": "[ˈruːstər]",
         "text": "Півник кукурікає: ку-ку-рі-ку!",
         "emoji": "🐓",
         "colorBg": "#FFE6E6",
@@ -306,6 +320,8 @@
       {
         "id": "a08",
         "sound": "КАЧЕЧКА",
+        "soundEn": "DUCK",
+        "transcription": "[dʌk]",
         "text": "Качечка крякає: кря-кря!",
         "emoji": "🦆",
         "colorBg": "#E6FFFF",
@@ -315,6 +331,8 @@
       {
         "id": "a09",
         "sound": "ЖАБКА",
+        "soundEn": "FROG",
+        "transcription": "[frɒɡ]",
         "text": "Жабка стрибає: ква-ква!",
         "emoji": "🐸",
         "colorBg": "#E6FFE6",
@@ -324,6 +342,8 @@
       {
         "id": "a10",
         "sound": "РИБКА",
+        "soundEn": "FISH",
+        "transcription": "[fɪʃ]",
         "text": "Рибка плаває: буль-буль!",
         "emoji": "🐟",
         "colorBg": "#E6F0FF",
@@ -333,6 +353,8 @@
       {
         "id": "a11",
         "sound": "ПТАШКА",
+        "soundEn": "BIRD",
+        "transcription": "[bɜːrd]",
         "text": "Пташка співає: чік-чірік!",
         "emoji": "🐦",
         "colorBg": "#F0FFFF",
@@ -342,6 +364,8 @@
       {
         "id": "a12",
         "sound": "МЕТЕЛИК",
+        "soundEn": "BUTTERFLY",
+        "transcription": "[ˈbʌtərflaɪ]",
         "text": "Метелик літає з квітки на квітку",
         "emoji": "🦋",
         "colorBg": "#F5E6FF",
@@ -351,6 +375,8 @@
       {
         "id": "a13",
         "sound": "БДЖІЛКА",
+        "soundEn": "BEE",
+        "transcription": "[biː]",
         "text": "Бджілка збирає мед: дзз-дзз!",
         "emoji": "🐝",
         "colorBg": "#FFFFF0",
@@ -360,6 +386,8 @@
       {
         "id": "a14",
         "sound": "РАВЛИК",
+        "soundEn": "SNAIL",
+        "transcription": "[sneɪl]",
         "text": "Равлик повзе повільненько",
         "emoji": "🐌",
         "colorBg": "#FFF5F0",
@@ -369,6 +397,8 @@
       {
         "id": "a15",
         "sound": "ЗАЙЧИК",
+        "soundEn": "BUNNY",
+        "transcription": "[ˈbʌni]",
         "text": "Зайчик стрибає: стриб-стриб!",
         "emoji": "🐰",
         "colorBg": "#F5F0FF",
@@ -378,6 +408,8 @@
       {
         "id": "a16",
         "sound": "ВЕДМІДЬ",
+        "soundEn": "BEAR",
+        "transcription": "[beər]",
         "text": "Ведмедик любить мед",
         "emoji": "🐻",
         "colorBg": "#FFF0E6",
@@ -387,6 +419,8 @@
       {
         "id": "a17",
         "sound": "ЛИСИЦЯ",
+        "soundEn": "FOX",
+        "transcription": "[fɒks]",
         "text": "Лисичка руда і спритна",
         "emoji": "🦊",
         "colorBg": "#FFF5E6",
@@ -397,6 +431,8 @@
       {
         "id": "a18",
         "sound": "ВОВЧИК",
+        "soundEn": "WOLF",
+        "transcription": "[wʊlf]",
         "text": "Вовчик сіренький: у-у-у!",
         "emoji": "🐺",
         "colorBg": "#F0F0F5",
@@ -406,6 +442,8 @@
       {
         "id": "a19",
         "sound": "ОЛЕНЬ",
+        "soundEn": "DEER",
+        "transcription": "[dɪər]",
         "text": "Олень має гарні роги",
         "emoji": "🦌",
         "colorBg": "#FFF5E6",
@@ -415,6 +453,8 @@
       {
         "id": "a20",
         "sound": "ЇЖАЧОК",
+        "soundEn": "HEDGEHOG",
+        "transcription": "[ˈhedʒhɒɡ]",
         "text": "Їжачок несе яблучко",
         "emoji": "🦔",
         "colorBg": "#FFF5F0",
@@ -424,6 +464,8 @@
       {
         "id": "a21",
         "sound": "СОВА",
+        "soundEn": "OWL",
+        "transcription": "[aʊl]",
         "text": "Совонька мудра: пугу-пугу!",
         "emoji": "🦉",
         "colorBg": "#F5F0E6",
@@ -433,6 +475,8 @@
       {
         "id": "a22",
         "sound": "ПІНГВІН",
+        "soundEn": "PENGUIN",
+        "transcription": "[ˈpeŋɡwɪn]",
         "text": "Пінгвінчик кумедно ходить!",
         "emoji": "🐧",
         "colorBg": "#E6F0FF",
@@ -443,6 +487,8 @@
       {
         "id": "a23",
         "sound": "СЛОН",
+        "soundEn": "ELEPHANT",
+        "transcription": "[ˈelɪfənt]",
         "text": "Слоник великий і добрий",
         "emoji": "🐘",
         "colorBg": "#F0F0F5",
@@ -453,6 +499,8 @@
       {
         "id": "a24",
         "sound": "ЛЕВ",
+        "soundEn": "LION",
+        "transcription": "[ˈlaɪən]",
         "text": "Лев хоробрий: р-р-р!",
         "emoji": "🦁",
         "colorBg": "#FFFFF0",
@@ -463,6 +511,8 @@
       {
         "id": "a25",
         "sound": "МАВПОЧКА",
+        "soundEn": "MONKEY",
+        "transcription": "[ˈmʌŋki]",
         "text": "Мавпочка любить банани",
         "emoji": "🐒",
         "colorBg": "#FFF5E6",
@@ -473,6 +523,8 @@
       {
         "id": "a26",
         "sound": "КРОКОДИЛ",
+        "soundEn": "CROCODILE",
+        "transcription": "[ˈkrɒkədaɪl]",
         "text": "Крокодильчик відкриває рот: клац!",
         "emoji": "🐊",
         "colorBg": "#E6FFE6",
@@ -483,6 +535,8 @@
       {
         "id": "a27",
         "sound": "ЧЕРЕПАХА",
+        "soundEn": "TURTLE",
+        "transcription": "[ˈtɜːrtl]",
         "text": "Черепашка носить хатку",
         "emoji": "🐢",
         "colorBg": "#E6FFE6",
@@ -493,6 +547,8 @@
       {
         "id": "a28",
         "sound": "ДЕЛЬФІН",
+        "soundEn": "DOLPHIN",
+        "transcription": "[ˈdɒlfɪn]",
         "text": "Дельфінчик стрибає з води!",
         "emoji": "🐬",
         "colorBg": "#E6F0FF",
@@ -503,6 +559,8 @@
       {
         "id": "a30",
         "sound": "БІЛОЧКА",
+        "soundEn": "SQUIRREL",
+        "transcription": "[ˈskwɪrəl]",
         "text": "Білочка збирає горішки",
         "emoji": "🐿️",
         "colorBg": "#FFF5E6",
@@ -522,6 +580,8 @@
       {
         "id": "h01",
         "sound": "МАМА",
+        "soundEn": "MOM",
+        "transcription": "[mɒm]",
         "text": "Мама добра і мене обіймає",
         "emoji": "🤱",
         "colorBg": "#FFF0F5",
@@ -531,6 +591,8 @@
       {
         "id": "h02",
         "sound": "ТАТО",
+        "soundEn": "DAD",
+        "transcription": "[dæd]",
         "text": "З татом ми будуємо!",
         "emoji": "👨‍👧",
         "colorBg": "#E6F0FF",
@@ -540,6 +602,8 @@
       {
         "id": "h03",
         "sound": "БАБУСЯ",
+        "soundEn": "GRANDMA",
+        "transcription": "[ˈɡrænmɑː]",
         "text": "З бабусею печемо пиріжки!",
         "emoji": "👵",
         "colorBg": "#FFF5E6",
@@ -549,6 +613,8 @@
       {
         "id": "h04",
         "sound": "ДІДУСЬ",
+        "soundEn": "GRANDPA",
+        "transcription": "[ˈɡrænpɑː]",
         "text": "Дідусь розповідає казку",
         "emoji": "👴",
         "colorBg": "#F0F5FF",
@@ -558,6 +624,8 @@
       {
         "id": "h05",
         "sound": "ЛЯЛЯ",
+        "soundEn": "BABY",
+        "transcription": "[ˈbeɪbi]",
         "text": "Ляля маленька — бережу!",
         "emoji": "👶",
         "colorBg": "#FFF0F0",
@@ -567,6 +635,8 @@
       {
         "id": "h06",
         "sound": "РОДИНА",
+        "soundEn": "FAMILY",
+        "transcription": "[ˈfæməli]",
         "text": "Моя родина — найкраща!",
         "emoji": "👨‍👩‍👧",
         "colorBg": "#FFE8EC",
@@ -576,6 +646,8 @@
       {
         "id": "h07",
         "sound": "ОБІЙМИ",
+        "soundEn": "HUG",
+        "transcription": "[hʌɡ]",
         "text": "Обіймемось міцно-міцно!",
         "emoji": "🫂",
         "colorBg": "#F3E5F5",
@@ -585,6 +657,8 @@
       {
         "id": "h08",
         "sound": "РАНОК",
+        "soundEn": "MORNING",
+        "transcription": "[ˈmɔːrnɪŋ]",
         "text": "Добрий ранок, прокидайсь!",
         "emoji": "🌅",
         "colorBg": "#FFF8E1",
@@ -594,6 +668,8 @@
       {
         "id": "h09",
         "sound": "ВЕЧІР",
+        "soundEn": "EVENING",
+        "transcription": "[ˈiːvnɪŋ]",
         "text": "Добраніч, зіронько моя!",
         "emoji": "🌙",
         "colorBg": "#E8EAF6",
@@ -603,6 +679,8 @@
       {
         "id": "h10",
         "sound": "РАДІСТЬ",
+        "soundEn": "JOY",
+        "transcription": "[dʒɔɪ]",
         "text": "Мені весело — ура!",
         "emoji": "😄",
         "colorBg": "#FFF8E1",
@@ -612,6 +690,8 @@
       {
         "id": "h11",
         "sound": "СУМНО",
+        "soundEn": "SAD",
+        "transcription": "[sæd]",
         "text": "Мені сумно — обійми мене",
         "emoji": "🥺",
         "colorBg": "#E3F2FD",
@@ -621,6 +701,8 @@
       {
         "id": "h12",
         "sound": "СЕРДИТИЙ",
+        "soundEn": "ANGRY",
+        "transcription": "[ˈæŋɡri]",
         "text": "Я сердитий — це нормально",
         "emoji": "😤",
         "colorBg": "#FFE6E6",
@@ -630,6 +712,8 @@
       {
         "id": "h13",
         "sound": "СТРАХ",
+        "soundEn": "FEAR",
+        "transcription": "[fɪər]",
         "text": "Мені страшно — мама тут!",
         "emoji": "😨",
         "colorBg": "#E8EAF6",
@@ -640,6 +724,8 @@
       {
         "id": "h14",
         "sound": "ПОДИВ",
+        "soundEn": "SURPRISE",
+        "transcription": "[sərˈpraɪz]",
         "text": "Ого, як цікаво!",
         "emoji": "😲",
         "colorBg": "#F3E5F5",
@@ -649,6 +735,8 @@
       {
         "id": "h15",
         "sound": "М'ЯЧ",
+        "soundEn": "BALL",
+        "transcription": "[bɔːl]",
         "text": "М'яч стрибає: бум-бум!",
         "emoji": "⚽",
         "colorBg": "#E6FFE6",
@@ -658,6 +746,8 @@
       {
         "id": "h16",
         "sound": "ЛЯЛЬКА",
+        "soundEn": "DOLL",
+        "transcription": "[dɒl]",
         "text": "Лялька гарно вдягнена",
         "emoji": "🧸",
         "colorBg": "#FFE6F5",
@@ -667,6 +757,8 @@
       {
         "id": "h17",
         "sound": "МАШИНКА",
+        "soundEn": "TOY CAR",
+        "transcription": "[tɔɪ kɑːr]",
         "text": "Машинка їде: бі-бі!",
         "emoji": "🚗",
         "colorBg": "#FFE6E6",
@@ -676,6 +768,8 @@
       {
         "id": "h18",
         "sound": "КНИЖКА",
+        "soundEn": "BOOK",
+        "transcription": "[bʊk]",
         "text": "Разом читаємо книжку!",
         "emoji": "📖",
         "colorBg": "#F0E6FF",
@@ -685,6 +779,8 @@
       {
         "id": "h19",
         "sound": "КУБИКИ",
+        "soundEn": "BLOCKS",
+        "transcription": "[blɒks]",
         "text": "З кубиків будуємо вежу!",
         "emoji": "🧱",
         "colorBg": "#FFF5E6",
@@ -694,6 +790,8 @@
       {
         "id": "h20",
         "sound": "КАША",
+        "soundEn": "PORRIDGE",
+        "transcription": "[ˈpɒrɪdʒ]",
         "text": "Каша смачна — ням-ням!",
         "emoji": "🥣",
         "colorBg": "#FFF3E0",
@@ -703,6 +801,8 @@
       {
         "id": "h21",
         "sound": "ЯБЛУКО",
+        "soundEn": "APPLE",
+        "transcription": "[ˈæpl]",
         "text": "Яблуко червоне та солодке",
         "emoji": "🍎",
         "colorBg": "#FFE6E6",
@@ -712,6 +812,8 @@
       {
         "id": "h22",
         "sound": "ВОДИЧКА",
+        "soundEn": "WATER",
+        "transcription": "[ˈwɔːtər]",
         "text": "Водичка чиста: буль-буль!",
         "emoji": "💧",
         "colorBg": "#E6F0FF",
@@ -721,6 +823,8 @@
       {
         "id": "h23",
         "sound": "ГУЛЯТИ",
+        "soundEn": "WALK",
+        "transcription": "[wɔːk]",
         "text": "Час гуляти — одягайсь!",
         "emoji": "🌳",
         "colorBg": "#E8F5E9",
@@ -730,6 +834,8 @@
       {
         "id": "h24",
         "sound": "ВАННА",
+        "soundEn": "BATH",
+        "transcription": "[bɑːθ]",
         "text": "Ванна з бульбашками!",
         "emoji": "🛁",
         "colorBg": "#E6FFFF",
@@ -739,6 +845,8 @@
       {
         "id": "h25",
         "sound": "РУЧКИ",
+        "soundEn": "HANDS",
+        "transcription": "[hændz]",
         "text": "Мило миє ручки чисто",
         "emoji": "🧼",
         "colorBg": "#F0FFFF",
@@ -748,6 +856,8 @@
       {
         "id": "h26",
         "sound": "ЗУБКИ",
+        "soundEn": "TEETH",
+        "transcription": "[tiːθ]",
         "text": "Зубки чистимо щіткою",
         "emoji": "🪥",
         "colorBg": "#F0FFFF",
@@ -757,6 +867,8 @@
       {
         "id": "h27",
         "sound": "ЛІЖКО",
+        "soundEn": "BED",
+        "transcription": "[bed]",
         "text": "Ліжко м'яке — баю-бай!",
         "emoji": "🛏️",
         "colorBg": "#F0E6FF",
@@ -766,6 +878,8 @@
       {
         "id": "h28",
         "sound": "ДЯКУЮ",
+        "soundEn": "THANK YOU",
+        "transcription": "[θæŋk juː]",
         "text": "Дякую тобі!",
         "emoji": "🙏",
         "colorBg": "#E8F5E9",
@@ -775,6 +889,8 @@
       {
         "id": "h29",
         "sound": "БУДЬ ЛАСКА",
+        "soundEn": "PLEASE",
+        "transcription": "[pliːz]",
         "text": "Будь ласка — чарівне слово!",
         "emoji": "✨",
         "colorBg": "#FFF8E1",
@@ -784,6 +900,8 @@
       {
         "id": "h30",
         "sound": "ЛЮБЛЮ",
+        "soundEn": "LOVE",
+        "transcription": "[lʌv]",
         "text": "Я тебе дуже люблю!",
         "emoji": "❤️",
         "colorBg": "#FFE8EC",
@@ -802,6 +920,8 @@
       {
         "id": "e01",
         "sound": "РАДІСТЬ",
+        "soundEn": "JOY",
+        "transcription": "[dʒɔɪ]",
         "text": "Мені весело — ура!",
         "emoji": "😄",
         "colorBg": "#FFF8E1",
@@ -812,6 +932,8 @@
       {
         "id": "e02",
         "sound": "СУМНО",
+        "soundEn": "SAD",
+        "transcription": "[sæd]",
         "text": "Мені сумно — обійми мене",
         "emoji": "😢",
         "colorBg": "#E3F2FD",
@@ -822,6 +944,8 @@
       {
         "id": "e03",
         "sound": "ЗЛІСТЬ",
+        "soundEn": "ANGER",
+        "transcription": "[ˈæŋɡər]",
         "text": "Я сердитий — це нормально",
         "emoji": "😤",
         "colorBg": "#FFE6E6",
@@ -831,6 +955,8 @@
       {
         "id": "e04",
         "sound": "СТРАХ",
+        "soundEn": "FEAR",
+        "transcription": "[fɪər]",
         "text": "Мені страшно — мама тут!",
         "emoji": "😨",
         "colorBg": "#E8EAF6",
@@ -840,6 +966,8 @@
       {
         "id": "e05",
         "sound": "ПОДИВ",
+        "soundEn": "SURPRISE",
+        "transcription": "[sərˈpraɪz]",
         "text": "Ого, як цікаво!",
         "emoji": "😲",
         "colorBg": "#F3E5F5",
@@ -850,6 +978,8 @@
       {
         "id": "e06",
         "sound": "ЛЮБОВ",
+        "soundEn": "LOVE",
+        "transcription": "[lʌv]",
         "text": "Я тебе дуже люблю!",
         "emoji": "❤️",
         "colorBg": "#FFE8EC",
@@ -860,6 +990,8 @@
       {
         "id": "e07",
         "sound": "СОРОМ",
+        "soundEn": "SHAME",
+        "transcription": "[ʃeɪm]",
         "text": "Мені соромно — вибач",
         "emoji": "😳",
         "colorBg": "#FFE8EC",
@@ -869,6 +1001,8 @@
       {
         "id": "e08",
         "sound": "ВТОМА",
+        "soundEn": "TIRED",
+        "transcription": "[ˈtaɪərd]",
         "text": "Я втомився — відпочину",
         "emoji": "😮‍💨",
         "colorBg": "#F0F0F5",
@@ -878,6 +1012,8 @@
       {
         "id": "e09",
         "sound": "ГОРДІСТЬ",
+        "soundEn": "PRIDE",
+        "transcription": "[praɪd]",
         "text": "Я молодець — у мене вийшло!",
         "emoji": "🏆",
         "colorBg": "#FFF8E1",
@@ -887,6 +1023,8 @@
       {
         "id": "e10",
         "sound": "ЦІКАВІСТЬ",
+        "soundEn": "CURIOSITY",
+        "transcription": "[ˌkjʊəriˈɒsɪti]",
         "text": "А що це таке?",
         "emoji": "🤔",
         "colorBg": "#E8F5E9",
@@ -896,6 +1034,8 @@
       {
         "id": "e11",
         "sound": "СПОКІЙ",
+        "soundEn": "CALM",
+        "transcription": "[kɑːm]",
         "text": "Мені спокійно і добре",
         "emoji": "😌",
         "colorBg": "#E3F2FD",
@@ -905,6 +1045,8 @@
       {
         "id": "e12",
         "sound": "НІЖНІСТЬ",
+        "soundEn": "TENDERNESS",
+        "transcription": "[ˈtendərnəs]",
         "text": "Погладжу тебе ніжно",
         "emoji": "🥰",
         "colorBg": "#FFE8EC",
@@ -914,6 +1056,8 @@
       {
         "id": "e13",
         "sound": "ЩАСТЯ",
+        "soundEn": "HAPPINESS",
+        "transcription": "[ˈhæpinəs]",
         "text": "Я такий щасливий!",
         "emoji": "🤩",
         "colorBg": "#FFF8E1",
@@ -923,6 +1067,8 @@
       {
         "id": "e14",
         "sound": "ТУРБОТА",
+        "soundEn": "CARE",
+        "transcription": "[keər]",
         "text": "Я про тебе дбаю",
         "emoji": "💝",
         "colorBg": "#F3E5F5",
@@ -932,6 +1078,8 @@
       {
         "id": "e15",
         "sound": "СМІХ",
+        "soundEn": "LAUGHTER",
+        "transcription": "[ˈlɑːftər]",
         "text": "Ха-ха, як смішно!",
         "emoji": "😂",
         "colorBg": "#FFF8E1",
@@ -941,6 +1089,8 @@
       {
         "id": "e16",
         "sound": "ДОВІРА",
+        "soundEn": "TRUST",
+        "transcription": "[trʌst]",
         "text": "Я тобі вірю!",
         "emoji": "🤝",
         "colorBg": "#E8F5E9",
@@ -951,6 +1101,8 @@
       {
         "id": "e17",
         "sound": "ДОБРОТА",
+        "soundEn": "KINDNESS",
+        "transcription": "[ˈkaɪndnəs]",
         "text": "Я хочу допомогти!",
         "emoji": "💕",
         "colorBg": "#FFE8EC",
@@ -961,6 +1113,8 @@
       {
         "id": "e18",
         "sound": "СМІЛИВІСТЬ",
+        "soundEn": "BRAVERY",
+        "transcription": "[ˈbreɪvəri]",
         "text": "Я сміливий — я зможу!",
         "emoji": "💪",
         "colorBg": "#FFF3E0",
@@ -971,6 +1125,8 @@
       {
         "id": "e19",
         "sound": "ВДЯЧНІСТЬ",
+        "soundEn": "GRATITUDE",
+        "transcription": "[ˈɡrætɪtjuːd]",
         "text": "Дякую тобі дуже!",
         "emoji": "🙏",
         "colorBg": "#E8F5E9",
@@ -980,6 +1136,8 @@
       {
         "id": "e20",
         "sound": "ЗДИВУВАННЯ",
+        "soundEn": "AMAZEMENT",
+        "transcription": "[əˈmeɪzmənt]",
         "text": "Ого! Оце так!",
         "emoji": "😯",
         "colorBg": "#E3F2FD",
@@ -989,6 +1147,8 @@
       {
         "id": "e21",
         "sound": "УВАГА",
+        "soundEn": "ATTENTION",
+        "transcription": "[əˈtenʃən]",
         "text": "Побудь зі мною!",
         "emoji": "🫶",
         "colorBg": "#F3E5F5",
@@ -999,6 +1159,8 @@
       {
         "id": "e22",
         "sound": "НУДЬГА",
+        "soundEn": "BOREDOM",
+        "transcription": "[ˈbɔːrdəm]",
         "text": "Мені нудно — пограємось?",
         "emoji": "🥱",
         "colorBg": "#F0F0F5",
@@ -1008,6 +1170,8 @@
       {
         "id": "e23",
         "sound": "СПІВЧУТТЯ",
+        "soundEn": "SYMPATHY",
+        "transcription": "[ˈsɪmpəθi]",
         "text": "Тобі болить? Я поруч",
         "emoji": "🫂",
         "colorBg": "#E3F2FD",
@@ -1018,6 +1182,8 @@
       {
         "id": "e24",
         "sound": "НАТХНЕННЯ",
+        "soundEn": "INSPIRATION",
+        "transcription": "[ˌɪnspɪˈreɪʃən]",
         "text": "Я хочу творити!",
         "emoji": "✨",
         "colorBg": "#FFF8E1",
@@ -1028,6 +1194,8 @@
       {
         "id": "e25",
         "sound": "ТЕПЛО",
+        "soundEn": "WARMTH",
+        "transcription": "[wɔːrmθ]",
         "text": "Обіймаю тепло-тепло",
         "emoji": "☀️",
         "colorBg": "#FFF3E0",
@@ -1038,6 +1206,8 @@
       {
         "id": "e26",
         "sound": "ХВИЛЮВАННЯ",
+        "soundEn": "WORRY",
+        "transcription": "[ˈwʌri]",
         "text": "Я хвилююсь трішки",
         "emoji": "😬",
         "colorBg": "#FFF3E0",
@@ -1048,6 +1218,8 @@
       {
         "id": "e27",
         "sound": "ЗАДОВОЛЕННЯ",
+        "soundEn": "PLEASURE",
+        "transcription": "[ˈpleʒər]",
         "text": "Мені подобається!",
         "emoji": "👍",
         "colorBg": "#E8F5E9",
@@ -1058,6 +1230,8 @@
       {
         "id": "e28",
         "sound": "ОБРАЗА",
+        "soundEn": "OFFENSE",
+        "transcription": "[əˈfens]",
         "text": "Мені прикро — поговоримо?",
         "emoji": "😔",
         "colorBg": "#E3F2FD",
@@ -1068,6 +1242,8 @@
       {
         "id": "e29",
         "sound": "ПОДЯКА",
+        "soundEn": "THANKS",
+        "transcription": "[θæŋks]",
         "text": "Ти найкращий! Дякую!",
         "emoji": "🌟",
         "colorBg": "#FFF8E1",
@@ -1078,6 +1254,8 @@
       {
         "id": "e30",
         "sound": "МИР",
+        "soundEn": "PEACE",
+        "transcription": "[piːs]",
         "text": "Давай помиримось!",
         "emoji": "🕊️",
         "colorBg": "#E8F5E9",
@@ -1097,6 +1275,8 @@
       {
         "id": "t01",
         "sound": "АВТОМОБІЛЬ",
+        "soundEn": "CAR",
+        "transcription": "[kɑːr]",
         "text": "Автомобіль їде: бі-бі!",
         "emoji": "🚗",
         "colorBg": "#FFE6E6",
@@ -1107,6 +1287,8 @@
       {
         "id": "t02",
         "sound": "АВТОБУС",
+        "soundEn": "BUS",
+        "transcription": "[bʌs]",
         "text": "Автобус везе пасажирів",
         "emoji": "🚌",
         "colorBg": "#FFF3E0",
@@ -1117,6 +1299,8 @@
       {
         "id": "t03",
         "sound": "ПОТЯГ",
+        "soundEn": "TRAIN",
+        "transcription": "[treɪn]",
         "text": "Потяг їде: ту-ту-ту!",
         "emoji": "🚂",
         "colorBg": "#E3F2FD",
@@ -1127,6 +1311,8 @@
       {
         "id": "t04",
         "sound": "ЛІТАК",
+        "soundEn": "AIRPLANE",
+        "transcription": "[ˈeərpleɪn]",
         "text": "Літак летить високо!",
         "emoji": "✈️",
         "colorBg": "#E3F2FD",
@@ -1137,6 +1323,8 @@
       {
         "id": "t05",
         "sound": "КОРАБЕЛЬ",
+        "soundEn": "SHIP",
+        "transcription": "[ʃɪp]",
         "text": "Корабель пливе по морю",
         "emoji": "🚢",
         "colorBg": "#E0F7FA",
@@ -1147,6 +1335,8 @@
       {
         "id": "t06",
         "sound": "ВЕЛОСИПЕД",
+        "soundEn": "BICYCLE",
+        "transcription": "[ˈbaɪsɪkl]",
         "text": "Велосипед — крути педалі!",
         "emoji": "🚲",
         "colorBg": "#E8F5E9",
@@ -1157,6 +1347,8 @@
       {
         "id": "t07",
         "sound": "МОТОЦИКЛ",
+        "soundEn": "MOTORCYCLE",
+        "transcription": "[ˈmoʊtərsaɪkl]",
         "text": "Мотоцикл гуде: вр-р-р!",
         "emoji": "🏍️",
         "colorBg": "#F0F0F5",
@@ -1167,6 +1359,8 @@
       {
         "id": "t08",
         "sound": "ГЕЛІКОПТЕР",
+        "soundEn": "HELICOPTER",
+        "transcription": "[ˈhelɪkɒptər]",
         "text": "Гелікоптер кружляє вгорі",
         "emoji": "🚁",
         "colorBg": "#E8F5E9",
@@ -1177,6 +1371,8 @@
       {
         "id": "t09",
         "sound": "ТРАМВАЙ",
+        "soundEn": "TRAM",
+        "transcription": "[træm]",
         "text": "Трамвай дзвенить: дзінь-дзінь!",
         "emoji": "🚋",
         "colorBg": "#FFF8E1",
@@ -1187,6 +1383,8 @@
       {
         "id": "t10",
         "sound": "МЕТРО",
+        "soundEn": "METRO",
+        "transcription": "[ˈmetroʊ]",
         "text": "Метро їде під землею",
         "emoji": "🚇",
         "colorBg": "#E8EAF6",
@@ -1197,6 +1395,8 @@
       {
         "id": "t11",
         "sound": "ТАКСІ",
+        "soundEn": "TAXI",
+        "transcription": "[ˈtæksi]",
         "text": "Таксі жовте — сідай!",
         "emoji": "🚕",
         "colorBg": "#FFF8E1",
@@ -1207,6 +1407,8 @@
       {
         "id": "t12",
         "sound": "ПОЖЕЖНА МАШИНА",
+        "soundEn": "FIRE TRUCK",
+        "transcription": "[ˈfaɪər trʌk]",
         "text": "Пожежна машина: ві-у-ві-у!",
         "emoji": "🚒",
         "colorBg": "#FFE6E6",
@@ -1217,6 +1419,8 @@
       {
         "id": "t13",
         "sound": "ШВИДКА",
+        "soundEn": "AMBULANCE",
+        "transcription": "[ˈæmbjʊləns]",
         "text": "Швидка допомога поспішає!",
         "emoji": "🚑",
         "colorBg": "#FFE8EC",
@@ -1227,6 +1431,8 @@
       {
         "id": "t14",
         "sound": "ПОЛІЦІЯ",
+        "soundEn": "POLICE",
+        "transcription": "[pəˈliːs]",
         "text": "Поліція нас захищає",
         "emoji": "🚓",
         "colorBg": "#E3F2FD",
@@ -1237,6 +1443,8 @@
       {
         "id": "t15",
         "sound": "ВАНТАЖІВКА",
+        "soundEn": "TRUCK",
+        "transcription": "[trʌk]",
         "text": "Вантажівка везе вантаж",
         "emoji": "🚛",
         "colorBg": "#FFF3E0",
@@ -1247,6 +1455,8 @@
       {
         "id": "t16",
         "sound": "ТРАКТОР",
+        "soundEn": "TRACTOR",
+        "transcription": "[ˈtræktər]",
         "text": "Трактор оре поле",
         "emoji": "🚜",
         "colorBg": "#E8F5E9",
@@ -1257,6 +1467,8 @@
       {
         "id": "t17",
         "sound": "САМОКАТ",
+        "soundEn": "SCOOTER",
+        "transcription": "[ˈskuːtər]",
         "text": "Самокат — швидко і весело!",
         "emoji": "🛴",
         "colorBg": "#E8F5E9",
@@ -1267,6 +1479,8 @@
       {
         "id": "t18",
         "sound": "РАКЕТА",
+        "soundEn": "ROCKET",
+        "transcription": "[ˈrɒkɪt]",
         "text": "Ракета летить у космос!",
         "emoji": "🚀",
         "colorBg": "#E8EAF6",
@@ -1277,6 +1491,8 @@
       {
         "id": "t19",
         "sound": "ЧОВНИК",
+        "soundEn": "BOAT",
+        "transcription": "[boʊt]",
         "text": "Човник пливе по річці",
         "emoji": "🚣",
         "colorBg": "#E0F7FA",
@@ -1287,6 +1503,8 @@
       {
         "id": "t20",
         "sound": "ЯХТА",
+        "soundEn": "YACHT",
+        "transcription": "[jɒt]",
         "text": "Яхта з білим вітрилом",
         "emoji": "⛵",
         "colorBg": "#E3F2FD",
@@ -1297,6 +1515,8 @@
       {
         "id": "t21",
         "sound": "ПОВІТРЯНА КУЛЯ",
+        "soundEn": "BALLOON",
+        "transcription": "[bəˈluːn]",
         "text": "Повітряна куля летить!",
         "emoji": "🎈",
         "colorBg": "#FFE8EC",
@@ -1307,6 +1527,8 @@
       {
         "id": "t22",
         "sound": "САНКИ",
+        "soundEn": "SLED",
+        "transcription": "[sled]",
         "text": "Санки ковзають з гірки!",
         "emoji": "🛷",
         "colorBg": "#E3F2FD",
@@ -1317,6 +1539,8 @@
       {
         "id": "t23",
         "sound": "КОНЯЧКА",
+        "soundEn": "PONY",
+        "transcription": "[ˈpoʊni]",
         "text": "На конячці: гоп-гоп!",
         "emoji": "🐎",
         "colorBg": "#FFF3E0",
@@ -1327,6 +1551,8 @@
       {
         "id": "t24",
         "sound": "КАРЕТА",
+        "soundEn": "CARRIAGE",
+        "transcription": "[ˈkærɪdʒ]",
         "text": "Карета — як у принцеси!",
         "emoji": "👸",
         "colorBg": "#F3E5F5",
@@ -1337,6 +1563,8 @@
       {
         "id": "t25",
         "sound": "СКЕЙТБОРД",
+        "soundEn": "SKATEBOARD",
+        "transcription": "[ˈskeɪtbɔːrd]",
         "text": "Скейтборд — тримай рівновагу!",
         "emoji": "🛹",
         "colorBg": "#FFF3E0",
@@ -1347,6 +1575,8 @@
       {
         "id": "t26",
         "sound": "КАНАТНА ДОРОГА",
+        "soundEn": "CABLE CAR",
+        "transcription": "[ˈkeɪbl kɑːr]",
         "text": "Канатна дорога — високо!",
         "emoji": "🚡",
         "colorBg": "#E8F5E9",
@@ -1357,6 +1587,8 @@
       {
         "id": "t27",
         "sound": "ЕЛЕКТРИЧКА",
+        "soundEn": "COMMUTER TRAIN",
+        "transcription": "[kəˈmjuːtər treɪn]",
         "text": "Електричка стукоче: тук-тук!",
         "emoji": "🚆",
         "colorBg": "#E3F2FD",
@@ -1367,6 +1599,8 @@
       {
         "id": "t28",
         "sound": "ЕКСКАВАТОР",
+        "soundEn": "EXCAVATOR",
+        "transcription": "[ˈekskəveɪtər]",
         "text": "Екскаватор копає землю",
         "emoji": "🏗️",
         "colorBg": "#FFF3E0",
@@ -1377,6 +1611,8 @@
       {
         "id": "t29",
         "sound": "ПІДВОДНИЙ ЧОВЕН",
+        "soundEn": "SUBMARINE",
+        "transcription": "[ˈsʌbməriːn]",
         "text": "Підводний човен — під водою!",
         "emoji": "🤿",
         "colorBg": "#E0F7FA",
@@ -1387,6 +1623,8 @@
       {
         "id": "t30",
         "sound": "ПАРАПЛАН",
+        "soundEn": "PARAGLIDER",
+        "transcription": "[ˈpærəɡlaɪdər]",
         "text": "Параплан летить як пташка!",
         "emoji": "🪂",
         "colorBg": "#E3F2FD",
@@ -1406,6 +1644,8 @@
       {
         "id": "f01",
         "sound": "ЯБЛУКО",
+        "soundEn": "APPLE",
+        "transcription": "[ˈæpl]",
         "text": "Яблуко червоне — хрум-хрум!",
         "emoji": "🍎",
         "colorBg": "#FFE6E6",
@@ -1416,6 +1656,8 @@
       {
         "id": "f02",
         "sound": "БАНАН",
+        "soundEn": "BANANA",
+        "transcription": "[bəˈnænə]",
         "text": "Банан жовтий і солодкий",
         "emoji": "🍌",
         "colorBg": "#FFF8E1",
@@ -1425,6 +1667,8 @@
       {
         "id": "f03",
         "sound": "ВИНОГРАД",
+        "soundEn": "GRAPES",
+        "transcription": "[ɡreɪps]",
         "text": "Виноград — маленькі ягідки",
         "emoji": "🍇",
         "colorBg": "#F3E5F5",
@@ -1434,6 +1678,8 @@
       {
         "id": "f04",
         "sound": "АПЕЛЬСИН",
+        "soundEn": "ORANGE",
+        "transcription": "[ˈɒrɪndʒ]",
         "text": "Апельсин соковитий!",
         "emoji": "🍊",
         "colorBg": "#FFF3E0",
@@ -1444,6 +1690,8 @@
       {
         "id": "f05",
         "sound": "ПОЛУНИЦЯ",
+        "soundEn": "STRAWBERRY",
+        "transcription": "[ˈstrɔːbəri]",
         "text": "Полуничка солоденька",
         "emoji": "🍓",
         "colorBg": "#FFE8EC",
@@ -1454,6 +1702,8 @@
       {
         "id": "f06",
         "sound": "КАВУН",
+        "soundEn": "WATERMELON",
+        "transcription": "[ˈwɔːtərmelən]",
         "text": "Кавун великий — ням-ням!",
         "emoji": "🍉",
         "colorBg": "#E8F5E9",
@@ -1464,6 +1714,8 @@
       {
         "id": "f07",
         "sound": "ГРУША",
+        "soundEn": "PEAR",
+        "transcription": "[peər]",
         "text": "Груша жовта і м'яка",
         "emoji": "🍐",
         "colorBg": "#F1F8E9",
@@ -1474,6 +1726,8 @@
       {
         "id": "f08",
         "sound": "ВИШНЯ",
+        "soundEn": "CHERRY",
+        "transcription": "[ˈtʃeri]",
         "text": "Вишеньки червоні-червоні",
         "emoji": "🍒",
         "colorBg": "#FFE6E6",
@@ -1484,6 +1738,8 @@
       {
         "id": "f09",
         "sound": "ПЕРСИК",
+        "soundEn": "PEACH",
+        "transcription": "[piːtʃ]",
         "text": "Персик пухнастий і солодкий",
         "emoji": "🍑",
         "colorBg": "#FFF3E0",
@@ -1494,6 +1750,8 @@
       {
         "id": "f10",
         "sound": "ЛИМОН",
+        "soundEn": "LEMON",
+        "transcription": "[ˈlemən]",
         "text": "Лимон кислий — ой!",
         "emoji": "🍋",
         "colorBg": "#FFF8E1",
@@ -1504,6 +1762,8 @@
       {
         "id": "f11",
         "sound": "ХЛІБ",
+        "soundEn": "BREAD",
+        "transcription": "[bred]",
         "text": "Хліб теплий з печі",
         "emoji": "🍞",
         "colorBg": "#EFEBE9",
@@ -1514,6 +1774,8 @@
       {
         "id": "f12",
         "sound": "МОЛОКО",
+        "soundEn": "MILK",
+        "transcription": "[mɪlk]",
         "text": "Молочко біле — корисне!",
         "emoji": "🥛",
         "colorBg": "#F5F5F5",
@@ -1524,6 +1786,8 @@
       {
         "id": "f13",
         "sound": "СИР",
+        "soundEn": "CHEESE",
+        "transcription": "[tʃiːz]",
         "text": "Сир жовтий — мишка любить!",
         "emoji": "🧀",
         "colorBg": "#FFF8E1",
@@ -1534,6 +1798,8 @@
       {
         "id": "f14",
         "sound": "КАША",
+        "soundEn": "PORRIDGE",
+        "transcription": "[ˈpɒrɪdʒ]",
         "text": "Каша на сніданок — смачно!",
         "emoji": "🥣",
         "colorBg": "#FFF3E0",
@@ -1544,6 +1810,8 @@
       {
         "id": "f15",
         "sound": "СУП",
+        "soundEn": "SOUP",
+        "transcription": "[suːp]",
         "text": "Суп гарячий — дмухай!",
         "emoji": "🍲",
         "colorBg": "#FFF3E0",
@@ -1554,6 +1822,8 @@
       {
         "id": "f16",
         "sound": "ПИРІЖОК",
+        "soundEn": "PIE",
+        "transcription": "[paɪ]",
         "text": "Пиріжок з начинкою",
         "emoji": "🥟",
         "colorBg": "#EFEBE9",
@@ -1564,6 +1834,8 @@
       {
         "id": "f17",
         "sound": "ПЕЧИВО",
+        "soundEn": "COOKIE",
+        "transcription": "[ˈkʊki]",
         "text": "Печиво солоденьке",
         "emoji": "🍪",
         "colorBg": "#FFF3E0",
@@ -1574,6 +1846,8 @@
       {
         "id": "f18",
         "sound": "ТОРТ",
+        "soundEn": "CAKE",
+        "transcription": "[keɪk]",
         "text": "Торт зі свічками — свято!",
         "emoji": "🎂",
         "colorBg": "#FFE8EC",
@@ -1584,6 +1858,8 @@
       {
         "id": "f19",
         "sound": "МОРОЗИВО",
+        "soundEn": "ICE CREAM",
+        "transcription": "[aɪs kriːm]",
         "text": "Морозиво холодненьке!",
         "emoji": "🍦",
         "colorBg": "#E0F7FA",
@@ -1594,6 +1870,8 @@
       {
         "id": "f20",
         "sound": "ВАРЕНИК",
+        "soundEn": "DUMPLING",
+        "transcription": "[ˈdʌmplɪŋ]",
         "text": "Вареники з вишнями",
         "emoji": "🥟",
         "colorBg": "#FFE8EC",
@@ -1604,6 +1882,8 @@
       {
         "id": "f21",
         "sound": "МОРКВА",
+        "soundEn": "CARROT",
+        "transcription": "[ˈkærət]",
         "text": "Морква — зайчик хрумає!",
         "emoji": "🥕",
         "colorBg": "#FFF3E0",
@@ -1614,6 +1894,8 @@
       {
         "id": "f22",
         "sound": "ОГІРОК",
+        "soundEn": "CUCUMBER",
+        "transcription": "[ˈkjuːkʌmbər]",
         "text": "Огірочок зелененький",
         "emoji": "🥒",
         "colorBg": "#E8F5E9",
@@ -1624,6 +1906,8 @@
       {
         "id": "f23",
         "sound": "ПОМІДОР",
+        "soundEn": "TOMATO",
+        "transcription": "[təˈmeɪtoʊ]",
         "text": "Помідор червоний",
         "emoji": "🍅",
         "colorBg": "#FFE6E6",
@@ -1634,6 +1918,8 @@
       {
         "id": "f24",
         "sound": "КАРТОПЛЯ",
+        "soundEn": "POTATO",
+        "transcription": "[pəˈteɪtoʊ]",
         "text": "Картопелька — пюре смачне!",
         "emoji": "🥔",
         "colorBg": "#EFEBE9",
@@ -1644,6 +1930,8 @@
       {
         "id": "f25",
         "sound": "КУКУРУДЗА",
+        "soundEn": "CORN",
+        "transcription": "[kɔːrn]",
         "text": "Кукурудза жовта — смак!",
         "emoji": "🌽",
         "colorBg": "#FFF8E1",
@@ -1654,6 +1942,8 @@
       {
         "id": "f26",
         "sound": "ГАРБУЗ",
+        "soundEn": "PUMPKIN",
+        "transcription": "[ˈpʌmpkɪn]",
         "text": "Гарбуз великий і круглий",
         "emoji": "🎃",
         "colorBg": "#FFF3E0",
@@ -1664,6 +1954,8 @@
       {
         "id": "f27",
         "sound": "МЕД",
+        "soundEn": "HONEY",
+        "transcription": "[ˈhʌni]",
         "text": "Медок солодкий від бджілок",
         "emoji": "🍯",
         "colorBg": "#FFF8E1",
@@ -1674,6 +1966,8 @@
       {
         "id": "f28",
         "sound": "ЯЄЧКО",
+        "soundEn": "EGG",
+        "transcription": "[eɡ]",
         "text": "Яєчко — курочка знесла!",
         "emoji": "🥚",
         "colorBg": "#FFF8E1",
@@ -1684,6 +1978,8 @@
       {
         "id": "f29",
         "sound": "ЦУКЕРКА",
+        "soundEn": "CANDY",
+        "transcription": "[ˈkændi]",
         "text": "Цукерочка солоденька!",
         "emoji": "🍬",
         "colorBg": "#F3E5F5",
@@ -1694,6 +1990,8 @@
       {
         "id": "f30",
         "sound": "ВОДИЧКА",
+        "soundEn": "WATER",
+        "transcription": "[ˈwɔːtər]",
         "text": "Водичка чиста — пий!",
         "emoji": "💧",
         "colorBg": "#E3F2FD",
@@ -1710,36 +2008,366 @@
     "color": "#E17055",
     "isLocked": true,
     "cards": [
-      {"id": "c01", "sound": "ЧЕРВОНИЙ", "text": "Червоне яблуко — смачне", "emoji": "🍎", "colorBg": "#FFE6E6", "colorAccent": "#E74C3C", "audio": "червоний", "image": "red"},
-      {"id": "c02", "sound": "СИНІЙ", "text": "Сине небо над нами", "emoji": "🌌", "colorBg": "#E3F2FD", "colorAccent": "#1976D2", "audio": "синій", "image": "blue"},
-      {"id": "c03", "sound": "ЖОВТИЙ", "text": "Жовте сонечко сяє!", "emoji": "☀️", "colorBg": "#FFF8E1", "colorAccent": "#FDD835", "audio": "жовтий", "image": "yellow"},
-      {"id": "c04", "sound": "ЗЕЛЕНИЙ", "text": "Зелена трава в полі", "emoji": "🌿", "colorBg": "#E8F5E9", "colorAccent": "#43A047", "audio": "зелений", "image": "green"},
-      {"id": "c05", "sound": "БІЛИЙ", "text": "Білий сніг — зима!", "emoji": "❄️", "colorBg": "#F5F5F5", "colorAccent": "#90A4AE", "audio": "білий", "image": "white"},
-      {"id": "c06", "sound": "ЧОРНИЙ", "text": "Чорний котик — мур-мур!", "emoji": "🐈‍⬛", "colorBg": "#E8EAF6", "colorAccent": "#37474F", "audio": "чорний", "image": "black"},
-      {"id": "c07", "sound": "ПОМАРАНЧЕВИЙ", "text": "Помаранчевий апельсин", "emoji": "🍊", "colorBg": "#FFF3E0", "colorAccent": "#FF9800", "audio": "помаранчевий", "image": "orange"},
-      {"id": "c08", "sound": "РОЖЕВИЙ", "text": "Рожева квіточка для тебе", "emoji": "🌸", "colorBg": "#FFE8EC", "colorAccent": "#E91E63", "audio": "рожевий", "image": "pink"},
-      {"id": "c09", "sound": "ФІОЛЕТОВИЙ", "text": "Фіолетовий виноград", "emoji": "🍇", "colorBg": "#F3E5F5", "colorAccent": "#9C27B0", "audio": "фіолетовий", "image": "purple"},
-      {"id": "c10", "sound": "КОРИЧНЕВИЙ", "text": "Коричневий ведмедик", "emoji": "🧸", "colorBg": "#EFEBE9", "colorAccent": "#8D6E63", "audio": "коричневий", "image": "brown"},
-      {"id": "c11", "sound": "СІРИЙ", "text": "Сіра хмаринка пливе", "emoji": "☁️", "colorBg": "#F0F0F5", "colorAccent": "#78909C", "audio": "сірий", "image": "gray"},
-      {"id": "c12", "sound": "БЛАКИТНИЙ", "text": "Блакитна водичка в морі", "emoji": "🌊", "colorBg": "#E0F7FA", "colorAccent": "#00ACC1", "audio": "блакитний", "image": "sky-blue"},
-      {"id": "c13", "sound": "ЗОЛОТИЙ", "text": "Золота зірочка сяє!", "emoji": "⭐", "colorBg": "#FFF8E1", "colorAccent": "#FFD700", "audio": "золотий", "image": "gold"},
-      {"id": "c14", "sound": "КОЛО", "text": "Коло — як м'ячик!", "emoji": "⚽", "colorBg": "#E8F5E9", "colorAccent": "#66BB6A", "audio": "коло", "image": "circle"},
-      {"id": "c15", "sound": "КВАДРАТ", "text": "Квадрат — як віконечко", "emoji": "🪟", "colorBg": "#E3F2FD", "colorAccent": "#42A5F5", "audio": "квадрат", "image": "square"},
-      {"id": "c16", "sound": "ТРИКУТНИК", "text": "Трикутник — як дах будинку", "emoji": "🏠", "colorBg": "#FFF3E0", "colorAccent": "#FF7043", "audio": "трикутник", "image": "triangle"},
-      {"id": "c17", "sound": "ЗІРКА", "text": "Зірочка яскрава — сяє!", "emoji": "🌟", "colorBg": "#FFF8E1", "colorAccent": "#FBC02D", "audio": "зірка", "image": "star"},
-      {"id": "c18", "sound": "СЕРЦЕ", "text": "Серце — це любов", "emoji": "❤️", "colorBg": "#FFE8EC", "colorAccent": "#E74C3C", "audio": "серце_к", "image": "hart_k"},
-      {"id": "c19", "sound": "ОВАЛ", "text": "Овал — як яєчко", "emoji": "🥚", "colorBg": "#FFF8E1", "colorAccent": "#FFB300", "audio": "овал", "image": "oval"},
-      {"id": "c20", "sound": "РОМБ", "text": "Ромб — як повітряний змій", "emoji": "🪁", "colorBg": "#E8EAF6", "colorAccent": "#7C4DFF", "audio": "ромб", "image": "diamond"},
-      {"id": "c21", "sound": "ВЕЛИКИЙ", "text": "Великий слон іде!", "emoji": "🐘", "colorBg": "#F0F0F5", "colorAccent": "#78909C", "audio": "великий", "image": "big"},
-      {"id": "c22", "sound": "МАЛЕНЬКИЙ", "text": "Маленька мишка — пі-пі!", "emoji": "🐭", "colorBg": "#FFF3E0", "colorAccent": "#D4A373", "audio": "маленький", "image": "little"},
-      {"id": "c23", "sound": "ДОВГИЙ", "text": "Довга змійка повзе: ш-ш-ш!", "emoji": "🐍", "colorBg": "#E8F5E9", "colorAccent": "#66BB6A", "audio": "довгий", "image": "long"},
-      {"id": "c24", "sound": "КРУГЛИЙ", "text": "Круглий м'ячик стрибає!", "emoji": "🏀", "colorBg": "#FFF3E0", "colorAccent": "#FF9800", "audio": "круглий", "image": "round"},
-      {"id": "c25", "sound": "ПУХНАСТИЙ", "text": "Пухнастий котик — м'якенький", "emoji": "🐱", "colorBg": "#FFF8E1", "colorAccent": "#FFB347", "audio": "пухнастий", "image": "fluffy"},
-      {"id": "c26", "sound": "ЯСКРАВИЙ", "text": "Яскрава веселка — дивись!", "emoji": "🌈", "colorBg": "#F3E5F5", "colorAccent": "#AB47BC", "audio": "яскравий", "image": "bright"},
-      {"id": "c27", "sound": "СМУГАСТИЙ", "text": "Смугаста бджілка летить", "emoji": "🐝", "colorBg": "#FFF8E1", "colorAccent": "#FDD835", "audio": "смугастий", "image": "striped"},
-      {"id": "c28", "sound": "ПЛЯМИСТИЙ", "text": "Плямистий жирафик", "emoji": "🦒", "colorBg": "#FFF3E0", "colorAccent": "#D4A373", "audio": "плямистий", "image": "spotted"},
-      {"id": "c29", "sound": "ПРОЗОРИЙ", "text": "Прозора краплинка води", "emoji": "💧", "colorBg": "#E3F2FD", "colorAccent": "#42A5F5", "audio": "прозорий", "image": "transparent"},
-      {"id": "c30", "sound": "РІЗНОБАРВНИЙ", "text": "Різнобарвний метелик", "emoji": "🦋", "colorBg": "#F3E5F5", "colorAccent": "#9C27B0", "audio": "різнобарвний", "image": "variegated"}
+      {
+        "id": "c01",
+        "sound": "ЧЕРВОНИЙ",
+        "soundEn": "RED",
+        "transcription": "[red]",
+        "text": "Червоне яблуко — смачне",
+        "emoji": "🍎",
+        "colorBg": "#FFE6E6",
+        "colorAccent": "#E74C3C",
+        "audio": "червоний",
+        "image": "red"
+      },
+      {
+        "id": "c02",
+        "sound": "СИНІЙ",
+        "soundEn": "BLUE",
+        "transcription": "[bluː]",
+        "text": "Синє небо над нами",
+        "emoji": "🌌",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#1976D2",
+        "audio": "синій",
+        "image": "blue"
+      },
+      {
+        "id": "c03",
+        "sound": "ЖОВТИЙ",
+        "soundEn": "YELLOW",
+        "transcription": "[ˈjeloʊ]",
+        "text": "Жовте сонечко сяє!",
+        "emoji": "☀️",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FDD835",
+        "audio": "жовтий",
+        "image": "yellow"
+      },
+      {
+        "id": "c04",
+        "sound": "ЗЕЛЕНИЙ",
+        "soundEn": "GREEN",
+        "transcription": "[ɡriːn]",
+        "text": "Зелена трава в полі",
+        "emoji": "🌿",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "зелений",
+        "image": "green"
+      },
+      {
+        "id": "c05",
+        "sound": "БІЛИЙ",
+        "soundEn": "WHITE",
+        "transcription": "[waɪt]",
+        "text": "Білий сніг — зима!",
+        "emoji": "❄️",
+        "colorBg": "#F5F5F5",
+        "colorAccent": "#90A4AE",
+        "audio": "білий",
+        "image": "white"
+      },
+      {
+        "id": "c06",
+        "sound": "ЧОРНИЙ",
+        "soundEn": "BLACK",
+        "transcription": "[blæk]",
+        "text": "Чорний котик — мур-мур!",
+        "emoji": "🐈‍⬛",
+        "colorBg": "#E8EAF6",
+        "colorAccent": "#37474F",
+        "audio": "чорний",
+        "image": "black"
+      },
+      {
+        "id": "c07",
+        "sound": "ПОМАРАНЧЕВИЙ",
+        "soundEn": "ORANGE",
+        "transcription": "[ˈɒrɪndʒ]",
+        "text": "Помаранчевий апельсин",
+        "emoji": "🍊",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#FF9800",
+        "audio": "помаранчевий",
+        "image": "orange"
+      },
+      {
+        "id": "c08",
+        "sound": "РОЖЕВИЙ",
+        "soundEn": "PINK",
+        "transcription": "[pɪŋk]",
+        "text": "Рожева квіточка для тебе",
+        "emoji": "🌸",
+        "colorBg": "#FFE8EC",
+        "colorAccent": "#E91E63",
+        "audio": "рожевий",
+        "image": "pink"
+      },
+      {
+        "id": "c09",
+        "sound": "ФІОЛЕТОВИЙ",
+        "soundEn": "PURPLE",
+        "transcription": "[ˈpɜːrpl]",
+        "text": "Фіолетовий виноград",
+        "emoji": "🍇",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "фіолетовий",
+        "image": "purple"
+      },
+      {
+        "id": "c10",
+        "sound": "КОРИЧНЕВИЙ",
+        "soundEn": "BROWN",
+        "transcription": "[braʊn]",
+        "text": "Коричневий ведмедик",
+        "emoji": "🧸",
+        "colorBg": "#EFEBE9",
+        "colorAccent": "#8D6E63",
+        "audio": "коричневий",
+        "image": "brown"
+      },
+      {
+        "id": "c11",
+        "sound": "СІРИЙ",
+        "soundEn": "GRAY",
+        "transcription": "[ɡreɪ]",
+        "text": "Сіра хмаринка пливе",
+        "emoji": "☁️",
+        "colorBg": "#F0F0F5",
+        "colorAccent": "#78909C",
+        "audio": "сірий",
+        "image": "gray"
+      },
+      {
+        "id": "c12",
+        "sound": "БЛАКИТНИЙ",
+        "soundEn": "SKY BLUE",
+        "transcription": "[skaɪ bluː]",
+        "text": "Блакитна водичка в морі",
+        "emoji": "🌊",
+        "colorBg": "#E0F7FA",
+        "colorAccent": "#00ACC1",
+        "audio": "блакитний",
+        "image": "sky-blue"
+      },
+      {
+        "id": "c13",
+        "sound": "ЗОЛОТИЙ",
+        "soundEn": "GOLD",
+        "transcription": "[ɡoʊld]",
+        "text": "Золота зірочка сяє!",
+        "emoji": "⭐",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FFD700",
+        "audio": "золотий",
+        "image": "gold"
+      },
+      {
+        "id": "c14",
+        "sound": "КОЛО",
+        "soundEn": "CIRCLE",
+        "transcription": "[ˈsɜːrkl]",
+        "text": "Коло — як м'ячик!",
+        "emoji": "⚽",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#66BB6A",
+        "audio": "коло",
+        "image": "circle"
+      },
+      {
+        "id": "c15",
+        "sound": "КВАДРАТ",
+        "soundEn": "SQUARE",
+        "transcription": "[skweər]",
+        "text": "Квадрат — як віконечко",
+        "emoji": "🪟",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#42A5F5",
+        "audio": "квадрат",
+        "image": "square"
+      },
+      {
+        "id": "c16",
+        "sound": "ТРИКУТНИК",
+        "soundEn": "TRIANGLE",
+        "transcription": "[ˈtraɪæŋɡl]",
+        "text": "Трикутник — як дах будинку",
+        "emoji": "🏠",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#FF7043",
+        "audio": "трикутник",
+        "image": "triangle"
+      },
+      {
+        "id": "c17",
+        "sound": "ЗІРКА",
+        "soundEn": "STAR",
+        "transcription": "[stɑːr]",
+        "text": "Зірочка яскрава — сяє!",
+        "emoji": "🌟",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FBC02D",
+        "audio": "зірка",
+        "image": "star"
+      },
+      {
+        "id": "c18",
+        "sound": "СЕРЦЕ",
+        "soundEn": "HEART",
+        "transcription": "[hɑːrt]",
+        "text": "Серце — це любов",
+        "emoji": "❤️",
+        "colorBg": "#FFE8EC",
+        "colorAccent": "#E74C3C",
+        "audio": "серце_к",
+        "image": "hart_k"
+      },
+      {
+        "id": "c19",
+        "sound": "ОВАЛ",
+        "soundEn": "OVAL",
+        "transcription": "[ˈoʊvəl]",
+        "text": "Овал — як яєчко",
+        "emoji": "🥚",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FFB300",
+        "audio": "овал",
+        "image": "oval"
+      },
+      {
+        "id": "c20",
+        "sound": "РОМБ",
+        "soundEn": "DIAMOND",
+        "transcription": "[ˈdaɪəmənd]",
+        "text": "Ромб — як повітряний змій",
+        "emoji": "🪁",
+        "colorBg": "#E8EAF6",
+        "colorAccent": "#7C4DFF",
+        "audio": "ромб",
+        "image": "diamond"
+      },
+      {
+        "id": "c21",
+        "sound": "ВЕЛИКИЙ",
+        "soundEn": "BIG",
+        "transcription": "[bɪɡ]",
+        "text": "Великий слон іде!",
+        "emoji": "🐘",
+        "colorBg": "#F0F0F5",
+        "colorAccent": "#78909C",
+        "audio": "великий",
+        "image": "big"
+      },
+      {
+        "id": "c22",
+        "sound": "МАЛЕНЬКИЙ",
+        "soundEn": "LITTLE",
+        "transcription": "[ˈlɪtl]",
+        "text": "Маленька мишка — пі-пі!",
+        "emoji": "🐭",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#D4A373",
+        "audio": "маленький",
+        "image": "little"
+      },
+      {
+        "id": "c23",
+        "sound": "ДОВГИЙ",
+        "soundEn": "LONG",
+        "transcription": "[lɒŋ]",
+        "text": "Довга змійка повзе: ш-ш-ш!",
+        "emoji": "🐍",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#66BB6A",
+        "audio": "довгий",
+        "image": "long"
+      },
+      {
+        "id": "c24",
+        "sound": "КРУГЛИЙ",
+        "soundEn": "ROUND",
+        "transcription": "[raʊnd]",
+        "text": "Круглий м'ячик стрибає!",
+        "emoji": "🏀",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#FF9800",
+        "audio": "круглий",
+        "image": "round"
+      },
+      {
+        "id": "c25",
+        "sound": "ПУХНАСТИЙ",
+        "soundEn": "FLUFFY",
+        "transcription": "[ˈflʌfi]",
+        "text": "Пухнастий котик — м'якенький",
+        "emoji": "🐱",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FFB347",
+        "audio": "пухнастий",
+        "image": "fluffy"
+      },
+      {
+        "id": "c26",
+        "sound": "ЯСКРАВИЙ",
+        "soundEn": "BRIGHT",
+        "transcription": "[braɪt]",
+        "text": "Яскрава веселка — дивись!",
+        "emoji": "🌈",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#AB47BC",
+        "audio": "яскравий",
+        "image": "bright"
+      },
+      {
+        "id": "c27",
+        "sound": "СМУГАСТИЙ",
+        "soundEn": "STRIPED",
+        "transcription": "[straɪpt]",
+        "text": "Смугаста бджілка летить",
+        "emoji": "🐝",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FDD835",
+        "audio": "смугастий",
+        "image": "striped"
+      },
+      {
+        "id": "c28",
+        "sound": "ПЛЯМИСТИЙ",
+        "soundEn": "SPOTTED",
+        "transcription": "[ˈspɒtɪd]",
+        "text": "Плямистий жирафик",
+        "emoji": "🦒",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#D4A373",
+        "audio": "плямистий",
+        "image": "spotted"
+      },
+      {
+        "id": "c29",
+        "sound": "ПРОЗОРИЙ",
+        "soundEn": "TRANSPARENT",
+        "transcription": "[trænsˈpærənt]",
+        "text": "Прозора краплинка води",
+        "emoji": "💧",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#42A5F5",
+        "audio": "прозорий",
+        "image": "transparent"
+      },
+      {
+        "id": "c30",
+        "sound": "РІЗНОБАРВНИЙ",
+        "soundEn": "COLORFUL",
+        "transcription": "[ˈkʌlərfʊl]",
+        "text": "Різнобарвний метелик",
+        "emoji": "🦋",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "різнобарвний",
+        "image": "variegated"
+      }
     ]
   },
   {
@@ -1749,36 +2377,366 @@
     "color": "#6C5CE7",
     "isLocked": true,
     "cards": [
-      {"id": "b01", "sound": "ГОЛОВА", "text": "Голова думає", "emoji": "🧠", "colorBg": "#F3E5F5", "colorAccent": "#9C27B0", "audio": "голова", "image": "head"},
-      {"id": "b02", "sound": "ОЧІ", "text": "Очі бачать все навколо!", "emoji": "👀", "colorBg": "#E3F2FD", "colorAccent": "#1976D2", "audio": "очі", "image": "eyes"},
-      {"id": "b03", "sound": "ВУХА", "text": "Вуха чують звуки", "emoji": "👂", "colorBg": "#FFF8E1", "colorAccent": "#FFB300", "audio": "вуха", "image": "ears"},
-      {"id": "b04", "sound": "НІС", "text": "Носик нюхає квіточки", "emoji": "👃", "colorBg": "#FFE8EC", "colorAccent": "#E91E63", "audio": "ніс", "image": "nose"},
-      {"id": "b05", "sound": "РОТ", "text": "Ротик їсть смачне: ням!", "emoji": "👄", "colorBg": "#FFE6E6", "colorAccent": "#E74C3C", "audio": "рот", "image": "mouse"},
-      {"id": "b06", "sound": "ЗУБИ", "text": "Зубки білі — чистимо!", "emoji": "🦷", "colorBg": "#F5F5F5", "colorAccent": "#90A4AE", "audio": "зуби", "image": "teeth"},
-      {"id": "b07", "sound": "ЯЗИК", "text": "Язичок куштує: смачно!", "emoji": "👅", "colorBg": "#FFE8EC", "colorAccent": "#EC407A", "audio": "язик", "image": "tonge"},
-      {"id": "b08", "sound": "ВОЛОССЯ", "text": "Волосся — розчісуємо!", "emoji": "💇", "colorBg": "#FFF3E0", "colorAccent": "#D4A373", "audio": "волосся", "image": "hair"},
-      {"id": "b09", "sound": "ШИЯ", "text": "Шия повертає голову: дивись!", "emoji": "🦒", "colorBg": "#E8F5E9", "colorAccent": "#66BB6A", "audio": "шия", "image": "neck"},
-      {"id": "b10", "sound": "ПЛЕЧІ", "text": "Плечі — можу знизати!", "emoji": "💪", "colorBg": "#E3F2FD", "colorAccent": "#42A5F5", "audio": "плечі", "image": "sholdes"},
-      {"id": "b11", "sound": "РУКИ", "text": "Ручки можуть обійняти!", "emoji": "🤗", "colorBg": "#FFE8EC", "colorAccent": "#E91E63", "audio": "руки", "image": "hands"},
-      {"id": "b12", "sound": "ПАЛЬЧИКИ", "text": "Пальчики рахують: раз-два!", "emoji": "✋", "colorBg": "#FFF8E1", "colorAccent": "#FDD835", "audio": "пальчики", "image": "fingers"},
-      {"id": "b13", "sound": "ЖИВІТ", "text": "Животик хоче їсти", "emoji": "🍽️", "colorBg": "#FFF3E0", "colorAccent": "#FF9800", "audio": "живіт", "image": "stomack"},
-      {"id": "b14", "sound": "СПИНА", "text": "Спинка — тримаймось рівно!", "emoji": "🧘", "colorBg": "#E8F5E9", "colorAccent": "#43A047", "audio": "спина", "image": "back"},
-      {"id": "b15", "sound": "НОГИ", "text": "Ніжки бігають швидко!", "emoji": "🦵", "colorBg": "#E3F2FD", "colorAccent": "#5DADE2", "audio": "ноги", "image": "legs"},
-      {"id": "b16", "sound": "КОЛІНА", "text": "Коліна — можу присісти!", "emoji": "🏃", "colorBg": "#FFF3E0", "colorAccent": "#FF7043", "audio": "коліна", "image": "knees"},
-      {"id": "b17", "sound": "СТУПНІ", "text": "Ступні тупотять: туп-туп!", "emoji": "🦶", "colorBg": "#EFEBE9", "colorAccent": "#8D6E63", "audio": "ступні", "image": "foots"},
-      {"id": "b18", "sound": "СЕРЦЕ", "text": "Серце стукає: тук-тук!", "emoji": "❤️", "colorBg": "#FFE6E6", "colorAccent": "#E74C3C", "audio": "серце_т", "image": "hart_t"},
-      {"id": "b19", "sound": "ЛЕГЕНІ", "text": "Легені дихають: вдих-видих!", "emoji": "🫁", "colorBg": "#E0F7FA", "colorAccent": "#00ACC1", "audio": "легені", "image": "lungs"},
-      {"id": "b20", "sound": "ЛІКОТЬ", "text": "Лікоть згинається", "emoji": "💪", "colorBg": "#E8EAF6", "colorAccent": "#7C4DFF", "audio": "лікоть", "image": "elbow"},
-      {"id": "b21", "sound": "ДОЛОНІ", "text": "Долоні плескають: плеск-плеск!", "emoji": "👏", "colorBg": "#FFF8E1", "colorAccent": "#FFB347", "audio": "долоні", "image": "palms"},
-      {"id": "b22", "sound": "БРОВИ", "text": "Брови вгору — я здивований!", "emoji": "🤨", "colorBg": "#F3E5F5", "colorAccent": "#AB47BC", "audio": "брови", "image": "eyebrows"},
-      {"id": "b23", "sound": "ЩОКИ", "text": "Щічки рожеві та м'які", "emoji": "😊", "colorBg": "#FFE8EC", "colorAccent": "#F06292", "audio": "щоки", "image": "cheeks"},
-      {"id": "b24", "sound": "ЧОЛО", "text": "Чоло — погладь, і все добре!", "emoji": "😌", "colorBg": "#E8F5E9", "colorAccent": "#66BB6A", "audio": "чоло", "image": "forehead"},
-      {"id": "b25", "sound": "ПІДБОРІДДЯ", "text": "Підборіддя — борідка тут!", "emoji": "🧔", "colorBg": "#EFEBE9", "colorAccent": "#A1887F", "audio": "підборіддя", "image": "chin"},
-      {"id": "b26", "sound": "НІГТІ", "text": "Нігтики — стрижемо акуратно!", "emoji": "💅", "colorBg": "#F3E5F5", "colorAccent": "#CE93D8", "audio": "нігті", "image": "neils"},
-      {"id": "b27", "sound": "ШКІРА", "text": "Шкіра м'яка і ніжна", "emoji": "🤚", "colorBg": "#FFF3E0", "colorAccent": "#D4A373", "audio": "шкіра", "image": "skin"},
-      {"id": "b28", "sound": "ПУПОК", "text": "Пупок — смішна кнопочка!", "emoji": "😄", "colorBg": "#FFF8E1", "colorAccent": "#FDD835", "audio": "пупок", "image": "jellybutton"},
-      {"id": "b29", "sound": "УСМІШКА", "text": "Усмішка — найкраща прикраса!", "emoji": "😁", "colorBg": "#FFF0F5", "colorAccent": "#FF69B4", "audio": "усмішка", "image": "smile"},
-      {"id": "b30", "sound": "ТІЛО", "text": "Моє тіло — мій скарб!", "emoji": "🧒", "colorBg": "#E8EAF6", "colorAccent": "#5C6BC0", "audio": "тіло", "image": "body"}
+      {
+        "id": "b01",
+        "sound": "ГОЛОВА",
+        "soundEn": "HEAD",
+        "transcription": "[hed]",
+        "text": "Голова думає",
+        "emoji": "🧠",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "голова",
+        "image": "head"
+      },
+      {
+        "id": "b02",
+        "sound": "ОЧІ",
+        "soundEn": "EYES",
+        "transcription": "[aɪz]",
+        "text": "Очі бачать все навколо!",
+        "emoji": "👀",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#1976D2",
+        "audio": "очі",
+        "image": "eyes"
+      },
+      {
+        "id": "b03",
+        "sound": "ВУХА",
+        "soundEn": "EARS",
+        "transcription": "[ɪərz]",
+        "text": "Вуха чують звуки",
+        "emoji": "👂",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FFB300",
+        "audio": "вуха",
+        "image": "ears"
+      },
+      {
+        "id": "b04",
+        "sound": "НІС",
+        "soundEn": "NOSE",
+        "transcription": "[noʊz]",
+        "text": "Носик нюхає квіточки",
+        "emoji": "👃",
+        "colorBg": "#FFE8EC",
+        "colorAccent": "#E91E63",
+        "audio": "ніс",
+        "image": "nose"
+      },
+      {
+        "id": "b05",
+        "sound": "РОТ",
+        "soundEn": "MOUTH",
+        "transcription": "[maʊθ]",
+        "text": "Ротик їсть смачне: ням!",
+        "emoji": "👄",
+        "colorBg": "#FFE6E6",
+        "colorAccent": "#E74C3C",
+        "audio": "рот",
+        "image": "mouse"
+      },
+      {
+        "id": "b06",
+        "sound": "ЗУБИ",
+        "soundEn": "TEETH",
+        "transcription": "[tiːθ]",
+        "text": "Зубки білі — чистимо!",
+        "emoji": "🦷",
+        "colorBg": "#F5F5F5",
+        "colorAccent": "#90A4AE",
+        "audio": "зуби",
+        "image": "teeth"
+      },
+      {
+        "id": "b07",
+        "sound": "ЯЗИК",
+        "soundEn": "TONGUE",
+        "transcription": "[tʌŋ]",
+        "text": "Язичок куштує: смачно!",
+        "emoji": "👅",
+        "colorBg": "#FFE8EC",
+        "colorAccent": "#EC407A",
+        "audio": "язик",
+        "image": "tonge"
+      },
+      {
+        "id": "b08",
+        "sound": "ВОЛОССЯ",
+        "soundEn": "HAIR",
+        "transcription": "[heər]",
+        "text": "Волосся — розчісуємо!",
+        "emoji": "💇",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#D4A373",
+        "audio": "волосся",
+        "image": "hair"
+      },
+      {
+        "id": "b09",
+        "sound": "ШИЯ",
+        "soundEn": "NECK",
+        "transcription": "[nek]",
+        "text": "Шия повертає голову: дивись!",
+        "emoji": "🦒",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#66BB6A",
+        "audio": "шия",
+        "image": "neck"
+      },
+      {
+        "id": "b10",
+        "sound": "ПЛЕЧІ",
+        "soundEn": "SHOULDERS",
+        "transcription": "[ˈʃoʊldərz]",
+        "text": "Плечі — можу знизати!",
+        "emoji": "💪",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#42A5F5",
+        "audio": "плечі",
+        "image": "sholdes"
+      },
+      {
+        "id": "b11",
+        "sound": "РУКИ",
+        "soundEn": "HANDS",
+        "transcription": "[hændz]",
+        "text": "Ручки можуть обійняти!",
+        "emoji": "🤗",
+        "colorBg": "#FFE8EC",
+        "colorAccent": "#E91E63",
+        "audio": "руки",
+        "image": "hands"
+      },
+      {
+        "id": "b12",
+        "sound": "ПАЛЬЧИКИ",
+        "soundEn": "FINGERS",
+        "transcription": "[ˈfɪŋɡərz]",
+        "text": "Пальчики рахують: раз-два!",
+        "emoji": "✋",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FDD835",
+        "audio": "пальчики",
+        "image": "fingers"
+      },
+      {
+        "id": "b13",
+        "sound": "ЖИВІТ",
+        "soundEn": "TUMMY",
+        "transcription": "[ˈtʌmi]",
+        "text": "Животик хоче їсти",
+        "emoji": "🍽️",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#FF9800",
+        "audio": "живіт",
+        "image": "stomack"
+      },
+      {
+        "id": "b14",
+        "sound": "СПИНА",
+        "soundEn": "BACK",
+        "transcription": "[bæk]",
+        "text": "Спинка — тримаймось рівно!",
+        "emoji": "🧘",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "спина",
+        "image": "back"
+      },
+      {
+        "id": "b15",
+        "sound": "НОГИ",
+        "soundEn": "LEGS",
+        "transcription": "[leɡz]",
+        "text": "Ніжки бігають швидко!",
+        "emoji": "🦵",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#5DADE2",
+        "audio": "ноги",
+        "image": "legs"
+      },
+      {
+        "id": "b16",
+        "sound": "КОЛІНА",
+        "soundEn": "KNEES",
+        "transcription": "[niːz]",
+        "text": "Коліна — можу присісти!",
+        "emoji": "🏃",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#FF7043",
+        "audio": "коліна",
+        "image": "knees"
+      },
+      {
+        "id": "b17",
+        "sound": "СТУПНІ",
+        "soundEn": "FEET",
+        "transcription": "[fiːt]",
+        "text": "Ступні тупотять: туп-туп!",
+        "emoji": "🦶",
+        "colorBg": "#EFEBE9",
+        "colorAccent": "#8D6E63",
+        "audio": "ступні",
+        "image": "foots"
+      },
+      {
+        "id": "b18",
+        "sound": "СЕРЦЕ",
+        "soundEn": "HEART",
+        "transcription": "[hɑːrt]",
+        "text": "Серце стукає: тук-тук!",
+        "emoji": "❤️",
+        "colorBg": "#FFE6E6",
+        "colorAccent": "#E74C3C",
+        "audio": "серце_т",
+        "image": "hart_t"
+      },
+      {
+        "id": "b19",
+        "sound": "ЛЕГЕНІ",
+        "soundEn": "LUNGS",
+        "transcription": "[lʌŋz]",
+        "text": "Легені дихають: вдих-видих!",
+        "emoji": "🫁",
+        "colorBg": "#E0F7FA",
+        "colorAccent": "#00ACC1",
+        "audio": "легені",
+        "image": "lungs"
+      },
+      {
+        "id": "b20",
+        "sound": "ЛІКОТЬ",
+        "soundEn": "ELBOW",
+        "transcription": "[ˈelboʊ]",
+        "text": "Лікоть згинається",
+        "emoji": "💪",
+        "colorBg": "#E8EAF6",
+        "colorAccent": "#7C4DFF",
+        "audio": "лікоть",
+        "image": "elbow"
+      },
+      {
+        "id": "b21",
+        "sound": "ДОЛОНІ",
+        "soundEn": "PALMS",
+        "transcription": "[pɑːmz]",
+        "text": "Долоні плескають: плеск-плеск!",
+        "emoji": "👏",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FFB347",
+        "audio": "долоні",
+        "image": "palms"
+      },
+      {
+        "id": "b22",
+        "sound": "БРОВИ",
+        "soundEn": "EYEBROWS",
+        "transcription": "[ˈaɪbraʊz]",
+        "text": "Брови вгору — я здивований!",
+        "emoji": "🤨",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#AB47BC",
+        "audio": "брови",
+        "image": "eyebrows"
+      },
+      {
+        "id": "b23",
+        "sound": "ЩОКИ",
+        "soundEn": "CHEEKS",
+        "transcription": "[tʃiːks]",
+        "text": "Щічки рожеві та м'які",
+        "emoji": "😊",
+        "colorBg": "#FFE8EC",
+        "colorAccent": "#F06292",
+        "audio": "щоки",
+        "image": "cheeks"
+      },
+      {
+        "id": "b24",
+        "sound": "ЧОЛО",
+        "soundEn": "FOREHEAD",
+        "transcription": "[ˈfɔːrhed]",
+        "text": "Чоло — погладь, і все добре!",
+        "emoji": "😌",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#66BB6A",
+        "audio": "чоло",
+        "image": "forehead"
+      },
+      {
+        "id": "b25",
+        "sound": "ПІДБОРІДДЯ",
+        "soundEn": "CHIN",
+        "transcription": "[tʃɪn]",
+        "text": "Підборіддя — борідка тут!",
+        "emoji": "🧔",
+        "colorBg": "#EFEBE9",
+        "colorAccent": "#A1887F",
+        "audio": "підборіддя",
+        "image": "chin"
+      },
+      {
+        "id": "b26",
+        "sound": "НІГТІ",
+        "soundEn": "NAILS",
+        "transcription": "[neɪlz]",
+        "text": "Нігтики — стрижемо акуратно!",
+        "emoji": "💅",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#CE93D8",
+        "audio": "нігті",
+        "image": "neils"
+      },
+      {
+        "id": "b27",
+        "sound": "ШКІРА",
+        "soundEn": "SKIN",
+        "transcription": "[skɪn]",
+        "text": "Шкіра м'яка і ніжна",
+        "emoji": "🤚",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#D4A373",
+        "audio": "шкіра",
+        "image": "skin"
+      },
+      {
+        "id": "b28",
+        "sound": "ПУПОК",
+        "soundEn": "BELLY BUTTON",
+        "transcription": "[ˈbeli ˈbʌtn]",
+        "text": "Пупок — смішна кнопочка!",
+        "emoji": "😄",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FDD835",
+        "audio": "пупок",
+        "image": "jellybutton"
+      },
+      {
+        "id": "b29",
+        "sound": "УСМІШКА",
+        "soundEn": "SMILE",
+        "transcription": "[smaɪl]",
+        "text": "Усмішка — найкраща прикраса!",
+        "emoji": "😁",
+        "colorBg": "#FFF0F5",
+        "colorAccent": "#FF69B4",
+        "audio": "усмішка",
+        "image": "smile"
+      },
+      {
+        "id": "b30",
+        "sound": "ТІЛО",
+        "soundEn": "BODY",
+        "transcription": "[ˈbɒdi]",
+        "text": "Моє тіло — мій скарб!",
+        "emoji": "🧒",
+        "colorBg": "#E8EAF6",
+        "colorAccent": "#5C6BC0",
+        "audio": "тіло",
+        "image": "body"
+      }
     ]
   }
 ]

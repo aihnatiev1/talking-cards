@@ -1,7 +1,9 @@
-Hi! Here's what's new:
+What's new in 1.0.3:
 
-- Improved home screen design
-- Better adaptation for different screen sizes
-- Minor bug fixes
+- English translation on every card — tap to flip!
+- Swipe forward and back between cards
+- New flip animation
+- Improved responsiveness for all screens
+- Fixed "Share" button
 
 Thank you for using Talking Cards!

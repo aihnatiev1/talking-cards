@@ -3,7 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_card_swiper/flutter_card_swiper.dart';
+import 'dart:ui';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -34,7 +34,7 @@ class CardsScreen extends ConsumerStatefulWidget {
 }
 
 class _CardsScreenState extends ConsumerState<CardsScreen> {
-  final CardSwiperController _controller = CardSwiperController();
+  late final PageController _pageController;
   int _currentIndex = 0;
   Timer? _speakDebounce;
   bool _imagesPrecached = false;
@@ -43,6 +43,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
 
   // Prevents dispose() from killing audio when navigating to "Play again"
   bool _celebrating = false;
+  bool _isFlipped = false;
 
   // Auto-play timer mode
   bool _autoPlayTimer = false;
@@ -54,6 +55,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(viewportFraction: 0.92);
 
     final allCards = widget.pack.cards;
     final visibleCards = widget.pack.isLocked
@@ -173,7 +175,12 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
       setState(() => _countdownSeconds--);
       if (_countdownSeconds <= 0) {
         timer.cancel();
-        _controller.swipe(CardSwiperDirection.left);
+        if (_currentIndex < _cards.length - 1) {
+          _pageController.nextPage(
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeInOut,
+          );
+        }
       }
     });
   }
@@ -411,7 +418,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     }
     if (!_celebrating) AudioService.instance.stop();
     _speakDebounce?.cancel();
-    _controller.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -531,60 +538,88 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
           Expanded(
             child: Stack(
               children: [
-                GestureDetector(
-                  onTap: _speakCurrentCard,
-                  child: CardSwiper(
-                    controller: _controller,
-                    cardsCount: cards.length,
-                    numberOfCardsDisplayed:
-                        cards.length < 3 ? cards.length : 3,
-                    onSwipe: (prevIndex, currentIndex, __) {
-                      if (currentIndex != null) {
-                        HapticFeedback.lightImpact();
-                        _swipeHintKey.currentState?.dismiss();
-                        _cancelAutoPlayCountdown();
-                        setState(() => _currentIndex = currentIndex);
-                        // Don't play sound if this was the last card
-                        // (onEnd will fire next)
-                        final isLastCard =
-                            prevIndex == cards.length - 1;
-                        if (!isLastCard) {
-                          AnalyticsService.instance.logCardView(
-                              cards[currentIndex].id, widget.pack.id);
-                          ref
-                              .read(packProgressProvider.notifier)
-                              .updateProgress(
-                                  widget.pack.id, currentIndex);
-                          ref
-                              .read(dailyStatsProvider.notifier)
-                              .recordView();
-                          ref
-                              .read(reviewProvider.notifier)
-                              .markSeen(cards[currentIndex].id);
-                          if (AudioService.instance.autoSpeak.value) {
-                            _speakCardDebounced(currentIndex);
-                          } else if (_autoPlayTimer) {
-                            // Muted — start 5s countdown directly
-                            _startAutoPlayCountdown();
-                          }
+                PageView.builder(
+                  controller: _pageController,
+                  itemCount: cards.length,
+                  onPageChanged: (index) {
+                    HapticFeedback.lightImpact();
+                    _swipeHintKey.currentState?.dismiss();
+                    _cancelAutoPlayCountdown();
+                    final prev = _currentIndex;
+                    setState(() {
+                      _currentIndex = index;
+                      _isFlipped = false;
+                    });
+                    // Track only forward progress
+                    if (index > prev) {
+                      AnalyticsService.instance.logCardView(
+                          cards[index].id, widget.pack.id);
+                      ref
+                          .read(packProgressProvider.notifier)
+                          .updateProgress(widget.pack.id, index);
+                      ref
+                          .read(dailyStatsProvider.notifier)
+                          .recordView();
+                      ref
+                          .read(reviewProvider.notifier)
+                          .markSeen(cards[index].id);
+                    }
+                    if (AudioService.instance.autoSpeak.value) {
+                      _speakCardDebounced(index);
+                    } else if (_autoPlayTimer) {
+                      _startAutoPlayCountdown();
+                    }
+                    // Last card reached
+                    if (index == cards.length - 1) {
+                      Future.delayed(const Duration(milliseconds: 600), () {
+                        if (!mounted) return;
+                        if (widget.pack.isLocked) {
+                          _showUnlockDialog();
+                        } else {
+                          _showCelebration();
                         }
-                      }
-                      return true;
-                    },
-                    onEnd: widget.pack.isLocked
-                        ? _showUnlockDialog
-                        : _showCelebration,
-                    cardBuilder: (_, index, __, ___) {
-                      return FlashCard(card: cards[index]);
-                    },
+                      });
+                    }
+                  },
+                  itemBuilder: (context, index) {
+                    return AnimatedBuilder(
+                      animation: _pageController,
+                      builder: (context, child) {
+                        double value = 0;
+                        if (_pageController.position.haveDimensions) {
+                          value = index - (_pageController.page ?? index.toDouble());
+                        }
+                        // 3D rotation + scale effect
+                        final angle = value * 0.04;
+                        final scale = lerpDouble(1, 0.9, value.abs())!;
+                        return Transform(
+                          alignment: Alignment.center,
+                          transform: Matrix4.identity()
+                            ..setEntry(3, 2, 0.001)
+                            ..rotateY(angle)
+                            ..scale(scale),
+                          child: Opacity(
+                            opacity: lerpDouble(1, 0.5, value.abs())!.clamp(0.0, 1.0),
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: FlashCard(
+                        card: cards[index],
+                        onFlipChanged: (flipped) {
+                          setState(() => _isFlipped = flipped);
+                        },
+                      ),
+                    );
+                  },
+                ),
+                if (!_isFlipped)
+                  Positioned(
+                    top: 36,
+                    right: 28,
+                    child:
+                        SpeakerButton(onActivated: _speakCurrentCard),
                   ),
-                ),
-                Positioned(
-                  top: 36,
-                  right: 28,
-                  child:
-                      SpeakerButton(onActivated: _speakCurrentCard),
-                ),
                 SwipeHint(key: _swipeHintKey),
               ],
             ),

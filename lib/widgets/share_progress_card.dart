@@ -9,8 +9,7 @@ import 'package:share_plus/share_plus.dart';
 import '../utils/constants.dart';
 import '../utils/uk_grammar.dart';
 
-/// Builds the share widget on-demand, captures it, and shares as image.
-/// No need for a persistent RepaintBoundary in the tree.
+/// Captures the share card as image and shares it.
 Future<void> shareProgress({
   required BuildContext context,
   required int completedPacks,
@@ -20,50 +19,37 @@ Future<void> shareProgress({
   required int streak,
   required Set<String> badges,
 }) async {
-  // Create an offscreen render pipeline
-  final widget = ShareProgressContent(
-    completedPacks: completedPacks,
-    totalPacks: totalPacks,
-    seenCards: seenCards,
-    totalCards: totalCards,
-    streak: streak,
-    badges: badges,
-  );
+  final key = GlobalKey();
 
-  // Use a RenderRepaintBoundary to capture without needing it in the tree
-  final repaintBoundary = RenderRepaintBoundary();
-  final view = View.of(context);
-  final renderView = RenderView(
-    view: view,
-    child: RenderPositionedBox(child: repaintBoundary),
-    configuration: ViewConfiguration(
-      logicalConstraints: BoxConstraints.tight(const Size(340, 250)),
-      devicePixelRatio: view.devicePixelRatio,
-    ),
-  );
-
-  final pipelineOwner = PipelineOwner()..rootNode = renderView;
-  renderView.prepareInitialFrame();
-
-  final buildOwner = BuildOwner(focusManager: FocusManager());
-  final rootElement = RenderObjectToWidgetAdapter<RenderBox>(
-    container: repaintBoundary,
-    child: MediaQuery(
-      data: MediaQueryData(devicePixelRatio: view.devicePixelRatio),
-      child: Directionality(
-        textDirection: TextDirection.ltr,
-        child: widget,
+  final overlay = OverlayEntry(
+    builder: (_) => Positioned(
+      left: -1000,
+      top: -1000,
+      child: RepaintBoundary(
+        key: key,
+        child: ShareProgressContent(
+          completedPacks: completedPacks,
+          totalPacks: totalPacks,
+          seenCards: seenCards,
+          totalCards: totalCards,
+          streak: streak,
+          badges: badges,
+        ),
       ),
     ),
-  ).attachToRenderTree(buildOwner);
+  );
 
-  buildOwner.buildScope(rootElement);
-  pipelineOwner.flushLayout();
-  pipelineOwner.flushCompositingBits();
-  pipelineOwner.flushPaint();
+  Overlay.of(context).insert(overlay);
+
+  // Wait for layout
+  await Future.delayed(const Duration(milliseconds: 100));
 
   try {
-    final image = await repaintBoundary.toImage(pixelRatio: 3.0);
+    final boundary =
+        key.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+    if (boundary == null) return;
+
+    final image = await boundary.toImage(pixelRatio: 3.0);
     final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
     if (byteData == null) return;
 
@@ -77,6 +63,8 @@ Future<void> shareProgress({
     );
   } catch (e) {
     debugPrint('Share error: $e');
+  } finally {
+    overlay.remove();
   }
 }
 

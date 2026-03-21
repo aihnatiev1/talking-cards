@@ -11,6 +11,8 @@ class CardModel {
   final Color colorAccent;
   final String? image;
   final String? audioKey;
+  final String? soundEn;
+  final String? transcription;
 
   const CardModel({
     required this.id,
@@ -21,6 +23,8 @@ class CardModel {
     required this.colorAccent,
     this.image,
     this.audioKey,
+    this.soundEn,
+    this.transcription,
   });
 
   static String? _nonEmpty(String? s) => (s == null || s.isEmpty) ? null : s;
@@ -36,6 +40,8 @@ class CardModel {
       colorAccent: colorFromHex(json['colorAccent'] as String),
       image: image,
       audioKey: _nonEmpty(json['audio'] as String?) ?? image,
+      soundEn: json['soundEn'] as String?,
+      transcription: json['transcription'] as String?,
     );
   }
 }
