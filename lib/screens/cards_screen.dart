@@ -10,6 +10,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
+import '../providers/bonus_cards_provider.dart';
+import '../providers/daily_quest_provider.dart';
 import '../providers/daily_stats_provider.dart';
 import '../providers/packs_provider.dart';
 import '../providers/review_provider.dart';
@@ -58,8 +60,9 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     _pageController = PageController(viewportFraction: 0.92);
 
     final allCards = widget.pack.cards;
+    final bonus = ref.read(bonusCardsProvider)[widget.pack.id] ?? 0;
     final visibleCards = widget.pack.isLocked
-        ? allCards.take(PackModel.freePreviewCount).toList()
+        ? allCards.take(PackModel.freePreviewCount + bonus).toList()
         : allCards.toList();
     visibleCards.shuffle(Random());
     _cards = visibleCards;
@@ -233,6 +236,44 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     );
   }
 
+  /// Waits for sound to finish + 1s (or 3s if no sound), then shows celebration.
+  Future<void> _showCelebrationAfterSound() async {
+    final audio = AudioService.instance;
+
+    // Wait for debounced speak to kick in (debounce is 100ms)
+    await Future.delayed(const Duration(milliseconds: 200));
+    if (!mounted) return;
+
+    if (audio.isSpeaking.value) {
+      // Sound is playing — wait for it to finish
+      final completer = Completer<void>();
+      void listener() {
+        if (!audio.isSpeaking.value) {
+          audio.isSpeaking.removeListener(listener);
+          if (!completer.isCompleted) completer.complete();
+        }
+      }
+      audio.isSpeaking.addListener(listener);
+      // Safety timeout so we don't wait forever
+      await Future.any([
+        completer.future,
+        Future.delayed(const Duration(seconds: 10)),
+      ]);
+      // Extra pause after sound ends
+      await Future.delayed(const Duration(seconds: 1));
+    } else {
+      // No sound playing — wait 3 seconds so user can see the last card
+      await Future.delayed(const Duration(seconds: 3));
+    }
+
+    if (!mounted) return;
+    if (widget.pack.isLocked) {
+      _showUnlockDialog();
+    } else {
+      _showCelebration();
+    }
+  }
+
   void _showCelebration() {
     _celebrating = true;
     AudioService.instance.stop();
@@ -336,9 +377,10 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   void _showUnlockDialog() {
     AudioService.instance.stop();
     final allCards = widget.pack.cards;
-    final remaining = allCards.length - PackModel.freePreviewCount;
+    final bonus = ref.read(bonusCardsProvider)[widget.pack.id] ?? 0;
+    final remaining = allCards.length - PackModel.freePreviewCount - bonus;
     final previewEmojis = allCards
-        .skip(PackModel.freePreviewCount)
+        .skip(PackModel.freePreviewCount + bonus)
         .take(6)
         .map((c) => c.emoji)
         .join(' ');
@@ -561,6 +603,9 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                           .read(dailyStatsProvider.notifier)
                           .recordView();
                       ref
+                          .read(dailyQuestProvider.notifier)
+                          .recordCardView();
+                      ref
                           .read(reviewProvider.notifier)
                           .markSeen(cards[index].id);
                     }
@@ -571,14 +616,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                     }
                     // Last card reached
                     if (index == cards.length - 1) {
-                      Future.delayed(const Duration(milliseconds: 600), () {
-                        if (!mounted) return;
-                        if (widget.pack.isLocked) {
-                          _showUnlockDialog();
-                        } else {
-                          _showCelebration();
-                        }
-                      });
+                      _showCelebrationAfterSound();
                     }
                   },
                   itemBuilder: (context, index) {

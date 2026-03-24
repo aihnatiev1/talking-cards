@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
+import '../providers/daily_quest_provider.dart';
 import '../providers/quiz_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
@@ -224,6 +225,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
     if (!_resultsLogged) {
       _resultsLogged = true;
       AnalyticsService.instance.logQuizComplete(score, total);
+      ref.read(dailyQuestProvider.notifier).completeTask(QuestTask.playQuiz);
     }
     final ratio = total > 0 ? score / total : 0.0;
 

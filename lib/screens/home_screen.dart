@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
+import '../providers/daily_quest_provider.dart';
 import '../providers/favorites_provider.dart';
 import '../providers/packs_provider.dart';
 import '../providers/review_provider.dart';
@@ -23,6 +24,7 @@ import '../widgets/pack_grid_card.dart';
 import '../widgets/parental_gate.dart';
 import 'cards_screen.dart';
 import 'guess_screen.dart';
+import 'quest_map_screen.dart';
 import 'stats_screen.dart';
 
 /// Category mapping: pack id → category name
@@ -194,6 +196,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       _showEmptyFavorites(context);
       return;
     }
+    // Opening any pack counts as reviewing for the quest
+    if (pack.id == '_review' || !pack.id.startsWith('_')) {
+      ref
+          .read(dailyQuestProvider.notifier)
+          .completeTask(QuestTask.reviewOldCard);
+    }
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => CardsScreen(pack: pack)),
     );
@@ -255,6 +263,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
   }
+
+  // Reward picker moved to QuestMapScreen
 
   void _openQuiz(List<CardModel> allCards) {
     final playable = allCards.where((c) => c.audioKey != null).toList();
@@ -613,17 +623,53 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                 // Subtitle with inline streak
                 _buildSubtitle(
-                    packs.length, completedPacks.length, streak.currentStreak),
+                    packs.length, completedPacks.length, streak.currentStreak,
+                    packProgress.values.fold(0, (a, b) => a + b)),
 
-                // Card of the Day — compact inline row
-                if (cotd != null)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
-                    child: _CardOfDayButton(
-                      card: cotd,
-                      onTap: () => _showCardOfDayPopup(cotd, cotdLocked),
-                    ),
+                // Hero section: Card of Day + Daily Quest
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+                  child: Row(
+                    children: [
+                      if (cotd != null)
+                        Expanded(
+                          child: _CardOfDayHero(
+                            card: cotd,
+                            onTap: () {
+                              _showCardOfDayPopup(cotd, cotdLocked);
+                              ref
+                                  .read(dailyQuestProvider.notifier)
+                                  .completeTask(QuestTask.listenCardOfDay);
+                            },
+                          ),
+                        ),
+                      if (cotd != null) const SizedBox(width: 10),
+                      Expanded(
+                        child: _DailyQuestHero(
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => QuestMapScreen(
+                                  cardOfDay: cotd,
+                                  cardOfDayLocked: cotdLocked,
+                                  onCardOfDayTap: () {
+                                    if (cotd != null) {
+                                      _showCardOfDayPopup(cotd, cotdLocked);
+                                      ref
+                                          .read(dailyQuestProvider.notifier)
+                                          .completeTask(
+                                              QuestTask.listenCardOfDay);
+                                    }
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
+                ),
 
                 const SizedBox(height: 8),
 
@@ -710,16 +756,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildSubtitle(int total, int done, int streak) {
-    if (done == 0 && streak <= 1) {
+  Widget _buildSubtitle(int total, int done, int streak, int totalViewed) {
+    if (done == 0 && streak <= 1 && totalViewed == 0) {
       return Text(
-        'Обери розділ і почнемо!',
-        style: TextStyle(fontSize: 15, color: Colors.grey[600]),
+        'Почни і побачиш свій прогрес тут!',
+        style: TextStyle(fontSize: 14, color: Colors.grey[500]),
       );
     }
-    final parts = <String>[];
-    if (done > 0) parts.add('Розділів пройдено $done/$total');
-    if (streak > 1) parts.add('🔥 $streak дн.');
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => const StatsScreen()),
@@ -727,12 +770,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (streak > 1) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: kStreakOrange.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '🔥 $streak дн.',
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: kStreakOrange,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
           Text(
-            parts.join(' · '),
-            style: const TextStyle(
-              fontSize: 15,
+            done > 0
+                ? '⭐ $done/$total розділів'
+                : '🃏 Переглянуто $totalViewed карток',
+            style: TextStyle(
+              fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: kStreakOrange,
+              color: Colors.grey[600],
             ),
           ),
           const SizedBox(width: 4),
@@ -752,17 +815,17 @@ class _GridItem {
   _GridItem.quiz(List<CardModel> cards) : pack = null, quizCards = cards;
 }
 
-class _CardOfDayButton extends StatefulWidget {
+class _CardOfDayHero extends StatefulWidget {
   final CardModel card;
   final VoidCallback onTap;
 
-  const _CardOfDayButton({required this.card, required this.onTap});
+  const _CardOfDayHero({required this.card, required this.onTap});
 
   @override
-  State<_CardOfDayButton> createState() => _CardOfDayButtonState();
+  State<_CardOfDayHero> createState() => _CardOfDayHeroState();
 }
 
-class _CardOfDayButtonState extends State<_CardOfDayButton>
+class _CardOfDayHeroState extends State<_CardOfDayHero>
     with SingleTickerProviderStateMixin {
   late final AnimationController _pulse;
   late final Animation<double> _scale;
@@ -774,7 +837,7 @@ class _CardOfDayButtonState extends State<_CardOfDayButton>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
-    _scale = Tween<double>(begin: 1.0, end: 1.04).animate(
+    _scale = Tween<double>(begin: 1.0, end: 1.03).animate(
       CurvedAnimation(parent: _pulse, curve: Curves.easeInOut),
     );
   }
@@ -787,55 +850,241 @@ class _CardOfDayButtonState extends State<_CardOfDayButton>
 
   @override
   Widget build(BuildContext context) {
+    final accent = widget.card.colorAccent;
     return ScaleTransition(
       scale: _scale,
       child: GestureDetector(
         onTap: widget.onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          height: 120,
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: widget.card.colorAccent.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: widget.card.colorAccent.withValues(alpha: 0.25),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                accent.withValues(alpha: 0.12),
+                accent.withValues(alpha: 0.04),
+              ],
             ),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: accent.withValues(alpha: 0.25),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: accent.withValues(alpha: 0.08),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
-          child: Row(
+          child: Column(
             children: [
-              Text(widget.card.emoji, style: const TextStyle(fontSize: 28)),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Картка дня',
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '🔊 Картка дня',
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 10,
                         fontWeight: FontWeight.bold,
-                        color: widget.card.colorAccent,
+                        color: accent,
                       ),
                     ),
-                    Text(
-                      widget.card.sound,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color:
-                            widget.card.colorAccent.withValues(alpha: 0.7),
-                      ),
-                    ),
-                  ],
+                  ),
+                ],
+              ),
+              const Spacer(),
+              Text(widget.card.emoji,
+                  style: const TextStyle(fontSize: 36)),
+              const SizedBox(height: 4),
+              Text(
+                widget.card.sound,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  color: accent,
                 ),
               ),
-              Icon(Icons.volume_up_rounded,
-                  size: 22,
-                  color: widget.card.colorAccent.withValues(alpha: 0.6)),
             ],
           ),
         ),
       ),
     );
   }
+}
+
+class _DailyQuestHero extends ConsumerWidget {
+  final VoidCallback onTap;
+
+  const _DailyQuestHero({required this.onTap});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final quest = ref.watch(dailyQuestProvider);
+    final done = quest.doneCount;
+    final total = quest.totalCount;
+    final allDone = quest.allDone;
+    final claimed = quest.rewardClaimed;
+
+    final Color accentColor;
+    final Color bgStart;
+    final Color bgEnd;
+    if (claimed) {
+      accentColor = Colors.green[600]!;
+      bgStart = Colors.green.withValues(alpha: 0.10);
+      bgEnd = Colors.green.withValues(alpha: 0.03);
+    } else if (allDone) {
+      accentColor = kAccent;
+      bgStart = kAccent.withValues(alpha: 0.12);
+      bgEnd = kAccent.withValues(alpha: 0.04);
+    } else {
+      accentColor = Colors.orange[700]!;
+      bgStart = Colors.orange.withValues(alpha: 0.10);
+      bgEnd = Colors.orange.withValues(alpha: 0.03);
+    }
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 120,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [bgStart, bgEnd],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: accentColor.withValues(alpha: 0.25),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: accentColor.withValues(alpha: 0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    claimed
+                        ? '✨ Зроблено'
+                        : (allDone ? '🎉 Готово!' : '🎯 Завдання'),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: accentColor,
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '$done/$total',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: accentColor.withValues(alpha: 0.6),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            // Progress bar
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: total > 0 ? done / total : 0,
+                minHeight: 5,
+                backgroundColor: Colors.grey.withValues(alpha: 0.12),
+                valueColor: AlwaysStoppedAnimation<Color>(accentColor),
+              ),
+            ),
+            const Spacer(),
+            if (claimed)
+              // Show treasure found
+              const Text(
+                '🎁 Скарб знайдено!',
+                style: TextStyle(fontSize: 15),
+              )
+            else if (allDone)
+              Text(
+                '🎁 Забери скарб!',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: accentColor,
+                ),
+              )
+            else ...[
+              // Task dots
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: QuestTask.values.map((task) {
+                  final isDone = quest.completed.contains(task);
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 3),
+                    child: Container(
+                      width: 18,
+                      height: 18,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isDone
+                            ? Colors.orange
+                            : Colors.orange.withValues(alpha: 0.12),
+                        border: Border.all(
+                          color: isDone
+                              ? Colors.orange
+                              : Colors.orange.withValues(alpha: 0.3),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: isDone
+                          ? const Icon(Icons.check,
+                              size: 12, color: Colors.white)
+                          : null,
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                'Відкрий карту 🗺️',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[500],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
 }
 
 class _QuizGridCard extends StatelessWidget {

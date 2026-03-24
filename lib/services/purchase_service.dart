@@ -10,6 +10,7 @@ class PurchaseService {
   static final PurchaseService instance = PurchaseService._();
 
   static const _prefKey = 'is_pro';
+  static const _installedKey = 'installed';
   static const _yearlyId = 'yearly_premium';
   static const _monthlyId = 'monthly_premium';
   static const _productIds = {_yearlyId, _monthlyId};
@@ -50,6 +51,13 @@ class PurchaseService {
     });
 
     _initialized = true;
+
+    // Fresh install: silently restore purchases from store
+    final isReinstall = !prefs.containsKey(_installedKey);
+    await prefs.setBool(_installedKey, true);
+    if (isReinstall && !isPro.value) {
+      _iap.restorePurchases();
+    }
   }
 
   Future<bool> purchase({int planIndex = 0}) async {

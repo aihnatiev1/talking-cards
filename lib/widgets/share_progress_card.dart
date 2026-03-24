@@ -9,6 +9,8 @@ import 'package:share_plus/share_plus.dart';
 import '../utils/constants.dart';
 import '../utils/uk_grammar.dart';
 
+const _storeUrl = 'https://apps.apple.com/app/id6760210043';
+
 /// Captures the share card as image and shares it.
 Future<void> shareProgress({
   required BuildContext context,
@@ -19,52 +21,120 @@ Future<void> shareProgress({
   required int streak,
   required Set<String> badges,
 }) async {
-  final key = GlobalKey();
-
-  final overlay = OverlayEntry(
-    builder: (_) => Positioned(
-      left: -1000,
-      top: -1000,
-      child: RepaintBoundary(
-        key: key,
-        child: ShareProgressContent(
-          completedPacks: completedPacks,
-          totalPacks: totalPacks,
-          seenCards: seenCards,
-          totalCards: totalCards,
-          streak: streak,
-          badges: badges,
-        ),
-      ),
-    ),
-  );
-
-  Overlay.of(context).insert(overlay);
-
-  // Wait for layout
-  await Future.delayed(const Duration(milliseconds: 100));
+  // Get position for iPad popover
+  Rect? sharePositionOrigin;
+  try {
+    final ro = context.findRenderObject();
+    if (ro is RenderBox && ro.hasSize) {
+      sharePositionOrigin = ro.localToGlobal(Offset.zero) & ro.size;
+    }
+  } catch (_) {}
 
   try {
-    final boundary =
-        key.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-    if (boundary == null) return;
+    // Build the widget off-screen using a pipeline render
+    final widget = ShareProgressContent(
+      completedPacks: completedPacks,
+      totalPacks: totalPacks,
+      seenCards: seenCards,
+      totalCards: totalCards,
+      streak: streak,
+      badges: badges,
+    );
 
-    final image = await boundary.toImage(pixelRatio: 3.0);
-    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-    if (byteData == null) return;
+    final image = await _renderWidgetToImage(widget, 340, context);
+    if (image == null) {
+      // Fallback: text-only share
+      await Share.share(
+        'Мій малюк вивчає слова з Картками-розмовлялками! 🗣️\n'
+        '⭐ Розділів: $completedPacks/$totalPacks\n'
+        '🃏 Карток: $seenCards/$totalCards'
+        '${streak > 0 ? '\n🔥 Серія: $streak ${dayWord(streak)}' : ''}'
+        '\n\nСкачай безкоштовно:\n$_storeUrl',
+        sharePositionOrigin: sharePositionOrigin,
+      );
+      return;
+    }
 
     final dir = await getTemporaryDirectory();
     final file = File('${dir.path}/progress.png');
-    await file.writeAsBytes(byteData.buffer.asUint8List());
+    await file.writeAsBytes(image);
 
     await Share.shareXFiles(
       [XFile(file.path)],
-      text: 'Мій прогрес у Картках-розмовлялках! 🗣️',
+      text: 'Мій малюк вивчає слова з Картками-розмовлялками! 🗣️\n'
+          'Скачай безкоштовно: $_storeUrl',
+      sharePositionOrigin: sharePositionOrigin,
     );
+  } catch (e, st) {
+    debugPrint('Share error: $e\n$st');
+    // Last resort: text share
+    try {
+      await Share.share(
+        'Мій малюк вивчає слова з Картками-розмовлялками! 🗣️\n'
+        'Скачай безкоштовно: $_storeUrl',
+        sharePositionOrigin: sharePositionOrigin,
+      );
+    } catch (_) {}
+  }
+}
+
+/// Renders a widget to a PNG image bytes using an offscreen pipeline.
+Future<List<int>?> _renderWidgetToImage(
+  Widget widget,
+  double width,
+  BuildContext context,
+) async {
+  try {
+    final pixelRatio = MediaQuery.of(context).devicePixelRatio;
+
+    // Create a render pipeline
+    final repaintBoundary = RenderRepaintBoundary();
+    final view = View.of(context);
+    final renderView = RenderView(
+      view: view,
+      child: RenderPositionedBox(
+        alignment: Alignment.center,
+        child: repaintBoundary,
+      ),
+      configuration: ViewConfiguration(
+        logicalConstraints: BoxConstraints(maxWidth: width, maxHeight: 600),
+        devicePixelRatio: pixelRatio,
+      ),
+    );
+
+    final pipelineOwner = PipelineOwner();
+    pipelineOwner.rootNode = renderView;
+    renderView.prepareInitialFrame();
+
+    final buildOwner = BuildOwner(focusManager: FocusManager());
+    final rootElement = RenderObjectToWidgetAdapter(
+      container: repaintBoundary,
+      child: MediaQuery(
+        data: MediaQuery.of(context),
+        child: Directionality(
+          textDirection: TextDirection.ltr,
+          child: widget,
+        ),
+      ),
+    ).attachToRenderTree(buildOwner);
+
+    buildOwner.buildScope(rootElement);
+    pipelineOwner.flushLayout();
+    pipelineOwner.flushCompositingBits();
+    pipelineOwner.flushPaint();
+
+    final image = await repaintBoundary.toImage(pixelRatio: pixelRatio);
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    image.dispose();
+
+    // Clean up
+    buildOwner.finalizeTree();
+
+    if (byteData == null) return null;
+    return byteData.buffer.asUint8List();
   } catch (e) {
-    debugPrint('Share error: $e');
-  } finally {
-    overlay.remove();
+    debugPrint('_renderWidgetToImage error: $e');
+    return null;
   }
 }
 
@@ -127,6 +197,23 @@ class ShareProgressContent extends StatelessWidget {
               style: const TextStyle(fontSize: 32),
             ),
           ],
+          const SizedBox(height: 16),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              color: Colors.white.withValues(alpha: 0.2),
+              child: const Text(
+                '📲 Скачай безкоштовно в App Store',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );

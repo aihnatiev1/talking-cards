@@ -44,16 +44,25 @@ class NotificationService {
     );
     await _plugin.initialize(settings);
 
-    // Re-schedule if enabled
+    // Enable by default on first launch, then re-schedule if enabled
     final prefs = await SharedPreferences.getInstance();
-    if (prefs.getBool(_enabledKey) == true) {
+    final enabled = prefs.getBool(_enabledKey);
+    if (enabled == null) {
+      // First launch — enable and request permission
+      await prefs.setBool(_enabledKey, true);
+      await _plugin
+          .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin>()
+          ?.requestPermissions(alert: true, badge: true, sound: true);
+      await _scheduleDailyNotification();
+    } else if (enabled) {
       await _scheduleDailyNotification();
     }
   }
 
   Future<bool> get isEnabled async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_enabledKey) ?? false;
+    return prefs.getBool(_enabledKey) ?? true;
   }
 
   Future<void> setEnabled(bool enabled) async {
