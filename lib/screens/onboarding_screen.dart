@@ -411,7 +411,7 @@ class _FeaturesPage extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             isEn
-                ? 'Here's what's waiting for you'
+                ? "Here's what's waiting for you"
                 : 'Ось що є в застосунку',
             style: TextStyle(fontSize: 14, color: Colors.grey[500]),
           ),

@@ -335,6 +335,10 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
             MaterialPageRoute(builder: (_) => GuessScreen(cards: playable)),
           );
         }
+      case QuestTask.reviewSRSCards:
+      case QuestTask.speakWords:
+        // Bonus tasks — no specific navigation action needed
+        break;
     }
   }
 

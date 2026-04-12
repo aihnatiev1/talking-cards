@@ -229,8 +229,8 @@ class _WeeklyTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final stats = ref.watch(dailyStatsProvider);
-    final chartData = stats.last7Days();
+    ref.watch(dailyStatsProvider); // rebuild when stats change
+    final chartData = ref.read(dailyStatsProvider.notifier).last7Days();
     final totalWeek =
         chartData.fold(0, (sum, e) => sum + e.value);
 
