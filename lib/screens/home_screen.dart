@@ -287,7 +287,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Сподобалась картка? Натисни ❤️\nі вона з\'явиться тут!',
+              s('Сподобалась картка? Натисни ❤️\nі вона з\'явиться тут!',
+                  'Liked a card? Tap ❤️\nand it will appear here!'),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
@@ -309,7 +310,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
                 child: const Text(
-                  'До розділів',
+                  s('До розділів', 'Go to packs'),
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
@@ -364,6 +365,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     AudioService.instance.speakCard(card.audioKey, card.sound, card.text);
     final isPro = ref.read(isProProvider);
     final isFav = ref.read(favoritesProvider).contains(card.id);
+    final ps = AppS(ref.read(languageProvider) == 'en');
 
     showModalBottomSheet(
       context: context,
@@ -431,7 +433,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 onPressed: () => AudioService.instance
                     .speakCard(card.audioKey, card.sound, card.text),
                 icon: const Icon(Icons.volume_up_rounded),
-                label: const Text('Слухати ще раз',
+                label: Text(ps('Слухати ще раз', 'Listen again'),
                     style: TextStyle(fontWeight: FontWeight.bold)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: card.colorAccent,
@@ -460,14 +462,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       Navigator.of(ctx).pop();
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Додано в улюблені ❤️'),
+                          content: Text(ps('Додано в улюблені ❤️', 'Added to favorites ❤️')),
                           duration: Duration(seconds: 2),
                         ),
                       );
                     }
                   },
                   icon: const Icon(Icons.favorite_border),
-                  label: const Text('Додати в улюблені'),
+                  label: Text(ps('Додати в улюблені', 'Add to favorites')),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.red[400],
                     side: BorderSide(color: Colors.red[300]!),
@@ -482,7 +484,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               onPressed: () {
                 Navigator.of(ctx).pop();
               },
-              child: Text('Закрити',
+              child: Text(ps('Закрити', 'Close'),
                   style: TextStyle(color: Colors.grey[400])),
             ),
           ],
@@ -877,6 +879,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       }
                       final pack = item.pack!;
                       return PackGridCard(
+                        key: ValueKey(pack.id),
                         pack: pack,
                         isCompleted: completedPacks.contains(pack.id),
                         progress: packProgress[pack.id] ?? 0,
@@ -1291,13 +1294,7 @@ class _QuizGridCard extends StatelessWidget {
             return Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Hero(
-                  tag: 'pack_icon_quiz',
-                  child: Material(
-                    color: Colors.transparent,
-                    child: Text('🎧', style: TextStyle(fontSize: 44)),
-                  ),
-                ),
+                const Text('🎧', style: TextStyle(fontSize: 44)),
                 const SizedBox(height: 8),
                 Text(
                   isEn ? 'Guess the word' : 'Вгадай звук',
@@ -1383,9 +1380,7 @@ class _SeasonalPacksRow extends ConsumerWidget {
                   ],
                 ),
               ),
-              SizedBox(
-                height: 170,
-                child: Row(
+              Row(
                   children: packs.map((pack) {
                     // Use localised title (EN/UK) for the card display
                     final displayPack = isEn && pack.titleEn.isNotEmpty
@@ -1412,7 +1407,6 @@ class _SeasonalPacksRow extends ConsumerWidget {
                       ),
                     );
                   }).toList(),
-                ),
               ),
             ],
           ),

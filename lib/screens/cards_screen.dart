@@ -574,14 +574,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Hero(
-              tag: 'pack_icon_${widget.pack.id}',
-              child: Material(
-                color: Colors.transparent,
-                child: Text(widget.pack.icon,
-                    style: const TextStyle(fontSize: 24)),
-              ),
-            ),
+            Text(widget.pack.icon, style: const TextStyle(fontSize: 24)),
             const SizedBox(width: 8),
             Flexible(
               child: Text(

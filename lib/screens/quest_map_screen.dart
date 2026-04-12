@@ -12,6 +12,7 @@ import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 
 import '../utils/constants.dart';
+import '../utils/l10n.dart';
 import '../widgets/share_progress_card.dart';
 import 'card_reveal_screen.dart';
 import 'cards_screen.dart';
@@ -32,12 +33,17 @@ class _StopInfo {
   });
 }
 
-const _stops = [
-  _StopInfo(task: QuestTask.listenCardOfDay, emoji: '👂', label: 'Послухай!', color: Color(0xFFFF7043)),
-  _StopInfo(task: QuestTask.viewCards3, emoji: '🎴', label: 'Знайди 3\nкартки!', color: Color(0xFF42A5F5)),
-  _StopInfo(task: QuestTask.playQuiz, emoji: '🎵', label: 'Вгадай\nзвук!', color: Color(0xFFAB47BC)),
-  _StopInfo(task: QuestTask.viewCards5, emoji: '⭐', label: 'Ще 5\nкарток!', color: Color(0xFFFFCA28)),
-  _StopInfo(task: QuestTask.reviewOldCard, emoji: '🔁', label: 'Повтори\nза мною!', color: Color(0xFF26A69A)),
+List<_StopInfo> _buildStops(bool isEn) => [
+  _StopInfo(task: QuestTask.listenCardOfDay, emoji: '👂',
+      label: isEn ? 'Listen!' : 'Послухай!', color: const Color(0xFFFF7043)),
+  _StopInfo(task: QuestTask.viewCards3, emoji: '🎴',
+      label: isEn ? 'Find 3\ncards!' : 'Знайди 3\nкартки!', color: const Color(0xFF42A5F5)),
+  _StopInfo(task: QuestTask.playQuiz, emoji: '🎵',
+      label: isEn ? 'Guess\nthe word!' : 'Вгадай\nзвук!', color: const Color(0xFFAB47BC)),
+  _StopInfo(task: QuestTask.viewCards5, emoji: '⭐',
+      label: isEn ? '5 more\ncards!' : 'Ще 5\nкарток!', color: const Color(0xFFFFCA28)),
+  _StopInfo(task: QuestTask.reviewOldCard, emoji: '🔁',
+      label: isEn ? 'Repeat\nafter me!' : 'Повтори\nза мною!', color: const Color(0xFF26A69A)),
 ];
 
 // Relative positions — tighter, more compact path
@@ -114,6 +120,9 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
     final packs = packsAsync.valueOrNull ?? [];
     final done = quest.doneCount;
     final total = quest.totalCount;
+    final isEn = ref.read(languageProvider) == 'en';
+    final s = AppS(isEn);
+    final stops = _buildStops(isEn);
 
     // Restore unlocked card/pack from persisted IDs
     CardModel? rewardCard;
@@ -178,9 +187,9 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
               color: kStreakOrange, size: 22),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text(
-          '🗺️ Пригода дня',
-          style: TextStyle(
+        title: Text(
+          s('🗺️ Пригода дня', '🗺️ Adventure'),
+          style: const TextStyle(
             fontWeight: FontWeight.w800,
             color: kStreakOrange,
             fontSize: 19,
@@ -242,6 +251,7 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
                       padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
                       child: _AdventureMap(
                         quest: quest,
+                        stops: stops,
                         onStopTap: (task) =>
                             _handleStopTap(context, task, packs),
                         onClaimTreasure: () =>
@@ -265,7 +275,7 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
         Row(
           children: [
             Text(
-              '$done з $total зупинок',
+              s('$done з $total зупинок', '$done of $total stops'),
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -357,7 +367,8 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('🎉 Усі паки вже відкрито — молодець!'),
+            content: Text(s('🎉 Усі паки вже відкрито — молодець!',
+                '🎉 All packs already unlocked — great job!')),
             backgroundColor: Color(0xFFFFB347),
             duration: Duration(seconds: 3),
           ),
@@ -448,17 +459,19 @@ class _AdventureMap extends StatelessWidget {
   final DailyQuestState quest;
   final void Function(QuestTask) onStopTap;
   final VoidCallback onClaimTreasure;
+  final List<_StopInfo> stops;
 
   const _AdventureMap({
     required this.quest,
     required this.onStopTap,
     required this.onClaimTreasure,
+    required this.stops,
   });
 
   bool _isCurrentStop(int index) {
-    if (quest.completed.contains(_stops[index].task)) return false;
+    if (quest.completed.contains(stops[index].task)) return false;
     for (int i = 0; i < index; i++) {
-      if (!quest.completed.contains(_stops[i].task)) return false;
+      if (!quest.completed.contains(stops[i].task)) return false;
     }
     return true;
   }
@@ -505,16 +518,16 @@ class _AdventureMap extends StatelessWidget {
               ),
 
             // Stop waypoints
-            for (int i = 0; i < _stops.length; i++)
+            for (int i = 0; i < stops.length; i++)
               Positioned(
                 left: positions[i].dx - 44,
                 top: positions[i].dy - 38,
                 child: _StopWaypoint(
-                  info: _stops[i],
-                  isDone: quest.completed.contains(_stops[i].task),
+                  info: stops[i],
+                  isDone: quest.completed.contains(stops[i].task),
                   isCurrent: _isCurrentStop(i),
                   index: i + 1,
-                  onTap: () => onStopTap(_stops[i].task),
+                  onTap: () => onStopTap(stops[i].task),
                 ),
               ),
 
@@ -617,7 +630,7 @@ class _PathPainter extends CustomPainter {
 //  STOP WAYPOINT — a circle on the map path
 // ═══════════════════════════════════════════════════════════════
 
-class _StopWaypoint extends StatefulWidget {
+class _StopWaypoint extends ConsumerStatefulWidget {
   final _StopInfo info;
   final bool isDone;
   final bool isCurrent;
@@ -636,7 +649,7 @@ class _StopWaypoint extends StatefulWidget {
   State<_StopWaypoint> createState() => _StopWaypointState();
 }
 
-class _StopWaypointState extends State<_StopWaypoint>
+class _StopWaypointState extends ConsumerState<_StopWaypoint>
     with SingleTickerProviderStateMixin {
   late final AnimationController _pulse;
 
@@ -740,7 +753,9 @@ class _StopWaypointState extends State<_StopWaypoint>
             ),
             const SizedBox(height: 4),
             Text(
-              widget.isDone ? 'Готово! ✅' : widget.info.label,
+              widget.isDone
+                  ? AppS(ref.read(languageProvider) == 'en')('Готово! ✅', 'Done! ✅')
+                  : widget.info.label,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 13,
@@ -789,7 +804,7 @@ class _StopWaypointState extends State<_StopWaypoint>
 //  TREASURE WAYPOINT — the goal at the end of the path
 // ═══════════════════════════════════════════════════════════════
 
-class _TreasureWaypoint extends StatefulWidget {
+class _TreasureWaypoint extends ConsumerStatefulWidget {
   final DailyQuestState quest;
   final VoidCallback onClaim;
 
@@ -799,7 +814,7 @@ class _TreasureWaypoint extends StatefulWidget {
   State<_TreasureWaypoint> createState() => _TreasureWaypointState();
 }
 
-class _TreasureWaypointState extends State<_TreasureWaypoint>
+class _TreasureWaypointState extends ConsumerState<_TreasureWaypoint>
     with SingleTickerProviderStateMixin {
   late final AnimationController _bounce;
 
@@ -894,11 +909,14 @@ class _TreasureWaypointState extends State<_TreasureWaypoint>
             ),
             const SizedBox(height: 4),
             Text(
-              claimed
-                  ? 'Знайдено! 🎉'
-                  : canClaim
-                      ? 'Відкрий\nскарб!'
-                      : 'Скарб 🔒',
+              () {
+                final ts = AppS(ref.read(languageProvider) == 'en');
+                return claimed
+                    ? ts('Знайдено! 🎉', 'Found! 🎉')
+                    : canClaim
+                        ? ts('Відкрий\nскарб!', 'Claim\nreward!')
+                        : ts('Скарб 🔒', 'Reward 🔒');
+              }(),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 13,
@@ -1065,7 +1083,7 @@ class _ConfettiPainter extends CustomPainter {
 //  LEVITATING CARD (after reward)
 // ═══════════════════════════════════════════════════════════════
 
-class _LevitatingCard extends StatefulWidget {
+class _LevitatingCard extends ConsumerStatefulWidget {
   final CardModel card;
   final PackModel pack;
 
@@ -1075,7 +1093,7 @@ class _LevitatingCard extends StatefulWidget {
   State<_LevitatingCard> createState() => _LevitatingCardState();
 }
 
-class _LevitatingCardState extends State<_LevitatingCard>
+class _LevitatingCardState extends ConsumerState<_LevitatingCard>
     with SingleTickerProviderStateMixin {
   late final AnimationController _float;
 
@@ -1132,7 +1150,8 @@ class _LevitatingCardState extends State<_LevitatingCard>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Сьогоднішній скарб',
+                    AppS(ref.read(languageProvider) == 'en')(
+                        'Сьогоднішній скарб', "Today's reward"),
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -1162,7 +1181,7 @@ class _LevitatingCardState extends State<_LevitatingCard>
 //  PACK PICKER SHEET
 // ═══════════════════════════════════════════════════════════════
 
-class _PackPickerSheet extends StatefulWidget {
+class _PackPickerSheet extends ConsumerStatefulWidget {
   final List<PackModel> lockedPacks;
   final Map<String, int> bonusCards;
   final void Function(PackModel pack) onPick;
@@ -1177,7 +1196,7 @@ class _PackPickerSheet extends StatefulWidget {
   State<_PackPickerSheet> createState() => _PackPickerSheetState();
 }
 
-class _PackPickerSheetState extends State<_PackPickerSheet>
+class _PackPickerSheetState extends ConsumerState<_PackPickerSheet>
     with SingleTickerProviderStateMixin {
   late final AnimationController _entryCtrl;
   int? _selectedIndex;
@@ -1225,7 +1244,8 @@ class _PackPickerSheetState extends State<_PackPickerSheet>
           ),
           const SizedBox(height: 4),
           Text(
-            'Де відкрити нову картку?',
+            AppS(ref.read(languageProvider) == 'en')(
+                'Де відкрити нову картку?', 'Where to open the new card?'),
             style: TextStyle(fontSize: 14, color: Colors.grey[500]),
           ),
           const SizedBox(height: 20),

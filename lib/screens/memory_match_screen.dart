@@ -183,17 +183,8 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: isDark
-                ? [color.withValues(alpha: 0.18), const Color(0xFF121212)]
-                : [color.withValues(alpha: 0.12), const Color(0xFFF5F5F5)],
-          ),
-        ),
-        child: SafeArea(
+      backgroundColor: isDark ? null : color.withValues(alpha: 0.06),
+      body: SafeArea(
           child: Column(
             children: [
               // ── Top bar ──────────────────────────
@@ -326,7 +317,6 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
             ],
           ),
         ),
-      ),
     );
   }
 }
@@ -357,6 +347,11 @@ class _TileWidgetState extends State<_TileWidget>
   late final AnimationController _ctrl;
   late final Animation<double> _anim;
 
+  // Track last-processed state to avoid mutable-object comparison issue.
+  // _Tile is mutated in-place → old.tile == widget.tile (same ref), so
+  // comparing old.tile.isFlipped gives the NEW value, not the old one.
+  bool _lastFaceUp = false;
+
   bool get _faceUp => widget.tile.isFlipped || widget.tile.isMatched;
 
   @override
@@ -364,18 +359,20 @@ class _TileWidgetState extends State<_TileWidget>
     super.initState();
     _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 350),
+      duration: const Duration(milliseconds: 380),
     );
     _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
+    _lastFaceUp = _faceUp;
     if (_faceUp) _ctrl.value = 1.0;
   }
 
   @override
   void didUpdateWidget(covariant _TileWidget old) {
     super.didUpdateWidget(old);
-    final was = old.tile.isFlipped || old.tile.isMatched;
-    if (_faceUp && !was) _ctrl.forward();
-    if (!_faceUp && was) _ctrl.reverse();
+    final now = _faceUp;
+    if (now && !_lastFaceUp) _ctrl.forward();
+    if (!now && _lastFaceUp) _ctrl.reverse();
+    _lastFaceUp = now;
   }
 
   @override
@@ -423,58 +420,43 @@ class _BackFace extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF2A2A2A) : Colors.white;
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            packColor,
-            Color.lerp(packColor, Colors.black, 0.2)!,
-          ],
-        ),
+        color: cardBg,
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: packColor.withValues(alpha: 0.35), width: 2),
         boxShadow: [
           BoxShadow(
-            color: packColor.withValues(alpha: 0.45),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+            color: packColor.withValues(alpha: 0.2),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
-      child: Stack(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Watermark: pack icon, big and faded
-          Center(
-            child: Opacity(
-              opacity: 0.15,
-              child: Text(packIcon,
-                  style: const TextStyle(fontSize: 44)),
+          // Pack icon as hint
+          Text(packIcon, style: const TextStyle(fontSize: 22)),
+          const SizedBox(height: 4),
+          // Big round "?" in pack color
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: packColor,
+              shape: BoxShape.circle,
             ),
-          ),
-          // Star dots decoration
-          Positioned(top: 6, left: 8,
-              child: Text('✦', style: TextStyle(
-                  fontSize: 8, color: Colors.white.withValues(alpha: 0.4)))),
-          Positioned(bottom: 6, right: 8,
-              child: Text('✦', style: TextStyle(
-                  fontSize: 8, color: Colors.white.withValues(alpha: 0.4)))),
-          // Main question mark
-          Center(
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                shape: BoxShape.circle,
-              ),
-              child: const Center(
-                child: Text('?',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                    )),
+            child: const Center(
+              child: Text(
+                '?',
+                style: TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),

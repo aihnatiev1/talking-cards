@@ -191,13 +191,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Hero(
-              tag: 'pack_icon_quiz',
-              child: Material(
-                color: Colors.transparent,
-                child: Text('🎧', style: TextStyle(fontSize: 22)),
-              ),
-            ),
+            const Text('🎧', style: TextStyle(fontSize: 22)),
             const SizedBox(width: 8),
             Text(
               () {
@@ -254,7 +248,15 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
     if (!_resultsLogged) {
       _resultsLogged = true;
       AnalyticsService.instance.logQuizComplete(score, total);
-      ref.read(dailyQuestProvider.notifier).completeTask(QuestTask.playQuiz);
+      // Defer state mutation to post-frame — calling it inside build()
+      // causes Riverpod to silently drop the update on some frames.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref
+              .read(dailyQuestProvider.notifier)
+              .completeTask(QuestTask.playQuiz);
+        }
+      });
     }
     final ratio = total > 0 ? score / total : 0.0;
     final s = AppS(ref.read(languageProvider) == 'en');
