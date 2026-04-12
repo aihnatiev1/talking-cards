@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
 import '../providers/daily_quest_provider.dart';
+import '../providers/language_provider.dart';
 import '../providers/quiz_provider.dart';
 import '../providers/srs_provider.dart';
 import '../providers/weak_words_provider.dart';
@@ -198,9 +199,13 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
             ),
             const SizedBox(width: 8),
             Text(
-              state != null && !state.finished
-                  ? 'Вгадай звук ${state.round}/${state.totalRounds}'
-                  : 'Вгадай звук',
+              () {
+                final isEn = ref.read(languageProvider) == 'en';
+                final base = isEn ? 'Guess the word' : 'Вгадай звук';
+                return state != null && !state.finished
+                    ? '$base ${state.round}/${state.totalRounds}'
+                    : base;
+              }(),
               style: const TextStyle(
                 color: _accent,
                 fontWeight: FontWeight.bold,

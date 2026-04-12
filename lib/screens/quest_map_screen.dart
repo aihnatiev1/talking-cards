@@ -8,6 +8,7 @@ import '../models/card_model.dart';
 import '../models/pack_model.dart';
 import '../providers/bonus_cards_provider.dart';
 import '../providers/daily_quest_provider.dart';
+import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 
 import '../utils/constants.dart';
@@ -329,10 +330,16 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
         }
       case QuestTask.playQuiz:
         final allCards = packs.expand((p) => p.cards).toList();
-        final playable = allCards.where((c) => c.audioKey != null).toList();
+        final lang = ref.read(languageProvider);
+        final playable = lang == 'en'
+            ? allCards.where((c) => c.image != null).toList()
+            : allCards.where((c) => c.audioKey != null).toList();
+        final ttsLocale = lang == 'en' ? 'en-US' : null;
         if (playable.length >= 4) {
           Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => GuessScreen(cards: playable)),
+            MaterialPageRoute(
+                builder: (_) =>
+                    GuessScreen(cards: playable, ttsLocale: ttsLocale)),
           );
         }
       case QuestTask.reviewSRSCards:

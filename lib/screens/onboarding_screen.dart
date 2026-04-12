@@ -23,6 +23,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   String _selectedLang = 'uk';
   String _selectedAvatar = '👶';
 
+  @override
+  void initState() {
+    super.initState();
+    // Rebuild when name changes so _canProceed is re-evaluated
+    _nameCtrl.addListener(() => setState(() {}));
+  }
+
   static const _avatars = [
     '👶', '👧', '👦', '🧒',
     '🐱', '🐶', '🐻', '🐸',
@@ -59,8 +66,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     // Update the default profile with chosen settings
     final profiles = ref.read(profileProvider).profiles;
     final defaultId = profiles.isNotEmpty ? profiles.first.id : 'default';
+    final fallbackName = _selectedLang == 'en' ? 'Kid' : 'Малюк';
     await notifier.updateProfile(
-        defaultId, name.isEmpty ? 'Малюк' : name, _selectedAvatar);
+        defaultId, name.isEmpty ? fallbackName : name, _selectedAvatar);
     await notifier.setLanguage(defaultId, _selectedLang);
 
     // Mark onboarding as completed so we never show it again
@@ -123,6 +131,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     selectedAvatar: _selectedAvatar,
                     avatars: _avatars,
                     onAvatarSelect: (a) => setState(() => _selectedAvatar = a),
+                    lang: _selectedLang,
                   ),
                   _FeaturesPage(lang: _selectedLang),
                 ],
@@ -289,13 +298,17 @@ class _ChildSetupPage extends StatelessWidget {
   final String selectedAvatar;
   final List<String> avatars;
   final ValueChanged<String> onAvatarSelect;
+  final String lang;
 
   const _ChildSetupPage({
     required this.nameCtrl,
     required this.selectedAvatar,
     required this.avatars,
     required this.onAvatarSelect,
+    required this.lang,
   });
+
+  bool get _isEn => lang == 'en';
 
   @override
   Widget build(BuildContext context) {
@@ -310,10 +323,11 @@ class _ChildSetupPage extends StatelessWidget {
                 style: const TextStyle(fontSize: 72)),
           ),
           const SizedBox(height: 20),
-          const Center(
+          Center(
             child: Text(
-              'Знайомство',
-              style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
+              _isEn ? 'Nice to meet you!' : 'Знайомство',
+              style: const TextStyle(
+                  fontSize: 26, fontWeight: FontWeight.w800),
             ),
           ),
           const SizedBox(height: 24),
@@ -323,8 +337,8 @@ class _ChildSetupPage extends StatelessWidget {
             textCapitalization: TextCapitalization.words,
             style: const TextStyle(fontSize: 18),
             decoration: InputDecoration(
-              labelText: "Як звати дитину?",
-              hintText: "Наприклад: Оленка",
+              labelText: _isEn ? "Child's name" : "Як звати дитину?",
+              hintText: _isEn ? "e.g. Emma" : "Наприклад: Оленка",
               counterText: '',
               border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14)),
@@ -332,8 +346,11 @@ class _ChildSetupPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          const Text('Оберіть аватар',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+          Text(
+            _isEn ? 'Choose an avatar' : 'Оберіть аватар',
+            style: const TextStyle(
+                fontWeight: FontWeight.w600, fontSize: 15),
+          ),
           const SizedBox(height: 10),
           GridView.count(
             shrinkWrap: true,

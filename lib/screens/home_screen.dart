@@ -561,8 +561,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           error: (e, _) => Center(child: Text('Помилка: $e')),
           data: (packs) {
             final allCards = packs.expand((p) => p.cards).toList();
-            final playableCount =
-                allCards.where((c) => c.audioKey != null).length;
+            final isEnMode = ref.read(languageProvider) == 'en';
+            // EN cards have no audioKey — use image presence instead
+            final playableCount = isEnMode
+                ? allCards.where((c) => c.image != null).length
+                : allCards.where((c) => c.audioKey != null).length;
             final cotdResult = _cardOfTheDay(packs);
             final cotd = cotdResult?.$1;
             final cotdLocked = cotdResult?.$2 ?? false;
@@ -754,7 +757,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   allCards: allCards,
                   onTap: (cards) => Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => GuessScreen(cards: cards),
+                      builder: (_) => GuessScreen(
+                        cards: cards,
+                        ttsLocale: isEnMode ? 'en-US' : null,
+                      ),
                     ),
                   ),
                 ),
