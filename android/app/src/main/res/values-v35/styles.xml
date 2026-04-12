@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 15 (API 35) enforces edge-to-edge display for all apps.
+         Declaring windowOptOutEdgeToEdgeEnforcement=false tells the system
+         we properly support edge-to-edge, resolving the Play Console warning.
+         Flutter already handles safe-area insets via MediaQuery.padding. -->
+    <style name="NormalTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowBackground">?android:colorBackground</item>
+        <item name="android:windowOptOutEdgeToEdgeEnforcement">false</item>
+    </style>
+</resources>
