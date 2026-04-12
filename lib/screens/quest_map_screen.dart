@@ -269,6 +269,7 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
   }
 
   Widget _buildProgress(int done, int total) {
+    final s = AppS(ref.read(languageProvider) == 'en');
     final progress = total > 0 ? done / total : 0.0;
     return Column(
       children: [
@@ -366,11 +367,12 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
       ref.read(dailyQuestProvider.notifier).claimReward();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(s('🎉 Усі паки вже відкрито — молодець!',
+          SnackBar(
+            content: Text(AppS(ref.read(languageProvider) == 'en')(
+                '🎉 Усі паки вже відкрито — молодець!',
                 '🎉 All packs already unlocked — great job!')),
-            backgroundColor: Color(0xFFFFB347),
-            duration: Duration(seconds: 3),
+            backgroundColor: const Color(0xFFFFB347),
+            duration: const Duration(seconds: 3),
           ),
         );
       }
@@ -646,7 +648,7 @@ class _StopWaypoint extends ConsumerStatefulWidget {
   });
 
   @override
-  State<_StopWaypoint> createState() => _StopWaypointState();
+  ConsumerState<_StopWaypoint> createState() => _StopWaypointState();
 }
 
 class _StopWaypointState extends ConsumerState<_StopWaypoint>
@@ -811,7 +813,7 @@ class _TreasureWaypoint extends ConsumerStatefulWidget {
   const _TreasureWaypoint({required this.quest, required this.onClaim});
 
   @override
-  State<_TreasureWaypoint> createState() => _TreasureWaypointState();
+  ConsumerState<_TreasureWaypoint> createState() => _TreasureWaypointState();
 }
 
 class _TreasureWaypointState extends ConsumerState<_TreasureWaypoint>
@@ -1090,7 +1092,7 @@ class _LevitatingCard extends ConsumerStatefulWidget {
   const _LevitatingCard({required this.card, required this.pack});
 
   @override
-  State<_LevitatingCard> createState() => _LevitatingCardState();
+  ConsumerState<_LevitatingCard> createState() => _LevitatingCardState();
 }
 
 class _LevitatingCardState extends ConsumerState<_LevitatingCard>
@@ -1193,7 +1195,7 @@ class _PackPickerSheet extends ConsumerStatefulWidget {
   });
 
   @override
-  State<_PackPickerSheet> createState() => _PackPickerSheetState();
+  ConsumerState<_PackPickerSheet> createState() => _PackPickerSheetState();
 }
 
 class _PackPickerSheetState extends ConsumerState<_PackPickerSheet>

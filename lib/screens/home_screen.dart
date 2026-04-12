@@ -264,6 +264,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _showEmptyFavorites(BuildContext context) {
+    final fs = AppS(ref.read(languageProvider) == 'en');
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -278,16 +279,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           children: [
             const Text('😿', style: TextStyle(fontSize: 64)),
             const SizedBox(height: 16),
-            const Text(
-              'Ой, тут ще порожньо!',
-              style: TextStyle(
+            Text(
+              fs('Ой, тут ще порожньо!', 'Nothing here yet!'),
+              style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              s('Сподобалась картка? Натисни ❤️\nі вона з\'явиться тут!',
+              fs('Сподобалась картка? Натисни ❤️\nі вона з\'явиться тут!',
                   'Liked a card? Tap ❤️\nand it will appear here!'),
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -309,9 +310,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-                child: const Text(
-                  s('До розділів', 'Go to packs'),
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                child: Text(
+                  fs('До розділів', 'Go to packs'),
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -461,9 +463,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           .toggle(card.id);
                       Navigator.of(ctx).pop();
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
+                        SnackBar(
                           content: Text(ps('Додано в улюблені ❤️', 'Added to favorites ❤️')),
-                          duration: Duration(seconds: 2),
+                          duration: const Duration(seconds: 2),
                         ),
                       );
                     }
