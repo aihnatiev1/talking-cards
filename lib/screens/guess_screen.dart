@@ -7,16 +7,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/card_model.dart';
 import '../providers/daily_quest_provider.dart';
 import '../providers/quiz_provider.dart';
+import '../providers/srs_provider.dart';
+import '../providers/weak_words_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
+import '../services/tts_service.dart';
 import '../utils/constants.dart';
 import '../widgets/confetti_burst.dart';
 import '../widgets/quiz_option.dart';
 
 class GuessScreen extends ConsumerStatefulWidget {
   final List<CardModel> cards;
+  /// When non-null, TTS is used instead of recorded audio (EN mode).
+  final String? ttsLocale;
 
-  const GuessScreen({super.key, required this.cards});
+  const GuessScreen({super.key, required this.cards, this.ttsLocale});
 
   @override
   ConsumerState<GuessScreen> createState() => _GuessScreenState();
@@ -38,9 +43,12 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
   @override
   void initState() {
     super.initState();
-    final soundCards = widget.cards
-        .where((c) => AudioService.instance.hasSound(c.audioKey))
-        .toList();
+    // EN mode: use cards with images; UA mode: use cards with recorded audio
+    final soundCards = widget.ttsLocale != null
+        ? widget.cards.where((c) => c.image != null).toList()
+        : widget.cards
+            .where((c) => AudioService.instance.hasSound(c.audioKey))
+            .toList();
     _provider = StateNotifierProvider.autoDispose<QuizNotifier, QuizState?>((ref) {
       return QuizNotifier(soundCards);
     });
@@ -78,7 +86,11 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
     final state = ref.read(_provider);
     if (state == null || state.finished) return;
     final card = state.correctCard;
-    AudioService.instance.speakCard(card.audioKey, card.sound, card.text);
+    if (widget.ttsLocale != null) {
+      TtsService.instance.speak(card.sound, locale: widget.ttsLocale!);
+    } else {
+      AudioService.instance.speakCard(card.audioKey, card.sound, card.text);
+    }
   }
 
   void _onAnswer(String cardId) {
@@ -90,6 +102,17 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
     ref.read(_provider.notifier).answer(cardId);
 
     final isCorrect = cardId == state.correctCard.id;
+
+    // Update SRS state: quality 5 = correct first try, 2 = wrong
+    ref
+        .read(srsProvider.notifier)
+        .recordAnswer(state.correctCard.id, isCorrect ? 5 : 2);
+    if (isCorrect) {
+      ref.read(dailyQuestProvider.notifier).recordSrsReview();
+    } else {
+      ref.read(weakWordsProvider.notifier).recordMistake(state.correctCard.id);
+    }
+
     if (isCorrect) {
       HapticFeedback.mediumImpact();
       _showConfetti();

@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/profile_service.dart';
+
 final reviewProvider =
     StateNotifierProvider<CardLastSeenNotifier, Map<String, String>>(
   (ref) => CardLastSeenNotifier(),
@@ -12,6 +14,7 @@ class CardLastSeenNotifier extends StateNotifier<Map<String, String>> {
   }
 
   static const _prefix = 'card_last_seen_';
+  String get _fullPrefix => '${ProfileService.prefix}$_prefix';
 
   static String _todayKey() {
     final now = DateTime.now();
@@ -20,10 +23,11 @@ class CardLastSeenNotifier extends StateNotifier<Map<String, String>> {
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
-    final keys = prefs.getKeys().where((k) => k.startsWith(_prefix));
+    final fp = _fullPrefix;
+    final keys = prefs.getKeys().where((k) => k.startsWith(fp));
     final map = <String, String>{};
     for (final k in keys) {
-      map[k.substring(_prefix.length)] = prefs.getString(k) ?? '';
+      map[k.substring(fp.length)] = prefs.getString(k) ?? '';
     }
     state = map;
   }
@@ -32,7 +36,7 @@ class CardLastSeenNotifier extends StateNotifier<Map<String, String>> {
     final today = _todayKey();
     state = {...state, cardId: today};
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('$_prefix$cardId', today);
+    await prefs.setString('${_fullPrefix}$cardId', today);
   }
 
   /// Returns card IDs not seen for 3+ days

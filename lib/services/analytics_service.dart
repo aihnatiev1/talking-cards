@@ -96,4 +96,9 @@ class AnalyticsService {
 
   Future<void> logOnboardingComplete() =>
       _analytics.logEvent(name: 'tutorial_complete');
+
+  /// Generic event logger for ad-hoc events (e.g. speech_attempt).
+  Future<void> logEvent(String name,
+          {Map<String, Object>? parameters}) =>
+      _analytics.logEvent(name: name, parameters: parameters);
 }

@@ -340,7 +340,20 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
 
   void _showPackPicker(BuildContext context, List<PackModel> packs) {
     final lockedPacks = packs.where((p) => p.isLocked).toList();
-    if (lockedPacks.isEmpty) return;
+    if (lockedPacks.isEmpty) {
+      // All packs already unlocked — claim the reward directly
+      ref.read(dailyQuestProvider.notifier).claimReward();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('🎉 Усі паки вже відкрито — молодець!'),
+            backgroundColor: Color(0xFFFFB347),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+      return;
+    }
     final bonusCards = ref.read(bonusCardsProvider);
 
     showModalBottomSheet(

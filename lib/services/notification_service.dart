@@ -55,8 +55,10 @@ class NotificationService {
               IOSFlutterLocalNotificationsPlugin>()
           ?.requestPermissions(alert: true, badge: true, sound: true);
       await _scheduleDailyNotification();
+      await _scheduleSeasonalNotifications();
     } else if (enabled) {
       await _scheduleDailyNotification();
+      await _scheduleSeasonalNotifications();
     }
   }
 
@@ -77,6 +79,54 @@ class NotificationService {
       await _scheduleDailyNotification();
     } else {
       await _plugin.cancelAll();
+    }
+  }
+
+  Future<void> _scheduleSeasonalNotifications() async {
+    const seasons = [
+      (id: 10, month: 12, day: 1,
+       title: '🎄 Новорічний пак відкрився!',
+       body: 'Вивчай зимові слова з Дідом Морозом 🎅'),
+      (id: 11, month: 4, day: 1,
+       title: '🐣 Великодній пак відкрився!',
+       body: 'Весняні слова для найменших 🌸'),
+      (id: 12, month: 6, day: 15,
+       title: '☀️ Літній пак відкрився!',
+       body: 'Час для літніх пригод! 🌊'),
+      (id: 13, month: 10, day: 1,
+       title: '🍂 Осінній пак відкрився!',
+       body: 'Пізнавай осінь з новими картками 🎃'),
+    ];
+
+    final now = tz.TZDateTime.now(tz.local);
+    const notifDetails = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'seasonal_pack',
+        'Сезонні паки',
+        channelDescription: 'Сповіщення про нові сезонні паки',
+        importance: Importance.defaultImportance,
+        priority: Priority.defaultPriority,
+      ),
+      iOS: DarwinNotificationDetails(),
+    );
+
+    for (final season in seasons) {
+      var scheduled =
+          tz.TZDateTime(tz.local, now.year, season.month, season.day, 9, 0);
+      if (scheduled.isBefore(now)) {
+        scheduled = tz.TZDateTime(
+            tz.local, now.year + 1, season.month, season.day, 9, 0);
+      }
+      await _plugin.zonedSchedule(
+        season.id,
+        season.title,
+        season.body,
+        scheduled,
+        notifDetails,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      );
     }
   }
 

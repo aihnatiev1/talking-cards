@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../services/audio_service.dart';
 import '../services/remote_config_service.dart';
+import '../services/speech_service.dart';
+import '../services/tts_service.dart';
 import '../services/widget_service.dart';
 import '../utils/constants.dart';
 import '../services/notification_service.dart';
 import '../services/purchase_service.dart';
 import 'home_screen.dart';
+import 'onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -23,6 +28,7 @@ class _SplashScreenState extends State<SplashScreen>
   bool _loadingDone = false;
   bool _animDone = false;
   bool _imageReady = false;
+  bool _showOnboarding = false;
 
   @override
   void initState() {
@@ -66,16 +72,43 @@ class _SplashScreenState extends State<SplashScreen>
       PurchaseService.instance.init(),
       AudioService.instance.precache(),
       NotificationService.instance.init(),
+      SpeechService.instance.init(),
+      TtsService.instance.init(),
     ]);
+
+    // Check if onboarding was completed before
+    final prefs = await SharedPreferences.getInstance();
+    final onboardingDone = prefs.getBool('onboarding_done') ?? false;
+    if (!onboardingDone) {
+      // Existing user upgrading from <1.1.0: they have pack progress data
+      // but no onboarding_done flag. Detect by checking for any saved data.
+      final hasExistingData = prefs.getKeys().any((k) =>
+          k.startsWith('pack_progress_') ||
+          k.startsWith('streak_current') ||
+          k.startsWith('completed_packs'));
+      if (hasExistingData) {
+        // Silently mark done — don't interrupt an existing user with onboarding
+        await prefs.setBool('onboarding_done', true);
+        _showOnboarding = false;
+      } else {
+        _showOnboarding = true;
+      }
+    } else {
+      _showOnboarding = false;
+    }
+
     _loadingDone = true;
     _navigateIfReady();
   }
 
   void _navigateIfReady() {
     if (!_loadingDone || !_animDone || !mounted) return;
+    final dest = _showOnboarding
+        ? const OnboardingScreen()
+        : const HomeScreen();
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) => const HomeScreen(),
+        pageBuilder: (_, __, ___) => dest,
         transitionsBuilder: (_, animation, __, child) {
           return FadeTransition(opacity: animation, child: child);
         },

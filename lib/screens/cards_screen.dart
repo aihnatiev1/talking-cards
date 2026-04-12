@@ -16,8 +16,11 @@ import '../providers/daily_stats_provider.dart';
 import '../providers/packs_provider.dart';
 import '../providers/review_provider.dart';
 import '../providers/streak_provider.dart';
+import '../providers/language_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
+import '../services/speech_service.dart';
+import '../services/tts_service.dart';
 import '../utils/constants.dart';
 import '../services/paywall_flow.dart';
 import '../widgets/celebration_overlay.dart';
@@ -25,6 +28,7 @@ import '../widgets/flash_card.dart';
 import '../widgets/share_progress_card.dart';
 import '../widgets/speaker_button.dart';
 import '../widgets/swipe_hint.dart';
+import 'memory_match_screen.dart';
 
 class CardsScreen extends ConsumerStatefulWidget {
   final PackModel pack;
@@ -46,6 +50,12 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   // Prevents dispose() from killing audio when navigating to "Play again"
   bool _celebrating = false;
   bool _isFlipped = false;
+
+  // ── Speech recognition state ─────────────────
+  bool _speechListening = false;
+  _SpeechResult? _speechResult; // null = no result shown
+  int _speechAttempts = 0; // resets on card change
+  static const _maxAttempts = 3;
 
   // Auto-play timer mode
   bool _autoPlayTimer = false;
@@ -200,17 +210,100 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
 
   void _speakCurrentCard() {
     final card = _cards[_currentIndex];
-    AudioService.instance.speakCard(card.audioKey, card.sound, card.text);
+    _speakCard(card);
     if (_autoPlayTimer) _startAutoPlayCountdown();
+  }
+
+  void _speakCard(CardModel card) {
+    final lang = ref.read(languageProvider);
+    if (lang == 'en') {
+      TtsService.instance.speak(card.sound, locale: 'en-US');
+    } else if (card.audioKey == null ||
+        !AudioService.instance.hasSound(card.audioKey)) {
+      // No recorded audio (e.g. phrases pack) → Ukrainian TTS
+      TtsService.instance.speak(card.sound, locale: 'uk-UA');
+    } else {
+      AudioService.instance.speakCard(card.audioKey, card.sound, card.text);
+    }
+  }
+
+  /// TTS locale for FlashCard: EN → en-US, no audio → uk-UA, else null.
+  String? _ttsLocaleForCard(CardModel card) {
+    final lang = ref.read(languageProvider);
+    if (lang == 'en') return 'en-US';
+    if (card.audioKey == null ||
+        !AudioService.instance.hasSound(card.audioKey)) {
+      return 'uk-UA';
+    }
+    return null;
+  }
+
+  // ── Speech recognition ────────────────────────
+
+  Future<void> _onMicTap() async {
+    if (!SpeechService.instance.isAvailable) return;
+    if (_speechListening) {
+      await SpeechService.instance.stopListening();
+      setState(() => _speechListening = false);
+      return;
+    }
+    // Stop audio to avoid echo during recognition
+    AudioService.instance.stop();
+
+    final card = _cards[_currentIndex];
+    AnalyticsService.instance.logEvent('speech_attempt',
+        parameters: {'card_id': card.id});
+
+    setState(() {
+      _speechListening = true;
+      _speechResult = null;
+    });
+
+    await SpeechService.instance.startListening(
+      onResult: (recognized) {
+        if (!mounted) return;
+        final correct = SpeechService.matches(recognized, card.sound);
+        _speechAttempts++;
+
+        AnalyticsService.instance.logEvent(
+          correct ? 'speech_correct' : 'speech_incorrect',
+          parameters: {'card_id': card.id, 'recognized': recognized},
+        );
+
+        if (correct) {
+          HapticFeedback.mediumImpact();
+          ref.read(dailyQuestProvider.notifier).recordSpeechCorrect();
+        } else {
+          HapticFeedback.lightImpact();
+        }
+
+        setState(() {
+          _speechListening = false;
+          _speechResult = _SpeechResult(
+            isCorrect: correct,
+            attemptsUsed: _speechAttempts,
+            correctWord: card.sound,
+          );
+        });
+
+        // Auto-dismiss result after 2.5 seconds
+        Future.delayed(const Duration(milliseconds: 2500), () {
+          if (mounted) setState(() => _speechResult = null);
+        });
+      },
+    );
+
+    // If listening stopped without a result (timeout, cancel)
+    if (mounted && _speechListening) {
+      setState(() => _speechListening = false);
+    }
   }
 
   void _speakCardDebounced(int index) {
     _speakDebounce?.cancel();
     _speakDebounce = Timer(const Duration(milliseconds: 100), () {
       if (!mounted) return;
-      final card = _cards[index];
-      AudioService.instance.speakCard(card.audioKey, card.sound, card.text);
-      // Start countdown AFTER sound has begun (isSpeaking is now true)
+      _speakCard(_cards[index]);
       if (_autoPlayTimer) _startAutoPlayCountdown();
     });
   }
@@ -505,6 +598,19 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
         ),
         centerTitle: true,
         actions: [
+          if (_cards.where((c) => c.audioKey != null).length >= 6)
+            IconButton(
+              icon: const Text('🧠', style: TextStyle(fontSize: 20)),
+              tooltip: 'Грати Memory',
+              onPressed: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => MemoryMatchScreen(
+                    pack: widget.pack,
+                    cards: _cards,
+                  ),
+                ));
+              },
+            ),
           GestureDetector(
             onTap: _toggleAutoPlayTimer,
             child: Container(
@@ -591,7 +697,12 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                     setState(() {
                       _currentIndex = index;
                       _isFlipped = false;
+                      // Reset speech state on card change
+                      _speechListening = false;
+                      _speechResult = null;
+                      _speechAttempts = 0;
                     });
+                    SpeechService.instance.cancelListening();
                     // Track only forward progress
                     if (index > prev) {
                       AnalyticsService.instance.logCardView(
@@ -644,6 +755,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                       },
                       child: FlashCard(
                         card: cards[index],
+                        ttsLocale: _ttsLocaleForCard(cards[index]),
                         onFlipChanged: (flipped) {
                           setState(() => _isFlipped = flipped);
                         },
@@ -657,6 +769,28 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                     right: 28,
                     child:
                         SpeakerButton(onActivated: _speakCurrentCard),
+                  ),
+                // Mic button — only for unlocked UA packs where speech is available
+                if (!_isFlipped &&
+                    !widget.pack.isLocked &&
+                    ref.read(languageProvider) == 'uk' &&
+                    SpeechService.instance.isAvailable &&
+                    _speechAttempts < _maxAttempts)
+                  Positioned(
+                    bottom: 80,
+                    right: 28,
+                    child: _MicButton(
+                      isListening: _speechListening,
+                      onTap: _onMicTap,
+                    ),
+                  ),
+                // Speech result banner
+                if (_speechResult != null)
+                  Positioned(
+                    bottom: 24,
+                    left: 24,
+                    right: 24,
+                    child: _SpeechResultBanner(result: _speechResult!),
                   ),
                 SwipeHint(key: _swipeHintKey),
               ],
@@ -700,6 +834,153 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+//  Speech helpers
+// ─────────────────────────────────────────────
+
+class _SpeechResult {
+  final bool isCorrect;
+  final int attemptsUsed;
+  final String correctWord;
+  const _SpeechResult({
+    required this.isCorrect,
+    required this.attemptsUsed,
+    required this.correctWord,
+  });
+}
+
+class _MicButton extends StatefulWidget {
+  final bool isListening;
+  final VoidCallback onTap;
+  const _MicButton({required this.isListening, required this.onTap});
+
+  @override
+  State<_MicButton> createState() => _MicButtonState();
+}
+
+class _MicButtonState extends State<_MicButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+    if (widget.isListening) _pulse.repeat(reverse: true);
+  }
+
+  @override
+  void didUpdateWidget(covariant _MicButton old) {
+    super.didUpdateWidget(old);
+    if (widget.isListening && !_pulse.isAnimating) {
+      _pulse.repeat(reverse: true);
+    } else if (!widget.isListening && _pulse.isAnimating) {
+      _pulse.stop();
+      _pulse.value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const color = Color(0xFF6C63FF);
+    return GestureDetector(
+      onTap: widget.onTap,
+      child: AnimatedBuilder(
+        animation: _pulse,
+        builder: (_, __) => Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: widget.isListening
+                ? color.withValues(alpha: 0.9 + _pulse.value * 0.1)
+                : Colors.white.withValues(alpha: 0.9),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(
+                    alpha: widget.isListening ? 0.4 + _pulse.value * 0.3 : 0.2),
+                blurRadius: widget.isListening ? 12 + _pulse.value * 8 : 6,
+                spreadRadius: widget.isListening ? 2 : 0,
+              ),
+            ],
+          ),
+          child: Icon(
+            widget.isListening ? Icons.mic : Icons.mic_none_rounded,
+            color: widget.isListening ? Colors.white : color,
+            size: 22,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SpeechResultBanner extends StatelessWidget {
+  final _SpeechResult result;
+  const _SpeechResultBanner({required this.result});
+
+  @override
+  Widget build(BuildContext context) {
+    final isCorrect = result.isCorrect;
+    final attemptsLeft =
+        _CardsScreenState._maxAttempts - result.attemptsUsed;
+    final color = isCorrect ? Colors.green : Colors.orange;
+
+    return AnimatedOpacity(
+      opacity: 1.0,
+      duration: const Duration(milliseconds: 200),
+      child: Container(
+        padding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.92),
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              isCorrect ? '✅' : '🔁',
+              style: const TextStyle(fontSize: 18),
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                isCorrect
+                    ? 'Правильно! Чудово!'
+                    : attemptsLeft > 0
+                        ? 'Ще раз! (залишилось $attemptsLeft)'
+                        : 'Слово: ${result.correctWord}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

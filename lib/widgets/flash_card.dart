@@ -7,12 +7,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/card_model.dart';
 import '../providers/favorites_provider.dart';
 import '../services/audio_service.dart';
+import '../services/tts_service.dart';
 
 class FlashCard extends ConsumerStatefulWidget {
   final CardModel card;
   final ValueChanged<bool>? onFlipChanged;
+  /// When non-null, card taps use TTS instead of recorded audio.
+  final String? ttsLocale;
 
-  const FlashCard({super.key, required this.card, this.onFlipChanged});
+  const FlashCard({
+    super.key,
+    required this.card,
+    this.onFlipChanged,
+    this.ttsLocale,
+  });
 
   @override
   ConsumerState<FlashCard> createState() => _FlashCardState();
@@ -134,8 +142,10 @@ class _FlashCardState extends ConsumerState<FlashCard>
           _pressCtrl.reverse();
           if (_hasEnglish) {
             _toggleFlip();
+          } else if (widget.ttsLocale != null) {
+            TtsService.instance.speak(
+                widget.card.sound, locale: widget.ttsLocale!);
           } else {
-            // No English — play sound on tap
             AudioService.instance.speakCard(
               widget.card.audioKey,
               widget.card.sound,

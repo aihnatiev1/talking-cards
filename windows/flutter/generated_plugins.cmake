@@ -6,7 +6,9 @@ list(APPEND FLUTTER_PLUGIN_LIST
   firebase_core
   firebase_remote_config
   flutter_timezone
+  flutter_tts
   share_plus
+  speech_to_text_windows
   url_launcher_windows
 )
 

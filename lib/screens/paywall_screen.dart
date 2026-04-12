@@ -30,40 +30,55 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   List<_Plan> get _plans {
     final products = PurchaseService.instance.products;
     if (products.isEmpty) {
-      return [
-        const _Plan('Річна', '449 грн', '/рік', 'Найвигідніше'),
-        const _Plan('Місячна', '79 грн', '/місяць', null),
+      return const [
+        _Plan('Річна', '449 грн', '/рік', 'Найвигідніше',
+            productId: 'yearly_premium'),
+        _Plan('Місячна', '79 грн', '/місяць', null,
+            productId: 'monthly_premium'),
+        _Plan('Назавжди', '699 грн', '', 'Без підписки',
+            badgeColor: Color(0xFFF9A825),
+            productId: 'lifetime_premium',
+            isLifetime: true),
       ];
     }
+
     return products.map((p) {
-      final isYearly = p.id == 'yearly_premium';
-      return _Plan(
-        isYearly ? 'Річна' : 'Місячна',
-        p.price,
-        isYearly ? '/рік' : '/місяць',
-        isYearly ? 'Найвигідніше' : null,
-      );
+      switch (p.id) {
+        case 'yearly_premium':
+          return _Plan('Річна', p.price, '/рік', 'Найвигідніше',
+              productId: p.id);
+        case 'monthly_premium':
+          return _Plan('Місячна', p.price, '/місяць', null,
+              productId: p.id);
+        case 'lifetime_premium':
+          return _Plan('Назавжди', p.price, '', 'Без підписки',
+              badgeColor: const Color(0xFFF9A825),
+              productId: p.id,
+              isLifetime: true);
+        default:
+          return _Plan(p.title, p.price, '', null, productId: p.id);
+      }
     }).toList();
   }
 
   Future<void> _purchase() async {
-    final productId = _selectedPlan == 0 ? 'yearly_premium' : 'monthly_premium';
-    AnalyticsService.instance.logPurchaseStart(productId);
+    final plan = _plans[_selectedPlan];
+    AnalyticsService.instance.logPurchaseStart(plan.productId);
     setState(() => _loading = true);
     try {
-      final success = await PurchaseService.instance.purchase(planIndex: _selectedPlan);
+      final success =
+          await PurchaseService.instance.purchaseByProductId(plan.productId);
       if (!mounted) return;
       if (!success) {
         setState(() => _loading = false);
         return;
       }
-      // Listen for purchase stream to update isPro instead of blind delay
       await _waitForPro();
       if (!mounted) return;
       setState(() => _loading = false);
 
       if (PurchaseService.instance.isPro.value) {
-        AnalyticsService.instance.logPurchaseSuccess(productId);
+        AnalyticsService.instance.logPurchaseSuccess(plan.productId);
         ref.read(isProProvider.notifier).state = true;
         Navigator.of(context).pop(true);
       }
@@ -190,8 +205,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      '3 дні безкоштовно, потім ${plans[_selectedPlan].price}${plans[_selectedPlan].period}',
-                      style: TextStyle(fontSize: 13, color: Colors.grey[600], fontWeight: FontWeight.w500),
+                      plans[_selectedPlan].isLifetime
+                          ? 'Одноразова покупка — доступ назавжди'
+                          : '3 дні безкоштовно, потім ${plans[_selectedPlan].price}${plans[_selectedPlan].period}',
+                      style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500),
                     ),
                     const SizedBox(height: 16),
                     TextButton(
@@ -246,7 +266,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   Widget _planTile(int index, List<_Plan> plans) {
     final plan = plans[index];
     final selected = _selectedPlan == index;
-    const accent = kAccent;
+    final tileColor =
+        plan.isLifetime ? const Color(0xFFF9A825) : kAccent;
 
     return GestureDetector(
       onTap: () => setState(() => _selectedPlan = index),
@@ -254,75 +275,95 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: selected ? accent.withValues(alpha: 0.08) : Colors.white,
+          color: selected
+              ? tileColor.withValues(alpha: 0.08)
+              : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: selected ? accent : Colors.grey.shade300,
+            color: selected ? tileColor : Colors.grey.shade300,
             width: selected ? 2.5 : 1.5,
           ),
         ),
         child: Row(
           children: [
+            // Radio dot
             Container(
               width: 24,
               height: 24,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: selected ? accent : Colors.grey.shade400,
+                  color: selected ? tileColor : Colors.grey.shade400,
                   width: 2,
                 ),
-                color: selected ? accent : Colors.transparent,
+                color: selected ? tileColor : Colors.transparent,
               ),
               child: selected
                   ? const Icon(Icons.check, size: 16, color: Colors.white)
                   : null,
             ),
             const SizedBox(width: 14),
+            // Label + badge
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      Text(
-                        plan.label,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: selected ? accent : null,
+                  Text(
+                    plan.label,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: selected ? tileColor : null,
+                    ),
+                  ),
+                  if (plan.badge != null) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: plan.badgeColor,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        plan.badge!,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      if (plan.badge != null) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFF6B6B),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            plan.badge!,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
+                    ),
+                  ],
                 ],
               ),
             ),
-            Text(
-              '${plan.price}${plan.period}',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-                color: selected ? accent : Colors.grey[700],
-              ),
+            // Price
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  plan.price,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: selected ? tileColor : Colors.grey[700],
+                  ),
+                ),
+                if (plan.period.isNotEmpty)
+                  Text(
+                    plan.period,
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey[500]),
+                  )
+                else if (plan.isLifetime)
+                  Text(
+                    'одноразово',
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey[500]),
+                  ),
+              ],
             ),
           ],
         ),
@@ -352,8 +393,19 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 class _Plan {
   final String label;
   final String price;
-  final String period;
+  final String period; // empty for one-time purchase
   final String? badge;
+  final Color badgeColor;
+  final String productId;
+  final bool isLifetime;
 
-  const _Plan(this.label, this.price, this.period, this.badge);
+  const _Plan(
+    this.label,
+    this.price,
+    this.period,
+    this.badge, {
+    this.badgeColor = const Color(0xFFFF6B6B),
+    required this.productId,
+    this.isLifetime = false,
+  });
 }

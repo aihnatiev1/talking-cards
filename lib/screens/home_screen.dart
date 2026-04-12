@@ -10,6 +10,10 @@ import '../models/card_model.dart';
 import '../models/pack_model.dart';
 import '../providers/daily_quest_provider.dart';
 import '../providers/favorites_provider.dart';
+import '../providers/language_provider.dart';
+import '../providers/parent_auth_provider.dart';
+import '../providers/seasonal_packs_provider.dart';
+import '../providers/srs_provider.dart';
 import '../providers/packs_provider.dart';
 import '../providers/review_provider.dart';
 import '../providers/streak_provider.dart';
@@ -22,8 +26,12 @@ import '../services/paywall_flow.dart';
 import '../services/notification_service.dart';
 import '../widgets/pack_grid_card.dart';
 import '../widgets/parental_gate.dart';
+import '../widgets/profile_avatar_chip.dart';
 import 'cards_screen.dart';
 import 'guess_screen.dart';
+import 'memory_match_screen.dart';
+import 'parent_dashboard_screen.dart';
+import 'parent_pin_screen.dart';
 import 'quest_map_screen.dart';
 import 'stats_screen.dart';
 
@@ -107,6 +115,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Future<void> _openParentArea(BuildContext context) async {
+    final notifier = ref.read(parentAuthProvider.notifier);
+    final hasPin = await notifier.hasPin();
+    final isAuthenticated = ref.read(parentAuthProvider);
+    if (!mounted) return;
+    if (isAuthenticated) {
+      // Already authenticated this session — skip PIN
+      Navigator.of(context).push(
+        MaterialPageRoute(
+            builder: (_) => const ParentDashboardScreen()),
+      );
+      return;
+    }
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ParentPinScreen(isSetup: !hasPin),
       ),
     );
   }
@@ -267,10 +295,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   // Reward picker moved to QuestMapScreen
 
   void _openQuiz(List<CardModel> allCards) {
-    final playable = allCards.where((c) => c.audioKey != null).toList();
-    if (playable.length < 4) return;
+    final lang = ref.read(languageProvider);
+    final List<CardModel> cards;
+    final String? ttsLocale;
+    if (lang == 'en') {
+      cards = allCards.where((c) => c.image != null).toList();
+      ttsLocale = 'en-US';
+    } else {
+      cards = allCards.where((c) => c.audioKey != null).toList();
+      ttsLocale = null;
+    }
+    if (cards.length < 4) return;
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => GuessScreen(cards: playable)),
+      MaterialPageRoute(
+          builder: (_) => GuessScreen(cards: cards, ttsLocale: ttsLocale)),
+    );
+  }
+
+  void _openMemoryMatch(List<CardModel> allCards) {
+    final lang = ref.read(languageProvider);
+    final playable = lang == 'en'
+        ? allCards.where((c) => c.image != null).toList()
+        : allCards.where((c) => c.audioKey != null).toList();
+    if (playable.length < 6) return;
+    // Use the first unlocked non-special pack as the pack reference for theming
+    final packs = ref.read(packsProvider).valueOrNull ?? [];
+    final pack = packs.firstWhere(
+      (p) => !p.isLocked && !p.id.startsWith('_'),
+      orElse: () => packs.first,
+    );
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => MemoryMatchScreen(pack: pack, cards: playable),
+      ),
     );
   }
 
@@ -558,6 +615,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             final gridItems = <_GridItem>[];
             const favPosition = 2;
             const quizPosition = 5;
+            const memoryPosition = 7;
             for (int i = 0; i < filteredPacks.length; i++) {
               if (_selectedCategory == 'Все') {
                 if (i == favPosition) {
@@ -565,6 +623,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 }
                 if (i == quizPosition && playableCount >= 4) {
                   gridItems.add(_GridItem.quiz(allCards));
+                }
+                if (i == memoryPosition && playableCount >= 6) {
+                  gridItems.add(_GridItem.memory(allCards));
                 }
               }
               gridItems.add(_GridItem.pack(filteredPacks[i]));
@@ -576,6 +637,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               if (filteredPacks.length <= quizPosition &&
                   playableCount >= 4) {
                 gridItems.add(_GridItem.quiz(allCards));
+              }
+              if (filteredPacks.length <= memoryPosition &&
+                  playableCount >= 6) {
+                gridItems.add(_GridItem.memory(allCards));
               }
               if (reviewPack != null) {
                 gridItems.add(_GridItem.pack(reviewPack));
@@ -604,10 +669,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ref.read(themeModeProvider.notifier).toggle(),
                       ),
                       const Spacer(),
-                      IconButton(
-                        icon: Icon(Icons.info_outline_rounded,
-                            color: Colors.grey[400], size: 26),
-                        onPressed: () => _showAbout(context),
+                      const ProfileAvatarChip(),
+                      GestureDetector(
+                        onLongPress: () => _openParentArea(context),
+                        child: IconButton(
+                          icon: Icon(Icons.info_outline_rounded,
+                              color: Colors.grey[400], size: 26),
+                          onPressed: () => _showAbout(context),
+                        ),
                       ),
                     ],
                   ),
@@ -627,9 +696,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     packProgress.values.fold(0, (a, b) => a + b)),
 
                 // Hero section: Card of Day + Daily Quest
+                // IntrinsicHeight equalises card heights; stretch fills them.
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
-                  child: Row(
+                  child: IntrinsicHeight(child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       if (cotd != null)
                         Expanded(
@@ -668,6 +739,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       ),
                     ],
+                  )),
+                ),
+
+                // Seasonal packs — shown only during active season
+                _SeasonalPacksRow(
+                  onTap: (pack) => _onPackTap(context, pack),
+                  completedPacks: completedPacks,
+                  packProgress: packProgress,
+                ),
+
+                // SRS review banner — shown when cards are due
+                _SrsReviewBanner(
+                  allCards: allCards,
+                  onTap: (cards) => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => GuessScreen(cards: cards),
+                    ),
                   ),
                 ),
 
@@ -739,6 +827,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         return _QuizGridCard(
                             onTap: () => _openQuiz(item.quizCards!));
                       }
+                      if (item.isMemory) {
+                        return _MemoryGridCard(
+                            onTap: () => _openMemoryMatch(item.memoryCards!));
+                      }
                       final pack = item.pack!;
                       return PackGridCard(
                         pack: pack,
@@ -809,10 +901,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 class _GridItem {
   final PackModel? pack;
   final List<CardModel>? quizCards;
+  final List<CardModel>? memoryCards;
   bool get isQuiz => quizCards != null;
+  bool get isMemory => memoryCards != null;
 
-  _GridItem.pack(PackModel p) : pack = p, quizCards = null;
-  _GridItem.quiz(List<CardModel> cards) : pack = null, quizCards = cards;
+  _GridItem.pack(PackModel p) : pack = p, quizCards = null, memoryCards = null;
+  _GridItem.quiz(List<CardModel> cards) : pack = null, quizCards = cards, memoryCards = null;
+  _GridItem.memory(List<CardModel> cards) : pack = null, quizCards = null, memoryCards = cards;
 }
 
 class _CardOfDayHero extends StatefulWidget {
@@ -856,7 +951,7 @@ class _CardOfDayHeroState extends State<_CardOfDayHero>
       child: GestureDetector(
         onTap: widget.onTap,
         child: Container(
-          height: 120,
+          constraints: const BoxConstraints(minHeight: 110),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -881,39 +976,46 @@ class _CardOfDayHeroState extends State<_CardOfDayHero>
             ],
           ),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: accent.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      '🔊 Картка дня',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: accent,
-                      ),
-                    ),
+              // Badge — always at top
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '🔊 Картка дня',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: accent,
                   ),
-                ],
+                ),
               ),
-              const Spacer(),
-              Text(widget.card.emoji,
-                  style: const TextStyle(fontSize: 36)),
-              const SizedBox(height: 4),
-              Text(
-                widget.card.sound,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                  color: accent,
+              // Emoji + word centred in remaining space
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(widget.card.emoji,
+                          style: const TextStyle(fontSize: 30)),
+                      const SizedBox(height: 4),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          widget.card.sound,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                            color: accent,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -957,7 +1059,7 @@ class _DailyQuestHero extends ConsumerWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 120,
+        constraints: const BoxConstraints(minHeight: 110),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -979,12 +1081,14 @@ class _DailyQuestHero extends ConsumerWidget {
           ],
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // ── Badge + counter ──────────────────────────
             Row(
               children: [
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: accentColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
@@ -1011,8 +1115,8 @@ class _DailyQuestHero extends ConsumerWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 6),
-            // Progress bar
+            const SizedBox(height: 5),
+            // ── Progress bar ─────────────────────────────
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
@@ -1022,63 +1126,86 @@ class _DailyQuestHero extends ConsumerWidget {
                 valueColor: AlwaysStoppedAnimation<Color>(accentColor),
               ),
             ),
-            const Spacer(),
-            if (claimed)
-              // Show treasure found
-              const Text(
-                '🎁 Скарб знайдено!',
-                style: TextStyle(fontSize: 15),
-              )
-            else if (allDone)
-              Text(
-                '🎁 Забери скарб!',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: accentColor,
-                ),
-              )
-            else ...[
-              // Task dots
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: QuestTask.values.map((task) {
-                  final isDone = quest.completed.contains(task);
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 3),
-                    child: Container(
-                      width: 18,
-                      height: 18,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isDone
-                            ? Colors.orange
-                            : Colors.orange.withValues(alpha: 0.12),
-                        border: Border.all(
-                          color: isDone
-                              ? Colors.orange
-                              : Colors.orange.withValues(alpha: 0.3),
-                          width: 1.5,
-                        ),
-                      ),
-                      child: isDone
-                          ? const Icon(Icons.check,
-                              size: 12, color: Colors.white)
-                          : null,
-                    ),
-                  );
-                }).toList(),
+            // ── Main content fills remaining height ──────
+            Expanded(
+              child: Center(
+                child: claimed
+                    ? FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text('🎁 Скарб знайдено!',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: accentColor,
+                            )),
+                      )
+                    : allDone
+                        ? FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text('🎁 Забери скарб!',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: accentColor,
+                                )),
+                          )
+                        : Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: QuestTask.values
+                                    .take(quest.totalCount)
+                                    .map((task) {
+                                  final isDone =
+                                      quest.completed.contains(task);
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 3),
+                                    child: Container(
+                                      width: 16,
+                                      height: 16,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: isDone
+                                            ? Colors.orange
+                                            : Colors.orange
+                                                .withValues(alpha: 0.12),
+                                        border: Border.all(
+                                          color: isDone
+                                              ? Colors.orange
+                                              : Colors.orange
+                                                  .withValues(alpha: 0.3),
+                                          width: 1.5,
+                                        ),
+                                      ),
+                                      child: isDone
+                                          ? const Icon(Icons.check,
+                                              size: 10,
+                                              color: Colors.white)
+                                          : null,
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                              const SizedBox(height: 4),
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  'Відкрий карту 🗺️',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.grey[500],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
               ),
-              const SizedBox(height: 3),
-              Text(
-                'Відкрий карту 🗺️',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey[500],
-                ),
-              ),
-            ],
+            ),
           ],
         ),
       ),
@@ -1130,6 +1257,210 @@ class _QuizGridCard extends StatelessWidget {
             Text(
               'Вікторина',
               style: TextStyle(fontSize: 12, color: kAccent),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+//  Seasonal packs row
+// ─────────────────────────────────────────────
+
+class _SeasonalPacksRow extends ConsumerWidget {
+  final void Function(PackModel) onTap;
+  final Set<String> completedPacks;
+  final Map<String, int> packProgress;
+
+  const _SeasonalPacksRow({
+    required this.onTap,
+    required this.completedPacks,
+    required this.packProgress,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final seasonal = ref.watch(activeSeasonalPacksProvider);
+    return seasonal.when(
+      data: (packs) {
+        if (packs.isEmpty) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Text(
+                      '✨ Сезонний пак',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: packs.first.color,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 7, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: packs.first.color.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'Безкоштовно',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: packs.first.color,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                height: 150,
+                child: Row(
+                  children: packs.map((pack) {
+                    return Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: PackGridCard(
+                          pack: pack,
+                          isCompleted: completedPacks.contains(pack.id),
+                          progress: packProgress[pack.id] ?? 0,
+                          isSeasonal: true,
+                          onTap: () => onTap(pack),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+//  SRS review banner
+// ─────────────────────────────────────────────
+
+class _SrsReviewBanner extends ConsumerWidget {
+  final List<CardModel> allCards;
+  final void Function(List<CardModel>) onTap;
+
+  const _SrsReviewBanner({required this.allCards, required this.onTap});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final srs = ref.watch(srsProvider);
+    if (srs.dueCount == 0) return const SizedBox.shrink();
+
+    // Resolve due CardModels from the full cards list
+    final dueCards = allCards
+        .where((c) => srs.dueIds.contains(c.id) && c.audioKey != null)
+        .take(20) // cap at 20 per session
+        .toList();
+    if (dueCards.isEmpty) return const SizedBox.shrink();
+
+    const color = Color(0xFF00BCD4);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+      child: GestureDetector(
+        onTap: () => onTap(dueCards),
+        child: Container(
+          padding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(14),
+            border:
+                Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
+          ),
+          child: Row(
+            children: [
+              const Text('🔁', style: TextStyle(fontSize: 20)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Повторити сьогодні',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: color,
+                      ),
+                    ),
+                    Text(
+                      '${dueCards.length} карток чекають',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: color.withValues(alpha: 0.8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.arrow_forward_ios_rounded, size: 14, color: color),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MemoryGridCard extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _MemoryGridCard({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    const color = kTeal;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: color.withValues(alpha: 0.25),
+            width: 1.5,
+          ),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+        child: const Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('🧠', style: TextStyle(fontSize: 44)),
+            SizedBox(height: 8),
+            Text(
+              'Знайди пару',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+            SizedBox(height: 4),
+            Text(
+              'Пам\'ять',
+              style: TextStyle(fontSize: 12, color: color),
             ),
           ],
         ),

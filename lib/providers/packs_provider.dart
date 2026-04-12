@@ -5,7 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/pack_model.dart';
+import '../services/profile_service.dart';
 import '../services/purchase_service.dart';
+import 'language_provider.dart';
 
 final isProProvider = StateProvider<bool>(
   (ref) => PurchaseService.instance.isPro.value,
@@ -13,11 +15,20 @@ final isProProvider = StateProvider<bool>(
 
 final packsProvider = FutureProvider<List<PackModel>>((ref) async {
   final isPro = ref.watch(isProProvider);
-  final jsonString = await rootBundle.loadString('assets/data/uk_cards.json');
+  final lang = ref.watch(languageProvider);
+
+  final assetPath = lang == 'en'
+      ? 'assets/data/en_cards.json'
+      : 'assets/data/uk_cards.json';
+
+  final jsonString = await rootBundle.loadString(assetPath);
   final List<dynamic> jsonList = json.decode(jsonString) as List<dynamic>;
   final packs = jsonList
       .map((e) => PackModel.fromJson(e as Map<String, dynamic>))
       .toList();
+
+  // EN packs are always free (no subscription required)
+  if (lang == 'en') return packs;
 
   if (!isPro) return packs;
 
@@ -37,14 +48,15 @@ class CompletedPacksNotifier extends StateNotifier<Set<String>> {
   }
 
   static const _key = 'completed_packs';
+  String get _prefixedKey => '${ProfileService.prefix}$_key';
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
-    final list = prefs.getStringList(_key) ?? [];
+    final list = prefs.getStringList(_prefixedKey) ?? [];
     // Filter out virtual packs that may have been saved by mistake
     final cleaned = list.where((id) => !id.startsWith('_')).toSet();
     if (cleaned.length != list.length) {
-      await prefs.setStringList(_key, cleaned.toList());
+      await prefs.setStringList(_prefixedKey, cleaned.toList());
     }
     state = cleaned;
   }
@@ -54,7 +66,7 @@ class CompletedPacksNotifier extends StateNotifier<Set<String>> {
     if (packId.startsWith('_')) return;
     state = {...state, packId};
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(_key, state.toList());
+    await prefs.setStringList(_prefixedKey, state.toList());
   }
 }
 
@@ -69,13 +81,15 @@ class PackProgressNotifier extends StateNotifier<Map<String, int>> {
   }
 
   static const _key = 'pack_progress';
+  String get _fullPrefix => '${ProfileService.prefix}${_key}_';
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
-    final keys = prefs.getKeys().where((k) => k.startsWith('${_key}_'));
+    final fp = _fullPrefix;
+    final keys = prefs.getKeys().where((k) => k.startsWith(fp));
     final map = <String, int>{};
     for (final k in keys) {
-      final packId = k.substring('${_key}_'.length);
+      final packId = k.substring(fp.length);
       // Clean up virtual packs saved by mistake
       if (packId.startsWith('_')) {
         await prefs.remove(k);
@@ -93,7 +107,7 @@ class PackProgressNotifier extends StateNotifier<Map<String, int>> {
     if (cardIndex + 1 > current) {
       state = {...state, packId: cardIndex + 1};
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt('${_key}_$packId', cardIndex + 1);
+      await prefs.setInt('${_fullPrefix}$packId', cardIndex + 1);
     }
   }
 }

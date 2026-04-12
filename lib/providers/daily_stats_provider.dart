@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/profile_service.dart';
+
 final dailyStatsProvider =
     StateNotifierProvider<DailyStatsNotifier, Map<String, int>>(
   (ref) => DailyStatsNotifier(),
@@ -12,6 +14,7 @@ class DailyStatsNotifier extends StateNotifier<Map<String, int>> {
   }
 
   static const _prefix = 'daily_views_';
+  String get _fullPrefix => '${ProfileService.prefix}$_prefix';
 
   String get _todayKey {
     final now = DateTime.now();
@@ -20,10 +23,11 @@ class DailyStatsNotifier extends StateNotifier<Map<String, int>> {
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
-    final keys = prefs.getKeys().where((k) => k.startsWith(_prefix));
+    final fp = _fullPrefix;
+    final keys = prefs.getKeys().where((k) => k.startsWith(fp));
     final map = <String, int>{};
     for (final k in keys) {
-      map[k.substring(_prefix.length)] = prefs.getInt(k) ?? 0;
+      map[k.substring(fp.length)] = prefs.getInt(k) ?? 0;
     }
     state = map;
   }
@@ -33,7 +37,7 @@ class DailyStatsNotifier extends StateNotifier<Map<String, int>> {
     final current = state[key] ?? 0;
     state = {...state, key: current + 1};
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('$_prefix$key', current + 1);
+    await prefs.setInt('${_fullPrefix}$key', current + 1);
   }
 
   /// Returns view counts for the last 7 days (oldest first).

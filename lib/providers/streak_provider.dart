@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/profile_service.dart';
+
 class StreakState {
   final int currentStreak;
   final String lastActiveDate;
@@ -51,11 +53,13 @@ class StreakNotifier extends StateNotifier<StreakState> {
     return '${yesterday.year}-${yesterday.month.toString().padLeft(2, '0')}-${yesterday.day.toString().padLeft(2, '0')}';
   }
 
+  String get _p => ProfileService.prefix;
+
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
-    final streak = prefs.getInt('streak_current') ?? 0;
-    final lastDate = prefs.getString('streak_last_date') ?? '';
-    final rewards = (prefs.getStringList('streak_rewards') ?? []).toSet();
+    final streak = prefs.getInt('${_p}streak_current') ?? 0;
+    final lastDate = prefs.getString('${_p}streak_last_date') ?? '';
+    final rewards = (prefs.getStringList('${_p}streak_rewards') ?? []).toSet();
     state = StreakState(
       currentStreak: streak,
       lastActiveDate: lastDate,
@@ -91,9 +95,9 @@ class StreakNotifier extends StateNotifier<StreakState> {
     );
 
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('streak_current', newStreak);
-    await prefs.setString('streak_last_date', today);
-    await prefs.setStringList('streak_rewards', newRewards.toList());
+    await prefs.setInt('${_p}streak_current', newStreak);
+    await prefs.setString('${_p}streak_last_date', today);
+    await prefs.setStringList('${_p}streak_rewards', newRewards.toList());
   }
 
   /// Next milestone the user hasn't reached yet

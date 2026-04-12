@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
@@ -13,7 +12,8 @@ class PurchaseService {
   static const _installedKey = 'installed';
   static const _yearlyId = 'yearly_premium';
   static const _monthlyId = 'monthly_premium';
-  static const _productIds = {_yearlyId, _monthlyId};
+  static const lifetimeId = 'lifetime_premium';
+  static const _productIds = {_yearlyId, _monthlyId, lifetimeId};
 
   final ValueNotifier<bool> isPro = ValueNotifier(false);
   bool _initialized = false;
@@ -43,11 +43,12 @@ class PurchaseService {
     final response = await _iap.queryProductDetails(_productIds);
     products = response.productDetails;
 
-    // Sort: yearly first
+    // Sort: yearly → monthly → lifetime
+    const order = [_yearlyId, _monthlyId, lifetimeId];
     products.sort((a, b) {
-      if (a.id == _yearlyId) return -1;
-      if (b.id == _yearlyId) return 1;
-      return 0;
+      final ai = order.indexOf(a.id);
+      final bi = order.indexOf(b.id);
+      return ai.compareTo(bi);
     });
 
     _initialized = true;
@@ -66,6 +67,14 @@ class PurchaseService {
     final product = products[planIndex.clamp(0, products.length - 1)];
     final param = PurchaseParam(productDetails: product);
 
+    return _iap.buyNonConsumable(purchaseParam: param);
+  }
+
+  /// Purchase by product ID directly (used by the paywall for the lifetime option).
+  Future<bool> purchaseByProductId(String productId) async {
+    final product = products.where((p) => p.id == productId).firstOrNull;
+    if (product == null) return false;
+    final param = PurchaseParam(productDetails: product);
     return _iap.buyNonConsumable(purchaseParam: param);
   }
 

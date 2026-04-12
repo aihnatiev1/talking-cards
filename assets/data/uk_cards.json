@@ -2738,5 +2738,214 @@
         "image": "body"
       }
     ]
+  },
+  {
+    "id": "phrases",
+    "title": "Фрази",
+    "icon": "💬",
+    "color": "#6C5CE7",
+    "isLocked": true,
+    "cards": [
+      {
+        "id": "ph01",
+        "sound": "Я хочу пити",
+        "text": "Коли хочеш водички",
+        "emoji": "🥤",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#0277BD"
+      },
+      {
+        "id": "ph02",
+        "sound": "Я хочу їсти",
+        "text": "Коли хочеш їжі",
+        "emoji": "🍽️",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100"
+      },
+      {
+        "id": "ph03",
+        "sound": "Я хочу спати",
+        "text": "Коли хочеш відпочити",
+        "emoji": "😴",
+        "colorBg": "#EDE7F6",
+        "colorAccent": "#6A1B9A"
+      },
+      {
+        "id": "ph04",
+        "sound": "Мені холодно",
+        "text": "Коли мерзнеш",
+        "emoji": "🥶",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#1565C0"
+      },
+      {
+        "id": "ph05",
+        "sound": "Мені жарко",
+        "text": "Коли спекотно",
+        "emoji": "🥵",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FF8F00"
+      },
+      {
+        "id": "ph06",
+        "sound": "Де мама?",
+        "text": "Шукаєш маму",
+        "emoji": "👩",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#AD1457"
+      },
+      {
+        "id": "ph07",
+        "sound": "Де тато?",
+        "text": "Шукаєш тата",
+        "emoji": "👨",
+        "colorBg": "#E8EAF6",
+        "colorAccent": "#3949AB"
+      },
+      {
+        "id": "ph08",
+        "sound": "Іди до мене",
+        "text": "Хочеш обійматися",
+        "emoji": "🤗",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FF8F00"
+      },
+      {
+        "id": "ph09",
+        "sound": "Я люблю тебе",
+        "text": "Коли хочеш сказати любов",
+        "emoji": "❤️",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#C62828"
+      },
+      {
+        "id": "ph10",
+        "sound": "Обійми мене",
+        "text": "Хочеш обіймів",
+        "emoji": "🫂",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100"
+      },
+      {
+        "id": "ph11",
+        "sound": "Дякую",
+        "text": "Коли тобі зробили щось хороше",
+        "emoji": "🙏",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32"
+      },
+      {
+        "id": "ph12",
+        "sound": "Будь ласка",
+        "text": "Коли про щось просиш",
+        "emoji": "😊",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#388E3C"
+      },
+      {
+        "id": "ph13",
+        "sound": "Вибач",
+        "text": "Коли зробив помилку",
+        "emoji": "🥺",
+        "colorBg": "#EDE7F6",
+        "colorAccent": "#6A1B9A"
+      },
+      {
+        "id": "ph14",
+        "sound": "Привіт!",
+        "text": "Зустрічаєш когось",
+        "emoji": "👋",
+        "colorBg": "#E1F5FE",
+        "colorAccent": "#0288D1"
+      },
+      {
+        "id": "ph15",
+        "sound": "До побачення",
+        "text": "Прощаєшся",
+        "emoji": "👋",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#7B1FA2"
+      },
+      {
+        "id": "ph16",
+        "sound": "Дай мені",
+        "text": "Хочеш щось отримати",
+        "emoji": "🤲",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FF8F00"
+      },
+      {
+        "id": "ph17",
+        "sound": "Допоможи мені",
+        "text": "Потрібна допомога",
+        "emoji": "🆘",
+        "colorBg": "#FFEBEE",
+        "colorAccent": "#C62828"
+      },
+      {
+        "id": "ph18",
+        "sound": "Ще раз",
+        "text": "Хочеш повторити",
+        "emoji": "🔁",
+        "colorBg": "#E1F5FE",
+        "colorAccent": "#0277BD"
+      },
+      {
+        "id": "ph19",
+        "sound": "Не хочу",
+        "text": "Коли відмовляєшся",
+        "emoji": "🙅",
+        "colorBg": "#FFEBEE",
+        "colorAccent": "#B71C1C"
+      },
+      {
+        "id": "ph20",
+        "sound": "Зачекай",
+        "text": "Просиш почекати",
+        "emoji": "⏳",
+        "colorBg": "#FFF9C4",
+        "colorAccent": "#F57F17"
+      },
+      {
+        "id": "ph21",
+        "sound": "Мені боляче",
+        "text": "Коли щось болить",
+        "emoji": "😢",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#AD1457"
+      },
+      {
+        "id": "ph22",
+        "sound": "Мені сумно",
+        "text": "Коли сумуєш",
+        "emoji": "😔",
+        "colorBg": "#EDE7F6",
+        "colorAccent": "#4527A0"
+      },
+      {
+        "id": "ph23",
+        "sound": "Я радий",
+        "text": "Коли радієш",
+        "emoji": "😄",
+        "colorBg": "#FFF9C4",
+        "colorAccent": "#F9A825"
+      },
+      {
+        "id": "ph24",
+        "sound": "Мені страшно",
+        "text": "Коли боїшся",
+        "emoji": "😨",
+        "colorBg": "#E8EAF6",
+        "colorAccent": "#283593"
+      },
+      {
+        "id": "ph25",
+        "sound": "Я не знаю",
+        "text": "Коли не знаєш відповіді",
+        "emoji": "🤷",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#7B1FA2"
+      }
+    ]
   }
 ]
