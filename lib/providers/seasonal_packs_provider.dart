@@ -19,6 +19,9 @@ class SeasonalPackModel extends PackModel {
   /// e.g. "01-15" = January 15
   final String activeTo;
 
+  /// English title (e.g. "Christmas")
+  final String titleEn;
+
   const SeasonalPackModel({
     required super.id,
     required super.title,
@@ -27,7 +30,12 @@ class SeasonalPackModel extends PackModel {
     required super.cards,
     required this.activeFrom,
     required this.activeTo,
+    this.titleEn = '',
   }) : super(isLocked: false, isFree: true);
+
+  /// Returns the localised title.
+  String localizedTitle(bool isEn) =>
+      isEn && titleEn.isNotEmpty ? titleEn : title;
 
   /// True when [now] falls within the active window.
   /// Handles cross-year ranges (e.g. Dec–Jan).
@@ -60,6 +68,7 @@ class SeasonalPackModel extends PackModel {
       cards: cards,
       activeFrom: json['activeFrom'] as String,
       activeTo: json['activeTo'] as String,
+      titleEn: json['titleEn'] as String? ?? '',
     );
   }
 }

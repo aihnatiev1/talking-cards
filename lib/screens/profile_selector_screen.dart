@@ -3,8 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/profile_model.dart';
+import '../providers/language_provider.dart';
 import '../providers/profile_provider.dart';
 import '../utils/constants.dart';
+import '../utils/l10n.dart';
 
 // ─────────────────────────────────────────────
 //  Profile selector bottom sheet
@@ -26,6 +28,7 @@ class _ProfileSelectorSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(profileProvider);
+    final s = AppS(ref.watch(languageProvider) == 'en');
 
     return Container(
       decoration: BoxDecoration(
@@ -52,7 +55,7 @@ class _ProfileSelectorSheet extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Профілі',
+            s('Профілі', 'Profiles'),
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w800,
@@ -68,9 +71,9 @@ class _ProfileSelectorSheet extends ConsumerWidget {
                   ref.read(profileProvider.notifier).switchProfile(profile.id);
                   Navigator.of(context).pop();
                 },
-                onEdit: () => _showEditDialog(context, ref, profile),
+                onEdit: () => _showEditDialog(context, ref, profile, s.isEn),
                 onDelete: state.profiles.length > 1
-                    ? () => _confirmDelete(context, ref, profile)
+                    ? () => _confirmDelete(context, ref, profile, s.isEn)
                     : null,
               )),
           if (state.profiles.length < 3) ...[
@@ -78,9 +81,9 @@ class _ProfileSelectorSheet extends ConsumerWidget {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: () => _showCreateDialog(context, ref),
+                onPressed: () => _showCreateDialog(context, ref, s.isEn),
                 icon: const Icon(Icons.add_rounded),
-                label: const Text('Додати профіль'),
+                label: Text(s('Додати профіль', 'Add profile')),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: kAccent,
                   side: BorderSide(color: kAccent.withValues(alpha: 0.4)),
@@ -96,10 +99,11 @@ class _ProfileSelectorSheet extends ConsumerWidget {
     );
   }
 
-  Future<void> _showCreateDialog(BuildContext context, WidgetRef ref) async {
+  Future<void> _showCreateDialog(BuildContext context, WidgetRef ref, bool isEn) async {
+    final loc = AppS(isEn);
     final result = await showDialog<(String, String, String)?>(
       context: context,
-      builder: (_) => const _ProfileEditDialog(title: 'Новий профіль'),
+      builder: (_) => _ProfileEditDialog(title: loc('Новий профіль', 'New profile'), isEn: isEn),
     );
     if (result != null) {
       await ref
@@ -109,14 +113,16 @@ class _ProfileSelectorSheet extends ConsumerWidget {
   }
 
   Future<void> _showEditDialog(
-      BuildContext context, WidgetRef ref, ProfileModel profile) async {
+      BuildContext context, WidgetRef ref, ProfileModel profile, bool isEn) async {
+    final loc = AppS(isEn);
     final result = await showDialog<(String, String, String)?>(
       context: context,
       builder: (_) => _ProfileEditDialog(
-        title: 'Редагувати',
+        title: loc('Редагувати', 'Edit'),
         initialName: profile.name,
         initialAvatar: profile.avatarEmoji,
         initialLanguage: profile.language,
+        isEn: isEn,
       ),
     );
     if (result != null) {
@@ -132,22 +138,25 @@ class _ProfileSelectorSheet extends ConsumerWidget {
   }
 
   Future<void> _confirmDelete(
-      BuildContext context, WidgetRef ref, ProfileModel profile) async {
+      BuildContext context, WidgetRef ref, ProfileModel profile, bool isEn) async {
+    final s = AppS(isEn);
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Видалити профіль?'),
-        content: Text(
-            'Весь прогрес "${profile.name}" буде видалено. Це незворотно.'),
+        title: Text(s('Видалити профіль?', 'Delete profile?')),
+        content: Text(s(
+          'Весь прогрес "${profile.name}" буде видалено. Це незворотно.',
+          'All progress for "${profile.name}" will be deleted. This cannot be undone.',
+        )),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Скасувати'),
+            child: Text(s('Скасувати', 'Cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Видалити',
-                style: TextStyle(color: Colors.red)),
+            child: Text(s('Видалити', 'Delete'),
+                style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -253,12 +262,14 @@ class _ProfileEditDialog extends StatefulWidget {
   final String? initialName;
   final String? initialAvatar;
   final String? initialLanguage;
+  final bool isEn;
 
   const _ProfileEditDialog({
     required this.title,
     this.initialName,
     this.initialAvatar,
     this.initialLanguage,
+    this.isEn = false,
   });
 
   @override
@@ -286,6 +297,7 @@ class _ProfileEditDialogState extends State<_ProfileEditDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final s = AppS(widget.isEn);
     return AlertDialog(
       title: Text(widget.title),
       content: SingleChildScrollView(
@@ -297,17 +309,17 @@ class _ProfileEditDialogState extends State<_ProfileEditDialog> {
             TextField(
               controller: _nameCtrl,
               maxLength: 20,
-              decoration: const InputDecoration(
-                labelText: "Ім'я дитини",
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: s("Ім'я дитини", "Child's name"),
+                border: const OutlineInputBorder(),
                 counterText: '',
               ),
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 16),
             // Language selector
-            const Text('Яку мову вчимо?',
-                style: TextStyle(fontWeight: FontWeight.w600)),
+            Text(s('Мова карток', 'Card language'),
+                style: const TextStyle(fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             Row(
               children: [
@@ -318,8 +330,8 @@ class _ProfileEditDialogState extends State<_ProfileEditDialog> {
             ),
             const SizedBox(height: 16),
             // Avatar grid
-            const Text('Аватар',
-                style: TextStyle(fontWeight: FontWeight.w600)),
+            Text(s('Аватар', 'Avatar'),
+                style: const TextStyle(fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -357,7 +369,7 @@ class _ProfileEditDialogState extends State<_ProfileEditDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Скасувати'),
+          child: Text(s('Скасувати', 'Cancel')),
         ),
         ElevatedButton(
           onPressed: _nameCtrl.text.trim().isEmpty
@@ -368,7 +380,7 @@ class _ProfileEditDialogState extends State<_ProfileEditDialog> {
             backgroundColor: kAccent,
             foregroundColor: Colors.white,
           ),
-          child: const Text('Зберегти'),
+          child: Text(s('Зберегти', 'Save')),
         ),
       ],
     );

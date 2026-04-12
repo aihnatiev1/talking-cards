@@ -156,7 +156,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   child: Text(
                     _page == 2
                         ? (_selectedLang == 'en' ? "Let's start! 🚀" : 'Почнемо! 🚀')
-                        : (_selectedLang == 'en' && _page > 0 ? 'Next →' : 'Далі →'),
+                        : (_selectedLang == 'en' ? 'Next →' : 'Далі →'),
                     style: const TextStyle(
                         fontSize: 17, fontWeight: FontWeight.w700),
                   ),
@@ -189,14 +189,16 @@ class _LanguagePage extends StatelessWidget {
           const SizedBox(height: 12),
           const Text('🗣️', style: TextStyle(fontSize: 64)),
           const SizedBox(height: 20),
-          const Text(
-            'Яку мову вчимо?',
+          Text(
+            selected == 'en' ? 'Choose card language' : 'Виберіть мову карток',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
+            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 8),
           Text(
-            'Можна змінити окремо для кожної дитини',
+            selected == 'en'
+                ? 'Can be changed per child'
+                : 'Можна змінити окремо для кожної дитини',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 14, color: Colors.grey[500]),
           ),

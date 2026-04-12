@@ -22,6 +22,7 @@ import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../services/widget_service.dart';
 import '../utils/constants.dart';
+import '../utils/l10n.dart';
 import '../services/paywall_flow.dart';
 import '../services/notification_service.dart';
 import '../widgets/pack_grid_card.dart';
@@ -35,8 +36,8 @@ import 'parent_pin_screen.dart';
 import 'quest_map_screen.dart';
 import 'stats_screen.dart';
 
-/// Category mapping: pack id → category name
-const _packCategories = <String, String>{
+/// Category mapping: pack id → category name (Ukrainian)
+const _packCategoriesUk = <String, String>{
   'rozmovlyalky': 'Мовлення',
   'animals': 'Світ навколо',
   'transport': 'Світ навколо',
@@ -45,9 +46,22 @@ const _packCategories = <String, String>{
   'emotions': 'Розвиток',
   'colors': 'Розвиток',
   'body': 'Розвиток',
+  'phrases': 'Мовлення',
 };
 
-const _allCategories = ['Все', 'Мовлення', 'Світ навколо', 'Побут', 'Розвиток'];
+/// Category mapping for English packs
+const _packCategoriesEn = <String, String>{
+  'en_animals': 'Nature',
+  'en_home': 'Home',
+  'en_emotions': 'Feelings',
+  'en_transport': 'Transport',
+  'en_food': 'Food',
+  'en_colors': 'Learning',
+  'en_body': 'Learning',
+};
+
+const _allCategoriesUk = ['Все', 'Мовлення', 'Світ навколо', 'Побут', 'Розвиток'];
+const _allCategoriesEn = ['All', 'Nature', 'Home', 'Feelings', 'Transport', 'Food', 'Learning'];
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -57,7 +71,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  String _selectedCategory = 'Все';
+  String _selectedCategory = ''; // '' means "All" — resolved per-language
 
   @override
   void initState() {
@@ -71,6 +85,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     await prefs.setBool('welcome_shown', true);
     if (!mounted) return;
 
+    final s = AppS(ref.read(languageProvider) == 'en');
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
@@ -82,16 +97,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             children: [
               const Text('👋', style: TextStyle(fontSize: 56)),
               const SizedBox(height: 12),
-              const Text(
-                'Привіт!',
-                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+              Text(
+                s('Привіт!', 'Hello!'),
+                style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
               Text(
-                'Тут зібрані картки зі звуками для малят.\n\n'
-                '👆 Натисни на картку — почуєш звук\n'
-                '👈 Свайпни — наступна картка\n'
-                '🔊 Звук вмикається автоматично',
+                s(
+                  'Тут зібрані картки зі звуками для малят.\n\n'
+                  '👆 Натисни на картку — почуєш звук\n'
+                  '👈 Свайпни — наступна картка\n'
+                  '🔊 Звук вмикається автоматично',
+                  'Flash cards with words for little ones.\n\n'
+                  '👆 Tap a card — hear the word\n'
+                  '👈 Swipe — next card\n'
+                  '🔊 Sound plays automatically',
+                ),
                 textAlign: TextAlign.left,
                 style: TextStyle(fontSize: 15, color: Theme.of(context).textTheme.bodyMedium?.color, height: 1.4),
               ),
@@ -108,8 +129,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  child: const Text('Почнемо! 🎉',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  child: Text(s("Почнемо! 🎉", "Let's go! 🎉"),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -142,6 +163,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void _showAbout(BuildContext _) async {
     final info = await PackageInfo.fromPlatform();
     if (!mounted) return;
+    final s = AppS(ref.read(languageProvider) == 'en');
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
@@ -154,17 +176,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             children: [
               const Text('🗣️', style: TextStyle(fontSize: 48)),
               const SizedBox(height: 12),
-              const Text(
-                'Картки-розмовлялки',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              Text(
+                s('Картки-розмовлялки', 'Talking Cards'),
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 4),
-              Text('Версія ${info.version}',
+              Text(s('Версія ${info.version}', 'Version ${info.version}'),
                   style: TextStyle(fontSize: 13, color: Colors.grey[500])),
               const SizedBox(height: 16),
               Text(
-                'Яскраві картки зі звуками для найменших. '
-                'Слухай — вивчай — повторюй!',
+                s(
+                  'Яскраві картки зі звуками для найменших. '
+                  'Слухай — вивчай — повторюй!',
+                  'Flash cards with sounds for little ones. '
+                  'Listen — learn — repeat!',
+                ),
                 style: TextStyle(
                     fontSize: 14, color: Colors.grey[600], height: 1.4),
               ),
@@ -178,7 +204,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   );
                 },
                 icon: const Icon(Icons.privacy_tip_outlined, size: 18),
-                label: const Text('Політика конфіденційності'),
+                label: Text(s('Політика конфіденційності', 'Privacy Policy')),
               ),
               TextButton.icon(
                 onPressed: () async {
@@ -193,7 +219,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   }
                 },
                 icon: const Icon(Icons.mail_outline, size: 18),
-                label: const Text('Підтримка'),
+                label: Text(s('Підтримка', 'Support')),
               ),
               const _NotificationToggle(),
               const SizedBox(height: 8),
@@ -208,8 +234,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                   onPressed: () => Navigator.of(ctx).pop(),
-                  child:
-                      Text('Закрити', style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.w600)),
+                  child: Text(s('Закрити', 'Close'),
+                      style: TextStyle(
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w600)),
                 ),
               ),
             ],
@@ -558,10 +586,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Scaffold(
       body: packsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Помилка: $e')),
+          error: (e, _) => Center(child: Text('Error: $e')),
           data: (packs) {
             final allCards = packs.expand((p) => p.cards).toList();
             final isEnMode = ref.read(languageProvider) == 'en';
+            final s = AppS(isEnMode);
+            final packCategories = isEnMode ? _packCategoriesEn : _packCategoriesUk;
+            final allCategories = isEnMode ? _allCategoriesEn : _allCategoriesUk;
+            // Reset selected category when language changes
+            if (_selectedCategory.isEmpty ||
+                !allCategories.contains(_selectedCategory)) {
+              Future.microtask(() =>
+                  setState(() => _selectedCategory = allCategories.first));
+            }
             // EN cards have no audioKey — use image presence instead
             final playableCount = isEnMode
                 ? allCards.where((c) => c.image != null).length
@@ -580,7 +617,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 allCards.where((c) => favorites.contains(c.id)).toList();
             final favoritesPack = PackModel(
               id: '_favorites',
-              title: 'Улюблені',
+              title: s('Улюблені', 'Favorites'),
               icon: '❤️',
               color: kStreakOrange,
               isLocked: false,
@@ -596,7 +633,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               if (reviewCards.length >= 5) {
                 reviewPack = PackModel(
                   id: '_review',
-                  title: 'Повторення',
+                  title: s('Повторення', 'Review'),
                   icon: '🔄',
                   color: const Color(0xFF45B7D1),
                   isLocked: false,
@@ -607,11 +644,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             }
 
             // Filter by category
-            final filteredPacks = _selectedCategory == 'Все'
+            final isAllCategory = _selectedCategory == allCategories.first;
+            final filteredPacks = isAllCategory
                 ? packs
                 : packs
-                    .where(
-                        (p) => _packCategories[p.id] == _selectedCategory)
+                    .where((p) => packCategories[p.id] == _selectedCategory)
                     .toList();
 
             // Build grid items
@@ -620,7 +657,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             const quizPosition = 5;
             const memoryPosition = 7;
             for (int i = 0; i < filteredPacks.length; i++) {
-              if (_selectedCategory == 'Все') {
+              if (isAllCategory) {
                 if (i == favPosition) {
                   gridItems.add(_GridItem.pack(favoritesPack));
                 }
@@ -633,7 +670,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               }
               gridItems.add(_GridItem.pack(filteredPacks[i]));
             }
-            if (_selectedCategory == 'Все') {
+            if (isAllCategory) {
               if (filteredPacks.length <= favPosition) {
                 gridItems.add(_GridItem.pack(favoritesPack));
               }
@@ -685,7 +722,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
                 Text(
-                  '🗣️ Картки-розмовлялки',
+                  s('🗣️ Картки-розмовлялки', '🗣️ Talking Cards'),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style:
@@ -709,6 +746,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         Expanded(
                           child: _CardOfDayHero(
                             card: cotd,
+                            isEn: isEnMode,
                             onTap: () {
                               _showCardOfDayPopup(cotd, cotdLocked);
                               ref
@@ -780,10 +818,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: _allCategories.length,
+                    itemCount: allCategories.length,
                     separatorBuilder: (_, __) => const SizedBox(width: 8),
                     itemBuilder: (context, index) {
-                      final cat = _allCategories[index];
+                      final cat = allCategories[index];
                       final selected = cat == _selectedCategory;
                       return FilterChip(
                         label: Text(
@@ -855,9 +893,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildSubtitle(int total, int done, int streak, int totalViewed) {
+    final s = AppS(ref.read(languageProvider) == 'en');
     if (done == 0 && streak <= 1 && totalViewed == 0) {
       return Text(
-        'Почни і побачиш свій прогрес тут!',
+        s('Почни і побачиш свій прогрес тут!',
+            'Start learning and track your progress here!'),
         style: TextStyle(fontSize: 14, color: Colors.grey[500]),
       );
     }
@@ -876,7 +916,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
-                '🔥 $streak дн.',
+                s('🔥 $streak дн.', '🔥 $streak days'),
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
@@ -888,8 +928,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ],
           Text(
             done > 0
-                ? '⭐ $done/$total розділів'
-                : '🃏 Переглянуто $totalViewed карток',
+                ? s('⭐ $done/$total розділів', '⭐ $done/$total packs')
+                : s('🃏 Переглянуто $totalViewed карток',
+                    '🃏 Viewed $totalViewed cards'),
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -919,8 +960,10 @@ class _GridItem {
 class _CardOfDayHero extends StatefulWidget {
   final CardModel card;
   final VoidCallback onTap;
+  final bool isEn;
 
-  const _CardOfDayHero({required this.card, required this.onTap});
+  const _CardOfDayHero(
+      {required this.card, required this.onTap, this.isEn = false});
 
   @override
   State<_CardOfDayHero> createState() => _CardOfDayHeroState();
@@ -992,7 +1035,7 @@ class _CardOfDayHeroState extends State<_CardOfDayHero>
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  '🔊 Картка дня',
+                  widget.isEn ? '🔊 Card of the day' : '🔊 Картка дня',
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
@@ -1044,6 +1087,7 @@ class _DailyQuestHero extends ConsumerWidget {
     final total = quest.totalCount;
     final allDone = quest.allDone;
     final claimed = quest.rewardClaimed;
+    final s = AppS(ref.watch(languageProvider) == 'en');
 
     final Color accentColor;
     final Color bgStart;
@@ -1101,8 +1145,10 @@ class _DailyQuestHero extends ConsumerWidget {
                   ),
                   child: Text(
                     claimed
-                        ? '✨ Зроблено'
-                        : (allDone ? '🎉 Готово!' : '🎯 Завдання'),
+                        ? s('✨ Зроблено', '✨ Done')
+                        : (allDone
+                            ? s('🎉 Готово!', '🎉 Done!')
+                            : s('🎯 Завдання', '🎯 Tasks')),
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
@@ -1138,7 +1184,7 @@ class _DailyQuestHero extends ConsumerWidget {
                 child: claimed
                     ? FittedBox(
                         fit: BoxFit.scaleDown,
-                        child: Text('🎁 Скарб знайдено!',
+                        child: Text(s('🎁 Скарб знайдено!', '🎁 Treasure found!'),
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
@@ -1148,7 +1194,7 @@ class _DailyQuestHero extends ConsumerWidget {
                     : allDone
                         ? FittedBox(
                             fit: BoxFit.scaleDown,
-                            child: Text('🎁 Забери скарб!',
+                            child: Text(s('🎁 Забери скарб!', '🎁 Claim reward!'),
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
@@ -1200,7 +1246,7 @@ class _DailyQuestHero extends ConsumerWidget {
                               FittedBox(
                                 fit: BoxFit.scaleDown,
                                 child: Text(
-                                  'Відкрий карту 🗺️',
+                                  s('Відкрий карту 🗺️', 'Open map 🗺️'),
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w500,
@@ -1239,32 +1285,37 @@ class _QuizGridCard extends StatelessWidget {
           ),
         ),
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
-        child: const Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Hero(
-              tag: 'pack_icon_quiz',
-              child: Material(
-                color: Colors.transparent,
-                child: Text('🎧', style: TextStyle(fontSize: 44)),
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Вгадай звук',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-                color: kAccent,
-              ),
-            ),
-            SizedBox(height: 4),
-            Text(
-              'Вікторина',
-              style: TextStyle(fontSize: 12, color: kAccent),
-            ),
-          ],
+        child: Consumer(
+          builder: (_, ref, __) {
+            final isEn = ref.watch(languageProvider) == 'en';
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Hero(
+                  tag: 'pack_icon_quiz',
+                  child: Material(
+                    color: Colors.transparent,
+                    child: Text('🎧', style: TextStyle(fontSize: 44)),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  isEn ? 'Guess the word' : 'Вгадай звук',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: kAccent,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  isEn ? 'Quiz' : 'Вікторина',
+                  style: const TextStyle(fontSize: 12, color: kAccent),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -1289,6 +1340,7 @@ class _SeasonalPacksRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final seasonal = ref.watch(activeSeasonalPacksProvider);
+    final isEn = ref.watch(languageProvider) == 'en';
     return seasonal.when(
       data: (packs) {
         if (packs.isEmpty) return const SizedBox.shrink();
@@ -1302,7 +1354,9 @@ class _SeasonalPacksRow extends ConsumerWidget {
                 child: Row(
                   children: [
                     Text(
-                      '✨ Сезонний пак',
+                      ref.watch(languageProvider) == 'en'
+                          ? '✨ Seasonal pack'
+                          : '✨ Сезонний пак',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
@@ -1318,7 +1372,7 @@ class _SeasonalPacksRow extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        'Безкоштовно',
+                        ref.watch(languageProvider) == 'en' ? 'Free' : 'Безкоштовно',
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
@@ -1333,11 +1387,23 @@ class _SeasonalPacksRow extends ConsumerWidget {
                 height: 150,
                 child: Row(
                   children: packs.map((pack) {
+                    // Use localised title (EN/UK) for the card display
+                    final displayPack = isEn && pack.titleEn.isNotEmpty
+                        ? PackModel(
+                            id: pack.id,
+                            title: pack.titleEn,
+                            icon: pack.icon,
+                            color: pack.color,
+                            isLocked: false,
+                            isFree: true,
+                            cards: pack.cards,
+                          )
+                        : pack as PackModel;
                     return Expanded(
                       child: Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: PackGridCard(
-                          pack: pack,
+                          pack: displayPack,
                           isCompleted: completedPacks.contains(pack.id),
                           progress: packProgress[pack.id] ?? 0,
                           isSeasonal: true,
@@ -1372,6 +1438,7 @@ class _SrsReviewBanner extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final srs = ref.watch(srsProvider);
     if (srs.dueCount == 0) return const SizedBox.shrink();
+    final s = AppS(ref.watch(languageProvider) == 'en');
 
     // Resolve due CardModels from the full cards list
     final dueCards = allCards
@@ -1403,7 +1470,7 @@ class _SrsReviewBanner extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Повторити сьогодні',
+                      s('Повторити сьогодні', 'Review today'),
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
@@ -1411,7 +1478,8 @@ class _SrsReviewBanner extends ConsumerWidget {
                       ),
                     ),
                     Text(
-                      '${dueCards.length} карток чекають',
+                      s('${dueCards.length} карток чекають',
+                          '${dueCards.length} cards waiting'),
                       style: TextStyle(
                         fontSize: 11,
                         color: color.withValues(alpha: 0.8),
@@ -1429,14 +1497,15 @@ class _SrsReviewBanner extends ConsumerWidget {
   }
 }
 
-class _MemoryGridCard extends StatelessWidget {
+class _MemoryGridCard extends ConsumerWidget {
   final VoidCallback onTap;
 
   const _MemoryGridCard({required this.onTap});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     const color = kTeal;
+    final isEn = ref.watch(languageProvider) == 'en';
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -1449,24 +1518,24 @@ class _MemoryGridCard extends StatelessWidget {
           ),
         ),
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
-        child: const Column(
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('🧠', style: TextStyle(fontSize: 44)),
-            SizedBox(height: 8),
+            const Text('🧠', style: TextStyle(fontSize: 44)),
+            const SizedBox(height: 8),
             Text(
-              'Знайди пару',
+              isEn ? 'Find the pair' : 'Знайди пару',
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
                 color: color,
               ),
             ),
-            SizedBox(height: 4),
+            const SizedBox(height: 4),
             Text(
-              'Пам\'ять',
-              style: TextStyle(fontSize: 12, color: color),
+              isEn ? 'Memory' : 'Пам\'ять',
+              style: const TextStyle(fontSize: 12, color: color),
             ),
           ],
         ),
@@ -1475,14 +1544,15 @@ class _MemoryGridCard extends StatelessWidget {
   }
 }
 
-class _NotificationToggle extends StatefulWidget {
+// ignore: must_be_immutable
+class _NotificationToggle extends ConsumerStatefulWidget {
   const _NotificationToggle();
 
   @override
-  State<_NotificationToggle> createState() => _NotificationToggleState();
+  ConsumerState<_NotificationToggle> createState() => _NotificationToggleState();
 }
 
-class _NotificationToggleState extends State<_NotificationToggle> {
+class _NotificationToggleState extends ConsumerState<_NotificationToggle> {
   bool _enabled = false;
   bool _loaded = false;
 
@@ -1516,8 +1586,12 @@ class _NotificationToggleState extends State<_NotificationToggle> {
             : Icons.notifications_off_outlined,
         size: 18,
       ),
-      label:
-          Text(_enabled ? 'Сповіщення увімкнено' : 'Увімкнути сповіщення'),
+      label: Builder(builder: (_) {
+        final s = AppS(ref.read(languageProvider) == 'en');
+        return Text(_enabled
+            ? s('Сповіщення увімкнено', 'Notifications on')
+            : s('Увімкнути сповіщення', 'Enable notifications'));
+      }),
     );
   }
 }

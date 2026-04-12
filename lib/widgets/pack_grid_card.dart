@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/pack_model.dart';
+import '../providers/language_provider.dart';
 
-class PackGridCard extends StatefulWidget {
+class PackGridCard extends ConsumerStatefulWidget {
   final PackModel pack;
   final VoidCallback onTap;
   final bool isCompleted;
@@ -19,10 +21,10 @@ class PackGridCard extends StatefulWidget {
   });
 
   @override
-  State<PackGridCard> createState() => _PackGridCardState();
+  ConsumerState<PackGridCard> createState() => _PackGridCardState();
 }
 
-class _PackGridCardState extends State<PackGridCard>
+class _PackGridCardState extends ConsumerState<PackGridCard>
     with SingleTickerProviderStateMixin {
   late final AnimationController _shimmer;
 
@@ -49,6 +51,8 @@ class _PackGridCardState extends State<PackGridCard>
     final hasProgress = widget.progress > 0 && !widget.isCompleted;
     final sw = MediaQuery.of(context).size.width;
     final scale = (sw / 375).clamp(0.85, 1.3);
+    final isEn = ref.watch(languageProvider) == 'en';
+    final cardsLabel = isEn ? 'cards' : 'карток';
 
     Widget card = GestureDetector(
       onTap: widget.onTap,
@@ -99,7 +103,7 @@ class _PackGridCardState extends State<PackGridCard>
             ),
             SizedBox(height: 3 * scale),
             Text(
-              hasProgress ? '${widget.progress}/$total' : '$total карток',
+              hasProgress ? '${widget.progress}/$total' : '$total $cardsLabel',
               style: TextStyle(
                 fontSize: 11 * scale,
                 color: pack.color.withValues(alpha: 0.7),

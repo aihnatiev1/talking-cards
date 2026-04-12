@@ -1,0 +1,637 @@
+[
+  {
+    "id": "en_animals",
+    "title": "Animals \ud83c\uddec\ud83c\udde7",
+    "icon": "\ud83e\udd81",
+    "color": "#E17055",
+    "isLocked": true,
+    "cards": [
+      {
+        "id": "ea01",
+        "sound": "CAT",
+        "text": "A cat says meow!",
+        "emoji": "\ud83d\udc31",
+        "colorBg": "#FFF5E6",
+        "colorAccent": "#F0B27A"
+      },
+      {
+        "id": "ea02",
+        "sound": "DOG",
+        "text": "A dog says woof!",
+        "emoji": "\ud83d\udc36",
+        "colorBg": "#FFF0E6",
+        "colorAccent": "#E67E22"
+      },
+      {
+        "id": "ea03",
+        "sound": "COW",
+        "text": "A cow gives us milk",
+        "emoji": "\ud83d\udc04",
+        "colorBg": "#F0FFF0",
+        "colorAccent": "#58D68D"
+      },
+      {
+        "id": "ea04",
+        "sound": "HORSE",
+        "text": "A horse runs fast",
+        "emoji": "\ud83d\udc34",
+        "colorBg": "#FFF5E6",
+        "colorAccent": "#D4A373"
+      },
+      {
+        "id": "ea05",
+        "sound": "PIG",
+        "text": "A pig says oink-oink!",
+        "emoji": "\ud83d\udc37",
+        "colorBg": "#FFE6F0",
+        "colorAccent": "#FF85A1"
+      },
+      {
+        "id": "ea06",
+        "sound": "DUCK",
+        "text": "A duck swims in the pond",
+        "emoji": "\ud83e\udd86",
+        "colorBg": "#E6F7FF",
+        "colorAccent": "#74B9FF"
+      },
+      {
+        "id": "ea07",
+        "sound": "FISH",
+        "text": "A fish lives in the water",
+        "emoji": "\ud83d\udc1f",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#2196F3"
+      },
+      {
+        "id": "ea08",
+        "sound": "BIRD",
+        "text": "A bird can fly high",
+        "emoji": "\ud83d\udc26",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#66BB6A"
+      },
+      {
+        "id": "ea09",
+        "sound": "FROG",
+        "text": "A frog jumps: ribbit!",
+        "emoji": "\ud83d\udc38",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#4CAF50"
+      },
+      {
+        "id": "ea10",
+        "sound": "BEAR",
+        "text": "A bear loves honey",
+        "emoji": "\ud83d\udc3b",
+        "colorBg": "#FFF0E6",
+        "colorAccent": "#A0522D"
+      },
+      {
+        "id": "ea11",
+        "sound": "LION",
+        "text": "A lion is the king of animals",
+        "emoji": "\ud83e\udd81",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FFB300"
+      },
+      {
+        "id": "ea12",
+        "sound": "ELEPHANT",
+        "text": "An elephant is very big",
+        "emoji": "\ud83d\udc18",
+        "colorBg": "#ECEFF1",
+        "colorAccent": "#78909C"
+      },
+      {
+        "id": "ea13",
+        "sound": "MONKEY",
+        "text": "A monkey loves bananas",
+        "emoji": "\ud83d\udc12",
+        "colorBg": "#FFF0E6",
+        "colorAccent": "#D4A373"
+      },
+      {
+        "id": "ea14",
+        "sound": "RABBIT",
+        "text": "A rabbit has long ears",
+        "emoji": "\ud83d\udc30",
+        "colorBg": "#FFE8EC",
+        "colorAccent": "#FF85A1"
+      },
+      {
+        "id": "ea15",
+        "sound": "MOUSE",
+        "text": "A mouse is very small",
+        "emoji": "\ud83d\udc2d",
+        "colorBg": "#F5F5F5",
+        "colorAccent": "#9E9E9E"
+      },
+      {
+        "id": "ea16",
+        "sound": "SHEEP",
+        "text": "A sheep gives us wool",
+        "emoji": "\ud83d\udc11",
+        "colorBg": "#F5F5F5",
+        "colorAccent": "#BDBDBD"
+      },
+      {
+        "id": "ea17",
+        "sound": "BUTTERFLY",
+        "text": "A butterfly has pretty wings",
+        "emoji": "\ud83e\udd8b",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#AB47BC"
+      },
+      {
+        "id": "ea18",
+        "sound": "TURTLE",
+        "text": "A turtle walks very slowly",
+        "emoji": "\ud83d\udc22",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#388E3C"
+      },
+      {
+        "id": "ea19",
+        "sound": "OWL",
+        "text": "An owl can see at night",
+        "emoji": "\ud83e\udd89",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#8D6E63"
+      },
+      {
+        "id": "ea20",
+        "sound": "BEE",
+        "text": "A bee makes sweet honey",
+        "emoji": "\ud83d\udc1d",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FFC107"
+      },
+      {
+        "id": "ea21",
+        "sound": "PENGUIN",
+        "text": "A penguin lives in the cold",
+        "emoji": "\ud83d\udc27",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#37474F"
+      },
+      {
+        "id": "ea22",
+        "sound": "GIRAFFE",
+        "text": "A giraffe has a long neck",
+        "emoji": "\ud83e\udd92",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FFB300"
+      },
+      {
+        "id": "ea23",
+        "sound": "SNAKE",
+        "text": "A snake says sss-sss!",
+        "emoji": "\ud83d\udc0d",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32"
+      },
+      {
+        "id": "ea24",
+        "sound": "CROCODILE",
+        "text": "A crocodile has big teeth",
+        "emoji": "\ud83d\udc0a",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#558B2F"
+      },
+      {
+        "id": "ea25",
+        "sound": "WHALE",
+        "text": "A whale is the biggest animal",
+        "emoji": "\ud83d\udc0b",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#1565C0"
+      }
+    ]
+  },
+  {
+    "id": "en_body",
+    "title": "My Body \ud83c\uddec\ud83c\udde7",
+    "icon": "\ud83e\udec0",
+    "color": "#6C5CE7",
+    "isLocked": true,
+    "cards": [
+      {
+        "id": "eb01",
+        "sound": "HEAD",
+        "text": "I think with my head",
+        "emoji": "\ud83e\udde0",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0"
+      },
+      {
+        "id": "eb02",
+        "sound": "EYES",
+        "text": "I see with my eyes",
+        "emoji": "\ud83d\udc40",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#1976D2"
+      },
+      {
+        "id": "eb03",
+        "sound": "EARS",
+        "text": "I hear with my ears",
+        "emoji": "\ud83d\udc42",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FFB300"
+      },
+      {
+        "id": "eb04",
+        "sound": "NOSE",
+        "text": "I smell with my nose",
+        "emoji": "\ud83d\udc43",
+        "colorBg": "#FFE8EC",
+        "colorAccent": "#E91E63"
+      },
+      {
+        "id": "eb05",
+        "sound": "MOUTH",
+        "text": "I eat with my mouth: yum!",
+        "emoji": "\ud83d\udc44",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#C62828"
+      },
+      {
+        "id": "eb06",
+        "sound": "TEETH",
+        "text": "I brush my teeth every day",
+        "emoji": "\ud83e\uddb7",
+        "colorBg": "#F5F5F5",
+        "colorAccent": "#BDBDBD"
+      },
+      {
+        "id": "eb07",
+        "sound": "HAIR",
+        "text": "I comb my hair",
+        "emoji": "\ud83d\udc87",
+        "colorBg": "#FFF0E6",
+        "colorAccent": "#D4A373"
+      },
+      {
+        "id": "eb08",
+        "sound": "HAND",
+        "text": "I wave my hand: hello!",
+        "emoji": "\ud83e\udd1a",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FFB300"
+      },
+      {
+        "id": "eb09",
+        "sound": "FINGERS",
+        "text": "I have ten fingers",
+        "emoji": "\ud83d\udd90\ufe0f",
+        "colorBg": "#FFF5E6",
+        "colorAccent": "#F0B27A"
+      },
+      {
+        "id": "eb10",
+        "sound": "ARM",
+        "text": "I hug with my arms",
+        "emoji": "\ud83e\udd17",
+        "colorBg": "#FFE8EC",
+        "colorAccent": "#FF85A1"
+      },
+      {
+        "id": "eb11",
+        "sound": "LEG",
+        "text": "I run with my legs",
+        "emoji": "\ud83e\uddb5",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#66BB6A"
+      },
+      {
+        "id": "eb12",
+        "sound": "FOOT",
+        "text": "I stand on my feet",
+        "emoji": "\ud83e\uddb6",
+        "colorBg": "#FFF0E6",
+        "colorAccent": "#E67E22"
+      },
+      {
+        "id": "eb13",
+        "sound": "TOES",
+        "text": "I have ten little toes",
+        "emoji": "\ud83e\ude70",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#EC407A"
+      },
+      {
+        "id": "eb14",
+        "sound": "KNEE",
+        "text": "I bend my knees to jump",
+        "emoji": "\ud83c\udfc3",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#42A5F5"
+      },
+      {
+        "id": "eb15",
+        "sound": "TUMMY",
+        "text": "My tummy is hungry!",
+        "emoji": "\ud83d\ude0b",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FFA726"
+      },
+      {
+        "id": "eb16",
+        "sound": "BACK",
+        "text": "My back is strong",
+        "emoji": "\ud83d\udcaa",
+        "colorBg": "#E8EAF6",
+        "colorAccent": "#5C6BC0"
+      },
+      {
+        "id": "eb17",
+        "sound": "SHOULDER",
+        "text": "I shrug my shoulders",
+        "emoji": "\ud83e\udd37",
+        "colorBg": "#ECEFF1",
+        "colorAccent": "#78909C"
+      },
+      {
+        "id": "eb18",
+        "sound": "NECK",
+        "text": "I turn my neck to look around",
+        "emoji": "\ud83e\udd92",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FFB300"
+      },
+      {
+        "id": "eb19",
+        "sound": "CHEEKS",
+        "text": "My cheeks turn pink",
+        "emoji": "\ud83d\ude0a",
+        "colorBg": "#FFE8EC",
+        "colorAccent": "#FF85A1"
+      },
+      {
+        "id": "eb20",
+        "sound": "TONGUE",
+        "text": "I taste with my tongue",
+        "emoji": "\ud83d\udc45",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#E91E63"
+      },
+      {
+        "id": "eb21",
+        "sound": "ELBOW",
+        "text": "I bend my elbow",
+        "emoji": "\ud83d\udcaa",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#4CAF50"
+      },
+      {
+        "id": "eb22",
+        "sound": "HEART",
+        "text": "My heart goes boom-boom!",
+        "emoji": "\u2764\ufe0f",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#C62828"
+      },
+      {
+        "id": "eb23",
+        "sound": "CHIN",
+        "text": "I have a little chin",
+        "emoji": "\ud83d\ude36",
+        "colorBg": "#FFF5E6",
+        "colorAccent": "#D4A373"
+      },
+      {
+        "id": "eb24",
+        "sound": "BELLY BUTTON",
+        "text": "Everyone has a belly button!",
+        "emoji": "\u2b55",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FFC107"
+      },
+      {
+        "id": "eb25",
+        "sound": "FACE",
+        "text": "I wash my face with water",
+        "emoji": "\ud83d\ude00",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#42A5F5"
+      }
+    ]
+  },
+  {
+    "id": "en_abc",
+    "title": "ABC Alphabet \ud83c\uddec\ud83c\udde7",
+    "icon": "\ud83d\udd24",
+    "color": "#00B894",
+    "isLocked": true,
+    "cards": [
+      {
+        "id": "abc01",
+        "sound": "A",
+        "text": "A is for Apple",
+        "emoji": "\ud83c\udf4e",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#C62828"
+      },
+      {
+        "id": "abc02",
+        "sound": "B",
+        "text": "B is for Bear",
+        "emoji": "\ud83d\udc3b",
+        "colorBg": "#FFF0E6",
+        "colorAccent": "#A0522D"
+      },
+      {
+        "id": "abc03",
+        "sound": "C",
+        "text": "C is for Cat",
+        "emoji": "\ud83d\udc31",
+        "colorBg": "#FFF5E6",
+        "colorAccent": "#F0B27A"
+      },
+      {
+        "id": "abc04",
+        "sound": "D",
+        "text": "D is for Dog",
+        "emoji": "\ud83d\udc36",
+        "colorBg": "#FFF0E6",
+        "colorAccent": "#E67E22"
+      },
+      {
+        "id": "abc05",
+        "sound": "E",
+        "text": "E is for Elephant",
+        "emoji": "\ud83d\udc18",
+        "colorBg": "#ECEFF1",
+        "colorAccent": "#78909C"
+      },
+      {
+        "id": "abc06",
+        "sound": "F",
+        "text": "F is for Fish",
+        "emoji": "\ud83d\udc1f",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#2196F3"
+      },
+      {
+        "id": "abc07",
+        "sound": "G",
+        "text": "G is for Giraffe",
+        "emoji": "\ud83e\udd92",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FFB300"
+      },
+      {
+        "id": "abc08",
+        "sound": "H",
+        "text": "H is for House",
+        "emoji": "\ud83c\udfe0",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#66BB6A"
+      },
+      {
+        "id": "abc09",
+        "sound": "I",
+        "text": "I is for Ice cream",
+        "emoji": "\ud83c\udf66",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#EC407A"
+      },
+      {
+        "id": "abc10",
+        "sound": "J",
+        "text": "J is for Juice",
+        "emoji": "\ud83e\uddc3",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FFA726"
+      },
+      {
+        "id": "abc11",
+        "sound": "K",
+        "text": "K is for Kite",
+        "emoji": "\ud83e\ude81",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#42A5F5"
+      },
+      {
+        "id": "abc12",
+        "sound": "L",
+        "text": "L is for Lion",
+        "emoji": "\ud83e\udd81",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FFB300"
+      },
+      {
+        "id": "abc13",
+        "sound": "M",
+        "text": "M is for Moon",
+        "emoji": "\ud83c\udf19",
+        "colorBg": "#E8EAF6",
+        "colorAccent": "#5C6BC0"
+      },
+      {
+        "id": "abc14",
+        "sound": "N",
+        "text": "N is for Nest",
+        "emoji": "\ud83e\udea6",
+        "colorBg": "#FFF0E6",
+        "colorAccent": "#D4A373"
+      },
+      {
+        "id": "abc15",
+        "sound": "O",
+        "text": "O is for Orange",
+        "emoji": "\ud83c\udf4a",
+        "colorBg": "#FFF5E6",
+        "colorAccent": "#FF9800"
+      },
+      {
+        "id": "abc16",
+        "sound": "P",
+        "text": "P is for Penguin",
+        "emoji": "\ud83d\udc27",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#37474F"
+      },
+      {
+        "id": "abc17",
+        "sound": "Q",
+        "text": "Q is for Queen",
+        "emoji": "\ud83d\udc78",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#AB47BC"
+      },
+      {
+        "id": "abc18",
+        "sound": "R",
+        "text": "R is for Rainbow",
+        "emoji": "\ud83c\udf08",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#4CAF50"
+      },
+      {
+        "id": "abc19",
+        "sound": "S",
+        "text": "S is for Sun",
+        "emoji": "\u2600\ufe0f",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FFC107"
+      },
+      {
+        "id": "abc20",
+        "sound": "T",
+        "text": "T is for Tree",
+        "emoji": "\ud83c\udf33",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#388E3C"
+      },
+      {
+        "id": "abc21",
+        "sound": "U",
+        "text": "U is for Umbrella",
+        "emoji": "\u2602\ufe0f",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#1976D2"
+      },
+      {
+        "id": "abc22",
+        "sound": "V",
+        "text": "V is for Violin",
+        "emoji": "\ud83c\udfbb",
+        "colorBg": "#FFF0E6",
+        "colorAccent": "#A0522D"
+      },
+      {
+        "id": "abc23",
+        "sound": "W",
+        "text": "W is for Whale",
+        "emoji": "\ud83d\udc0b",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#1565C0"
+      },
+      {
+        "id": "abc24",
+        "sound": "X",
+        "text": "X is for Xylophone",
+        "emoji": "\ud83c\udfb5",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#E91E63"
+      },
+      {
+        "id": "abc25",
+        "sound": "Y",
+        "text": "Y is for Yellow",
+        "emoji": "\ud83d\udc9b",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FFC107"
+      },
+      {
+        "id": "abc26",
+        "sound": "Z",
+        "text": "Z is for Zebra",
+        "emoji": "\ud83e\udd93",
+        "colorBg": "#F5F5F5",
+        "colorAccent": "#37474F"
+      }
+    ]
+  }
+]

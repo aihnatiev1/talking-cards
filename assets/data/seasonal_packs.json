@@ -9,22 +9,128 @@
     "activeFrom": "12-01",
     "activeTo": "01-15",
     "cards": [
-      {"id":"sx01","sound":"ялинка","text":"Блискуча ялинка в кутку","emoji":"🎄","colorBg":"#FFEBEE","colorAccent":"#C62828"},
-      {"id":"sx02","sound":"подарунок","text":"Подарунок під ялинкою","emoji":"🎁","colorBg":"#FCE4EC","colorAccent":"#AD1457"},
-      {"id":"sx03","sound":"сніг","text":"Білий сніг вкриває землю","emoji":"❄️","colorBg":"#E3F2FD","colorAccent":"#1565C0"},
-      {"id":"sx04","sound":"дід мороз","text":"Дід Мороз несе подарунки","emoji":"🎅","colorBg":"#FFEBEE","colorAccent":"#B71C1C"},
-      {"id":"sx05","sound":"зірка","text":"Зірка світить на ялинці","emoji":"⭐","colorBg":"#FFFDE7","colorAccent":"#F9A825"},
-      {"id":"sx06","sound":"сніговик","text":"Сніговик стоїть у дворі","emoji":"⛄","colorBg":"#E3F2FD","colorAccent":"#1565C0"},
-      {"id":"sx07","sound":"олень","text":"Олень везе сани по небу","emoji":"🦌","colorBg":"#FFF8E1","colorAccent":"#E65100"},
-      {"id":"sx08","sound":"свічка","text":"Свічка тепло горить","emoji":"🕯️","colorBg":"#FFF3E0","colorAccent":"#E65100"},
-      {"id":"sx09","sound":"дзвіночок","text":"Дзвіночок дзвенить весело","emoji":"🔔","colorBg":"#FFFDE7","colorAccent":"#F9A825"},
-      {"id":"sx10","sound":"мандарин","text":"Солодкий мандарин на Новий рік","emoji":"🍊","colorBg":"#FFF3E0","colorAccent":"#E65100"},
-      {"id":"sx11","sound":"куранти","text":"Куранти б'ють опівночі","emoji":"🕛","colorBg":"#E8EAF6","colorAccent":"#3949AB"},
-      {"id":"sx12","sound":"гірлянда","text":"Яскрава гірлянда на вікні","emoji":"🎇","colorBg":"#FCE4EC","colorAccent":"#AD1457"},
-      {"id":"sx13","sound":"ковзани","text":"Ковзани ковзають по льоду","emoji":"⛸️","colorBg":"#E3F2FD","colorAccent":"#0277BD"},
-      {"id":"sx14","sound":"казка","text":"Новорічна казка для всіх","emoji":"📖","colorBg":"#F3E5F5","colorAccent":"#6A1B9A"},
-      {"id":"sx15","sound":"шкарпетка","text":"Шкарпетка на каміні чекає","emoji":"🧦","colorBg":"#FFEBEE","colorAccent":"#C62828"}
-    ]
+      {
+        "id": "sx01",
+        "sound": "ялинка",
+        "text": "Блискуча ялинка в кутку",
+        "emoji": "🎄",
+        "colorBg": "#FFEBEE",
+        "colorAccent": "#C62828"
+      },
+      {
+        "id": "sx02",
+        "sound": "подарунок",
+        "text": "Подарунок під ялинкою",
+        "emoji": "🎁",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#AD1457"
+      },
+      {
+        "id": "sx03",
+        "sound": "сніг",
+        "text": "Білий сніг вкриває землю",
+        "emoji": "❄️",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#1565C0"
+      },
+      {
+        "id": "sx04",
+        "sound": "дід мороз",
+        "text": "Дід Мороз несе подарунки",
+        "emoji": "🎅",
+        "colorBg": "#FFEBEE",
+        "colorAccent": "#B71C1C"
+      },
+      {
+        "id": "sx05",
+        "sound": "зірка",
+        "text": "Зірка світить на ялинці",
+        "emoji": "⭐",
+        "colorBg": "#FFFDE7",
+        "colorAccent": "#F9A825"
+      },
+      {
+        "id": "sx06",
+        "sound": "сніговик",
+        "text": "Сніговик стоїть у дворі",
+        "emoji": "⛄",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#1565C0"
+      },
+      {
+        "id": "sx07",
+        "sound": "олень",
+        "text": "Олень везе сани по небу",
+        "emoji": "🦌",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#E65100"
+      },
+      {
+        "id": "sx08",
+        "sound": "свічка",
+        "text": "Свічка тепло горить",
+        "emoji": "🕯️",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100"
+      },
+      {
+        "id": "sx09",
+        "sound": "дзвіночок",
+        "text": "Дзвіночок дзвенить весело",
+        "emoji": "🔔",
+        "colorBg": "#FFFDE7",
+        "colorAccent": "#F9A825"
+      },
+      {
+        "id": "sx10",
+        "sound": "мандарин",
+        "text": "Солодкий мандарин на Новий рік",
+        "emoji": "🍊",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100"
+      },
+      {
+        "id": "sx11",
+        "sound": "куранти",
+        "text": "Куранти б'ють опівночі",
+        "emoji": "🕛",
+        "colorBg": "#E8EAF6",
+        "colorAccent": "#3949AB"
+      },
+      {
+        "id": "sx12",
+        "sound": "гірлянда",
+        "text": "Яскрава гірлянда на вікні",
+        "emoji": "🎇",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#AD1457"
+      },
+      {
+        "id": "sx13",
+        "sound": "ковзани",
+        "text": "Ковзани ковзають по льоду",
+        "emoji": "⛸️",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#0277BD"
+      },
+      {
+        "id": "sx14",
+        "sound": "казка",
+        "text": "Новорічна казка для всіх",
+        "emoji": "📖",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#6A1B9A"
+      },
+      {
+        "id": "sx15",
+        "sound": "шкарпетка",
+        "text": "Шкарпетка на каміні чекає",
+        "emoji": "🧦",
+        "colorBg": "#FFEBEE",
+        "colorAccent": "#C62828"
+      }
+    ],
+    "titleEn": "Christmas"
   },
   {
     "id": "seasonal_easter",
@@ -36,22 +142,128 @@
     "activeFrom": "04-01",
     "activeTo": "05-15",
     "cards": [
-      {"id":"se01","sound":"яйце","text":"Кольорове яйце на Великдень","emoji":"🥚","colorBg":"#F1F8E9","colorAccent":"#2E7D32"},
-      {"id":"se02","sound":"кошик","text":"Кошик з пасками і яйцями","emoji":"🧺","colorBg":"#F9FBE7","colorAccent":"#558B2F"},
-      {"id":"se03","sound":"квіти","text":"Весняні квіти розцвіли","emoji":"🌸","colorBg":"#FCE4EC","colorAccent":"#AD1457"},
-      {"id":"se04","sound":"сонце","text":"Тепле весняне сонечко","emoji":"☀️","colorBg":"#FFFDE7","colorAccent":"#F9A825"},
-      {"id":"se05","sound":"пташка","text":"Пташка повернулась з вирію","emoji":"🐦","colorBg":"#E3F2FD","colorAccent":"#0277BD"},
-      {"id":"se06","sound":"метелик","text":"Метелик летить над квіткою","emoji":"🦋","colorBg":"#EDE7F6","colorAccent":"#6A1B9A"},
-      {"id":"se07","sound":"зайчик","text":"Великодній зайчик з яйцями","emoji":"🐰","colorBg":"#FFF8E1","colorAccent":"#FF8F00"},
-      {"id":"se08","sound":"трава","text":"Зелена трава весною","emoji":"🌿","colorBg":"#E8F5E9","colorAccent":"#388E3C"},
-      {"id":"se09","sound":"веселка","text":"Яскрава веселка після дощу","emoji":"🌈","colorBg":"#E3F2FD","colorAccent":"#1565C0"},
-      {"id":"se10","sound":"гніздо","text":"Пташине гніздо на дереві","emoji":"🪺","colorBg":"#FFF8E1","colorAccent":"#6D4C41"},
-      {"id":"se11","sound":"паска","text":"Смачна паска на святі","emoji":"🍞","colorBg":"#FFF3E0","colorAccent":"#E65100"},
-      {"id":"se12","sound":"крашанка","text":"Розписана крашанка","emoji":"🎨","colorBg":"#FCE4EC","colorAccent":"#C2185B"},
-      {"id":"se13","sound":"ластівка","text":"Ластівка летить над хатою","emoji":"🦅","colorBg":"#E3F2FD","colorAccent":"#0288D1"},
-      {"id":"se14","sound":"верба","text":"Верба цвіте навесні","emoji":"🌱","colorBg":"#E8F5E9","colorAccent":"#2E7D32"},
-      {"id":"se15","sound":"дощик","text":"Теплий весняний дощик","emoji":"🌧️","colorBg":"#E3F2FD","colorAccent":"#1565C0"}
-    ]
+      {
+        "id": "se01",
+        "sound": "яйце",
+        "text": "Кольорове яйце на Великдень",
+        "emoji": "🥚",
+        "colorBg": "#F1F8E9",
+        "colorAccent": "#2E7D32"
+      },
+      {
+        "id": "se02",
+        "sound": "кошик",
+        "text": "Кошик з пасками і яйцями",
+        "emoji": "🧺",
+        "colorBg": "#F9FBE7",
+        "colorAccent": "#558B2F"
+      },
+      {
+        "id": "se03",
+        "sound": "квіти",
+        "text": "Весняні квіти розцвіли",
+        "emoji": "🌸",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#AD1457"
+      },
+      {
+        "id": "se04",
+        "sound": "сонце",
+        "text": "Тепле весняне сонечко",
+        "emoji": "☀️",
+        "colorBg": "#FFFDE7",
+        "colorAccent": "#F9A825"
+      },
+      {
+        "id": "se05",
+        "sound": "пташка",
+        "text": "Пташка повернулась з вирію",
+        "emoji": "🐦",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#0277BD"
+      },
+      {
+        "id": "se06",
+        "sound": "метелик",
+        "text": "Метелик летить над квіткою",
+        "emoji": "🦋",
+        "colorBg": "#EDE7F6",
+        "colorAccent": "#6A1B9A"
+      },
+      {
+        "id": "se07",
+        "sound": "зайчик",
+        "text": "Великодній зайчик з яйцями",
+        "emoji": "🐰",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FF8F00"
+      },
+      {
+        "id": "se08",
+        "sound": "трава",
+        "text": "Зелена трава весною",
+        "emoji": "🌿",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#388E3C"
+      },
+      {
+        "id": "se09",
+        "sound": "веселка",
+        "text": "Яскрава веселка після дощу",
+        "emoji": "🌈",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#1565C0"
+      },
+      {
+        "id": "se10",
+        "sound": "гніздо",
+        "text": "Пташине гніздо на дереві",
+        "emoji": "🪺",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#6D4C41"
+      },
+      {
+        "id": "se11",
+        "sound": "паска",
+        "text": "Смачна паска на святі",
+        "emoji": "🍞",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100"
+      },
+      {
+        "id": "se12",
+        "sound": "крашанка",
+        "text": "Розписана крашанка",
+        "emoji": "🎨",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#C2185B"
+      },
+      {
+        "id": "se13",
+        "sound": "ластівка",
+        "text": "Ластівка летить над хатою",
+        "emoji": "🦅",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#0288D1"
+      },
+      {
+        "id": "se14",
+        "sound": "верба",
+        "text": "Верба цвіте навесні",
+        "emoji": "🌱",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32"
+      },
+      {
+        "id": "se15",
+        "sound": "дощик",
+        "text": "Теплий весняний дощик",
+        "emoji": "🌧️",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#1565C0"
+      }
+    ],
+    "titleEn": "Easter"
   },
   {
     "id": "seasonal_summer",
@@ -63,22 +275,128 @@
     "activeFrom": "06-15",
     "activeTo": "08-31",
     "cards": [
-      {"id":"ss01","sound":"море","text":"Хвилі плещуться на морі","emoji":"🌊","colorBg":"#E1F5FE","colorAccent":"#0277BD"},
-      {"id":"ss02","sound":"пляж","text":"На пляжі тепло і весело","emoji":"🏖️","colorBg":"#FFF8E1","colorAccent":"#FF8F00"},
-      {"id":"ss03","sound":"морозиво","text":"Холодне смачне морозиво","emoji":"🍦","colorBg":"#FCE4EC","colorAccent":"#EC407A"},
-      {"id":"ss04","sound":"кавун","text":"Солодкий кавун влітку","emoji":"🍉","colorBg":"#E8F5E9","colorAccent":"#388E3C"},
-      {"id":"ss05","sound":"сонце","text":"Яскраве літнє сонце","emoji":"☀️","colorBg":"#FFFDE7","colorAccent":"#F9A825"},
-      {"id":"ss06","sound":"соняшник","text":"Жовтий соняшник в полі","emoji":"🌻","colorBg":"#FFF9C4","colorAccent":"#F9A825"},
-      {"id":"ss07","sound":"риба","text":"Рибка плаває в морі","emoji":"🐟","colorBg":"#E1F5FE","colorAccent":"#0288D1"},
-      {"id":"ss08","sound":"краб","text":"Краб йде по піску","emoji":"🦀","colorBg":"#FFF3E0","colorAccent":"#E65100"},
-      {"id":"ss09","sound":"черепаха","text":"Черепаха повзе по камінню","emoji":"🐢","colorBg":"#E8F5E9","colorAccent":"#388E3C"},
-      {"id":"ss10","sound":"м'яч","text":"М'яч летить над сіткою","emoji":"⚽","colorBg":"#ECEFF1","colorAccent":"#546E7A"},
-      {"id":"ss11","sound":"парасолька","text":"Парасолька від сонця","emoji":"☂️","colorBg":"#FCE4EC","colorAccent":"#AD1457"},
-      {"id":"ss12","sound":"акула","text":"Велика акула в морі","emoji":"🦈","colorBg":"#E3F2FD","colorAccent":"#1565C0"},
-      {"id":"ss13","sound":"полуниця","text":"Стигла червона полуниця","emoji":"🍓","colorBg":"#FCE4EC","colorAccent":"#C62828"},
-      {"id":"ss14","sound":"зірочка","text":"Зірочка морська на дні","emoji":"⭐","colorBg":"#FFF9C4","colorAccent":"#F57F17"},
-      {"id":"ss15","sound":"дельфін","text":"Дельфін стрибає у хвилях","emoji":"🐬","colorBg":"#E1F5FE","colorAccent":"#0277BD"}
-    ]
+      {
+        "id": "ss01",
+        "sound": "море",
+        "text": "Хвилі плещуться на морі",
+        "emoji": "🌊",
+        "colorBg": "#E1F5FE",
+        "colorAccent": "#0277BD"
+      },
+      {
+        "id": "ss02",
+        "sound": "пляж",
+        "text": "На пляжі тепло і весело",
+        "emoji": "🏖️",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FF8F00"
+      },
+      {
+        "id": "ss03",
+        "sound": "морозиво",
+        "text": "Холодне смачне морозиво",
+        "emoji": "🍦",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#EC407A"
+      },
+      {
+        "id": "ss04",
+        "sound": "кавун",
+        "text": "Солодкий кавун влітку",
+        "emoji": "🍉",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#388E3C"
+      },
+      {
+        "id": "ss05",
+        "sound": "сонце",
+        "text": "Яскраве літнє сонце",
+        "emoji": "☀️",
+        "colorBg": "#FFFDE7",
+        "colorAccent": "#F9A825"
+      },
+      {
+        "id": "ss06",
+        "sound": "соняшник",
+        "text": "Жовтий соняшник в полі",
+        "emoji": "🌻",
+        "colorBg": "#FFF9C4",
+        "colorAccent": "#F9A825"
+      },
+      {
+        "id": "ss07",
+        "sound": "риба",
+        "text": "Рибка плаває в морі",
+        "emoji": "🐟",
+        "colorBg": "#E1F5FE",
+        "colorAccent": "#0288D1"
+      },
+      {
+        "id": "ss08",
+        "sound": "краб",
+        "text": "Краб йде по піску",
+        "emoji": "🦀",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100"
+      },
+      {
+        "id": "ss09",
+        "sound": "черепаха",
+        "text": "Черепаха повзе по камінню",
+        "emoji": "🐢",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#388E3C"
+      },
+      {
+        "id": "ss10",
+        "sound": "м'яч",
+        "text": "М'яч летить над сіткою",
+        "emoji": "⚽",
+        "colorBg": "#ECEFF1",
+        "colorAccent": "#546E7A"
+      },
+      {
+        "id": "ss11",
+        "sound": "парасолька",
+        "text": "Парасолька від сонця",
+        "emoji": "☂️",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#AD1457"
+      },
+      {
+        "id": "ss12",
+        "sound": "акула",
+        "text": "Велика акула в морі",
+        "emoji": "🦈",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#1565C0"
+      },
+      {
+        "id": "ss13",
+        "sound": "полуниця",
+        "text": "Стигла червона полуниця",
+        "emoji": "🍓",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#C62828"
+      },
+      {
+        "id": "ss14",
+        "sound": "зірочка",
+        "text": "Зірочка морська на дні",
+        "emoji": "⭐",
+        "colorBg": "#FFF9C4",
+        "colorAccent": "#F57F17"
+      },
+      {
+        "id": "ss15",
+        "sound": "дельфін",
+        "text": "Дельфін стрибає у хвилях",
+        "emoji": "🐬",
+        "colorBg": "#E1F5FE",
+        "colorAccent": "#0277BD"
+      }
+    ],
+    "titleEn": "Summer"
   },
   {
     "id": "seasonal_autumn",
@@ -90,21 +408,127 @@
     "activeFrom": "10-01",
     "activeTo": "11-15",
     "cards": [
-      {"id":"sa01","sound":"гарбуз","text":"Помаранчевий гарбуз восени","emoji":"🎃","colorBg":"#FFF3E0","colorAccent":"#E65100"},
-      {"id":"sa02","sound":"листя","text":"Жовте листя падає з дерев","emoji":"🍂","colorBg":"#FFF8E1","colorAccent":"#FF8F00"},
-      {"id":"sa03","sound":"яблуко","text":"Стигле яблуко в саду","emoji":"🍎","colorBg":"#FFEBEE","colorAccent":"#C62828"},
-      {"id":"sa04","sound":"їжак","text":"Їжак збирає гриби в лісі","emoji":"🦔","colorBg":"#FFF8E1","colorAccent":"#6D4C41"},
-      {"id":"sa05","sound":"гриби","text":"Лісові гриби після дощу","emoji":"🍄","colorBg":"#FFF3E0","colorAccent":"#E65100"},
-      {"id":"sa06","sound":"дощ","text":"Осінній холодний дощ","emoji":"🌧️","colorBg":"#E3F2FD","colorAccent":"#1565C0"},
-      {"id":"sa07","sound":"жолудь","text":"Жолудь впав з дуба","emoji":"🌰","colorBg":"#FFF8E1","colorAccent":"#6D4C41"},
-      {"id":"sa08","sound":"горобець","text":"Горобець сидить на гілці","emoji":"🐦","colorBg":"#ECEFF1","colorAccent":"#546E7A"},
-      {"id":"sa09","sound":"кіт","text":"Рудий кіт гріється вдома","emoji":"🐱","colorBg":"#FFF3E0","colorAccent":"#FF8F00"},
-      {"id":"sa10","sound":"павук","text":"Павук плете павутину","emoji":"🕷️","colorBg":"#ECEFF1","colorAccent":"#37474F"},
-      {"id":"sa11","sound":"ворона","text":"Чорна ворона каркає","emoji":"🐦","colorBg":"#ECEFF1","colorAccent":"#37474F"},
-      {"id":"sa12","sound":"туман","text":"Ранковий туман в полі","emoji":"🌫️","colorBg":"#ECEFF1","colorAccent":"#546E7A"},
-      {"id":"sa13","sound":"шишка","text":"Соснова шишка в лісі","emoji":"🌲","colorBg":"#E8F5E9","colorAccent":"#2E7D32"},
-      {"id":"sa14","sound":"парасолька","text":"Парасолька від дощу","emoji":"☂️","colorBg":"#EDE7F6","colorAccent":"#6A1B9A"},
-      {"id":"sa15","sound":"вогнище","text":"Тепле вогнище восени","emoji":"🔥","colorBg":"#FFF3E0","colorAccent":"#E65100"}
-    ]
+      {
+        "id": "sa01",
+        "sound": "гарбуз",
+        "text": "Помаранчевий гарбуз восени",
+        "emoji": "🎃",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100"
+      },
+      {
+        "id": "sa02",
+        "sound": "листя",
+        "text": "Жовте листя падає з дерев",
+        "emoji": "🍂",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FF8F00"
+      },
+      {
+        "id": "sa03",
+        "sound": "яблуко",
+        "text": "Стигле яблуко в саду",
+        "emoji": "🍎",
+        "colorBg": "#FFEBEE",
+        "colorAccent": "#C62828"
+      },
+      {
+        "id": "sa04",
+        "sound": "їжак",
+        "text": "Їжак збирає гриби в лісі",
+        "emoji": "🦔",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#6D4C41"
+      },
+      {
+        "id": "sa05",
+        "sound": "гриби",
+        "text": "Лісові гриби після дощу",
+        "emoji": "🍄",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100"
+      },
+      {
+        "id": "sa06",
+        "sound": "дощ",
+        "text": "Осінній холодний дощ",
+        "emoji": "🌧️",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#1565C0"
+      },
+      {
+        "id": "sa07",
+        "sound": "жолудь",
+        "text": "Жолудь впав з дуба",
+        "emoji": "🌰",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#6D4C41"
+      },
+      {
+        "id": "sa08",
+        "sound": "горобець",
+        "text": "Горобець сидить на гілці",
+        "emoji": "🐦",
+        "colorBg": "#ECEFF1",
+        "colorAccent": "#546E7A"
+      },
+      {
+        "id": "sa09",
+        "sound": "кіт",
+        "text": "Рудий кіт гріється вдома",
+        "emoji": "🐱",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#FF8F00"
+      },
+      {
+        "id": "sa10",
+        "sound": "павук",
+        "text": "Павук плете павутину",
+        "emoji": "🕷️",
+        "colorBg": "#ECEFF1",
+        "colorAccent": "#37474F"
+      },
+      {
+        "id": "sa11",
+        "sound": "ворона",
+        "text": "Чорна ворона каркає",
+        "emoji": "🐦",
+        "colorBg": "#ECEFF1",
+        "colorAccent": "#37474F"
+      },
+      {
+        "id": "sa12",
+        "sound": "туман",
+        "text": "Ранковий туман в полі",
+        "emoji": "🌫️",
+        "colorBg": "#ECEFF1",
+        "colorAccent": "#546E7A"
+      },
+      {
+        "id": "sa13",
+        "sound": "шишка",
+        "text": "Соснова шишка в лісі",
+        "emoji": "🌲",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32"
+      },
+      {
+        "id": "sa14",
+        "sound": "парасолька",
+        "text": "Парасолька від дощу",
+        "emoji": "☂️",
+        "colorBg": "#EDE7F6",
+        "colorAccent": "#6A1B9A"
+      },
+      {
+        "id": "sa15",
+        "sound": "вогнище",
+        "text": "Тепле вогнище восени",
+        "emoji": "🔥",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100"
+      }
+    ],
+    "titleEn": "Autumn"
   }
 ]

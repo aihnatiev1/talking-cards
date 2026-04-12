@@ -7,7 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
 import '../providers/daily_quest_provider.dart';
+import '../providers/language_provider.dart';
 import '../services/audio_service.dart';
+import '../utils/l10n.dart';
 
 // ─────────────────────────────────────────────
 //  Data
@@ -176,6 +178,7 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
       );
     }
 
+    final s = AppS(ref.read(languageProvider) == 'en');
     return Scaffold(
       backgroundColor: widget.pack.color.withValues(alpha: 0.05),
       appBar: AppBar(
@@ -189,7 +192,7 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
         title: Column(
           children: [
             Text(
-              '🧠 Знайди пару',
+              s('🧠 Знайди пару', '🧠 Find the pair'),
               style: TextStyle(
                 color: widget.pack.color,
                 fontWeight: FontWeight.w800,
@@ -244,7 +247,7 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
                       color: widget.pack.color.withValues(alpha: 0.5)),
                   const SizedBox(width: 4),
                   Text(
-                    'Спроб: $_attempts',
+                    s('Спроб: $_attempts', 'Attempts: $_attempts'),
                     style: TextStyle(
                       fontSize: 13,
                       color: widget.pack.color.withValues(alpha: 0.6),
@@ -446,7 +449,7 @@ class _FrontFace extends StatelessWidget {
 //  Result screen
 // ─────────────────────────────────────────────
 
-class _ResultScreen extends StatelessWidget {
+class _ResultScreen extends ConsumerWidget {
   final PackModel pack;
   final int stars;
   final int attempts;
@@ -461,15 +464,17 @@ class _ResultScreen extends StatelessWidget {
     required this.onPlayAgain,
   });
 
-  String get _timeLabel {
-    final s = elapsed.inSeconds;
-    final m = elapsed.inMinutes;
-    if (m > 0) return '${m}хв ${s % 60}с';
-    return '${s}с';
+  String _timeLabel(bool isEn) {
+    final sec = elapsed.inSeconds;
+    final min = elapsed.inMinutes;
+    if (min > 0) return isEn ? '${min}m ${sec % 60}s' : '${min}хв ${sec % 60}с';
+    return isEn ? '${sec}s' : '${sec}с';
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isEn = ref.read(languageProvider) == 'en';
+    final s = AppS(isEn);
     return Scaffold(
       backgroundColor: pack.color.withValues(alpha: 0.05),
       body: SafeArea(
@@ -482,10 +487,10 @@ class _ResultScreen extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 stars == 3
-                    ? 'Чудово!'
+                    ? s('Чудово!', 'Excellent!')
                     : stars == 2
-                        ? 'Молодець!'
-                        : 'Гарна спроба!',
+                        ? s('Молодець!', 'Well done!')
+                        : s('Гарна спроба!', 'Good try!'),
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
@@ -517,14 +522,14 @@ class _ResultScreen extends StatelessWidget {
                 children: [
                   _StatChip(
                       icon: Icons.touch_app_rounded,
-                      label: 'Спроб',
+                      label: s('Спроб', 'Attempts'),
                       value: '$attempts',
                       color: pack.color),
                   const SizedBox(width: 16),
                   _StatChip(
                       icon: Icons.timer_rounded,
-                      label: 'Час',
-                      value: _timeLabel,
+                      label: s('Час', 'Time'),
+                      value: _timeLabel(isEn),
                       color: pack.color),
                 ],
               ),
@@ -535,7 +540,7 @@ class _ResultScreen extends StatelessWidget {
                 child: ElevatedButton.icon(
                   onPressed: onPlayAgain,
                   icon: const Icon(Icons.refresh_rounded),
-                  label: const Text('Грати знову',
+                  label: Text(s('Грати знову', 'Play again'),
                       style: TextStyle(
                           fontSize: 17, fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(
@@ -551,7 +556,7 @@ class _ResultScreen extends StatelessWidget {
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
                 child: Text(
-                  'Назад',
+                  s('Назад', 'Back'),
                   style: TextStyle(
                       color: pack.color.withValues(alpha: 0.7),
                       fontSize: 15),

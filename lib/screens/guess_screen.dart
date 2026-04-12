@@ -14,6 +14,7 @@ import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../services/tts_service.dart';
 import '../utils/constants.dart';
+import '../utils/l10n.dart';
 import '../widgets/confetti_burst.dart';
 import '../widgets/quiz_option.dart';
 
@@ -256,21 +257,22 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
       ref.read(dailyQuestProvider.notifier).completeTask(QuestTask.playQuiz);
     }
     final ratio = total > 0 ? score / total : 0.0;
+    final s = AppS(ref.read(languageProvider) == 'en');
 
     String emoji;
     String message;
     if (ratio >= 0.9) {
       emoji = '🏆';
-      message = 'Чудово!';
+      message = s('Чудово!', 'Excellent!');
     } else if (ratio >= 0.7) {
       emoji = '🌟';
-      message = 'Молодець!';
+      message = s('Молодець!', 'Well done!');
     } else if (ratio >= 0.5) {
       emoji = '👍';
-      message = 'Непогано!';
+      message = s('Непогано!', 'Not bad!');
     } else {
       emoji = '💪';
-      message = 'Спробуй ще!';
+      message = s('Спробуй ще!', 'Try again!');
     }
 
     return Center(
@@ -331,14 +333,14 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
                     ),
                   ],
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('🔄', style: TextStyle(fontSize: 24)),
-                    SizedBox(width: 10),
+                    const Text('🔄', style: TextStyle(fontSize: 24)),
+                    const SizedBox(width: 10),
                     Text(
-                      'Грати ще раз',
-                      style: TextStyle(
+                      s('Грати ще раз', 'Play again'),
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -355,7 +357,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
                 padding:
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 child: Text(
-                  '🏠 На головну',
+                  s('🏠 На головну', '🏠 Home'),
                   style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
