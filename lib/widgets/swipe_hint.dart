@@ -31,7 +31,6 @@ class SwipeHintState extends State<SwipeHint>
 
   Future<void> _checkIfShouldShow() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_shownKey); // TODO: remove — temp reset for testing
     if (prefs.getBool(_shownKey) == true) return;
     if (!mounted) return;
 

@@ -1384,7 +1384,7 @@ class _SeasonalPacksRow extends ConsumerWidget {
                 ),
               ),
               SizedBox(
-                height: 150,
+                height: 170,
                 child: Row(
                   children: packs.map((pack) {
                     // Use localised title (EN/UK) for the card display

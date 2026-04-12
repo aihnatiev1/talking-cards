@@ -179,100 +179,148 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
     }
 
     final s = AppS(ref.read(languageProvider) == 'en');
+    final color = widget.pack.color;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: widget.pack.color.withValues(alpha: 0.05),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded,
-              color: widget.pack.color, size: 22),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Column(
-          children: [
-            Text(
-              s('🧠 Знайди пару', '🧠 Find the pair'),
-              style: TextStyle(
-                color: widget.pack.color,
-                fontWeight: FontWeight.w800,
-                fontSize: 17,
-              ),
-            ),
-            Text(
-              widget.pack.title,
-              style: TextStyle(
-                color: widget.pack.color.withValues(alpha: 0.7),
-                fontSize: 11,
-              ),
-            ),
-          ],
-        ),
-        centerTitle: true,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Center(
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: widget.pack.color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '$_matched/$_pairCount',
-                  style: TextStyle(
-                    color: widget.pack.color,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-            ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDark
+                ? [color.withValues(alpha: 0.18), const Color(0xFF121212)]
+                : [color.withValues(alpha: 0.12), const Color(0xFFF5F5F5)],
           ),
-        ],
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+        ),
+        child: SafeArea(
           child: Column(
             children: [
-              // Attempts indicator
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.touch_app_rounded,
-                      size: 14,
-                      color: widget.pack.color.withValues(alpha: 0.5)),
-                  const SizedBox(width: 4),
-                  Text(
-                    s('Спроб: $_attempts', 'Attempts: $_attempts'),
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: widget.pack.color.withValues(alpha: 0.6),
+              // ── Top bar ──────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.arrow_back_ios_new_rounded,
+                          color: color, size: 22),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Text(
+                            s('Знайди пару', 'Find the pair'),
+                            style: TextStyle(
+                              color: color,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 16,
+                            ),
+                          ),
+                          Text(
+                            widget.pack.title,
+                            style: TextStyle(
+                              color: color.withValues(alpha: 0.6),
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Matched pairs badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: color,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: color.withValues(alpha: 0.4),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        '$_matched/$_pairCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                ),
+              ),
+
+              // ── Pair progress dots ─────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(_pairCount, (i) {
+                    final done = i < _matched;
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOutBack,
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                      width: done ? 22 : 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: done ? color : color.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+
+              // ── Game board ──────────────────────
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+                  child: GridView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      mainAxisSpacing: 10,
+                      crossAxisSpacing: 10,
+                      childAspectRatio: 0.78,
+                    ),
+                    itemCount: _tiles.length,
+                    itemBuilder: (context, i) => _TileWidget(
+                      tile: _tiles[i],
+                      packColor: color,
+                      packIcon: widget.pack.icon,
+                      onTap: () => _onTap(i),
                     ),
                   ),
-                ],
+                ),
               ),
-              const SizedBox(height: 12),
-              // Game board
-              Expanded(
-                child: GridView.builder(
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 4,
-                    mainAxisSpacing: 8,
-                    crossAxisSpacing: 8,
-                    childAspectRatio: 0.82,
-                  ),
-                  itemCount: _tiles.length,
-                  itemBuilder: (context, i) => _TileWidget(
-                    tile: _tiles[i],
-                    packColor: widget.pack.color,
-                    onTap: () => _onTap(i),
-                  ),
+
+              // ── Attempts counter ───────────────
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.touch_app_rounded,
+                        size: 14,
+                        color: color.withValues(alpha: 0.5)),
+                    const SizedBox(width: 5),
+                    Text(
+                      s('Спроб: $_attempts', 'Tries: $_attempts'),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: color.withValues(alpha: 0.6),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -290,11 +338,13 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
 class _TileWidget extends StatefulWidget {
   final _Tile tile;
   final Color packColor;
+  final String packIcon;
   final VoidCallback onTap;
 
   const _TileWidget({
     required this.tile,
     required this.packColor,
+    required this.packIcon,
     required this.onTap,
   });
 
@@ -350,7 +400,8 @@ class _TileWidgetState extends State<_TileWidget>
                   child: _FrontFace(
                       tile: widget.tile, packColor: widget.packColor),
                 )
-              : _BackFace(packColor: widget.packColor);
+              : _BackFace(
+                  packColor: widget.packColor, packIcon: widget.packIcon);
 
           return Transform(
             transform: Matrix4.identity()
@@ -367,25 +418,67 @@ class _TileWidgetState extends State<_TileWidget>
 
 class _BackFace extends StatelessWidget {
   final Color packColor;
-  const _BackFace({required this.packColor});
+  final String packIcon;
+  const _BackFace({required this.packColor, required this.packIcon});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: packColor.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(12),
-        border:
-            Border.all(color: packColor.withValues(alpha: 0.3), width: 2),
-      ),
-      child: Center(
-        child: Text(
-          '❓',
-          style: TextStyle(
-            fontSize: 28,
-            color: packColor.withValues(alpha: 0.5),
-          ),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            packColor,
+            Color.lerp(packColor, Colors.black, 0.2)!,
+          ],
         ),
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: packColor.withValues(alpha: 0.45),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          // Watermark: pack icon, big and faded
+          Center(
+            child: Opacity(
+              opacity: 0.15,
+              child: Text(packIcon,
+                  style: const TextStyle(fontSize: 44)),
+            ),
+          ),
+          // Star dots decoration
+          Positioned(top: 6, left: 8,
+              child: Text('✦', style: TextStyle(
+                  fontSize: 8, color: Colors.white.withValues(alpha: 0.4)))),
+          Positioned(bottom: 6, right: 8,
+              child: Text('✦', style: TextStyle(
+                  fontSize: 8, color: Colors.white.withValues(alpha: 0.4)))),
+          // Main question mark
+          Center(
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Center(
+                child: Text('?',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                    )),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -401,42 +494,58 @@ class _FrontFace extends StatelessWidget {
     final matched = tile.isMatched;
     return Container(
       decoration: BoxDecoration(
-        color: matched
-            ? Colors.green.withValues(alpha: 0.12)
-            : tile.card.colorBg,
-        borderRadius: BorderRadius.circular(12),
+        color: matched ? Colors.white : tile.card.colorBg,
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: matched ? Colors.green : tile.card.colorAccent,
+          color: matched
+              ? const Color(0xFF4CAF50)
+              : tile.card.colorAccent.withValues(alpha: 0.5),
           width: matched ? 2.5 : 1.5,
         ),
-        boxShadow: matched
-            ? [
-                BoxShadow(
-                  color: Colors.green.withValues(alpha: 0.25),
-                  blurRadius: 8,
-                  spreadRadius: 1,
-                )
-              ]
-            : null,
+        boxShadow: [
+          if (matched)
+            BoxShadow(
+              color: const Color(0xFF4CAF50).withValues(alpha: 0.35),
+              blurRadius: 10,
+              spreadRadius: 2,
+            )
+          else
+            BoxShadow(
+              color: tile.card.colorAccent.withValues(alpha: 0.15),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
+            ),
+        ],
       ),
-      padding: const EdgeInsets.all(4),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          if (matched)
+            const Padding(
+              padding: EdgeInsets.only(bottom: 2),
+              child: Icon(Icons.check_circle_rounded,
+                  color: Color(0xFF4CAF50), size: 14),
+            ),
           Text(
             tile.card.emoji,
-            style: const TextStyle(fontSize: 26),
+            style: TextStyle(fontSize: matched ? 28 : 30),
           ),
-          const SizedBox(height: 4),
-          Text(
-            tile.card.sound,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: matched ? Colors.green[700] : tile.card.colorAccent,
+          const SizedBox(height: 3),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 3),
+            child: Text(
+              tile.card.sound,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                color: matched
+                    ? const Color(0xFF4CAF50)
+                    : tile.card.colorAccent,
+                letterSpacing: 0.3,
+              ),
             ),
           ),
         ],
