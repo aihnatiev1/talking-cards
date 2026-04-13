@@ -25,7 +25,7 @@ class RewardsScreen extends ConsumerWidget {
           icon: const Icon(Icons.arrow_back_ios, color: _accent),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text(
+        title: Text(
           s('Нагороди', 'Rewards'),
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
@@ -58,7 +58,7 @@ class RewardsScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
+                  Text(
                     s('поспіль', 'streak'),
                     style: TextStyle(fontSize: 16, color: Colors.white70),
                   ),

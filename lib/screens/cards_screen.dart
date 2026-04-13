@@ -470,6 +470,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
 
   void _showUnlockDialog() {
     AudioService.instance.stop();
+    final s = AppS(ref.read(languageProvider) == 'en');
     final allCards = widget.pack.cards;
     final bonus = ref.read(bonusCardsProvider)[widget.pack.id] ?? 0;
     final remaining = allCards.length - PackModel.freePreviewCount - bonus;
