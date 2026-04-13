@@ -101,27 +101,28 @@ class _ProfileSelectorSheet extends ConsumerWidget {
 
   Future<void> _showCreateDialog(BuildContext context, WidgetRef ref, bool isEn) async {
     final loc = AppS(isEn);
-    final result = await showDialog<(String, String, String)?>(
+    final result = await showDialog<(String, String, String, int)?>(
       context: context,
       builder: (_) => _ProfileEditDialog(title: loc('Новий профіль', 'New profile'), isEn: isEn),
     );
     if (result != null) {
       await ref
           .read(profileProvider.notifier)
-          .addProfile(result.$1, result.$2, language: result.$3);
+          .addProfile(result.$1, result.$2, language: result.$3, level: result.$4);
     }
   }
 
   Future<void> _showEditDialog(
       BuildContext context, WidgetRef ref, ProfileModel profile, bool isEn) async {
     final loc = AppS(isEn);
-    final result = await showDialog<(String, String, String)?>(
+    final result = await showDialog<(String, String, String, int)?>(
       context: context,
       builder: (_) => _ProfileEditDialog(
         title: loc('Редагувати', 'Edit'),
         initialName: profile.name,
         initialAvatar: profile.avatarEmoji,
         initialLanguage: profile.language,
+        initialLevel: profile.level,
         isEn: isEn,
       ),
     );
@@ -133,6 +134,11 @@ class _ProfileSelectorSheet extends ConsumerWidget {
         await ref
             .read(profileProvider.notifier)
             .setLanguage(profile.id, result.$3);
+      }
+      if (result.$4 != profile.level) {
+        await ref
+            .read(profileProvider.notifier)
+            .setLevel(profile.id, result.$4);
       }
     }
   }
@@ -165,6 +171,11 @@ class _ProfileSelectorSheet extends ConsumerWidget {
       await ref.read(profileProvider.notifier).deleteProfile(profile.id);
     }
   }
+}
+
+String _levelLabel(int level) {
+  const labels = {1: '🍼 1-2р', 2: '🐣 2-3р', 3: '🌟 3-4р', 4: '🚀 4-5р'};
+  return labels[level] ?? '🐣 2-3р';
 }
 
 // ─────────────────────────────────────────────
@@ -224,8 +235,8 @@ class _ProfileTile extends StatelessWidget {
           ),
         ),
         subtitle: Text(
-          profile.flagEmoji +
-              (profile.language == 'en' ? ' English' : ' Українська'),
+          '${profile.flagEmoji} ${profile.language == 'en' ? 'English' : 'Українська'}'
+          ' · ${_levelLabel(profile.level)}',
           style: TextStyle(fontSize: 12, color: Colors.grey[500]),
         ),
         trailing: Row(
@@ -262,6 +273,7 @@ class _ProfileEditDialog extends StatefulWidget {
   final String? initialName;
   final String? initialAvatar;
   final String? initialLanguage;
+  final int? initialLevel;
   final bool isEn;
 
   const _ProfileEditDialog({
@@ -269,6 +281,7 @@ class _ProfileEditDialog extends StatefulWidget {
     this.initialName,
     this.initialAvatar,
     this.initialLanguage,
+    this.initialLevel,
     this.isEn = false,
   });
 
@@ -280,6 +293,7 @@ class _ProfileEditDialogState extends State<_ProfileEditDialog> {
   late final TextEditingController _nameCtrl;
   late String _selectedAvatar;
   late String _selectedLang;
+  late int _selectedLevel;
 
   @override
   void initState() {
@@ -287,6 +301,7 @@ class _ProfileEditDialogState extends State<_ProfileEditDialog> {
     _nameCtrl = TextEditingController(text: widget.initialName ?? '');
     _selectedAvatar = widget.initialAvatar ?? kAvatarEmojis.first;
     _selectedLang = widget.initialLanguage ?? 'uk';
+    _selectedLevel = widget.initialLevel ?? 2;
   }
 
   @override
@@ -326,6 +341,22 @@ class _ProfileEditDialogState extends State<_ProfileEditDialog> {
                 _langChip('uk', '🇺🇦 Українська'),
                 const SizedBox(width: 8),
                 _langChip('en', '🇬🇧 English'),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Level selector
+            Text(s('Вік дитини', 'Child\'s age'),
+                style: const TextStyle(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                _levelChip(1, '🍼', s('1-2р', '1-2y')),
+                const SizedBox(width: 6),
+                _levelChip(2, '🐣', s('2-3р', '2-3y')),
+                const SizedBox(width: 6),
+                _levelChip(3, '🌟', s('3-4р', '3-4y')),
+                const SizedBox(width: 6),
+                _levelChip(4, '🚀', s('4-5р', '4-5y')),
               ],
             ),
             const SizedBox(height: 16),
@@ -374,8 +405,8 @@ class _ProfileEditDialogState extends State<_ProfileEditDialog> {
         ElevatedButton(
           onPressed: _nameCtrl.text.trim().isEmpty
               ? null
-              : () => Navigator.of(context)
-                  .pop((_nameCtrl.text.trim(), _selectedAvatar, _selectedLang)),
+              : () => Navigator.of(context).pop(
+                  (_nameCtrl.text.trim(), _selectedAvatar, _selectedLang, _selectedLevel)),
           style: ElevatedButton.styleFrom(
             backgroundColor: kAccent,
             foregroundColor: Colors.white,
@@ -406,9 +437,45 @@ class _ProfileEditDialogState extends State<_ProfileEditDialog> {
           label,
           style: TextStyle(
             fontSize: 14,
-            fontWeight:
-                selected ? FontWeight.w700 : FontWeight.w400,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
             color: selected ? kAccent : null,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _levelChip(int level, String emoji, String label) {
+    final selected = _selectedLevel == level;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          setState(() => _selectedLevel = level);
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: selected
+                ? kAccent.withValues(alpha: 0.15)
+                : Colors.grey.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(10),
+            border: selected ? Border.all(color: kAccent, width: 2) : null,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(emoji, style: const TextStyle(fontSize: 18)),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                  color: selected ? kAccent : Colors.grey[600],
+                ),
+              ),
+            ],
           ),
         ),
       ),

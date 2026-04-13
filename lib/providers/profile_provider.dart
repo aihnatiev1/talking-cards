@@ -55,9 +55,9 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
 
   /// Add a new profile (max 3).
   Future<void> addProfile(String name, String avatarEmoji,
-      {String language = 'uk'}) async {
+      {String language = 'uk', int level = 2}) async {
     final updated =
-        await ProfileService.addProfile(name, avatarEmoji, language: language);
+        await ProfileService.addProfile(name, avatarEmoji, language: language, level: level);
     state = state.copyWith(profiles: updated);
   }
 
@@ -72,6 +72,12 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
   /// [packsProvider] auto-reloads via [languageProvider] dependency.
   Future<void> setLanguage(String profileId, String language) async {
     final updated = await ProfileService.setLanguage(profileId, language);
+    state = state.copyWith(profiles: updated);
+  }
+
+  /// Change the age/difficulty level (1-4) for a profile.
+  Future<void> setLevel(String profileId, int level) async {
+    final updated = await ProfileService.setLevel(profileId, level);
     state = state.copyWith(profiles: updated);
   }
 

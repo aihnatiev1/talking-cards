@@ -65,7 +65,7 @@ class ProfileService {
 
   /// Add a new profile (max 3 total).
   static Future<List<ProfileModel>> addProfile(
-      String name, String avatarEmoji, {String language = 'uk'}) async {
+      String name, String avatarEmoji, {String language = 'uk', int level = 2}) async {
     final prefs = await SharedPreferences.getInstance();
     final existing = await _loadProfiles(prefs);
     if (existing.length >= 3) return existing;
@@ -75,6 +75,7 @@ class ProfileService {
       avatarEmoji: avatarEmoji,
       createdAt: DateTime.now(),
       language: language,
+      level: level,
     );
     final updated = [...existing, newProfile];
     await _saveProfiles(prefs, updated);
@@ -100,6 +101,17 @@ class ProfileService {
     final existing = await _loadProfiles(prefs);
     final updated = existing
         .map((p) => p.id == id ? p.copyWith(language: language) : p)
+        .toList();
+    await _saveProfiles(prefs, updated);
+    return updated;
+  }
+
+  /// Change the age/difficulty level (1-4) for a profile.
+  static Future<List<ProfileModel>> setLevel(String id, int level) async {
+    final prefs = await SharedPreferences.getInstance();
+    final existing = await _loadProfiles(prefs);
+    final updated = existing
+        .map((p) => p.id == id ? p.copyWith(level: level) : p)
         .toList();
     await _saveProfiles(prefs, updated);
     return updated;
