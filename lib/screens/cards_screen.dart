@@ -22,6 +22,7 @@ import '../services/audio_service.dart';
 import '../services/speech_service.dart';
 import '../services/tts_service.dart';
 import '../utils/constants.dart';
+import '../utils/l10n.dart';
 import '../services/paywall_flow.dart';
 import '../widgets/celebration_overlay.dart';
 import '../widgets/flash_card.dart';
@@ -492,7 +493,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                   style: const TextStyle(fontSize: 56)),
               const SizedBox(height: 16),
               Text(
-                'Сподобалось? ${widget.pack.title}',
+                s('Сподобалось? ${widget.pack.title}', 'Enjoying ${widget.pack.title}?'),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 22,
@@ -502,7 +503,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
               ),
               const SizedBox(height: 10),
               Text(
-                'Ще $remaining карток чекають!',
+                s('Ще $remaining карток чекають!', '$remaining more cards waiting!'),
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
               ),
@@ -524,8 +525,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16)),
                   ),
-                  child: const Text(
-                    'Розблокувати все',
+                  child: Text(s('Розблокувати все', 'Unlock all'),
                     style: TextStyle(
                         fontSize: 18, fontWeight: FontWeight.bold),
                   ),
@@ -534,7 +534,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
               const SizedBox(height: 10),
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: Text('Може пізніше',
+                child: Text(s('Може пізніше', 'Maybe later'),
                     style:
                         TextStyle(color: Colors.grey[500], fontSize: 15)),
               ),
@@ -562,6 +562,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     final cards = _cards;
     final allCards = widget.pack.cards;
     final progress = (_currentIndex + 1) / cards.length;
+    final s = AppS(ref.read(languageProvider) == 'en');
 
     return Scaffold(
       appBar: AppBar(
@@ -802,7 +803,8 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'Превʼю ${cards.length} з ${allCards.length} карток',
+                      s('Превʼю ${cards.length} з ${allCards.length} карток',
+                          'Preview ${cards.length} of ${allCards.length} cards'),
                       style: TextStyle(
                         color: widget.pack.color,
                         fontSize: 14,
@@ -820,8 +822,8 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 8),
                     ),
-                    child: const Text('Розблокувати',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: Text(s('Розблокувати', 'Unlock'),
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),

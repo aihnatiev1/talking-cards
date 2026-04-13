@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/streak_provider.dart';
+import '../providers/language_provider.dart';
 import '../utils/constants.dart';
+import '../utils/l10n.dart';
 import '../utils/uk_grammar.dart';
 
 class RewardsScreen extends ConsumerWidget {
@@ -13,6 +15,7 @@ class RewardsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final streak = ref.watch(streakProvider);
+    final s = AppS(ref.read(languageProvider) == 'en');
 
     return Scaffold(
       appBar: AppBar(
@@ -23,7 +26,7 @@ class RewardsScreen extends ConsumerWidget {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
-          'Нагороди',
+          s('Нагороди', 'Rewards'),
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -47,7 +50,7 @@ class RewardsScreen extends ConsumerWidget {
                   const Text('🔥', style: TextStyle(fontSize: 48)),
                   const SizedBox(height: 8),
                   Text(
-                    '${streak.currentStreak} ${dayWord(streak.currentStreak)}',
+                    s.isEn ? '${streak.currentStreak} days' : '${streak.currentStreak} \${dayWord(streak.currentStreak)}',
                     style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
@@ -56,7 +59,7 @@ class RewardsScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 4),
                   const Text(
-                    'поспіль',
+                    s('поспіль', 'streak'),
                     style: TextStyle(fontSize: 16, color: Colors.white70),
                   ),
                 ],
@@ -68,7 +71,7 @@ class RewardsScreen extends ConsumerWidget {
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Значки',
+                s('Значки', 'Badges'),
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -100,7 +103,7 @@ class RewardsScreen extends ConsumerWidget {
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Бонусні картки',
+                s('Бонусні картки', 'Bonus cards'),
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
