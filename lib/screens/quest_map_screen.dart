@@ -864,7 +864,7 @@ class _TreasureWaypointState extends ConsumerState<_TreasureWaypoint>
           : null,
       child: SizedBox(
         width: 84,
-        height: 100,
+        height: 110,
         child: Column(
           children: [
             Container(

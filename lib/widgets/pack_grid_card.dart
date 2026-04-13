@@ -69,13 +69,7 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Hero(
-              tag: 'pack_icon_${pack.id}',
-              child: Material(
-                color: Colors.transparent,
-                child: Text(pack.icon, style: TextStyle(fontSize: 40 * scale)),
-              ),
-            ),
+            Text(pack.icon, style: TextStyle(fontSize: 40 * scale)),
             SizedBox(height: 6 * scale),
             Text(
               pack.title,
