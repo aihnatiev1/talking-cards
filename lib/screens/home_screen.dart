@@ -31,6 +31,7 @@ import '../widgets/profile_avatar_chip.dart';
 import 'cards_screen.dart';
 import 'guess_screen.dart';
 import 'memory_match_screen.dart';
+import 'sort_game_screen.dart';
 import 'parent_dashboard_screen.dart';
 import 'parent_pin_screen.dart';
 import 'quest_map_screen.dart';
@@ -362,6 +363,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  void _openSortGame(List<PackModel> packs) {
+    final lang = ref.read(languageProvider);
+    final playablePacks = packs
+        .where((p) =>
+            !p.id.startsWith('_') &&
+            !p.isLocked &&
+            p.cards.length >= 3 &&
+            (lang == 'en'
+                ? p.cards.any((c) => c.image != null)
+                : p.cards.any((c) => c.audioKey != null)))
+        .toList()
+      ..shuffle();
+    if (playablePacks.length < 2) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SortGameScreen(
+          packA: playablePacks[0],
+          packB: playablePacks[1],
+        ),
+      ),
+    );
+  }
+
   void _showCardOfDayPopup(CardModel card, bool isFromLockedPack) {
     AnalyticsService.instance.logCardOfDayTap(card.id);
     AudioService.instance.speakCard(card.audioKey, card.sound, card.text);
@@ -658,33 +682,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             // Build grid items
             final gridItems = <_GridItem>[];
             const favPosition = 2;
-            const quizPosition = 5;
-            const memoryPosition = 7;
             for (int i = 0; i < filteredPacks.length; i++) {
-              if (isAllCategory) {
-                if (i == favPosition) {
-                  gridItems.add(_GridItem.pack(favoritesPack));
-                }
-                if (i == quizPosition && playableCount >= 4) {
-                  gridItems.add(_GridItem.quiz(allCards));
-                }
-                if (i == memoryPosition && playableCount >= 6) {
-                  gridItems.add(_GridItem.memory(allCards));
-                }
+              if (isAllCategory && i == favPosition) {
+                gridItems.add(_GridItem.pack(favoritesPack));
               }
               gridItems.add(_GridItem.pack(filteredPacks[i]));
             }
             if (isAllCategory) {
               if (filteredPacks.length <= favPosition) {
                 gridItems.add(_GridItem.pack(favoritesPack));
-              }
-              if (filteredPacks.length <= quizPosition &&
-                  playableCount >= 4) {
-                gridItems.add(_GridItem.quiz(allCards));
-              }
-              if (filteredPacks.length <= memoryPosition &&
-                  playableCount >= 6) {
-                gridItems.add(_GridItem.memory(allCards));
               }
               if (reviewPack != null) {
                 gridItems.add(_GridItem.pack(reviewPack));
@@ -807,6 +813,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
 
+                // Games section
+                _GamesSection(
+                  playableCount: playableCount,
+                  hasSortGame: packs
+                          .where((p) =>
+                              !p.id.startsWith('_') &&
+                              !p.isLocked &&
+                              p.cards.length >= 3)
+                          .length >=
+                      2,
+                  onQuiz: () => _openQuiz(allCards),
+                  onMemory: () => _openMemoryMatch(allCards),
+                  onSort: () => _openSortGame(packs),
+                ),
+
                 const SizedBox(height: 8),
 
                 // Category filter chips
@@ -870,16 +891,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     itemCount: gridItems.length,
                     itemBuilder: (context, index) {
-                      final item = gridItems[index];
-                      if (item.isQuiz) {
-                        return _QuizGridCard(
-                            onTap: () => _openQuiz(item.quizCards!));
-                      }
-                      if (item.isMemory) {
-                        return _MemoryGridCard(
-                            onTap: () => _openMemoryMatch(item.memoryCards!));
-                      }
-                      final pack = item.pack!;
+                      final pack = gridItems[index].pack;
                       return PackGridCard(
                         key: ValueKey(pack.id),
                         pack: pack,
@@ -951,15 +963,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 }
 
 class _GridItem {
-  final PackModel? pack;
-  final List<CardModel>? quizCards;
-  final List<CardModel>? memoryCards;
-  bool get isQuiz => quizCards != null;
-  bool get isMemory => memoryCards != null;
-
-  _GridItem.pack(PackModel p) : pack = p, quizCards = null, memoryCards = null;
-  _GridItem.quiz(List<CardModel> cards) : pack = null, quizCards = cards, memoryCards = null;
-  _GridItem.memory(List<CardModel> cards) : pack = null, quizCards = null, memoryCards = cards;
+  final PackModel pack;
+  _GridItem.pack(this.pack);
 }
 
 class _CardOfDayHero extends StatefulWidget {
@@ -1271,50 +1276,128 @@ class _DailyQuestHero extends ConsumerWidget {
 
 }
 
-class _QuizGridCard extends StatelessWidget {
-  final VoidCallback onTap;
+// ─────────────────────────────────────────────
+//  Games section
+// ─────────────────────────────────────────────
 
-  const _QuizGridCard({required this.onTap});
+class _GamesSection extends ConsumerWidget {
+  final int playableCount;
+  final bool hasSortGame;
+  final VoidCallback onQuiz;
+  final VoidCallback onMemory;
+  final VoidCallback onSort;
+
+  const _GamesSection({
+    required this.playableCount,
+    required this.hasSortGame,
+    required this.onQuiz,
+    required this.onMemory,
+    required this.onSort,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (playableCount < 4) return const SizedBox.shrink();
+    final isEn = ref.watch(languageProvider) == 'en';
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            isEn ? '🎮 Games' : '🎮 Ігри',
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: kAccent,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: _GameButton(
+                  emoji: '🎧',
+                  label: isEn ? 'Guess\nthe word' : 'Вгадай\nзвук',
+                  color: kAccent,
+                  onTap: onQuiz,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _GameButton(
+                  emoji: '🧠',
+                  label: isEn ? 'Find\nthe pair' : 'Знайди\nпару',
+                  color: kTeal,
+                  onTap: playableCount >= 6 ? onMemory : null,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _GameButton(
+                  emoji: '🗂️',
+                  label: isEn ? 'Sort\nit!' : 'Роз-\nклади',
+                  color: const Color(0xFFFF8C42),
+                  onTap: hasSortGame ? onSort : null,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GameButton extends StatelessWidget {
+  final String emoji;
+  final String label;
+  final Color color;
+  final VoidCallback? onTap;
+
+  const _GameButton({
+    required this.emoji,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final disabled = onTap == null;
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: kAccent.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: kAccent.withValues(alpha: 0.25),
-            width: 1.5,
+      child: AnimatedOpacity(
+        opacity: disabled ? 0.4 : 1.0,
+        duration: const Duration(milliseconds: 150),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: color.withValues(alpha: 0.25),
+              width: 1.5,
+            ),
           ),
-        ),
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
-        child: Consumer(
-          builder: (_, ref, __) {
-            final isEn = ref.watch(languageProvider) == 'en';
-            return Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text('🎧', style: TextStyle(fontSize: 44)),
-                const SizedBox(height: 8),
-                Text(
-                  isEn ? 'Guess the word' : 'Вгадай звук',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: kAccent,
-                  ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(emoji, style: const TextStyle(fontSize: 28)),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                  height: 1.2,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  isEn ? 'Quiz' : 'Вікторина',
-                  style: const TextStyle(fontSize: 12, color: kAccent),
-                ),
-              ],
-            );
-          },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1487,53 +1570,6 @@ class _SrsReviewBanner extends ConsumerWidget {
               Icon(Icons.arrow_forward_ios_rounded, size: 14, color: color),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _MemoryGridCard extends ConsumerWidget {
-  final VoidCallback onTap;
-
-  const _MemoryGridCard({required this.onTap});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    const color = kTeal;
-    final isEn = ref.watch(languageProvider) == 'en';
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: color.withValues(alpha: 0.25),
-            width: 1.5,
-          ),
-        ),
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('🧠', style: TextStyle(fontSize: 44)),
-            const SizedBox(height: 8),
-            Text(
-              isEn ? 'Find the pair' : 'Знайди пару',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              isEn ? 'Memory' : 'Пам\'ять',
-              style: const TextStyle(fontSize: 12, color: color),
-            ),
-          ],
         ),
       ),
     );

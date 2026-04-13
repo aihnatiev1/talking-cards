@@ -20,6 +20,8 @@
 
 | 8 | English Market | ✅ done | main | |
 
+| 9 | Games Block + Sort Game | ✅ done | main | |
+
 ## Pre-execution Checklist
 
 - [ ] Phase 3: Create `lifetime_premium` SKU in App Store Connect before coding
