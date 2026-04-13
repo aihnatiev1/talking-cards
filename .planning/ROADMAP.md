@@ -251,3 +251,42 @@ When English audio is recorded:
 - Add audio files to `assets/audio_mp3/` with `en_` prefix
 - Add `audio` field to `en_cards.json` entries
 - `AudioService` already handles them — no code changes needed
+
+---
+
+## Phase 9 — Games Block + Content Reorganization
+
+**Goal:** Move games out of the pack grid into a dedicated "Games" section. Add Sorting game. Add age/level selector to profiles.
+
+### Step 1: Games Section in HomeScreen
+- Remove Quiz + Memory from the pack grid
+- Add a `_GamesSection` widget above the pack grid with:
+  - 🎧 Guess the word (quiz)
+  - 🧠 Find the pair (memory)
+  - 🗂️ Sort it! (new — drag/drop category sorting)
+- Visual: horizontal scroll row or 2×N grid of game cards
+
+### Step 2: Pack grid cleanup
+- Without quiz/memory tiles, the pack grid is cleaner
+- Favorites virtual pack stays
+- Review virtual pack stays
+- Add "Phrases" to the grid properly (it was added to uk_cards.json)
+
+### Step 3: Sort game (new)
+- Show 6-8 cards mixed from 2 categories (e.g. Animals + Food)
+- Two drop zones at bottom (category icons)
+- Drag card to correct category
+- Counts as quest task: completes `reviewOldCard`
+
+### Step 4: Age/level in profile (future)
+- Add `level: 1-4` to ProfileModel
+- Level 1 (1-2y): audio + emoji only, no text
+- Level 2 (2-3y): audio + image + word
+- Level 3 (3-4y): full card + quiz
+- Level 4 (4-5y): sentences + harder quiz
+
+**Success criteria:**
+- [ ] Games section visible above pack grid
+- [ ] Quiz + Memory removed from grid (no more ⬛ holes)
+- [ ] Sort game playable with 2 categories
+- [ ] Profile shows level selector (optional for Phase 9)
