@@ -1404,7 +1404,7 @@ class _SeasonalPacksRow extends ConsumerWidget {
                           isCompleted: completedPacks.contains(pack.id),
                           progress: packProgress[pack.id] ?? 0,
                           isSeasonal: true,
-                          onTap: () => onTap(pack),
+                          onTap: () => onTap(displayPack),
                         ),
                       ),
                     );

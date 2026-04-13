@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
 class ActivityChart extends StatelessWidget {
-  final List<MapEntry<String, int>> data; // date → count, 7 entries
+  final List<MapEntry<String, int>> data;
+  final bool isEn;
 
-  const ActivityChart({super.key, required this.data});
+  const ActivityChart({super.key, required this.data, this.isEn = false});
 
   @override
   Widget build(BuildContext context) {
@@ -62,8 +63,9 @@ class ActivityChart extends StatelessWidget {
   String _weekday(String dateKey) {
     try {
       final date = DateTime.parse(dateKey);
-      const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд'];
-      return days[date.weekday - 1];
+      const uk = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд'];
+      const en = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      return (isEn ? en : uk)[date.weekday - 1];
     } catch (_) {
       return '';
     }

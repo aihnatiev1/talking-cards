@@ -9,7 +9,9 @@ import 'package:share_plus/share_plus.dart';
 import '../utils/constants.dart';
 import '../utils/uk_grammar.dart';
 
-const _storeUrl = 'https://apps.apple.com/app/id6760210043';
+const _appStoreUrl = 'https://apps.apple.com/app/id6760210043';
+const _playStoreUrl = 'https://play.google.com/store/apps/details?id=com.talkingcards.app';
+const _storeUrl = '$_appStoreUrl\n$_playStoreUrl';
 
 /// Captures the share card as image and shares it.
 Future<void> shareProgress({
@@ -20,6 +22,7 @@ Future<void> shareProgress({
   required int totalCards,
   required int streak,
   required Set<String> badges,
+  bool isEn = false,
 }) async {
   // Get position for iPad popover
   Rect? sharePositionOrigin;
@@ -45,11 +48,17 @@ Future<void> shareProgress({
     if (image == null) {
       // Fallback: text-only share
       await Share.share(
-        'Мій малюк вивчає слова з Картками-розмовлялками! 🗣️\n'
-        '⭐ Розділів: $completedPacks/$totalPacks\n'
-        '🃏 Карток: $seenCards/$totalCards'
-        '${streak > 0 ? '\n🔥 Серія: $streak ${dayWord(streak)}' : ''}'
-        '\n\nСкачай безкоштовно:\n$_storeUrl',
+        isEn
+          ? 'My child is learning words with Talking Cards! 🗣️\n'
+            '⭐ Packs: $completedPacks/$totalPacks\n'
+            '🃏 Cards: $seenCards/$totalCards'
+            '${streak > 0 ? '\n🔥 Streak: $streak days' : ''}'
+            '\n\nDownload free:\n$_storeUrl'
+          : 'Мій малюк вивчає слова з Картками-розмовлялками! 🗣️\n'
+            '⭐ Розділів: $completedPacks/$totalPacks\n'
+            '🃏 Карток: $seenCards/$totalCards'
+            '${streak > 0 ? '\n🔥 Серія: $streak ${dayWord(streak)}' : ''}'
+            '\n\nСкачай безкоштовно:\n$_storeUrl',
         sharePositionOrigin: sharePositionOrigin,
       );
       return;
@@ -61,8 +70,9 @@ Future<void> shareProgress({
 
     await Share.shareXFiles(
       [XFile(file.path)],
-      text: 'Мій малюк вивчає слова з Картками-розмовлялками! 🗣️\n'
-          'Скачай безкоштовно: $_storeUrl',
+      text: isEn
+          ? 'My child is learning words with Talking Cards! 🗣️\nDownload free: $_storeUrl'
+          : 'Мій малюк вивчає слова з Картками-розмовлялками! 🗣️\nСкачай безкоштовно: $_storeUrl',
       sharePositionOrigin: sharePositionOrigin,
     );
   } catch (e, st) {

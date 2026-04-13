@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/daily_stats_provider.dart';
+import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../providers/streak_provider.dart';
 import '../screens/cards_screen.dart';
 import '../screens/rewards_screen.dart';
 import '../utils/constants.dart';
+import '../utils/l10n.dart';
 import '../utils/uk_grammar.dart';
 import '../widgets/activity_chart.dart';
 import '../widgets/share_progress_card.dart';
@@ -23,6 +25,7 @@ class StatsScreen extends ConsumerWidget {
     ref.watch(dailyStatsProvider);
     final dailyNotifier = ref.read(dailyStatsProvider.notifier);
 
+    final s = AppS(ref.read(languageProvider) == 'en');
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -31,9 +34,9 @@ class StatsScreen extends ConsumerWidget {
           icon: const Icon(Icons.arrow_back_ios, color: kAccent),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text(
-          'Прогрес дитини',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          s('Прогрес дитини', "Child's Progress"),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         actions: [
@@ -90,9 +93,9 @@ class StatsScreen extends ConsumerWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Розділів пройдено',
-                              style: TextStyle(
+                            Text(
+                              s('Розділів пройдено', 'Packs completed'),
+                              style: const TextStyle(
                                 fontSize: 13,
                                 color: Colors.white70,
                               ),
@@ -108,7 +111,8 @@ class StatsScreen extends ConsumerWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '$seenCards з $totalCards карток переглянуто',
+                              s('$seenCards з $totalCards карток переглянуто',
+                                '$seenCards of $totalCards cards viewed'),
                               style: const TextStyle(
                                 fontSize: 13,
                                 color: Colors.white70,
@@ -141,7 +145,7 @@ class StatsScreen extends ConsumerWidget {
                                   ),
                                 ),
                                 Text(
-                                  dayWord(streak.currentStreak),
+                                  s.isEn ? 'days' : dayWord(streak.currentStreak),
                                   style: const TextStyle(
                                     fontSize: 12,
                                     color: Colors.white70,
@@ -174,7 +178,7 @@ class StatsScreen extends ConsumerWidget {
                             style: TextStyle(fontSize: 28)),
                         const SizedBox(height: 6),
                         Text(
-                          '~$approxMinutes хв навчання',
+                          s('~$approxMinutes хв навчання', '~$approxMinutes min learning'),
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -182,7 +186,7 @@ class StatsScreen extends ConsumerWidget {
                           ),
                         ),
                         Text(
-                          '$totalViews переглядів карток',
+                          s('$totalViews переглядів карток', '$totalViews card views'),
                           style: TextStyle(
                               fontSize: 13, color: Colors.grey[600]),
                         ),
@@ -193,7 +197,7 @@ class StatsScreen extends ConsumerWidget {
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'Активність за тиждень',
+                    s('Активність за тиждень', 'Activity this week'),
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -202,7 +206,7 @@ class StatsScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                ActivityChart(data: dailyNotifier.last7Days()),
+                ActivityChart(data: dailyNotifier.last7Days(), isEn: s.isEn),
                 const SizedBox(height: 24),
                 ...packs.map((pack) {
                   final packProgress = progress[pack.id] ?? 0;
