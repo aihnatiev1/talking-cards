@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
 import '../utils/color_utils.dart';
+import 'language_provider.dart';
 
 // ─────────────────────────────────────────────
 //  Model
@@ -94,6 +95,9 @@ final _allSeasonalPacksProvider =
 
 final activeSeasonalPacksProvider =
     FutureProvider<List<SeasonalPackModel>>((ref) async {
+  // Seasonal packs are UA cultural content — hide in EN mode
+  final lang = ref.watch(languageProvider);
+  if (lang == 'en') return [];
   final all = await ref.watch(_allSeasonalPacksProvider.future);
   final now = DateTime.now();
   return all.where((p) => p.isActiveOn(now)).toList();
