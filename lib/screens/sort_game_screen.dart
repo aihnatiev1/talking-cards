@@ -216,23 +216,30 @@ class _SortGameScreenState extends ConsumerState<SortGameScreen>
       body: SafeArea(
         child: Column(
           children: [
-            // Progress
+            // ── Progress ──────────────────────────────
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+              child: Row(
                 children: [
-                  LinearProgressIndicator(
-                    value: total > 0 ? sorted / total : 0,
-                    minHeight: 6,
-                    borderRadius: BorderRadius.circular(4),
-                    backgroundColor: Colors.grey.withValues(alpha: 0.15),
-                    valueColor: const AlwaysStoppedAnimation<Color>(kAccent),
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: total > 0 ? sorted / total : 0,
+                        minHeight: 7,
+                        backgroundColor: Colors.grey.withValues(alpha: 0.15),
+                        valueColor:
+                            const AlwaysStoppedAnimation<Color>(kAccent),
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(width: 12),
                   Text(
-                    s('$sorted / $total розкладено', '$sorted / $total sorted'),
-                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                    '$sorted/$total',
+                    style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[500]),
                   ),
                 ],
               ),
@@ -240,80 +247,75 @@ class _SortGameScreenState extends ConsumerState<SortGameScreen>
 
             const SizedBox(height: 12),
 
-            // Cards — horizontal row, all same drag distance to zones
-            Expanded(
-              flex: 5,
-              child: _remaining.isEmpty
-                  ? const Center(child: Text('✅', style: TextStyle(fontSize: 64)))
-                  : Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Hint text — shown until first drag
-                        AnimatedOpacity(
-                          opacity: _showHint ? 1.0 : 0.0,
-                          duration: const Duration(milliseconds: 400),
-                          child: Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: Text(
-                              s('Перетягни картку у правильну купку 👇',
-                                  'Drag each card to the right bin 👇'),
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey[500],
-                              ),
-                            ),
-                          ),
-                        ),
-                        // Single horizontal row — consistent drag distance
-                        SizedBox(
-                          height: 120,
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            shrinkWrap: true,
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            itemCount: _remaining.length,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(width: 12),
-                            itemBuilder: (_, i) =>
-                                _buildDraggableCard(_remaining[i]),
-                          ),
-                        ),
-                      ],
-                    ),
-            ),
-
-            // Bouncing arrow hint
-            AnimatedOpacity(
-              opacity: _showHint && _remaining.isNotEmpty ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 400),
-              child: AnimatedBuilder(
-                animation: _hintAnim,
-                builder: (_, __) => Transform.translate(
-                  offset: Offset(0, _hintAnim.value),
-                  child: Icon(
-                    Icons.keyboard_double_arrow_down_rounded,
-                    size: 28,
-                    color: Colors.grey[400],
+            // ── Cards ─────────────────────────────────
+            if (_remaining.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 20),
+                child: Text('✅', style: TextStyle(fontSize: 56)),
+              )
+            else ...[
+              AnimatedOpacity(
+                opacity: _showHint ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 400),
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    s('Перетягни у правильну купку 👇',
+                        'Drag to the right bin 👇'),
+                    style:
+                        TextStyle(fontSize: 12, color: Colors.grey[500]),
                   ),
                 ),
               ),
-            ),
+              SizedBox(
+                height: 128,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  itemCount: _remaining.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 12),
+                  itemBuilder: (_, i) =>
+                      _buildDraggableCard(_remaining[i]),
+                ),
+              ),
+              // Bouncing arrow
+              AnimatedOpacity(
+                opacity: _showHint ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 400),
+                child: AnimatedBuilder(
+                  animation: _hintAnim,
+                  builder: (_, __) => Transform.translate(
+                    offset: Offset(0, _hintAnim.value),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Icon(
+                        Icons.keyboard_double_arrow_down_rounded,
+                        size: 26,
+                        color: Colors.grey[400],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
 
-            const SizedBox(height: 8),
-
-            // Drop zones — large, obvious targets
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-              child: Row(
-                children: [
-                  Expanded(
-                      child: _buildDropZone(
-                          pack: widget.packA, isZoneA: true, s: s)),
-                  const SizedBox(width: 12),
-                  Expanded(
-                      child: _buildDropZone(
-                          pack: widget.packB, isZoneA: false, s: s)),
-                ],
+            // ── Drop zones — fill all remaining space ──
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                        child: _buildDropZone(
+                            pack: widget.packA, isZoneA: true, s: s)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                        child: _buildDropZone(
+                            pack: widget.packB, isZoneA: false, s: s)),
+                  ],
+                ),
               ),
             ),
           ],
@@ -385,24 +387,23 @@ class _SortGameScreenState extends ConsumerState<SortGameScreen>
       builder: (context, candidateData, rejectedData) {
         return AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          height: 130,
           decoration: BoxDecoration(
             color: isHighlighted
-                ? pack.color.withValues(alpha: 0.22)
-                : pack.color.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(20),
+                ? pack.color.withValues(alpha: 0.18)
+                : pack.color.withValues(alpha: 0.07),
+            borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: isHighlighted
-                  ? pack.color.withValues(alpha: 0.9)
-                  : pack.color.withValues(alpha: 0.35),
-              width: isHighlighted ? 2.5 : 1.5,
+                  ? pack.color
+                  : pack.color.withValues(alpha: 0.3),
+              width: isHighlighted ? 3 : 1.5,
             ),
             boxShadow: isHighlighted
                 ? [
                     BoxShadow(
-                      color: pack.color.withValues(alpha: 0.2),
-                      blurRadius: 12,
-                      spreadRadius: 2,
+                      color: pack.color.withValues(alpha: 0.25),
+                      blurRadius: 20,
+                      spreadRadius: 4,
                     )
                   ]
                 : null,
@@ -412,29 +413,39 @@ class _SortGameScreenState extends ConsumerState<SortGameScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 AnimatedScale(
-                  scale: isHighlighted ? 1.15 : 1.0,
+                  scale: isHighlighted ? 1.2 : 1.0,
                   duration: const Duration(milliseconds: 150),
                   child: Text(pack.icon,
-                      style: const TextStyle(fontSize: 36)),
+                      style: const TextStyle(fontSize: 52)),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 10),
                 Text(
                   pack.title,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 15,
                     fontWeight: FontWeight.bold,
                     color: pack.color,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  isHighlighted ? s('⬆ кидай!', '⬆ drop!') : s('↑ сюди', '↑ here'),
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: pack.color.withValues(alpha: 0.6),
+                if (isHighlighted) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: pack.color,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      s('Кидай! 🎯', 'Drop! 🎯'),
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold),
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
