@@ -31,7 +31,12 @@ import '../widgets/profile_avatar_chip.dart';
 import 'cards_screen.dart';
 import 'guess_screen.dart';
 import 'memory_match_screen.dart';
-import 'sort_game_screen.dart';
+import 'odd_one_out_screen.dart';
+import 'opposite_game_screen.dart';
+import 'repeat_game_screen.dart';
+import 'sort_game_setup_screen.dart';
+import 'sound_filter_screen.dart';
+import 'syllable_game_screen.dart';
 import 'parent_dashboard_screen.dart';
 import 'parent_pin_screen.dart';
 import 'quest_map_screen.dart';
@@ -48,6 +53,12 @@ const _packCategoriesUk = <String, String>{
   'colors': 'Розвиток',
   'body': 'Розвиток',
   'phrases': 'Мовлення',
+  'actions': 'Розвиток',
+  'opposites': 'Розвиток',
+  'sound_r': 'Звуки',
+  'sound_l': 'Звуки',
+  'sound_sh': 'Звуки',
+  'sound_s': 'Звуки',
 };
 
 /// Category mapping for English packs
@@ -61,7 +72,7 @@ const _packCategoriesEn = <String, String>{
   'en_body': 'Learning',
 };
 
-const _allCategoriesUk = ['Все', 'Мовлення', 'Світ навколо', 'Побут', 'Розвиток'];
+const _allCategoriesUk = ['Все', 'Мовлення', 'Світ навколо', 'Побут', 'Розвиток', 'Звуки'];
 const _allCategoriesEn = ['All', 'Nature', 'Home', 'Feelings', 'Transport', 'Food', 'Learning'];
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -72,11 +83,14 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  String _selectedCategory = ''; // '' means "All" — resolved per-language
+  // Static so the category persists when user navigates into a pack and returns
+  static String _lastCategory = '';
+  String _selectedCategory = '';
 
   @override
   void initState() {
     super.initState();
+    _selectedCategory = _lastCategory;
     _showWelcomeIfNeeded();
   }
 
@@ -223,6 +237,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 label: Text(s('Підтримка', 'Support')),
               ),
               const _NotificationToggle(),
+              TextButton.icon(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  _openParentArea(context);
+                },
+                icon: const Icon(Icons.family_restroom, size: 18),
+                label: Text(s('Батьківський режим', 'Parent area')),
+              ),
               const SizedBox(height: 8),
               SizedBox(
                 width: double.infinity,
@@ -373,15 +395,76 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             (lang == 'en'
                 ? p.cards.any((c) => c.image != null)
                 : p.cards.any((c) => c.audioKey != null)))
-        .toList()
-      ..shuffle();
+        .toList();
     if (playablePacks.length < 2) return;
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => SortGameScreen(
-          packA: playablePacks[0],
-          packB: playablePacks[1],
-        ),
+        builder: (_) => SortGameSetupScreen(packs: playablePacks),
+      ),
+    );
+  }
+
+  void _openOddOneOut(List<PackModel> packs) {
+    final lang = ref.read(languageProvider);
+    final playablePacks = packs
+        .where((p) =>
+            !p.id.startsWith('_') &&
+            !p.isLocked &&
+            p.cards.length >= 3 &&
+            (lang == 'en'
+                ? p.cards.any((c) => c.image != null)
+                : true))
+        .toList();
+    if (playablePacks.length < 2) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => OddOneOutScreen(packs: playablePacks),
+      ),
+    );
+  }
+
+  void _openRepeatGame(List<CardModel> allCards) {
+    final lang = ref.read(languageProvider);
+    final cards = lang == 'en'
+        ? allCards.where((c) => c.image != null).toList()
+        : allCards;
+    if (cards.length < 4) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => RepeatGameScreen(cards: cards),
+      ),
+    );
+  }
+
+  void _openSoundFilter() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const SoundFilterScreen()),
+    );
+  }
+
+  void _openOppositeGame(List<PackModel> packs) {
+    final oppPack = packs.where((p) => p.id == 'opposites').firstOrNull;
+    if (oppPack == null || oppPack.cards.length < 4) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => OppositeGameScreen(pack: oppPack),
+      ),
+    );
+  }
+
+  void _openSyllableGame(List<CardModel> allCards) {
+    // Filter out sound-repetition cards (contain hyphens like АС-АС-АС)
+    // and cards with no vowels (too short/unusual)
+    const vowels = {'А', 'Е', 'И', 'І', 'О', 'У', 'Є', 'Ї', 'Ю', 'Я'};
+    final cards = allCards
+        .where((c) =>
+            !c.sound.contains('-') &&
+            c.sound.toUpperCase().split('').any(vowels.contains))
+        .toList();
+    if (cards.length < 4) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SyllableGameScreen(cards: cards),
       ),
     );
   }
@@ -697,6 +780,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               }
             }
 
+            // Inject seasonal packs as highlighted first items in the grid
+            if (isAllCategory) {
+              final seasonalPacks =
+                  ref.watch(activeSeasonalPacksProvider).valueOrNull ?? [];
+              for (int i = seasonalPacks.length - 1; i >= 0; i--) {
+                final sp = seasonalPacks[i];
+                gridItems.insert(
+                  0,
+                  _GridItem.pack(
+                    PackModel(
+                      id: sp.id,
+                      title: sp.localizedTitle(isEnMode),
+                      icon: sp.icon,
+                      color: sp.color,
+                      isLocked: false,
+                      isFree: true,
+                      cards: sp.cards,
+                    ),
+                    isSeasonal: true,
+                  ),
+                );
+              }
+            }
+
             return Column(
               children: [
                 // Status bar spacing (replaces SafeArea top)
@@ -708,6 +815,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   child: Row(
                     children: [
                       IconButton(
+                        tooltip: isDark
+                            ? s('Світла тема', 'Light theme')
+                            : s('Темна тема', 'Dark theme'),
                         icon: Icon(
                           isDark
                               ? Icons.light_mode_rounded
@@ -723,6 +833,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       GestureDetector(
                         onLongPress: () => _openParentArea(context),
                         child: IconButton(
+                          tooltip: s('Про додаток', 'About'),
                           icon: Icon(Icons.info_outline_rounded,
                               color: Colors.grey[400], size: 26),
                           onPressed: () => _showAbout(context),
@@ -793,14 +904,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   )),
                 ),
 
-                // Seasonal packs — shown only during active season
-                _SeasonalPacksRow(
-                  onTap: (pack) => _onPackTap(context, pack),
-                  completedPacks: completedPacks,
-                  packProgress: packProgress,
-                ),
-
-                // SRS review banner — shown when cards are due
+                // SRS review banner — shown when cards are due (near "today" hero)
                 _SrsReviewBanner(
                   allCards: allCards,
                   onTap: (cards) => Navigator.of(context).push(
@@ -826,6 +930,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   onQuiz: () => _openQuiz(allCards),
                   onMemory: () => _openMemoryMatch(allCards),
                   onSort: () => _openSortGame(packs),
+                  onOddOneOut: () => _openOddOneOut(packs),
+                  onRepeat: () => _openRepeatGame(allCards),
+                  onSyllable: () => _openSyllableGame(allCards),
+                  onOpposite: () => _openOppositeGame(packs),
+                  onSoundFilter: _openSoundFilter,
                 ),
 
                 const SizedBox(height: 8),
@@ -862,13 +971,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         selected: selected,
                         selectedColor: kAccent,
                         backgroundColor:
-                            Colors.grey.withValues(alpha: 0.1),
+                            Colors.grey.withValues(alpha: 0.18),
                         showCheckmark: false,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        onSelected: (_) =>
-                            setState(() => _selectedCategory = cat),
+                        onSelected: (_) => setState(() {
+                          _selectedCategory = cat;
+                          _lastCategory = cat;
+                        }),
                       );
                     },
                   ),
@@ -891,12 +1002,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     itemCount: gridItems.length,
                     itemBuilder: (context, index) {
-                      final pack = gridItems[index].pack;
+                      final item = gridItems[index];
+                      final pack = item.pack;
                       return PackGridCard(
                         key: ValueKey(pack.id),
                         pack: pack,
                         isCompleted: completedPacks.contains(pack.id),
                         progress: packProgress[pack.id] ?? 0,
+                        isSeasonal: item.isSeasonal,
                         onTap: () => _onPackTap(context, pack),
                       );
                     },
@@ -964,7 +1077,60 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
 class _GridItem {
   final PackModel pack;
-  _GridItem.pack(this.pack);
+  final bool isSeasonal;
+  _GridItem.pack(this.pack, {this.isSeasonal = false});
+}
+
+/// Shared card shell used by Card of Day, Daily Quest and game buttons.
+/// Provides consistent: gradient bg, colored border, soft shadow, radius-16.
+class _AppCard extends StatelessWidget {
+  final Color color;
+  final Widget child;
+  final VoidCallback? onTap;
+  final EdgeInsetsGeometry padding;
+  final BoxConstraints? constraints;
+
+  const _AppCard({
+    required this.color,
+    required this.child,
+    this.onTap,
+    this.padding = const EdgeInsets.all(12),
+    this.constraints,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        constraints: constraints,
+        padding: padding,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              color.withValues(alpha: 0.12),
+              color.withValues(alpha: 0.04),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: color.withValues(alpha: 0.25),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: child,
+      ),
+    );
+  }
 }
 
 class _CardOfDayHero extends StatefulWidget {
@@ -1007,78 +1173,54 @@ class _CardOfDayHeroState extends State<_CardOfDayHero>
     final accent = widget.card.colorAccent;
     return ScaleTransition(
       scale: _scale,
-      child: GestureDetector(
+      child: _AppCard(
+        color: accent,
         onTap: widget.onTap,
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 110),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                accent.withValues(alpha: 0.12),
-                accent.withValues(alpha: 0.04),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: accent.withValues(alpha: 0.25),
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: accent.withValues(alpha: 0.08),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
+        constraints: const BoxConstraints(minHeight: 110),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Badge — always at top
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(8),
               ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Badge — always at top
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  widget.isEn ? '🔊 Card of the day' : '🔊 Картка дня',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: accent,
-                  ),
+              child: Text(
+                widget.isEn ? '🔊 Card of the day' : '🔊 Картка дня',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: accent,
                 ),
               ),
-              // Emoji + word centred in remaining space
-              Expanded(
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(widget.card.emoji,
-                          style: const TextStyle(fontSize: 30)),
-                      const SizedBox(height: 4),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          widget.card.sound,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w900,
-                            color: accent,
-                          ),
+            ),
+            // Emoji + word centred in remaining space
+            Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(widget.card.emoji,
+                        style: const TextStyle(fontSize: 30)),
+                    const SizedBox(height: 4),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        widget.card.sound,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                          color: accent,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -1100,47 +1242,19 @@ class _DailyQuestHero extends ConsumerWidget {
     final s = AppS(ref.watch(languageProvider) == 'en');
 
     final Color accentColor;
-    final Color bgStart;
-    final Color bgEnd;
     if (claimed) {
       accentColor = Colors.green[600]!;
-      bgStart = Colors.green.withValues(alpha: 0.10);
-      bgEnd = Colors.green.withValues(alpha: 0.03);
     } else if (allDone) {
       accentColor = kAccent;
-      bgStart = kAccent.withValues(alpha: 0.12);
-      bgEnd = kAccent.withValues(alpha: 0.04);
     } else {
       accentColor = Colors.orange[700]!;
-      bgStart = Colors.orange.withValues(alpha: 0.10);
-      bgEnd = Colors.orange.withValues(alpha: 0.03);
     }
 
-    return GestureDetector(
+    return _AppCard(
+      color: accentColor,
       onTap: onTap,
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 110),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [bgStart, bgEnd],
-          ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: accentColor.withValues(alpha: 0.25),
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: accentColor.withValues(alpha: 0.08),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Column(
+      constraints: const BoxConstraints(minHeight: 110),
+      child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // ── Badge + counter ──────────────────────────
@@ -1270,10 +1384,8 @@ class _DailyQuestHero extends ConsumerWidget {
             ),
           ],
         ),
-      ),
     );
   }
-
 }
 
 // ─────────────────────────────────────────────
@@ -1286,6 +1398,11 @@ class _GamesSection extends ConsumerWidget {
   final VoidCallback onQuiz;
   final VoidCallback onMemory;
   final VoidCallback onSort;
+  final VoidCallback onOddOneOut;
+  final VoidCallback onRepeat;
+  final VoidCallback onSyllable;
+  final VoidCallback onOpposite;
+  final VoidCallback onSoundFilter;
 
   const _GamesSection({
     required this.playableCount,
@@ -1293,6 +1410,11 @@ class _GamesSection extends ConsumerWidget {
     required this.onQuiz,
     required this.onMemory,
     required this.onSort,
+    required this.onOddOneOut,
+    required this.onRepeat,
+    required this.onSyllable,
+    required this.onOpposite,
+    required this.onSoundFilter,
   });
 
   @override
@@ -1337,11 +1459,66 @@ class _GamesSection extends ConsumerWidget {
               Expanded(
                 child: _GameButton(
                   emoji: '🗂️',
-                  label: isEn ? 'Sort\nit!' : 'Роз-\nклади',
+                  label: isEn ? 'Sort\nit!' : 'По\nкупках',
                   color: const Color(0xFFFF8C42),
                   onTap: hasSortGame ? onSort : null,
                 ),
               ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _GameButton(
+                  emoji: '🔍',
+                  label: isEn ? 'Odd\none out' : 'Знайди\nзайве',
+                  color: const Color(0xFF7B61FF),
+                  onTap: hasSortGame ? onOddOneOut : null,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _GameButton(
+                  emoji: '🎤',
+                  label: isEn ? 'Repeat\nafter me' : 'Повтори\nза мною',
+                  color: const Color(0xFF00BFA5),
+                  onTap: playableCount >= 4 ? onRepeat : null,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _GameButton(
+                  emoji: '🥁',
+                  label: isEn ? 'Count\nsyllables' : 'Рахуй\nсклади',
+                  color: const Color(0xFFE91E8C),
+                  onTap: playableCount >= 4 ? onSyllable : null,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _GameButton(
+                  emoji: '↔️',
+                  label: isEn ? 'Find\nopposite' : 'Протилеж-\nності',
+                  color: const Color(0xFF8E44AD),
+                  onTap: onOpposite,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _GameButton(
+                  emoji: '🔤',
+                  label: isEn ? 'By\nsound' : 'За\nзвуком',
+                  color: const Color(0xFF00897B),
+                  onTap: onSoundFilter,
+                ),
+              ),
+              const SizedBox(width: 10),
+              const Expanded(child: SizedBox()),
             ],
           ),
         ],
@@ -1366,142 +1543,37 @@ class _GameButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final disabled = onTap == null;
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedOpacity(
-        opacity: disabled ? 0.4 : 1.0,
-        duration: const Duration(milliseconds: 150),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.10),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: color.withValues(alpha: 0.25),
-              width: 1.5,
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(emoji, style: const TextStyle(fontSize: 28)),
-              const SizedBox(height: 6),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                  height: 1.2,
-                ),
+    return AnimatedOpacity(
+      opacity: disabled ? 0.4 : 1.0,
+      duration: const Duration(milliseconds: 150),
+      child: _AppCard(
+        color: color,
+        onTap: onTap,
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 28)),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: color,
+                height: 1.2,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-// ─────────────────────────────────────────────
-//  Seasonal packs row
-// ─────────────────────────────────────────────
-
-class _SeasonalPacksRow extends ConsumerWidget {
-  final void Function(PackModel) onTap;
-  final Set<String> completedPacks;
-  final Map<String, int> packProgress;
-
-  const _SeasonalPacksRow({
-    required this.onTap,
-    required this.completedPacks,
-    required this.packProgress,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final seasonal = ref.watch(activeSeasonalPacksProvider);
-    final isEn = ref.watch(languageProvider) == 'en';
-    return seasonal.when(
-      data: (packs) {
-        if (packs.isEmpty) return const SizedBox.shrink();
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  children: [
-                    Text(
-                      ref.watch(languageProvider) == 'en'
-                          ? '✨ Seasonal pack'
-                          : '✨ Сезонний пак',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: packs.first.color,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 7, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: packs.first.color.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        ref.watch(languageProvider) == 'en' ? 'Free' : 'Безкоштовно',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: packs.first.color,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Row(
-                  children: packs.map((pack) {
-                    // Use localised title (EN/UK) for the card display
-                    final displayPack = isEn && pack.titleEn.isNotEmpty
-                        ? PackModel(
-                            id: pack.id,
-                            title: pack.titleEn,
-                            icon: pack.icon,
-                            color: pack.color,
-                            isLocked: false,
-                            isFree: true,
-                            cards: pack.cards,
-                          )
-                        : pack as PackModel;
-                    return Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: PackGridCard(
-                          pack: displayPack,
-                          isCompleted: completedPacks.contains(pack.id),
-                          progress: packProgress[pack.id] ?? 0,
-                          isSeasonal: true,
-                          onTap: () => onTap(displayPack),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-              ),
-            ],
-          ),
-        );
-      },
-      loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
-    );
-  }
-}
+// _SeasonalPacksRow removed — seasonal packs are now injected
+// directly as the first items in the pack grid (see gridItems builder)
 
 // ─────────────────────────────────────────────
 //  SRS review banner

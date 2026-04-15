@@ -19,6 +19,7 @@ import '../providers/streak_provider.dart';
 import '../providers/language_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
+import '../services/engage_service.dart';
 import '../services/speech_service.dart';
 import '../services/tts_service.dart';
 import '../utils/constants.dart';
@@ -85,6 +86,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     AudioService.instance.autoSpeak.addListener(_muteListener!);
 
     AnalyticsService.instance.logPackOpen(widget.pack.id);
+    EngageService.instance.saveLastPack(widget.pack.id, widget.pack.title);
     _loadPrefs();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref
@@ -606,7 +608,12 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                 ));
               },
             ),
-          GestureDetector(
+          Semantics(
+            label: _autoPlayTimer
+                ? 'Автогортання увімкнено'
+                : 'Автогортання вимкнено',
+            button: true,
+            child: GestureDetector(
             onTap: _toggleAutoPlayTimer,
             child: Container(
               padding: const EdgeInsets.all(6),
@@ -646,11 +653,14 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
               ),
             ),
           ),
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: Center(
               child: Text(
-                '${_currentIndex + 1}/${cards.length}',
+                _autoPlayTimer && _countdownSeconds > 0
+                    ? '${_currentIndex + 1}/${cards.length}  · $_countdownSeconds'
+                    : '${_currentIndex + 1}/${cards.length}',
                 style: TextStyle(
                   color: widget.pack.color,
                   fontSize: 16,

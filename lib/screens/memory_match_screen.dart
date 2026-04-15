@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
 import '../providers/daily_quest_provider.dart';
+import '../providers/game_stats_provider.dart';
 import '../providers/language_provider.dart';
 import '../services/audio_service.dart';
 import '../utils/l10n.dart';
@@ -137,6 +138,7 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
         ref
             .read(dailyQuestProvider.notifier)
             .completeTask(QuestTask.playQuiz); // memory counts as the game task
+        ref.read(gameStatsProvider.notifier).record('memory', _matched);
       });
     }
   }

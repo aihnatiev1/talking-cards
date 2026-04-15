@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
 import '../providers/daily_stats_provider.dart';
+import '../providers/game_stats_provider.dart';
 import '../providers/packs_provider.dart';
 import '../providers/profile_provider.dart';
 import '../providers/streak_provider.dart';
@@ -19,7 +20,7 @@ class ParentDashboardScreen extends ConsumerWidget {
     final profile = ref.watch(profileProvider);
 
     return DefaultTabController(
-      length: 4,
+      length: 5,
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
@@ -62,6 +63,7 @@ class ParentDashboardScreen extends ConsumerWidget {
               Tab(text: 'Огляд'),
               Tab(text: 'Тиждень'),
               Tab(text: 'Паки'),
+              Tab(text: 'Ігри'),
               Tab(text: 'Помилки'),
             ],
           ),
@@ -71,6 +73,7 @@ class ParentDashboardScreen extends ConsumerWidget {
             _OverviewTab(),
             _WeeklyTab(),
             _PacksTab(),
+            _GamesTab(),
             _WeakWordsTab(),
           ],
         ),
@@ -368,7 +371,167 @@ class _PacksTab extends ConsumerWidget {
 }
 
 // ─────────────────────────────────────────────
-//  Tab 4 — Weak words
+//  Tab 4 — Games
+// ─────────────────────────────────────────────
+
+class _GamesTab extends ConsumerWidget {
+  const _GamesTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final statsAsync = ref.watch(gameStatsProvider);
+
+    return statsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (stats) {
+        final played = stats.where((g) => g.plays > 0).toList();
+
+        if (played.isEmpty) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('🎮', style: TextStyle(fontSize: 48)),
+                  SizedBox(height: 12),
+                  Text(
+                    'Ще не грали в жодну гру.\nЗапустіть будь-яку гру з головного екрану!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 15, height: 1.5),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        final totalPlays = stats.fold(0, (s, g) => s + g.plays);
+        final favorite = stats.reduce(
+          (a, b) => a.plays >= b.plays ? a : b,
+        );
+
+        return ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            // Summary row
+            Row(
+              children: [
+                Expanded(
+                  child: _StatCard(
+                    emoji: '🎮',
+                    label: 'Всього сесій',
+                    value: '$totalPlays',
+                    color: kAccent,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _StatCard(
+                    emoji: favorite.emoji,
+                    label: 'Улюблена гра',
+                    value: favorite.labelUk,
+                    color: const Color(0xFF7B1FA2),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Всі ігри',
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 12),
+            ...stats.map((g) => _GameStatRow(stat: g)),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _GameStatRow extends StatelessWidget {
+  final GameStat stat;
+  const _GameStatRow({required this.stat});
+
+  @override
+  Widget build(BuildContext context) {
+    final hasPlays = stat.plays > 0;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: hasPlays
+              ? kAccent.withValues(alpha: 0.05)
+              : Colors.grey.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: hasPlays
+                ? kAccent.withValues(alpha: 0.15)
+                : Colors.grey.withValues(alpha: 0.12),
+          ),
+        ),
+        child: Row(
+          children: [
+            Text(stat.emoji, style: const TextStyle(fontSize: 24)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                stat.labelUk,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: hasPlays ? null : Colors.grey[500],
+                ),
+              ),
+            ),
+            if (hasPlays) ...[
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${stat.plays} ${_playsLabel(stat.plays)}',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: kAccent,
+                    ),
+                  ),
+                  if (stat.bestScore > 0)
+                    Text(
+                      'рекорд: ${stat.bestScore} ⭐',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey[500],
+                      ),
+                    ),
+                ],
+              ),
+            ] else
+              Text(
+                'не грали',
+                style: TextStyle(fontSize: 12, color: Colors.grey[400]),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _playsLabel(int n) {
+    if (n == 1) return 'раз';
+    if (n >= 2 && n <= 4) return 'рази';
+    return 'разів';
+  }
+}
+
+// ─────────────────────────────────────────────
+//  Tab 5 — Weak words
 // ─────────────────────────────────────────────
 
 class _WeakWordsTab extends ConsumerWidget {

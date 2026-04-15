@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
 import '../providers/daily_quest_provider.dart';
+import '../providers/game_stats_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/quiz_provider.dart';
 import '../providers/srs_provider.dart';
@@ -248,6 +249,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
     if (!_resultsLogged) {
       _resultsLogged = true;
       AnalyticsService.instance.logQuizComplete(score, total);
+      ref.read(gameStatsProvider.notifier).record('quiz', score);
       // Defer state mutation to post-frame — calling it inside build()
       // causes Riverpod to silently drop the update on some frames.
       WidgetsBinding.instance.addPostFrameCallback((_) {

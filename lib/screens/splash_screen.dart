@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/audio_service.dart';
+import '../services/engage_service.dart';
 import '../services/remote_config_service.dart';
 import '../services/speech_service.dart';
 import '../services/tts_service.dart';
@@ -29,6 +30,7 @@ class _SplashScreenState extends State<SplashScreen>
   bool _animDone = false;
   bool _imageReady = false;
   bool _showOnboarding = false;
+  String? _deepLink;
 
   @override
   void initState() {
@@ -76,6 +78,9 @@ class _SplashScreenState extends State<SplashScreen>
       TtsService.instance.init(),
     ]);
 
+    _deepLink = await EngageService.instance.getInitialLink();
+    EngageService.instance.publishFromPrefs();
+
     // Check if onboarding was completed before
     final prefs = await SharedPreferences.getInstance();
     final onboardingDone = prefs.getBool('onboarding_done') ?? false;
@@ -103,9 +108,24 @@ class _SplashScreenState extends State<SplashScreen>
 
   void _navigateIfReady() {
     if (!_loadingDone || !_animDone || !mounted) return;
-    final dest = _showOnboarding
-        ? const OnboardingScreen()
-        : const HomeScreen();
+
+    Widget dest = _showOnboarding ? const OnboardingScreen() : const HomeScreen();
+
+    // Handle deep links: talkingcards://cards/{packId} → CardsScreen
+    // talkingcards://home or unknown → HomeScreen
+    final link = _deepLink;
+    if (link != null && !_showOnboarding) {
+      final uri = Uri.tryParse(link);
+      if (uri != null && uri.scheme == 'talkingcards') {
+        if (uri.host == 'quest') {
+          // Navigate to home and let it open quest map
+          dest = const HomeScreen();
+        }
+        // cards/{packId} is handled post-navigation via HomeScreen state
+        // For simplicity we navigate home and let the user tap the pack
+      }
+    }
+
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (_, __, ___) => dest,

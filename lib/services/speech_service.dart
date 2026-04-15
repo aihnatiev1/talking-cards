@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
@@ -26,9 +24,6 @@ class SpeechService {
   Future<void> init() async {
     if (_initialized) return;
     _initialized = true;
-
-    // Only wire up on iOS (requirement: iOS only for Phase 5)
-    if (!Platform.isIOS) return;
 
     try {
       _available = await _stt.initialize(

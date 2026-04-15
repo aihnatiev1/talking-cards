@@ -97,6 +97,22 @@ class AnalyticsService {
   Future<void> logOnboardingComplete() =>
       _analytics.logEvent(name: 'tutorial_complete');
 
+  // --- Games ---
+
+  Future<void> logGameStart(String gameId) =>
+      _analytics.logEvent(name: 'game_start', parameters: {'game_id': gameId});
+
+  Future<void> logGameComplete(String gameId, int score) =>
+      _analytics.logEvent(name: 'game_complete', parameters: {
+        'game_id': gameId,
+        'score': score,
+      });
+
+  Future<void> logSoundFilterOpen(String letter) =>
+      _analytics.logEvent(name: 'sound_filter_open', parameters: {
+        'letter': letter,
+      });
+
   /// Generic event logger for ad-hoc events (e.g. speech_attempt).
   Future<void> logEvent(String name,
           {Map<String, Object>? parameters}) =>
