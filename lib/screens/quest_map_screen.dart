@@ -443,7 +443,11 @@ class _AdventureMap extends StatelessWidget {
         final w = constraints.maxWidth;
         final h = constraints.maxHeight;
 
-        // Calculate absolute positions for stops
+        // Scale factor: design baseline is 390×700 (iPhone 14 map area).
+        // On smaller screens everything shrinks proportionally so stops
+        // always sit over the image circles and never overflow.
+        final scale = (w / 390).clamp(0.6, 1.2);
+
         final positions = _stopPositions
             .map((p) => Offset(p.dx * w, p.dy * h))
             .toList();
@@ -452,10 +456,17 @@ class _AdventureMap extends StatelessWidget {
           _treasurePos.dy * h,
         );
 
+        // Half-sizes of waypoints after scaling
+        final stopHalf  = 44.0 * scale;
+        final stopHalfV = 38.0 * scale;
+        final chestHalf = 42.0 * scale;
+
         return Stack(
           clipBehavior: Clip.none,
           children: [
-            // Background image — fills the entire adventure map area
+            // Background image — fills the entire adventure map area.
+            // BoxFit.fill ensures the image exactly covers the widget,
+            // keeping circle positions proportional on every screen size.
             Positioned.fill(
               child: Image.asset(
                 'assets/images/quest_map_bg.png',
@@ -463,27 +474,35 @@ class _AdventureMap extends StatelessWidget {
               ),
             ),
 
-            // Stop waypoints
+            // Stop waypoints — scaled to screen size
             for (int i = 0; i < stops.length; i++)
               Positioned(
-                left: positions[i].dx - 44,
-                top: positions[i].dy - 38,
-                child: _StopWaypoint(
-                  info: stops[i],
-                  isDone: quest.completed.contains(stops[i].task),
-                  isCurrent: _isCurrentStop(i),
-                  index: i + 1,
-                  onTap: () => onStopTap(stops[i].task),
+                left: positions[i].dx - stopHalf,
+                top: positions[i].dy - stopHalfV,
+                child: Transform.scale(
+                  scale: scale,
+                  alignment: Alignment.topLeft,
+                  child: _StopWaypoint(
+                    info: stops[i],
+                    isDone: quest.completed.contains(stops[i].task),
+                    isCurrent: _isCurrentStop(i),
+                    index: i + 1,
+                    onTap: () => onStopTap(stops[i].task),
+                  ),
                 ),
               ),
 
-            // Treasure at the end
+            // Treasure — also scaled
             Positioned(
-              left: treasureAbs.dx - 42,
-              top: treasureAbs.dy - 42,
-              child: _TreasureWaypoint(
-                quest: quest,
-                onClaim: onClaimTreasure,
+              left: treasureAbs.dx - chestHalf,
+              top: treasureAbs.dy - chestHalf,
+              child: Transform.scale(
+                scale: scale,
+                alignment: Alignment.topLeft,
+                child: _TreasureWaypoint(
+                  quest: quest,
+                  onClaim: onClaimTreasure,
+                ),
               ),
             ),
           ],
