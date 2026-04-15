@@ -20,6 +20,7 @@ import '../providers/streak_provider.dart';
 import '../providers/theme_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
+import '../services/whatsnew_service.dart';
 import '../services/widget_service.dart';
 import '../utils/constants.dart';
 import '../utils/l10n.dart';
@@ -75,6 +76,8 @@ const _packCategoriesEn = <String, String>{
   'en_food': 'Food',
   'en_colors': 'Learning',
   'en_body': 'Learning',
+  'en_actions': 'Learning',
+  'en_opposites': 'Learning',
 };
 
 const _allCategoriesUk = ['Все', 'Мовлення', 'Світ навколо', 'Побут', 'Розвиток', 'Звуки'];
@@ -101,7 +104,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _showWelcomeIfNeeded() async {
     final prefs = await SharedPreferences.getInstance();
-    if (prefs.getBool('welcome_shown') == true) return;
+    if (prefs.getBool('welcome_shown') == true) {
+      // Existing user — show "What's New" instead of welcome
+      if (mounted) {
+        await Future.delayed(const Duration(milliseconds: 800));
+        if (mounted) WhatsNewService.instance.showIfNeeded(context);
+      }
+      return;
+    }
     await prefs.setBool('welcome_shown', true);
     if (!mounted) return;
 
