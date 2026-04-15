@@ -3985,5 +3985,586 @@
         "colorAccent": "#1565C0"
       }
     ]
+  },
+  {
+    "id": "sound_z",
+    "title": "Звук З",
+    "icon": "🌿",
+    "color": "#2E7D32",
+    "isLocked": false,
+    "cards": [
+      {
+        "id": "sz01",
+        "sound": "ЗЕБРА",
+        "text": "Зебра має чорно-білі смужки!",
+        "emoji": "🦓",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32"
+      },
+      {
+        "id": "sz02",
+        "sound": "ЗАЄЦЬ",
+        "text": "Заєць стрибає швидко!",
+        "emoji": "🐰",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32"
+      },
+      {
+        "id": "sz03",
+        "sound": "ЗІРКА",
+        "text": "Зірка світить у небі!",
+        "emoji": "⭐",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32"
+      },
+      {
+        "id": "sz04",
+        "sound": "ЗАМОК",
+        "text": "Замок великий і красивий!",
+        "emoji": "🏰",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32"
+      },
+      {
+        "id": "sz05",
+        "sound": "ЗИМА",
+        "text": "Взимку падає сніг!",
+        "emoji": "❄️",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32"
+      },
+      {
+        "id": "sz06",
+        "sound": "ЗМІЯ",
+        "text": "Змія повзе тихенько!",
+        "emoji": "🐍",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32"
+      },
+      {
+        "id": "sz07",
+        "sound": "ЗОНТИК",
+        "text": "Зонтик від дощу!",
+        "emoji": "☂️",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32"
+      },
+      {
+        "id": "sz08",
+        "sound": "ЗУБИ",
+        "text": "Зуби треба чистити!",
+        "emoji": "🦷",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32"
+      },
+      {
+        "id": "sz09",
+        "sound": "ЗЕЛЕНЬ",
+        "text": "Зелень корисна для здоров'я!",
+        "emoji": "🥬",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32"
+      },
+      {
+        "id": "sz10",
+        "sound": "ЗЕРНЯТКО",
+        "text": "Зернятко виросте у квітку!",
+        "emoji": "🌾",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32"
+      },
+      {
+        "id": "sz11",
+        "sound": "КОЗА",
+        "text": "Коза їсть травичку!",
+        "emoji": "🐐",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32"
+      },
+      {
+        "id": "sz12",
+        "sound": "КАЗКА",
+        "text": "Казку читають на ніч!",
+        "emoji": "📖",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32"
+      },
+      {
+        "id": "sz13",
+        "sound": "БЕРЕЗА",
+        "text": "Береза — біле дерево!",
+        "emoji": "🌳",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32"
+      },
+      {
+        "id": "sz14",
+        "sound": "ВАЗА",
+        "text": "У вазі стоять квіти!",
+        "emoji": "🏺",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32"
+      },
+      {
+        "id": "sz15",
+        "sound": "МОРОЗ",
+        "text": "Мороз щипає носика!",
+        "emoji": "🥶",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32"
+      },
+      {
+        "id": "sz16",
+        "sound": "ЗАЛІЗНИЦЯ",
+        "text": "Залізниця для поїздів!",
+        "emoji": "🚂",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32"
+      }
+    ]
+  },
+  {
+    "id": "sound_zh",
+    "title": "Звук Ж",
+    "icon": "🐝",
+    "color": "#F57F17",
+    "isLocked": false,
+    "cards": [
+      {
+        "id": "szh01",
+        "sound": "ЖИРАФ",
+        "text": "Жираф — найвища тварина!",
+        "emoji": "🦒",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#F57F17"
+      },
+      {
+        "id": "szh02",
+        "sound": "ЖАБА",
+        "text": "Жаба скаче по болоту!",
+        "emoji": "🐸",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#F57F17"
+      },
+      {
+        "id": "szh03",
+        "sound": "ЖУК",
+        "text": "Жук літає і дзижчить!",
+        "emoji": "🪲",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#F57F17"
+      },
+      {
+        "id": "szh04",
+        "sound": "ЖИВІТ",
+        "text": "Живіт треба гріти!",
+        "emoji": "🫃",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#F57F17"
+      },
+      {
+        "id": "szh05",
+        "sound": "ЖОЛУДЬ",
+        "text": "Жолудь падає з дуба!",
+        "emoji": "🌰",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#F57F17"
+      },
+      {
+        "id": "szh06",
+        "sound": "ЖОВТИЙ",
+        "text": "Жовтий — колір сонця!",
+        "emoji": "💛",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#F57F17"
+      },
+      {
+        "id": "szh07",
+        "sound": "ЇЖАК",
+        "text": "Їжак колючий!",
+        "emoji": "🦔",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#F57F17"
+      },
+      {
+        "id": "szh08",
+        "sound": "ЛИЖІ",
+        "text": "На лижах їздять взимку!",
+        "emoji": "🎿",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#F57F17"
+      },
+      {
+        "id": "szh09",
+        "sound": "БДЖОЛА",
+        "text": "Бджола збирає мед!",
+        "emoji": "🐝",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#F57F17"
+      },
+      {
+        "id": "szh10",
+        "sound": "НОЖИЦІ",
+        "text": "Ножицями ріжуть папір!",
+        "emoji": "✂️",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#F57F17"
+      },
+      {
+        "id": "szh11",
+        "sound": "ВУЖИК",
+        "text": "Вужик — маленька змійка!",
+        "emoji": "🐍",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#F57F17"
+      },
+      {
+        "id": "szh12",
+        "sound": "ЇЖА",
+        "text": "Їжа смачна і корисна!",
+        "emoji": "🍽️",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#F57F17"
+      },
+      {
+        "id": "szh13",
+        "sound": "КРИЖИНА",
+        "text": "Крижина пливе по річці!",
+        "emoji": "🧊",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#F57F17"
+      }
+    ]
+  },
+  {
+    "id": "sound_ch",
+    "title": "Звук Ч",
+    "icon": "🍵",
+    "color": "#546E7A",
+    "isLocked": false,
+    "cards": [
+      {
+        "id": "sch01",
+        "sound": "ЧЕРЕПАХА",
+        "text": "Черепаха повзе повільно!",
+        "emoji": "🐢",
+        "colorBg": "#ECEFF1",
+        "colorAccent": "#37474F"
+      },
+      {
+        "id": "sch02",
+        "sound": "ЧАШКА",
+        "text": "З чашки п'ють чай!",
+        "emoji": "🍵",
+        "colorBg": "#ECEFF1",
+        "colorAccent": "#37474F"
+      },
+      {
+        "id": "sch03",
+        "sound": "ЧЕРЕШНЯ",
+        "text": "Черешня солодка і червона!",
+        "emoji": "🍒",
+        "colorBg": "#ECEFF1",
+        "colorAccent": "#37474F"
+      },
+      {
+        "id": "sch04",
+        "sound": "ЧОБОТИ",
+        "text": "Чоботи від дощу!",
+        "emoji": "👢",
+        "colorBg": "#ECEFF1",
+        "colorAccent": "#37474F"
+      },
+      {
+        "id": "sch05",
+        "sound": "ЧАСНИК",
+        "text": "Часник захищає від хвороб!",
+        "emoji": "🧄",
+        "colorBg": "#ECEFF1",
+        "colorAccent": "#37474F"
+      },
+      {
+        "id": "sch06",
+        "sound": "ЧОРНИЙ",
+        "text": "Чорний — темний колір!",
+        "emoji": "⬛",
+        "colorBg": "#ECEFF1",
+        "colorAccent": "#37474F"
+      },
+      {
+        "id": "sch07",
+        "sound": "ЧАЙНИК",
+        "text": "Чайник кипить!",
+        "emoji": "🫖",
+        "colorBg": "#ECEFF1",
+        "colorAccent": "#37474F"
+      },
+      {
+        "id": "sch08",
+        "sound": "КАЧКА",
+        "text": "Качка плаває у воді!",
+        "emoji": "🦆",
+        "colorBg": "#ECEFF1",
+        "colorAccent": "#37474F"
+      },
+      {
+        "id": "sch09",
+        "sound": "КЛЮЧ",
+        "text": "Ключем відчиняють двері!",
+        "emoji": "🗝️",
+        "colorBg": "#ECEFF1",
+        "colorAccent": "#37474F"
+      },
+      {
+        "id": "sch10",
+        "sound": "М'ЯЧ",
+        "text": "М'яч кидають і ловлять!",
+        "emoji": "⚽",
+        "colorBg": "#ECEFF1",
+        "colorAccent": "#37474F"
+      },
+      {
+        "id": "sch11",
+        "sound": "ОЧІ",
+        "text": "Очі бачать увесь світ!",
+        "emoji": "👀",
+        "colorBg": "#ECEFF1",
+        "colorAccent": "#37474F"
+      },
+      {
+        "id": "sch12",
+        "sound": "РУЧКА",
+        "text": "Ручкою пишуть літери!",
+        "emoji": "✏️",
+        "colorBg": "#ECEFF1",
+        "colorAccent": "#37474F"
+      },
+      {
+        "id": "sch13",
+        "sound": "ПЕЧИВО",
+        "text": "Печиво смачне і солодке!",
+        "emoji": "🍪",
+        "colorBg": "#ECEFF1",
+        "colorAccent": "#37474F"
+      },
+      {
+        "id": "sch14",
+        "sound": "РІЧКА",
+        "text": "Річка тече до моря!",
+        "emoji": "🌊",
+        "colorBg": "#ECEFF1",
+        "colorAccent": "#37474F"
+      },
+      {
+        "id": "sch15",
+        "sound": "ЧАПЛЯ",
+        "text": "Чапля стоїть на одній нозі!",
+        "emoji": "🦩",
+        "colorBg": "#ECEFF1",
+        "colorAccent": "#37474F"
+      }
+    ]
+  },
+  {
+    "id": "sound_shch",
+    "title": "Звук Щ",
+    "icon": "🦔",
+    "color": "#004D40",
+    "isLocked": false,
+    "cards": [
+      {
+        "id": "sshch01",
+        "sound": "ЩУКА",
+        "text": "Щука — хижа риба!",
+        "emoji": "🐟",
+        "colorBg": "#E0F2F1",
+        "colorAccent": "#004D40"
+      },
+      {
+        "id": "sshch02",
+        "sound": "ЩІТКА",
+        "text": "Щіткою чистять зуби!",
+        "emoji": "🪥",
+        "colorBg": "#E0F2F1",
+        "colorAccent": "#004D40"
+      },
+      {
+        "id": "sshch03",
+        "sound": "ЩОКИ",
+        "text": "Щоки рожеві і пухкі!",
+        "emoji": "😊",
+        "colorBg": "#E0F2F1",
+        "colorAccent": "#004D40"
+      },
+      {
+        "id": "sshch04",
+        "sound": "ЩЕНЯ",
+        "text": "Щеня — маленький песик!",
+        "emoji": "🐕",
+        "colorBg": "#E0F2F1",
+        "colorAccent": "#004D40"
+      },
+      {
+        "id": "sshch05",
+        "sound": "ЩАСТЯ",
+        "text": "Щастя — це сміх і любов!",
+        "emoji": "🍀",
+        "colorBg": "#E0F2F1",
+        "colorAccent": "#004D40"
+      },
+      {
+        "id": "sshch06",
+        "sound": "ЯЩІРКА",
+        "text": "Ящірка гріється на сонці!",
+        "emoji": "🦎",
+        "colorBg": "#E0F2F1",
+        "colorAccent": "#004D40"
+      },
+      {
+        "id": "sshch07",
+        "sound": "ЯЩИК",
+        "text": "У ящику зберігають іграшки!",
+        "emoji": "📦",
+        "colorBg": "#E0F2F1",
+        "colorAccent": "#004D40"
+      },
+      {
+        "id": "sshch08",
+        "sound": "БОРЩ",
+        "text": "Борщ — смачний суп!",
+        "emoji": "🍲",
+        "colorBg": "#E0F2F1",
+        "colorAccent": "#004D40"
+      },
+      {
+        "id": "sshch09",
+        "sound": "ПЛАЩ",
+        "text": "Плащ від дощу!",
+        "emoji": "🧥",
+        "colorBg": "#E0F2F1",
+        "colorAccent": "#004D40"
+      },
+      {
+        "id": "sshch10",
+        "sound": "ВОГНИЩЕ",
+        "text": "Вогнище гріє в лісі!",
+        "emoji": "🔥",
+        "colorBg": "#E0F2F1",
+        "colorAccent": "#004D40"
+      },
+      {
+        "id": "sshch11",
+        "sound": "ХРУЩ",
+        "text": "Хрущ гуде над квіткою!",
+        "emoji": "🐛",
+        "colorBg": "#E0F2F1",
+        "colorAccent": "#004D40"
+      }
+    ]
+  },
+  {
+    "id": "sound_ts",
+    "title": "Звук Ц",
+    "icon": "🎪",
+    "color": "#AD1457",
+    "isLocked": false,
+    "cards": [
+      {
+        "id": "sts01",
+        "sound": "ЦИБУЛЯ",
+        "text": "Цибуля — гостра!",
+        "emoji": "🧅",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#AD1457"
+      },
+      {
+        "id": "sts02",
+        "sound": "ЦУКЕРКА",
+        "text": "Цукерка солодка!",
+        "emoji": "🍬",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#AD1457"
+      },
+      {
+        "id": "sts03",
+        "sound": "ЦИРК",
+        "text": "У цирку виступають клоуни!",
+        "emoji": "🎪",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#AD1457"
+      },
+      {
+        "id": "sts04",
+        "sound": "ЦВІТ",
+        "text": "Цвіт квітки — красивий!",
+        "emoji": "🌸",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#AD1457"
+      },
+      {
+        "id": "sts05",
+        "sound": "ЦУЦЕНЯ",
+        "text": "Цуценя — маленький собачка!",
+        "emoji": "🐶",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#AD1457"
+      },
+      {
+        "id": "sts06",
+        "sound": "ЯЙЦЕ",
+        "text": "Яйце кругле і біле!",
+        "emoji": "🥚",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#AD1457"
+      },
+      {
+        "id": "sts07",
+        "sound": "КІЛЬЦЕ",
+        "text": "Кільце блищить!",
+        "emoji": "💍",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#AD1457"
+      },
+      {
+        "id": "sts08",
+        "sound": "СЕРЦЕ",
+        "text": "Серце б'ється: тук-тук!",
+        "emoji": "❤️",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#AD1457"
+      },
+      {
+        "id": "sts09",
+        "sound": "ПАЛЕЦЬ",
+        "text": "Пальцем показують!",
+        "emoji": "👆",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#AD1457"
+      },
+      {
+        "id": "sts10",
+        "sound": "ВІВЦЯ",
+        "text": "Вівця дає вовну!",
+        "emoji": "🐑",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#AD1457"
+      },
+      {
+        "id": "sts11",
+        "sound": "ЦИФРА",
+        "text": "Цифри — це числа!",
+        "emoji": "🔢",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#AD1457"
+      },
+      {
+        "id": "sts12",
+        "sound": "ПТИЦЯ",
+        "text": "Птиця літає у небі!",
+        "emoji": "🐦",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#AD1457"
+      }
+    ]
   }
 ]

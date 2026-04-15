@@ -59,6 +59,11 @@ const _packCategoriesUk = <String, String>{
   'sound_l': 'Звуки',
   'sound_sh': 'Звуки',
   'sound_s': 'Звуки',
+  'sound_z': 'Звуки',
+  'sound_zh': 'Звуки',
+  'sound_ch': 'Звуки',
+  'sound_shch': 'Звуки',
+  'sound_ts': 'Звуки',
 };
 
 /// Category mapping for English packs

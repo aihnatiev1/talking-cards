@@ -15,6 +15,7 @@ import '../utils/l10n.dart';
 const _excludedPacks = {
   'rozmovlyalky', 'phrases', 'opposites',
   'sound_r', 'sound_l', 'sound_sh', 'sound_s',
+  'sound_z', 'sound_zh', 'sound_ch', 'sound_shch', 'sound_ts',
 };
 
 class SoundFilterScreen extends ConsumerStatefulWidget {
