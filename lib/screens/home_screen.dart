@@ -32,11 +32,14 @@ import '../widgets/profile_avatar_chip.dart';
 import 'cards_screen.dart';
 import 'guess_screen.dart';
 import 'memory_match_screen.dart';
+import 'articulation_screen.dart';
 import 'odd_one_out_screen.dart';
 import 'opposite_game_screen.dart';
 import 'repeat_game_screen.dart';
+import 'rhyme_game_screen.dart';
 import 'sort_game_setup_screen.dart';
 import 'sound_filter_screen.dart';
+import 'sound_position_screen.dart';
 import 'syllable_game_screen.dart';
 import 'parent_dashboard_screen.dart';
 import 'parent_pin_screen.dart';
@@ -454,6 +457,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void _openSoundFilter() {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const SoundFilterScreen()),
+    );
+  }
+
+  void _openSoundPosition() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const SoundPositionSetupScreen()),
+    );
+  }
+
+  void _openRhymeGame() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const RhymeGameScreen()),
+    );
+  }
+
+  void _openArticulation() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const ArticulationScreen()),
     );
   }
 
@@ -950,6 +971,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   onSyllable: () => _openSyllableGame(allCards),
                   onOpposite: () => _openOppositeGame(packs),
                   onSoundFilter: _openSoundFilter,
+                  onSoundPosition: _openSoundPosition,
+                  onRhyme: _openRhymeGame,
+                  onArticulation: _openArticulation,
                 ),
 
                 const SizedBox(height: 8),
@@ -1418,6 +1442,9 @@ class _GamesSection extends ConsumerWidget {
   final VoidCallback onSyllable;
   final VoidCallback onOpposite;
   final VoidCallback onSoundFilter;
+  final VoidCallback onSoundPosition;
+  final VoidCallback onRhyme;
+  final VoidCallback onArticulation;
 
   const _GamesSection({
     required this.playableCount,
@@ -1430,6 +1457,9 @@ class _GamesSection extends ConsumerWidget {
     required this.onSyllable,
     required this.onOpposite,
     required this.onSoundFilter,
+    required this.onSoundPosition,
+    required this.onRhyme,
+    required this.onArticulation,
   });
 
   @override
@@ -1530,6 +1560,37 @@ class _GamesSection extends ConsumerWidget {
                   label: isEn ? 'By\nsound' : 'За\nзвуком',
                   color: const Color(0xFF00897B),
                   onTap: onSoundFilter,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _GameButton(
+                  emoji: '🎵',
+                  label: isEn ? 'Find\nrhyme' : 'Знайди\nриму',
+                  color: const Color(0xFFE91E8C),
+                  onTap: onRhyme,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _GameButton(
+                  emoji: '🎯',
+                  label: isEn ? 'Sound\nposition' : 'Де живе\nзвук?',
+                  color: const Color(0xFF1565C0),
+                  onTap: onSoundPosition,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _GameButton(
+                  emoji: '👅',
+                  label: isEn ? 'Articulation' : 'Гімнас-\nтика',
+                  color: const Color(0xFF6A1B9A),
+                  onTap: onArticulation,
                 ),
               ),
               const SizedBox(width: 10),
