@@ -46,28 +46,16 @@ List<_StopInfo> _buildStops(bool isEn) => [
       label: isEn ? 'Repeat\nafter me!' : 'Повтори\nза мною!', color: const Color(0xFF26A69A)),
 ];
 
-// Relative positions — tighter, more compact path
+// Positions aligned to the colored circles in quest_map_bg.png
+// (fraction of adventure map widget width/height)
 const _stopPositions = [
-  Offset(0.22, 0.02),  // Stop 0 — top left
-  Offset(0.72, 0.15),  // Stop 1 — right
-  Offset(0.22, 0.32),  // Stop 2 — left
-  Offset(0.72, 0.48),  // Stop 3 — right
-  Offset(0.22, 0.64),  // Stop 4 — left
+  Offset(0.40, 0.13),  // Stop 0 — green circle, top
+  Offset(0.60, 0.27),  // Stop 1 — orange circle, upper-right
+  Offset(0.40, 0.41),  // Stop 2 — purple circle, middle-left
+  Offset(0.63, 0.57),  // Stop 3 — blue circle, middle-right
+  Offset(0.37, 0.73),  // Stop 4 — yellow circle, lower-left
 ];
-const _treasurePos = Offset(0.50, 0.82);
-
-// Bigger, more impactful decorations
-const _decorations = [
-  ('🌳', 0.88, 0.0, 32.0),
-  ('🌻', 0.02, 0.12, 26.0),
-  ('🍄', 0.90, 0.30, 24.0),
-  ('🌸', 0.0, 0.45, 26.0),
-  ('🦋', 0.92, 0.58, 26.0),
-  ('🌿', 0.02, 0.72, 26.0),
-  ('🌲', 0.52, 0.24, 28.0),
-  ('🍀', 0.48, 0.55, 22.0),
-  ('🌈', 0.50, 0.92, 28.0),
-];
+const _treasurePos = Offset(0.47, 0.86);
 
 class QuestMapScreen extends ConsumerStatefulWidget {
   final CardModel? cardOfDay;
@@ -91,7 +79,6 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
   PackModel? _lastUnlockedPack;
 
   late final AnimationController _floatCtrl;
-  late final AnimationController _sparkleCtrl;
 
   @override
   void initState() {
@@ -100,16 +87,11 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
       vsync: this,
       duration: const Duration(milliseconds: 3000),
     )..repeat(reverse: true);
-    _sparkleCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 6000),
-    )..repeat();
   }
 
   @override
   void dispose() {
     _floatCtrl.dispose();
-    _sparkleCtrl.dispose();
     super.dispose();
   }
 
@@ -177,7 +159,7 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF8F0),
+      backgroundColor: const Color(0xFFB5E5A0),
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -199,30 +181,6 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
       ),
       body: Stack(
         children: [
-          // Background gradient
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFFFFF8F0),
-                  Color(0xFFFFEDD8),
-                  Color(0xFFFDE2C8),
-                ],
-              ),
-            ),
-          ),
-
-          // Background sparkles
-          AnimatedBuilder(
-            animation: _sparkleCtrl,
-            builder: (_, __) => CustomPaint(
-              size: MediaQuery.of(context).size,
-              painter: _SparklesPainter(progress: _sparkleCtrl.value),
-            ),
-          ),
-
           // Content
           SafeArea(
             child: Column(
@@ -497,27 +455,13 @@ class _AdventureMap extends StatelessWidget {
         return Stack(
           clipBehavior: Clip.none,
           children: [
-            // The winding path
-            CustomPaint(
-              size: Size(w, h),
-              painter: _PathPainter(
-                stops: positions,
-                treasure: treasureAbs,
-                completedCount: quest.doneCount,
-                allDone: quest.allDone,
+            // Background image — fills the entire adventure map area
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/quest_map_bg.png',
+                fit: BoxFit.fill,
               ),
             ),
-
-            // Decorative elements
-            for (final d in _decorations)
-              Positioned(
-                left: d.$2 * w - d.$4 / 2,
-                top: d.$3 * h - d.$4 / 2,
-                child: Text(
-                  d.$1,
-                  style: TextStyle(fontSize: d.$4),
-                ),
-              ),
 
             // Stop waypoints
             for (int i = 0; i < stops.length; i++)
@@ -547,85 +491,6 @@ class _AdventureMap extends StatelessWidget {
       },
     );
   }
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  PATH PAINTER — draws the winding trail with Bezier curves
-// ═══════════════════════════════════════════════════════════════
-
-class _PathPainter extends CustomPainter {
-  final List<Offset> stops;
-  final Offset treasure;
-  final int completedCount;
-  final bool allDone;
-
-  _PathPainter({
-    required this.stops,
-    required this.treasure,
-    required this.completedCount,
-    required this.allDone,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final allPoints = [...stops, treasure];
-
-    for (int i = 0; i < allPoints.length - 1; i++) {
-      final from = allPoints[i];
-      final to = allPoints[i + 1];
-      final isDone = i < completedCount;
-
-      _drawSegment(canvas, from, to, isDone);
-    }
-  }
-
-  void _drawSegment(Canvas canvas, Offset from, Offset to, bool done) {
-    // Control points for smooth S-curve
-    final midY = (from.dy + to.dy) / 2;
-    final cp1 = Offset(from.dx, midY);
-    final cp2 = Offset(to.dx, midY);
-
-    final path = Path()
-      ..moveTo(from.dx, from.dy)
-      ..cubicTo(cp1.dx, cp1.dy, cp2.dx, cp2.dy, to.dx, to.dy);
-
-    // Draw dashed path
-    final metrics = path.computeMetrics().first;
-    final totalLen = metrics.length;
-    const dashLen = 10.0;
-    const gapLen = 7.0;
-
-    final paint = Paint()
-      ..color = done
-          ? const Color(0xFF81C784).withValues(alpha: 0.85)
-          : const Color(0xFFD7CFC4).withValues(alpha: 0.5)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = done ? 5.0 : 4.0
-      ..strokeCap = StrokeCap.round;
-
-    double distance = 0;
-    while (distance < totalLen) {
-      final end = (distance + dashLen).clamp(0.0, totalLen);
-      final dash = metrics.extractPath(distance, end);
-      canvas.drawPath(dash, paint);
-      distance += dashLen + gapLen;
-    }
-
-    // Small glow on completed path
-    if (done) {
-      final glowPaint = Paint()
-        ..color = const Color(0xFF81C784).withValues(alpha: 0.15)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 10
-        ..strokeCap = StrokeCap.round
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
-      canvas.drawPath(path, glowPaint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _PathPainter old) =>
-      old.completedCount != completedCount || old.allDone != allDone;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -691,18 +556,17 @@ class _StopWaypointState extends ConsumerState<_StopWaypoint>
     final Color labelColor;
 
     if (widget.isDone) {
-      bg = const Color(0xFFE8F5E9);
+      bg = Colors.white.withValues(alpha: 0.85);
       border = const Color(0xFF66BB6A);
-      labelColor = const Color(0xFF388E3C);
+      labelColor = const Color(0xFF2E7D32);
     } else if (widget.isCurrent) {
-      bg = stopColor.withValues(alpha: 0.12);
+      bg = Colors.white.withValues(alpha: 0.92);
       border = stopColor;
       labelColor = stopColor;
     } else {
-      // Inactive but still colorful (dimmed)
-      bg = stopColor.withValues(alpha: 0.06);
-      border = stopColor.withValues(alpha: 0.3);
-      labelColor = stopColor.withValues(alpha: 0.45);
+      bg = Colors.white.withValues(alpha: 0.65);
+      border = stopColor.withValues(alpha: 0.5);
+      labelColor = stopColor;
     }
 
     Widget circle = GestureDetector(
@@ -949,43 +813,6 @@ class _TreasureWaypointState extends ConsumerState<_TreasureWaypoint>
 
     return treasure;
   }
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  SPARKLES — background floating particles
-// ═══════════════════════════════════════════════════════════════
-
-class _SparklesPainter extends CustomPainter {
-  final double progress;
-  _SparklesPainter({required this.progress});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rng = Random(17);
-    final paint = Paint()..style = PaintingStyle.fill;
-
-    for (int i = 0; i < 20; i++) {
-      final baseX = rng.nextDouble() * size.width;
-      final baseY = rng.nextDouble() * size.height;
-      final phase = rng.nextDouble();
-      final sparkleSize = 1.5 + rng.nextDouble() * 2.0;
-
-      final t = ((progress + phase) % 1.0);
-      final alpha = (sin(t * pi * 2) * 0.5 + 0.5) * 0.3;
-      final drift = sin((progress + phase) * pi * 2) * 6;
-
-      paint.color = const Color(0xFFFFD700).withValues(alpha: alpha);
-      canvas.drawCircle(
-        Offset(baseX + drift, baseY + drift * 0.5),
-        sparkleSize,
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _SparklesPainter old) =>
-      old.progress != progress;
 }
 
 // ═══════════════════════════════════════════════════════════════
