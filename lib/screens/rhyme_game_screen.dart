@@ -50,9 +50,25 @@ const _rhymeWords = [
   _RhymeWord('МАЙКА',  '👕', 'ayka'),
   _RhymeWord('ЧАЙКА',  '🦅', 'ayka'),
   // -ОТ
-  _RhymeWord('КОТ',    '🐱', 'ot'),
-  _RhymeWord('РОТ',    '👄', 'ot'),
-  _RhymeWord('МОТ',    '🧶', 'ot'),
+  _RhymeWord('КОТ',     '🐱',  'ot'),
+  _RhymeWord('РОТ',     '👄',  'ot'),
+  _RhymeWord('МОТ',     '🧶',  'ot'),
+  // -АЙ
+  _RhymeWord('ЧАЙ',    '🫖',  'ay'),
+  _RhymeWord('МАЙ',    '🌷',  'ay'),
+  _RhymeWord('ГАЙ',    '🌳',  'ay'),
+  // -ОЧКА
+  _RhymeWord('БОЧКА',  '🪣',  'ochka'),
+  _RhymeWord('ДОЧКА',  '👧',  'ochka'),
+  _RhymeWord('НОЧКА',  '🌙',  'ochka'),
+  // -УШКА
+  _RhymeWord('ПОДУШКА','🛏️', 'ushka'),
+  _RhymeWord('ГРУШКА', '🍐',  'ushka'),
+  _RhymeWord('МУШКА',  '🪰',  'ushka'),
+  // -ИЦЯ
+  _RhymeWord('ЛИСИЦЯ', '🦊',  'ytsia'),
+  _RhymeWord('ПТИЦЯ',  '🐦',  'ytsia'),
+  _RhymeWord('ГОРЛИЦЯ','🕊️', 'ytsia'),
 ];
 
 // ─────────────────────────────────────────────

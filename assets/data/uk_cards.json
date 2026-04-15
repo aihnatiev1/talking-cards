@@ -4566,5 +4566,198 @@
         "colorAccent": "#AD1457"
       }
     ]
+  },
+  {
+    "id": "adjectives",
+    "title": "Прикметники",
+    "icon": "🎨",
+    "color": "#E65100",
+    "isLocked": false,
+    "cards": [
+      {
+        "id": "adj01",
+        "sound": "ЧЕРВОНИЙ",
+        "text": "Червоний — як яблучко!",
+        "emoji": "🔴",
+        "colorBg": "#FFEBEE",
+        "colorAccent": "#C62828"
+      },
+      {
+        "id": "adj02",
+        "sound": "СИНІЙ",
+        "text": "Синій — як небо!",
+        "emoji": "🔵",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#1565C0"
+      },
+      {
+        "id": "adj03",
+        "sound": "ЖОВТИЙ",
+        "text": "Жовтий — як сонечко!",
+        "emoji": "🟡",
+        "colorBg": "#FFFDE7",
+        "colorAccent": "#F57F17"
+      },
+      {
+        "id": "adj04",
+        "sound": "ЗЕЛЕНИЙ",
+        "text": "Зелений — як листочок!",
+        "emoji": "🟢",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32"
+      },
+      {
+        "id": "adj05",
+        "sound": "ПОМАРАНЧЕВИЙ",
+        "text": "Помаранчевий — як морквинка!",
+        "emoji": "🟠",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100"
+      },
+      {
+        "id": "adj06",
+        "sound": "ФІОЛЕТОВИЙ",
+        "text": "Фіолетовий — як бузок!",
+        "emoji": "🟣",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#6A1B9A"
+      },
+      {
+        "id": "adj07",
+        "sound": "РОЖЕВИЙ",
+        "text": "Рожевий — як квіточка!",
+        "emoji": "🌸",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#AD1457"
+      },
+      {
+        "id": "adj08",
+        "sound": "КОРИЧНЕВИЙ",
+        "text": "Коричневий — як шоколад!",
+        "emoji": "🍫",
+        "colorBg": "#EFEBE9",
+        "colorAccent": "#4E342E"
+      },
+      {
+        "id": "adj09",
+        "sound": "КРУГЛИЙ",
+        "text": "Круглий — як м'ячик!",
+        "emoji": "⭕",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#1565C0"
+      },
+      {
+        "id": "adj10",
+        "sound": "КВАДРАТНИЙ",
+        "text": "Квадратний — як кубик!",
+        "emoji": "🟦",
+        "colorBg": "#E8EAF6",
+        "colorAccent": "#3949AB"
+      },
+      {
+        "id": "adj11",
+        "sound": "ТРИКУТНИЙ",
+        "text": "Трикутний — як гірка!",
+        "emoji": "🔺",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100"
+      },
+      {
+        "id": "adj12",
+        "sound": "ПУХНАСТИЙ",
+        "text": "Пухнастий — м'яко торкатись!",
+        "emoji": "🐱",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#E91E63"
+      },
+      {
+        "id": "adj13",
+        "sound": "КОЛЮЧИЙ",
+        "text": "Колючий — обережно!",
+        "emoji": "🦔",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#388E3C"
+      },
+      {
+        "id": "adj14",
+        "sound": "ГЛАДКИЙ",
+        "text": "Гладкий — як скло!",
+        "emoji": "💎",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#0277BD"
+      },
+      {
+        "id": "adj15",
+        "sound": "СЛИЗЬКИЙ",
+        "text": "Слизький — можна впасти!",
+        "emoji": "🐟",
+        "colorBg": "#E0F2F1",
+        "colorAccent": "#00695C"
+      },
+      {
+        "id": "adj16",
+        "sound": "СОЛОДКИЙ",
+        "text": "Солодкий — як цукерка!",
+        "emoji": "🍬",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#E91E63"
+      },
+      {
+        "id": "adj17",
+        "sound": "КИСЛИЙ",
+        "text": "Кислий — як лимончик!",
+        "emoji": "🍋",
+        "colorBg": "#FFFDE7",
+        "colorAccent": "#F9A825"
+      },
+      {
+        "id": "adj18",
+        "sound": "ГІРКИЙ",
+        "text": "Гіркий — фу, несмачно!",
+        "emoji": "🍫",
+        "colorBg": "#EFEBE9",
+        "colorAccent": "#4E342E"
+      },
+      {
+        "id": "adj19",
+        "sound": "СОЛОНИЙ",
+        "text": "Солоний — як морська вода!",
+        "emoji": "🧂",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#1565C0"
+      },
+      {
+        "id": "adj20",
+        "sound": "ТОВСТИЙ",
+        "text": "Товстий — широкий!",
+        "emoji": "🐘",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100"
+      },
+      {
+        "id": "adj21",
+        "sound": "ТОНКИЙ",
+        "text": "Тонкий — вузький!",
+        "emoji": "✏️",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#7B1FA2"
+      },
+      {
+        "id": "adj22",
+        "sound": "ДОВГИЙ",
+        "text": "Довгий — від початку до кінця!",
+        "emoji": "📏",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#1565C0"
+      },
+      {
+        "id": "adj23",
+        "sound": "КОРОТКИЙ",
+        "text": "Короткий — трохи!",
+        "emoji": "✂️",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#C62828"
+      }
+    ]
   }
 ]

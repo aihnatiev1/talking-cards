@@ -34,6 +34,7 @@ import 'guess_screen.dart';
 import 'memory_match_screen.dart';
 import 'articulation_screen.dart';
 import 'odd_one_out_screen.dart';
+import 'plural_game_screen.dart';
 import 'opposite_game_screen.dart';
 import 'repeat_game_screen.dart';
 import 'rhyme_game_screen.dart';
@@ -59,6 +60,7 @@ const _packCategoriesUk = <String, String>{
   'phrases': 'Мовлення',
   'actions': 'Розвиток',
   'opposites': 'Розвиток',
+  'adjectives': 'Розвиток',
   'sound_r': 'Звуки',
   'sound_l': 'Звуки',
   'sound_sh': 'Звуки',
@@ -475,6 +477,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void _openArticulation() {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const ArticulationScreen()),
+    );
+  }
+
+  void _openPluralGame() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const PluralGameScreen()),
     );
   }
 
@@ -974,6 +982,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   onSoundPosition: _openSoundPosition,
                   onRhyme: _openRhymeGame,
                   onArticulation: _openArticulation,
+                  onPlural: _openPluralGame,
                 ),
 
                 const SizedBox(height: 8),
@@ -1445,6 +1454,7 @@ class _GamesSection extends ConsumerWidget {
   final VoidCallback onSoundPosition;
   final VoidCallback onRhyme;
   final VoidCallback onArticulation;
+  final VoidCallback onPlural;
 
   const _GamesSection({
     required this.playableCount,
@@ -1460,6 +1470,7 @@ class _GamesSection extends ConsumerWidget {
     required this.onSoundPosition,
     required this.onRhyme,
     required this.onArticulation,
+    required this.onPlural,
   });
 
   @override
@@ -1594,7 +1605,14 @@ class _GamesSection extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              const Expanded(child: SizedBox()),
+              Expanded(
+                child: _GameButton(
+                  emoji: '1️⃣',
+                  label: isEn ? 'One —\nMany' : 'Один —\nБагато',
+                  color: const Color(0xFF00897B),
+                  onTap: onPlural,
+                ),
+              ),
             ],
           ),
         ],
