@@ -368,6 +368,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   // Reward picker moved to QuestMapScreen
 
+  /// Smooth fade+scale transition for games — avoids the jarring iOS slide.
+  Route<T> _gameRoute<T>(Widget page) => PageRouteBuilder<T>(
+        pageBuilder: (_, __, ___) => page,
+        transitionDuration: const Duration(milliseconds: 260),
+        reverseTransitionDuration: const Duration(milliseconds: 200),
+        transitionsBuilder: (_, animation, __, child) {
+          final fade = CurvedAnimation(
+              parent: animation, curve: Curves.easeOut);
+          final scale = Tween<double>(begin: 0.93, end: 1.0).animate(
+              CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
+          return FadeTransition(
+              opacity: fade, child: ScaleTransition(scale: scale, child: child));
+        },
+      );
+
   void _openQuiz(List<CardModel> allCards) {
     final lang = ref.read(languageProvider);
     final List<CardModel> cards;
@@ -381,9 +396,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
     if (cards.length < 4) return;
     Navigator.of(context).push(
-      MaterialPageRoute(
-          builder: (_) => GuessScreen(cards: cards, ttsLocale: ttsLocale)),
-    );
+        _gameRoute(GuessScreen(cards: cards, ttsLocale: ttsLocale)));
   }
 
   void _openMemoryMatch(List<CardModel> allCards) {
@@ -392,17 +405,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ? allCards.where((c) => c.image != null).toList()
         : allCards.where((c) => c.audioKey != null).toList();
     if (playable.length < 6) return;
-    // Use the first unlocked non-special pack as the pack reference for theming
     final packs = ref.read(packsProvider).valueOrNull ?? [];
     final pack = packs.firstWhere(
       (p) => !p.isLocked && !p.id.startsWith('_'),
       orElse: () => packs.first,
     );
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => MemoryMatchScreen(pack: pack, cards: playable),
-      ),
-    );
+        _gameRoute(MemoryMatchScreen(pack: pack, cards: playable)));
   }
 
   void _openSortGame(List<PackModel> packs) {
@@ -418,10 +427,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         .toList();
     if (playablePacks.length < 2) return;
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => SortGameSetupScreen(packs: playablePacks),
-      ),
-    );
+        _gameRoute(SortGameSetupScreen(packs: playablePacks)));
   }
 
   void _openOddOneOut(List<PackModel> packs) {
@@ -431,16 +437,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             !p.id.startsWith('_') &&
             !p.isLocked &&
             p.cards.length >= 3 &&
-            (lang == 'en'
-                ? p.cards.any((c) => c.image != null)
-                : true))
+            (lang == 'en' ? p.cards.any((c) => c.image != null) : true))
         .toList();
     if (playablePacks.length < 2) return;
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => OddOneOutScreen(packs: playablePacks),
-      ),
-    );
+        _gameRoute(OddOneOutScreen(packs: playablePacks)));
   }
 
   void _openRepeatGame(List<CardModel> allCards) {
@@ -449,56 +450,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ? allCards.where((c) => c.image != null).toList()
         : allCards;
     if (cards.length < 4) return;
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => RepeatGameScreen(cards: cards),
-      ),
-    );
+    Navigator.of(context).push(_gameRoute(RepeatGameScreen(cards: cards)));
   }
 
   void _openSoundFilter() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const SoundFilterScreen()),
-    );
+    Navigator.of(context).push(_gameRoute(const SoundFilterScreen()));
   }
 
   void _openSoundPosition() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const SoundPositionSetupScreen()),
-    );
+    Navigator.of(context)
+        .push(_gameRoute(const SoundPositionSetupScreen()));
   }
 
   void _openRhymeGame() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const RhymeGameScreen()),
-    );
+    Navigator.of(context).push(_gameRoute(const RhymeGameScreen()));
   }
 
   void _openArticulation() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ArticulationScreen()),
-    );
+    Navigator.of(context).push(_gameRoute(const ArticulationScreen()));
   }
 
   void _openPluralGame() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const PluralGameScreen()),
-    );
+    Navigator.of(context).push(_gameRoute(const PluralGameScreen()));
   }
 
   void _openOppositeGame(List<PackModel> packs) {
     final oppPack = packs.where((p) => p.id == 'opposites').firstOrNull;
     if (oppPack == null || oppPack.cards.length < 4) return;
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => OppositeGameScreen(pack: oppPack),
-      ),
-    );
+    Navigator.of(context)
+        .push(_gameRoute(OppositeGameScreen(pack: oppPack)));
   }
 
   void _openSyllableGame(List<CardModel> allCards) {
-    // Filter out sound-repetition cards (contain hyphens like АС-АС-АС)
-    // and cards with no vowels (too short/unusual)
     const vowels = {'А', 'Е', 'И', 'І', 'О', 'У', 'Є', 'Ї', 'Ю', 'Я'};
     final cards = allCards
         .where((c) =>
@@ -506,11 +489,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             c.sound.toUpperCase().split('').any(vowels.contains))
         .toList();
     if (cards.length < 4) return;
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => SyllableGameScreen(cards: cards),
-      ),
-    );
+    Navigator.of(context).push(_gameRoute(SyllableGameScreen(cards: cards)));
   }
 
   void _showCardOfDayPopup(CardModel card, bool isFromLockedPack) {
@@ -1478,12 +1457,27 @@ class _GamesSection extends ConsumerWidget {
     if (playableCount < 4) return const SizedBox.shrink();
     final isEn = ref.watch(languageProvider) == 'en';
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
+    final games = [
+      (emoji: '🎧', uk: 'Вгадай\nзвук',     en: 'Guess\nword',    color: kAccent,                      tap: onQuiz),
+      (emoji: '🧠', uk: 'Знайди\nпару',      en: 'Find\npair',     color: kTeal,                         tap: playableCount >= 6 ? onMemory : null),
+      (emoji: '🗂️',uk: 'По\nкупках',       en: 'Sort\nit!',      color: const Color(0xFFFF8C42),       tap: hasSortGame ? onSort : null),
+      (emoji: '🔍', uk: 'Знайди\nзайве',     en: 'Odd\none out',   color: const Color(0xFF7B61FF),       tap: hasSortGame ? onOddOneOut : null),
+      (emoji: '🎤', uk: 'Повтори\nза мною',  en: 'Repeat\nme',     color: const Color(0xFF00BFA5),       tap: onRepeat),
+      (emoji: '🥁', uk: 'Рахуй\nсклади',     en: 'Count\nsyllables',color: const Color(0xFFE91E8C),      tap: onSyllable),
+      (emoji: '↔️', uk: 'Протилеж-\nності', en: 'Opposites',      color: const Color(0xFF8E44AD),       tap: onOpposite),
+      (emoji: '🔤', uk: 'За\nзвуком',        en: 'By\nsound',      color: const Color(0xFF00897B),       tap: onSoundFilter),
+      (emoji: '🎵', uk: 'Знайди\nриму',      en: 'Find\nrhyme',    color: const Color(0xFFE91E8C),       tap: onRhyme),
+      (emoji: '🎯', uk: 'Де живе\nзвук?',   en: 'Sound\npos.',    color: const Color(0xFF1565C0),       tap: onSoundPosition),
+      (emoji: '👅', uk: 'Гімнас-\nтика',    en: 'Articul.',       color: const Color(0xFF6A1B9A),       tap: onArticulation),
+      (emoji: '1️⃣',uk: 'Один —\nБагато',   en: 'One —\nMany',    color: const Color(0xFF00897B),       tap: onPlural),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+          child: Text(
             isEn ? '🎮 Games' : '🎮 Ігри',
             style: const TextStyle(
               fontSize: 13,
@@ -1491,136 +1485,88 @@ class _GamesSection extends ConsumerWidget {
               color: kAccent,
             ),
           ),
-          const SizedBox(height: 8),
-          Row(
+        ),
+        SizedBox(
+          height: 100,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: games.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            itemBuilder: (_, i) {
+              final g = games[i];
+              return _GameChip(
+                emoji: g.emoji,
+                label: isEn ? g.en : g.uk,
+                color: g.color,
+                onTap: g.tap,
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Compact chip for horizontal scroll ──────────────────────────
+class _GameChip extends StatelessWidget {
+  final String emoji;
+  final String label;
+  final Color color;
+  final VoidCallback? onTap;
+
+  const _GameChip({
+    required this.emoji,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final disabled = onTap == null;
+    return AnimatedOpacity(
+      opacity: disabled ? 0.38 : 1.0,
+      duration: const Duration(milliseconds: 150),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 82,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: color.withValues(alpha: 0.30),
+              width: 1.5,
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Expanded(
-                child: _GameButton(
-                  emoji: '🎧',
-                  label: isEn ? 'Guess\nthe word' : 'Вгадай\nзвук',
-                  color: kAccent,
-                  onTap: onQuiz,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _GameButton(
-                  emoji: '🧠',
-                  label: isEn ? 'Find\nthe pair' : 'Знайди\nпару',
-                  color: kTeal,
-                  onTap: playableCount >= 6 ? onMemory : null,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _GameButton(
-                  emoji: '🗂️',
-                  label: isEn ? 'Sort\nit!' : 'По\nкупках',
-                  color: const Color(0xFFFF8C42),
-                  onTap: hasSortGame ? onSort : null,
+              Text(emoji, style: const TextStyle(fontSize: 28)),
+              const SizedBox(height: 5),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                  height: 1.2,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: _GameButton(
-                  emoji: '🔍',
-                  label: isEn ? 'Odd\none out' : 'Знайди\nзайве',
-                  color: const Color(0xFF7B61FF),
-                  onTap: hasSortGame ? onOddOneOut : null,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _GameButton(
-                  emoji: '🎤',
-                  label: isEn ? 'Repeat\nafter me' : 'Повтори\nза мною',
-                  color: const Color(0xFF00BFA5),
-                  onTap: playableCount >= 4 ? onRepeat : null,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _GameButton(
-                  emoji: '🥁',
-                  label: isEn ? 'Count\nsyllables' : 'Рахуй\nсклади',
-                  color: const Color(0xFFE91E8C),
-                  onTap: playableCount >= 4 ? onSyllable : null,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: _GameButton(
-                  emoji: '↔️',
-                  label: isEn ? 'Find\nopposite' : 'Протилеж-\nності',
-                  color: const Color(0xFF8E44AD),
-                  onTap: onOpposite,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _GameButton(
-                  emoji: '🔤',
-                  label: isEn ? 'By\nsound' : 'За\nзвуком',
-                  color: const Color(0xFF00897B),
-                  onTap: onSoundFilter,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _GameButton(
-                  emoji: '🎵',
-                  label: isEn ? 'Find\nrhyme' : 'Знайди\nриму',
-                  color: const Color(0xFFE91E8C),
-                  onTap: onRhyme,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: _GameButton(
-                  emoji: '🎯',
-                  label: isEn ? 'Sound\nposition' : 'Де живе\nзвук?',
-                  color: const Color(0xFF1565C0),
-                  onTap: onSoundPosition,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _GameButton(
-                  emoji: '👅',
-                  label: isEn ? 'Articulation' : 'Гімнас-\nтика',
-                  color: const Color(0xFF6A1B9A),
-                  onTap: onArticulation,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _GameButton(
-                  emoji: '1️⃣',
-                  label: isEn ? 'One —\nMany' : 'Один —\nБагато',
-                  color: const Color(0xFF00897B),
-                  onTap: onPlural,
-                ),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
+// ─── Full-size button (kept for potential future use) ─────────────
 class _GameButton extends StatelessWidget {
   final String emoji;
   final String label;

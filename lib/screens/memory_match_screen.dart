@@ -185,7 +185,9 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? null : color.withValues(alpha: 0.06),
+      backgroundColor: isDark
+          ? const Color(0xFF1A1A2E)
+          : Color.lerp(color.withValues(alpha: 0.12), Colors.white, 0.7)!,
       body: SafeArea(
           child: Column(
             children: [
@@ -422,44 +424,66 @@ class _BackFace extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardBg = isDark ? const Color(0xFF2A2A2A) : Colors.white;
+    // Derive a darker shade for gradient bottom
+    final darker = Color.lerp(packColor, Colors.black, 0.25)!;
     return Container(
       decoration: BoxDecoration(
-        color: cardBg,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [packColor, darker],
+        ),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: packColor.withValues(alpha: 0.35), width: 2),
         boxShadow: [
           BoxShadow(
-            color: packColor.withValues(alpha: 0.2),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
+            color: packColor.withValues(alpha: 0.45),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Stack(
         children: [
-          // Pack icon as hint
-          Text(packIcon, style: const TextStyle(fontSize: 22)),
-          const SizedBox(height: 4),
-          // Big round "?" in pack color
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: packColor,
-              shape: BoxShape.circle,
-            ),
-            child: const Center(
-              child: Text(
-                '?',
+          // Subtle corner pattern
+          Positioned(
+            top: -6, left: -6,
+            child: Text(packIcon,
                 style: TextStyle(
-                  fontSize: 19,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                ),
+                    fontSize: 28,
+                    color: Colors.white.withValues(alpha: 0.12))),
+          ),
+          Positioned(
+            bottom: -6, right: -6,
+            child: Text(packIcon,
+                style: TextStyle(
+                    fontSize: 28,
+                    color: Colors.white.withValues(alpha: 0.12))),
+          ),
+          // White inner border
+          Positioned.fill(
+            child: Container(
+              margin: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.25), width: 1.5),
               ),
+            ),
+          ),
+          // Center icon
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(packIcon, style: const TextStyle(fontSize: 28)),
+                const SizedBox(height: 4),
+                Text(
+                  '✨',
+                  style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white.withValues(alpha: 0.8)),
+                ),
+              ],
             ),
           ),
         ],
