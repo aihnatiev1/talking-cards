@@ -152,6 +152,7 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
     final majorityPack = _slots.firstWhere((sl) => !sl.isOdd).pack;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF0EEFF),
       appBar: AppBar(
         title: Text(
           s('Знайди зайве', 'Odd one out'),

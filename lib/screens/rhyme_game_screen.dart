@@ -216,6 +216,7 @@ class _RhymeGameScreenState extends ConsumerState<RhymeGameScreen>
     final question = _round.question;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFFFF0FB),
       appBar: AppBar(
         title: Text(
           s('Знайди риму', 'Find the rhyme'),

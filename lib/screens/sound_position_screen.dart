@@ -42,6 +42,7 @@ class SoundPositionSetupScreen extends ConsumerWidget {
     final packsAsync = ref.watch(packsProvider);
 
     return Scaffold(
+      backgroundColor: const Color(0xFFEEF5FF),
       appBar: AppBar(
         title: Text(
           s('Де живе звук?', 'Where is the sound?'),

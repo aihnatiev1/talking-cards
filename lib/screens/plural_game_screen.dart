@@ -191,6 +191,7 @@ class _PluralGameScreenState extends ConsumerState<PluralGameScreen>
     final pair = _current;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFE8FFF8),
       appBar: AppBar(
         title: Text(
           s('Один — багато', 'One — Many'),

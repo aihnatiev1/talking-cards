@@ -183,6 +183,7 @@ class ArticulationScreen extends ConsumerWidget {
     final s = AppS(isEn);
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF5EEFF),
       appBar: AppBar(
         title: Text(
           s('Артикуляційна гімнастика', 'Articulation Exercises'),

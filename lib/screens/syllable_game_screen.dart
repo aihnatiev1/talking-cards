@@ -14,6 +14,7 @@ import '../services/tts_service.dart';
 import '../services/audio_service.dart';
 import '../utils/constants.dart';
 import '../utils/l10n.dart';
+import '../widgets/confetti_burst.dart';
 
 class SyllableGameScreen extends ConsumerStatefulWidget {
   final List<CardModel> cards;
@@ -35,6 +36,7 @@ class _SyllableGameScreenState extends ConsumerState<SyllableGameScreen>
   bool _questDone = false;
 
   Timer? _evalTimer;
+  OverlayEntry? _confettiEntry;
 
   // Ripple animations for each tap
   final List<_RippleDot> _ripples = [];
@@ -80,7 +82,24 @@ class _SyllableGameScreenState extends ConsumerState<SyllableGameScreen>
     _evalTimer?.cancel();
     _bounceCtrl.dispose();
     _resultCtrl.dispose();
+    _confettiEntry?.remove();
     super.dispose();
+  }
+
+  void _showConfetti() {
+    _confettiEntry?.remove();
+    final size = MediaQuery.of(context).size;
+    _confettiEntry = OverlayEntry(
+      builder: (_) => IgnorePointer(
+        child: ConfettiBurst(
+            origin: Offset(size.width / 2, size.height / 3)),
+      ),
+    );
+    Overlay.of(context).insert(_confettiEntry!);
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      _confettiEntry?.remove();
+      _confettiEntry = null;
+    });
   }
 
   CardModel get _current => _deck[_index];
@@ -123,6 +142,7 @@ class _SyllableGameScreenState extends ConsumerState<SyllableGameScreen>
     if (isCorrect) {
       HapticFeedback.lightImpact();
       _score++;
+      _showConfetti();
       Future.delayed(const Duration(milliseconds: 300), () {
         final isEn = ref.read(languageProvider) == 'en';
         TtsService.instance.speak(
@@ -180,6 +200,7 @@ class _SyllableGameScreenState extends ConsumerState<SyllableGameScreen>
     );
 
     return Scaffold(
+      backgroundColor: const Color(0xFFFFF0F5),
       appBar: AppBar(
         title: Text(
           s('Порахуй склади', 'Count syllables'),

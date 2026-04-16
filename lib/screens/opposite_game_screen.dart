@@ -171,6 +171,7 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
     final correct = _round.correct;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF8F0FF),
       appBar: AppBar(
         title: Text(
           s('Знайди протилежність', 'Find the opposite'),

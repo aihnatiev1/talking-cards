@@ -197,6 +197,7 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
     final hasMic = SpeechService.instance.isAvailable;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFEAFFF5),
       appBar: AppBar(
         title: Text(
           s('Повтори за мною', 'Repeat after me'),

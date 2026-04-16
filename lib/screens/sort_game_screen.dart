@@ -198,6 +198,7 @@ class _SortGameScreenState extends ConsumerState<SortGameScreen>
     final sorted = _score;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFFFF4E8),
       appBar: AppBar(
         title: Row(
           mainAxisSize: MainAxisSize.min,
