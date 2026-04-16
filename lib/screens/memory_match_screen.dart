@@ -187,7 +187,7 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
     return Scaffold(
       backgroundColor: isDark
           ? const Color(0xFF1A1A2E)
-          : Color.lerp(color.withValues(alpha: 0.12), Colors.white, 0.7)!,
+          : const Color(0xFFFAFAFF), // neutral — pack color used as accent only
       body: SafeArea(
           child: Column(
             children: [
@@ -198,7 +198,8 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
                   children: [
                     IconButton(
                       icon: Icon(Icons.arrow_back_ios_new_rounded,
-                          color: color, size: 22),
+                          color: isDark ? Colors.white70 : Colors.black54,
+                          size: 22),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                     Expanded(
@@ -207,7 +208,7 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
                           Text(
                             s('Знайди пару', 'Find the pair'),
                             style: TextStyle(
-                              color: color,
+                              color: isDark ? Colors.white : Colors.black87,
                               fontWeight: FontWeight.w800,
                               fontSize: 16,
                             ),
@@ -215,8 +216,9 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
                           Text(
                             widget.pack.title,
                             style: TextStyle(
-                              color: color.withValues(alpha: 0.6),
-                              fontSize: 10,
+                              color: color,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
