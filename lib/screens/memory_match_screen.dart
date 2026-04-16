@@ -49,7 +49,7 @@ class MemoryMatchScreen extends ConsumerStatefulWidget {
 }
 
 class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
-  static const _pairCount = 6; // 4×3 grid
+  static const _pairCount = 6; // 3×4 grid — bigger tiles
 
   late List<_Tile> _tiles;
   int? _firstIndex; // index of first flipped tile awaiting a pair
@@ -281,10 +281,10 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
                     physics: const NeverScrollableScrollPhysics(),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4,
-                      mainAxisSpacing: 10,
-                      crossAxisSpacing: 10,
-                      childAspectRatio: 0.78,
+                      crossAxisCount: 3,
+                      mainAxisSpacing: 12,
+                      crossAxisSpacing: 12,
+                      childAspectRatio: 0.82,
                     ),
                     itemCount: _tiles.length,
                     itemBuilder: (context, i) => _TileWidget(

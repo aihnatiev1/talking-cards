@@ -183,41 +183,36 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
             children: [
               const SizedBox(height: 8),
 
-              // Hint: which pack do 3 cards belong to
+              // Hint — big pack icon + short question
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
-                child: Container(
+                child: Column(
                   key: ValueKey(majorityPack.id),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: majorityPack.color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: majorityPack.color.withValues(alpha: 0.3),
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(majorityPack.icon,
+                            style: const TextStyle(fontSize: 40)),
+                        Text(majorityPack.icon,
+                            style: const TextStyle(fontSize: 40)),
+                        Text(majorityPack.icon,
+                            style: const TextStyle(fontSize: 40)),
+                        const SizedBox(width: 12),
+                        Text('❓',
+                            style: const TextStyle(fontSize: 40)),
+                      ],
                     ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(majorityPack.icon,
-                          style: const TextStyle(fontSize: 28)),
-                      const SizedBox(width: 12),
-                      Flexible(
-                        child: Text(
-                          s(
-                            'Три картки — «${majorityPack.title}». Яка зайва?',
-                            'Three cards are «${majorityPack.title}». Which is odd?',
-                          ),
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: majorityPack.color,
-                          ),
-                        ),
+                    const SizedBox(height: 6),
+                    Text(
+                      s('Яка картка зайва?', 'Which is odd?'),
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: majorityPack.color,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
 

@@ -342,23 +342,25 @@ class _SyllableGameScreenState extends ConsumerState<SyllableGameScreen>
               child: _evaluated
                   ? Column(
                       children: [
+                        // Big emoji result
                         Text(
-                          _correct
-                              ? s('Чудово! ✅', 'Perfect! ✅')
-                              : s(
-                                  'У слові $_syllableCount склад${_ru(syllableCount)}, а не $_taps',
-                                  '$syllableCount syllable${syllableCount == 1 ? '' : 's'}, not $_taps',
-                                ),
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: _correct
-                                ? const Color(0xFF2E7D32)
-                                : const Color(0xFFC62828),
-                          ),
+                          _correct ? '🎉' : '🔄',
+                          style: const TextStyle(fontSize: 36),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 4),
+                        // Dots show correct count (lit up after eval)
                         syllableDots,
+                        const SizedBox(height: 4),
+                        // Only show count on wrong so child learns
+                        if (!_correct)
+                          Text(
+                            s('Треба: $_syllableCount', 'Need: $_syllableCount'),
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFFC62828),
+                            ),
+                          ),
                       ],
                     )
                   : syllableDots,
