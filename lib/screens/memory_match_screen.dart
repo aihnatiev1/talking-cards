@@ -10,6 +10,7 @@ import '../providers/daily_quest_provider.dart';
 import '../providers/game_stats_provider.dart';
 import '../providers/language_provider.dart';
 import '../services/audio_service.dart';
+import '../services/tts_service.dart';
 import '../utils/l10n.dart';
 
 // ─────────────────────────────────────────────
@@ -103,7 +104,7 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
     if (tile.isFlipped || tile.isMatched) return;
 
     HapticFeedback.lightImpact();
-    AudioService.instance.playSound(tile.card.audioKey);
+    TtsService.instance.speak(tile.card.sound, locale: 'uk-UA');
 
     setState(() => _tiles[index].isFlipped = true);
 

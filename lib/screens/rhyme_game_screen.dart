@@ -55,7 +55,7 @@ const _rhymeWords = [
   _RhymeWord('МОТ',     '🧶',  'ot'),
   // -АЙ
   _RhymeWord('ЧАЙ',    '🫖',  'ay'),
-  _RhymeWord('МАЙ',    '🌷',  'ay'),
+  _RhymeWord('КРАЙ',   '🗺️',  'ay'),
   _RhymeWord('ГАЙ',    '🌳',  'ay'),
   // -ОЧКА
   _RhymeWord('БОЧКА',  '🪣',  'ochka'),
@@ -192,6 +192,9 @@ class _RhymeGameScreenState extends ConsumerState<RhymeGameScreen>
       HapticFeedback.mediumImpact();
       setState(() => _shakingWord = word.word);
       _shakeCtrl.forward();
+      Future.delayed(const Duration(milliseconds: 1300), () {
+        if (mounted) setState(() { _answered = false; _tappedWord = null; });
+      });
     }
   }
 

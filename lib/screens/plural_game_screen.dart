@@ -154,6 +154,9 @@ class _PluralGameScreenState extends ConsumerState<PluralGameScreen>
       HapticFeedback.mediumImpact();
       setState(() => _shakingAnswer = answer);
       _shakeCtrl.forward();
+      Future.delayed(const Duration(milliseconds: 1300), () {
+        if (mounted) setState(() { _answered = false; _tappedAnswer = null; });
+      });
     }
   }
 

@@ -430,13 +430,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         _gameRoute(SortGameSetupScreen(packs: playablePacks)));
   }
 
+  // Packs excluded from Odd One Out — cards inside don't share a visible category
+  static const _oddOneOutExclude = {
+    'adjectives', 'actions', 'opposites', 'phrases', 'rozmovlyalky',
+    'sound_r', 'sound_l', 'sound_sh', 'sound_s', 'sound_z',
+    'sound_zh', 'sound_ch', 'sound_shch', 'sound_ts',
+    'en_actions', 'en_opposites',
+  };
+
   void _openOddOneOut(List<PackModel> packs) {
     final lang = ref.read(languageProvider);
     final playablePacks = packs
         .where((p) =>
             !p.id.startsWith('_') &&
             !p.isLocked &&
-            p.cards.length >= 3 &&
+            !_oddOneOutExclude.contains(p.id) &&
+            p.cards.length >= 4 &&
             (lang == 'en' ? p.cards.any((c) => c.image != null) : true))
         .toList();
     if (playablePacks.length < 2) return;

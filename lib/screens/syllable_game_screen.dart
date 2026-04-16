@@ -106,11 +106,7 @@ class _SyllableGameScreenState extends ConsumerState<SyllableGameScreen>
   int get _expected => _syllables(_current.sound);
 
   void _speakCurrent() {
-    AudioService.instance.speakCard(
-      _current.audioKey,
-      _current.sound,
-      _current.text,
-    );
+    TtsService.instance.speak(_current.sound, locale: 'uk-UA');
   }
 
   void _onTap() {

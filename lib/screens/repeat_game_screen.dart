@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -11,6 +12,7 @@ import '../providers/language_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../services/speech_service.dart';
+import '../services/tts_service.dart';
 import '../utils/constants.dart';
 import '../utils/l10n.dart';
 import '../widgets/confetti_burst.dart';
@@ -45,6 +47,7 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
   late AnimationController _flipCtrl;
   late Animation<double> _flipAnim;
 
+  Timer? _listenTimeout;
   static const _maxAttempts = 2;
 
   @override
@@ -74,6 +77,7 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
 
   @override
   void dispose() {
+    _listenTimeout?.cancel();
     _pulseCtrl.dispose();
     _flipCtrl.dispose();
     _confettiEntry?.remove();
@@ -84,11 +88,7 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
   CardModel get _current => _deck[_index];
 
   Future<void> _speakCurrent() async {
-    await AudioService.instance.speakCard(
-      _current.audioKey,
-      _current.sound,
-      _current.text,
-    );
+    await TtsService.instance.speak(_current.sound, locale: 'uk-UA');
   }
 
   Future<void> _startListening() async {
@@ -107,9 +107,16 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
     });
     _pulseCtrl.repeat(reverse: true);
 
+    // Auto-stop after 6s if speech recognition produces no result
+    _listenTimeout?.cancel();
+    _listenTimeout = Timer(const Duration(seconds: 6), () {
+      if (mounted && _listening) _stopListening();
+    });
+
     await speech.startListening(
       pauseFor: const Duration(seconds: 3),
       onResult: (text) {
+        _listenTimeout?.cancel();
         _pulseCtrl.stop();
         _pulseCtrl.reset();
         _evaluateResult(text);
@@ -118,6 +125,7 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
   }
 
   void _stopListening() {
+    _listenTimeout?.cancel();
     SpeechService.instance.stopListening();
     _pulseCtrl.stop();
     _pulseCtrl.reset();

@@ -146,6 +146,10 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
       HapticFeedback.mediumImpact();
       setState(() => _shakingId = card.id);
       _shakeCtrl.forward();
+      // Show wrong+correct highlight, then reset so user can try again
+      Future.delayed(const Duration(milliseconds: 1300), () {
+        if (mounted) setState(() { _answered = false; _tappedId = null; });
+      });
     }
   }
 

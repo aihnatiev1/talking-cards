@@ -232,11 +232,7 @@ class _SoundCardState extends ConsumerState<_SoundCard> {
     if (_playing) return;
     setState(() => _playing = true);
     ref.read(dailyQuestProvider.notifier).recordCardView();
-    await AudioService.instance.speakCard(
-      widget.card.audioKey,
-      widget.card.sound,
-      widget.card.text,
-    );
+    await TtsService.instance.speak(widget.card.sound, locale: 'uk-UA');
     if (mounted) setState(() => _playing = false);
   }
 

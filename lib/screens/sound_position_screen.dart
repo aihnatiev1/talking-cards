@@ -212,11 +212,7 @@ class _SoundPositionGameScreenState
   }
 
   void _speakCurrent() {
-    AudioService.instance.speakCard(
-      _current.audioKey,
-      _current.sound,
-      _current.text,
-    );
+    TtsService.instance.speak(_current.sound, locale: 'uk-UA');
   }
 
   void _onTap(String position) {
@@ -250,6 +246,9 @@ class _SoundPositionGameScreenState
       HapticFeedback.mediumImpact();
       setState(() => _shakingPos = position);
       _shakeCtrl.forward();
+      Future.delayed(const Duration(milliseconds: 1300), () {
+        if (mounted) setState(() { _answered = false; _tappedPosition = null; });
+      });
     }
   }
 
@@ -415,52 +414,39 @@ class _SoundPositionGameScreenState
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Visual position dots: ●○○ / ○●○ / ○○●
-              if (!isCorrect && !isWrong)
+              if (isCorrect)
+                const Icon(Icons.check_circle_rounded,
+                    color: Color(0xFF43A047), size: 32)
+              else if (isWrong)
+                const Icon(Icons.cancel_rounded,
+                    color: Color(0xFFE53935), size: 32)
+              else ...[
+                // Position indicator: 3 squares, active one is filled
+                // [■□□] beginning / [□■□] middle / [□□■] end
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(3, (i) {
                     final active = dots[i];
                     return Container(
-                      width: active ? 18 : 10,
-                      height: active ? 18 : 10,
+                      width: 22,
+                      height: 22,
                       margin: const EdgeInsets.symmetric(horizontal: 3),
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
+                        borderRadius: BorderRadius.circular(5),
                         color: active
                             ? kAccent
-                            : kAccent.withValues(alpha: 0.2),
+                            : kAccent.withValues(alpha: 0.15),
                       ),
-                      child: active
-                          ? Center(
-                              child: Text(
-                                'А',
-                                style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white),
-                              ),
-                            )
-                          : null,
                     );
                   }),
-                )
-              else
-                Icon(
-                  isCorrect
-                      ? Icons.check_circle_rounded
-                      : Icons.cancel_rounded,
-                  color: isCorrect
-                      ? const Color(0xFF43A047)
-                      : const Color(0xFFE53935),
-                  size: 28,
                 ),
-              const SizedBox(height: 8),
+              ],
+              const SizedBox(height: 10),
               Text(
                 label,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: isCorrect
                       ? const Color(0xFF2E7D32)

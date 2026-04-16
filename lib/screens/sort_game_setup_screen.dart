@@ -79,7 +79,7 @@ class _SortGameSetupScreenState extends ConsumerState<SortGameSetupScreen> {
               onPressed: _randomize,
               icon: const Text('🎲', style: TextStyle(fontSize: 18)),
               label: Text(
-                s('Рандом', 'Random'),
+                s('За мене!', 'Surprise!'),
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
