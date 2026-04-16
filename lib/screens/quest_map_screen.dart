@@ -46,16 +46,27 @@ List<_StopInfo> _buildStops(bool isEn) => [
       label: isEn ? 'Repeat\nafter me!' : 'Повтори\nза мною!', color: const Color(0xFF26A69A)),
 ];
 
-// Positions aligned to the colored circles in quest_map_bg.png
-// (fraction of adventure map widget width/height)
+// Stop positions — snake path left→right→left
 const _stopPositions = [
-  Offset(0.40, 0.13),  // Stop 0 — green circle, top
-  Offset(0.60, 0.27),  // Stop 1 — orange circle, upper-right
-  Offset(0.40, 0.41),  // Stop 2 — purple circle, middle-left
-  Offset(0.63, 0.57),  // Stop 3 — blue circle, middle-right
-  Offset(0.37, 0.73),  // Stop 4 — yellow circle, lower-left
+  Offset(0.22, 0.04),  // Stop 0 — top left
+  Offset(0.72, 0.18),  // Stop 1 — right
+  Offset(0.22, 0.34),  // Stop 2 — left
+  Offset(0.72, 0.50),  // Stop 3 — right
+  Offset(0.22, 0.66),  // Stop 4 — left
 ];
-const _treasurePos = Offset(0.47, 0.86);
+const _treasurePos = Offset(0.50, 0.83);
+
+const _decorations = [
+  ('🌳', 0.88, 0.01, 30.0),
+  ('🌻', 0.02, 0.10, 26.0),
+  ('🍄', 0.90, 0.28, 22.0),
+  ('🌸', 0.01, 0.43, 24.0),
+  ('🦋', 0.90, 0.57, 24.0),
+  ('🌿', 0.02, 0.70, 24.0),
+  ('🌲', 0.50, 0.25, 26.0),
+  ('🍀', 0.48, 0.56, 20.0),
+  ('🌈', 0.50, 0.93, 26.0),
+];
 
 class QuestMapScreen extends ConsumerStatefulWidget {
   final CardModel? cardOfDay;
@@ -159,7 +170,7 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFB5E5A0),
+      backgroundColor: const Color(0xFFFFF8F0),
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -181,6 +192,20 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
       ),
       body: Stack(
         children: [
+          // Gradient background
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0xFFFFF8F0),
+                  Color(0xFFFFEDD8),
+                  Color(0xFFFDE2C8),
+                ],
+              ),
+            ),
+          ),
           // Content
           SafeArea(
             child: Column(
@@ -464,15 +489,24 @@ class _AdventureMap extends StatelessWidget {
         return Stack(
           clipBehavior: Clip.none,
           children: [
-            // Background image — fills the entire adventure map area.
-            // BoxFit.fill ensures the image exactly covers the widget,
-            // keeping circle positions proportional on every screen size.
-            Positioned.fill(
-              child: Image.asset(
-                'assets/images/quest_map_bg.png',
-                fit: BoxFit.fill,
+            // Winding path
+            CustomPaint(
+              size: Size(w, h),
+              painter: _PathPainter(
+                stops: positions,
+                treasure: treasureAbs,
+                completedCount: quest.doneCount,
+                allDone: quest.allDone,
               ),
             ),
+
+            // Decorative emoji
+            for (final d in _decorations)
+              Positioned(
+                left: d.$2 * w - d.$4 / 2,
+                top: d.$3 * h - d.$4 / 2,
+                child: Text(d.$1, style: TextStyle(fontSize: d.$4)),
+              ),
 
             // Stop waypoints — scaled to screen size
             for (int i = 0; i < stops.length; i++)
@@ -687,6 +721,77 @@ class _StopWaypointState extends ConsumerState<_StopWaypoint>
 
 // ═══════════════════════════════════════════════════════════════
 //  TREASURE WAYPOINT — the goal at the end of the path
+// ═══════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════
+//  PATH PAINTER
+// ═══════════════════════════════════════════════════════════════
+
+class _PathPainter extends CustomPainter {
+  final List<Offset> stops;
+  final Offset treasure;
+  final int completedCount;
+  final bool allDone;
+
+  _PathPainter({
+    required this.stops,
+    required this.treasure,
+    required this.completedCount,
+    required this.allDone,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final allPoints = [...stops, treasure];
+    for (int i = 0; i < allPoints.length - 1; i++) {
+      _drawSegment(canvas, allPoints[i], allPoints[i + 1], i < completedCount);
+    }
+  }
+
+  void _drawSegment(Canvas canvas, Offset from, Offset to, bool done) {
+    final midY = (from.dy + to.dy) / 2;
+    final path = Path()
+      ..moveTo(from.dx, from.dy)
+      ..cubicTo(from.dx, midY, to.dx, midY, to.dx, to.dy);
+
+    final metrics = path.computeMetrics().first;
+    final totalLen = metrics.length;
+    const dashLen = 10.0;
+    const gapLen = 7.0;
+
+    final paint = Paint()
+      ..color = done
+          ? const Color(0xFF81C784).withValues(alpha: 0.85)
+          : const Color(0xFFD7CFC4).withValues(alpha: 0.5)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = done ? 5.0 : 4.0
+      ..strokeCap = StrokeCap.round;
+
+    double distance = 0;
+    while (distance < totalLen) {
+      final end = (distance + dashLen).clamp(0.0, totalLen);
+      canvas.drawPath(metrics.extractPath(distance, end), paint);
+      distance += dashLen + gapLen;
+    }
+
+    if (done) {
+      final glowPaint = Paint()
+        ..color = const Color(0xFF81C784).withValues(alpha: 0.15)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 10
+        ..strokeCap = StrokeCap.round
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+      canvas.drawPath(path, glowPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _PathPainter old) =>
+      old.completedCount != completedCount;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  TREASURE WAYPOINT
 // ═══════════════════════════════════════════════════════════════
 
 class _TreasureWaypoint extends ConsumerStatefulWidget {
