@@ -318,13 +318,15 @@ class _ExercisePlayerScreen extends StatefulWidget {
 }
 
 class _ExercisePlayerScreenState extends State<_ExercisePlayerScreen>
-    with TickerProviderStateMixin {
-  late AnimationController _timerCtrl;
-  Timer? _stepTimer;
+    with SingleTickerProviderStateMixin {
   int _stepIndex = 0;
   bool _done = false;
   int _reps = 0;
   static const _maxReps = 5;
+
+  // Hold timer — shown on the last "Тримай!" step
+  late AnimationController _holdCtrl;
+  bool _holding = false;
 
   List<String> get steps =>
       widget.isEn ? widget.exercise.stepsEn : widget.exercise.steps;
@@ -332,54 +334,19 @@ class _ExercisePlayerScreenState extends State<_ExercisePlayerScreen>
   @override
   void initState() {
     super.initState();
-    _timerCtrl = AnimationController(
+    _holdCtrl = AnimationController(
       vsync: this,
       duration: Duration(seconds: widget.exercise.seconds),
     );
-    _startRep();
-  }
-
-  @override
-  void dispose() {
-    _timerCtrl.dispose();
-    _stepTimer?.cancel();
-    super.dispose();
-  }
-
-  void _startRep() {
-    if (_reps >= _maxReps) {
-      setState(() => _done = true);
-      return;
-    }
-    setState(() {
-      _stepIndex = 0;
-      _done = false;
-    });
-
-    _timerCtrl.forward(from: 0);
-
-    // Cycle through steps every (seconds / steps) seconds
-    final stepDuration = (widget.exercise.seconds / steps.length * 1000).round();
-    _stepTimer?.cancel();
-    _stepTimer = Timer.periodic(
-      Duration(milliseconds: stepDuration),
-      (t) {
-        if (!mounted) { t.cancel(); return; }
+    _holdCtrl.addStatusListener((status) {
+      if (status == AnimationStatus.completed && mounted) {
         setState(() {
-          _stepIndex = (_stepIndex + 1) % steps.length;
-        });
-      },
-    );
-
-    _timerCtrl.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        _stepTimer?.cancel();
-        setState(() {
+          _holding = false;
           _reps++;
-          if (_reps < _maxReps) {
-            _startRep();
-          } else {
+          if (_reps >= _maxReps) {
             _done = true;
+          } else {
+            _stepIndex = 0;
           }
         });
       }
@@ -387,14 +354,31 @@ class _ExercisePlayerScreenState extends State<_ExercisePlayerScreen>
   }
 
   @override
+  void dispose() {
+    _holdCtrl.dispose();
+    super.dispose();
+  }
+
+  void _nextStep() {
+    if (_stepIndex < steps.length - 1) {
+      setState(() => _stepIndex++);
+      // Auto-start hold timer on last step
+      if (_stepIndex == steps.length - 1) {
+        _holding = true;
+        _holdCtrl.forward(from: 0);
+      }
+    }
+  }
+
+  bool get _isLastStep => _stepIndex == steps.length - 1;
+
+  @override
   Widget build(BuildContext context) {
     final s = AppS(widget.isEn);
     final name = widget.isEn ? widget.exercise.nameEn : widget.exercise.name;
-    final desc = widget.isEn
-        ? widget.exercise.descriptionEn
-        : widget.exercise.description;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF5EEFF),
       appBar: AppBar(
         title: Text(name,
             style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -403,92 +387,174 @@ class _ExercisePlayerScreenState extends State<_ExercisePlayerScreen>
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 28),
+          padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
             children: [
-              const SizedBox(height: 16),
-
-              // Emoji
-              Text(widget.exercise.emoji,
-                  style: const TextStyle(fontSize: 80)),
-
-              const SizedBox(height: 16),
-
-              // Description
-              Text(
-                desc,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                    fontSize: 15,
-                    color: Colors.grey[600],
-                    height: 1.4),
-              ),
-
-              const SizedBox(height: 28),
-
-              // Circular timer
-              if (!_done) ...[
-                AnimatedBuilder(
-                  animation: _timerCtrl,
-                  builder: (_, __) => Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      SizedBox(
-                        width: 120,
-                        height: 120,
-                        child: CircularProgressIndicator(
-                          value: _timerCtrl.value,
-                          strokeWidth: 8,
-                          backgroundColor:
-                              kAccent.withValues(alpha: 0.12),
-                          valueColor:
-                              const AlwaysStoppedAnimation<Color>(kAccent),
-                        ),
-                      ),
-                      Column(
-                        children: [
-                          Text(
-                            '${_reps + 1}/$_maxReps',
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            s('раз', 'rep'),
-                            style: TextStyle(
-                                fontSize: 12, color: Colors.grey[500]),
-                          ),
-                        ],
-                      ),
-                    ],
+              // "For parent" banner
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(
+                  color: kAccent.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  s('👨‍👧 Батьки читають вголос — дитина повторює рухи',
+                      '👨‍👧 Parents read aloud — child mirrors the moves'),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: kAccent,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
+              ),
 
-                const SizedBox(height: 28),
+              const SizedBox(height: 16),
 
-                // Current step
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: Text(
-                    steps[_stepIndex],
-                    key: ValueKey(_stepIndex),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
+              // Big emoji
+              Text(widget.exercise.emoji,
+                  style: const TextStyle(fontSize: 88)),
+
+              const SizedBox(height: 8),
+
+              // Reps counter
+              Text(
+                '${_reps + 1} / $_maxReps',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[500],
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Steps list — all visible, current highlighted
+              Expanded(
+                child: ListView.builder(
+                  itemCount: steps.length,
+                  itemBuilder: (_, i) {
+                    final isCurrent = i == _stepIndex;
+                    final isDone = i < _stepIndex;
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: isCurrent
+                            ? kAccent.withValues(alpha: 0.12)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: isCurrent
+                              ? kAccent.withValues(alpha: 0.4)
+                              : Colors.transparent,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: isDone
+                                  ? const Color(0xFF43A047)
+                                  : isCurrent
+                                      ? kAccent
+                                      : Colors.grey[300],
+                            ),
+                            child: Center(
+                              child: isDone
+                                  ? const Icon(Icons.check_rounded,
+                                      color: Colors.white, size: 16)
+                                  : Text(
+                                      '${i + 1}',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                        color: isCurrent
+                                            ? Colors.white
+                                            : Colors.grey[600],
+                                      ),
+                                    ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              steps[i],
+                              style: TextStyle(
+                                fontSize: isCurrent ? 17 : 14,
+                                fontWeight: isCurrent
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                                color: isDone
+                                    ? Colors.grey[400]
+                                    : isCurrent
+                                        ? Colors.black87
+                                        : Colors.grey[600],
+                              ),
+                            ),
+                          ),
+                          // Hold timer on last step
+                          if (isCurrent && _isLastStep && _holding)
+                            AnimatedBuilder(
+                              animation: _holdCtrl,
+                              builder: (_, __) => SizedBox(
+                                width: 32,
+                                height: 32,
+                                child: CircularProgressIndicator(
+                                  value: _holdCtrl.value,
+                                  strokeWidth: 4,
+                                  backgroundColor:
+                                      kAccent.withValues(alpha: 0.2),
+                                  valueColor:
+                                      const AlwaysStoppedAnimation<Color>(
+                                          kAccent),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              if (!_done) ...[
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: _isLastStep && _holding ? null : _nextStep,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kAccent,
+                      disabledBackgroundColor:
+                          kAccent.withValues(alpha: 0.3),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: Text(
+                      _isLastStep
+                          ? s('Тримай... ⏳', 'Hold... ⏳')
+                          : s('Далі ▶', 'Next ▶'),
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
-
-                const Spacer(),
-
+                const SizedBox(height: 8),
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: Text(
-                    s('Зупинити', 'Stop'),
-                    style: TextStyle(color: Colors.grey[500]),
-                  ),
+                  child: Text(s('Зупинити', 'Stop'),
+                      style: TextStyle(color: Colors.grey[500])),
                 ),
               ] else ...[
                 // Done state
@@ -522,7 +588,15 @@ class _ExercisePlayerScreenState extends State<_ExercisePlayerScreen>
                     const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: _startRep,
+                        onPressed: () {
+                          setState(() {
+                            _done = false;
+                            _reps = 0;
+                            _stepIndex = 0;
+                            _holding = false;
+                          });
+                          _holdCtrl.reset();
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: kAccent,
                           foregroundColor: Colors.white,
