@@ -2655,5 +2655,455 @@
         "colorAccent": "#6A1B9A"
       }
     ]
+  },
+  {
+    "id": "en_phrases",
+    "title": "Phrases",
+    "icon": "💬",
+    "color": "#FF8C00",
+    "isLocked": false,
+    "cards": [
+      {
+        "id": "eph01",
+        "sound": "I'M THIRSTY",
+        "soundEn": "I'M THIRSTY",
+        "text": "I need water!",
+        "emoji": "🥤",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#1565C0"
+      },
+      {
+        "id": "eph02",
+        "sound": "I'M HUNGRY",
+        "soundEn": "I'M HUNGRY",
+        "text": "I want to eat!",
+        "emoji": "🍽️",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#F57F17"
+      },
+      {
+        "id": "eph03",
+        "sound": "I'M SLEEPY",
+        "soundEn": "I'M SLEEPY",
+        "text": "I want to sleep!",
+        "emoji": "😴",
+        "colorBg": "#EDE7F6",
+        "colorAccent": "#6A1B9A"
+      },
+      {
+        "id": "eph04",
+        "sound": "I'M COLD",
+        "soundEn": "I'M COLD",
+        "text": "Brrr, so cold!",
+        "emoji": "🥶",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#1565C0"
+      },
+      {
+        "id": "eph05",
+        "sound": "I'M HOT",
+        "soundEn": "I'M HOT",
+        "text": "It's so hot!",
+        "emoji": "🥵",
+        "colorBg": "#FFEBEE",
+        "colorAccent": "#C62828"
+      },
+      {
+        "id": "eph06",
+        "sound": "WHERE'S MOMMY?",
+        "soundEn": "WHERE'S MOMMY?",
+        "text": "Where is mommy?",
+        "emoji": "👩",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#E91E63"
+      },
+      {
+        "id": "eph07",
+        "sound": "WHERE'S DADDY?",
+        "soundEn": "WHERE'S DADDY?",
+        "text": "Where is daddy?",
+        "emoji": "👨",
+        "colorBg": "#E8EAF6",
+        "colorAccent": "#3949AB"
+      },
+      {
+        "id": "eph08",
+        "sound": "COME HERE",
+        "soundEn": "COME HERE",
+        "text": "Come to me!",
+        "emoji": "🤗",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#F57F17"
+      },
+      {
+        "id": "eph09",
+        "sound": "I LOVE YOU",
+        "soundEn": "I LOVE YOU",
+        "text": "I love you so much!",
+        "emoji": "❤️",
+        "colorBg": "#FFEBEE",
+        "colorAccent": "#C62828"
+      },
+      {
+        "id": "eph10",
+        "sound": "HUG ME",
+        "soundEn": "HUG ME",
+        "text": "Give me a hug!",
+        "emoji": "🫂",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#AD1457"
+      },
+      {
+        "id": "eph11",
+        "sound": "THANK YOU",
+        "soundEn": "THANK YOU",
+        "text": "Thank you very much!",
+        "emoji": "🙏",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32"
+      },
+      {
+        "id": "eph12",
+        "sound": "PLEASE",
+        "soundEn": "PLEASE",
+        "text": "Please!",
+        "emoji": "😊",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#7B1FA2"
+      },
+      {
+        "id": "eph13",
+        "sound": "SORRY",
+        "soundEn": "SORRY",
+        "text": "I'm sorry!",
+        "emoji": "🥺",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100"
+      },
+      {
+        "id": "eph14",
+        "sound": "HELLO!",
+        "soundEn": "HELLO!",
+        "text": "Hello there!",
+        "emoji": "👋",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#F57F17"
+      },
+      {
+        "id": "eph15",
+        "sound": "BYE-BYE!",
+        "soundEn": "BYE-BYE!",
+        "text": "See you later!",
+        "emoji": "👋",
+        "colorBg": "#E0F2F1",
+        "colorAccent": "#00695C"
+      },
+      {
+        "id": "eph16",
+        "sound": "GIVE ME",
+        "soundEn": "GIVE ME",
+        "text": "Please give me",
+        "emoji": "🤲",
+        "colorBg": "#E8EAF6",
+        "colorAccent": "#283593"
+      },
+      {
+        "id": "eph17",
+        "sound": "HELP ME",
+        "soundEn": "HELP ME",
+        "text": "Can you help me?",
+        "emoji": "🆘",
+        "colorBg": "#FFEBEE",
+        "colorAccent": "#C62828"
+      },
+      {
+        "id": "eph18",
+        "sound": "AGAIN",
+        "soundEn": "AGAIN",
+        "text": "Do it again!",
+        "emoji": "🔁",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32"
+      },
+      {
+        "id": "eph19",
+        "sound": "NO!",
+        "soundEn": "NO!",
+        "text": "No, I don't want to",
+        "emoji": "🙅",
+        "colorBg": "#FFEBEE",
+        "colorAccent": "#C62828"
+      },
+      {
+        "id": "eph20",
+        "sound": "WAIT",
+        "soundEn": "WAIT",
+        "text": "Please wait!",
+        "emoji": "⏳",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#F57F17"
+      },
+      {
+        "id": "eph21",
+        "sound": "IT HURTS",
+        "soundEn": "IT HURTS",
+        "text": "Ouch, that hurts!",
+        "emoji": "😢",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#C62828"
+      },
+      {
+        "id": "eph22",
+        "sound": "I'M SAD",
+        "soundEn": "I'M SAD",
+        "text": "I feel sad",
+        "emoji": "😔",
+        "colorBg": "#E8EAF6",
+        "colorAccent": "#3949AB"
+      },
+      {
+        "id": "eph23",
+        "sound": "I'M HAPPY",
+        "soundEn": "I'M HAPPY",
+        "text": "I feel happy!",
+        "emoji": "😄",
+        "colorBg": "#FFFDE7",
+        "colorAccent": "#F9A825"
+      },
+      {
+        "id": "eph24",
+        "sound": "I'M SCARED",
+        "soundEn": "I'M SCARED",
+        "text": "I'm a little scared",
+        "emoji": "😨",
+        "colorBg": "#EDE7F6",
+        "colorAccent": "#7B1FA2"
+      },
+      {
+        "id": "eph25",
+        "sound": "I DON'T KNOW",
+        "soundEn": "I DON'T KNOW",
+        "text": "I'm not sure",
+        "emoji": "🤷",
+        "colorBg": "#ECEFF1",
+        "colorAccent": "#607D8B"
+      }
+    ]
+  },
+  {
+    "id": "en_adjectives",
+    "title": "Adjectives",
+    "icon": "🎨",
+    "color": "#E65100",
+    "isLocked": false,
+    "cards": [
+      {
+        "id": "eadj01",
+        "sound": "ROUND",
+        "soundEn": "ROUND",
+        "text": "Round like a ball!",
+        "emoji": "⭕",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#1565C0"
+      },
+      {
+        "id": "eadj02",
+        "sound": "SQUARE",
+        "soundEn": "SQUARE",
+        "text": "Square like a box!",
+        "emoji": "⬛",
+        "colorBg": "#E8EAF6",
+        "colorAccent": "#3949AB"
+      },
+      {
+        "id": "eadj03",
+        "sound": "TRIANGULAR",
+        "soundEn": "TRIANGULAR",
+        "text": "Pointy like a mountain!",
+        "emoji": "🔺",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100"
+      },
+      {
+        "id": "eadj04",
+        "sound": "FLUFFY",
+        "soundEn": "FLUFFY",
+        "text": "Soft and fluffy!",
+        "emoji": "🐱",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#E91E63"
+      },
+      {
+        "id": "eadj05",
+        "sound": "PRICKLY",
+        "soundEn": "PRICKLY",
+        "text": "Careful, it's prickly!",
+        "emoji": "🦔",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#388E3C"
+      },
+      {
+        "id": "eadj06",
+        "sound": "SMOOTH",
+        "soundEn": "SMOOTH",
+        "text": "Smooth like glass!",
+        "emoji": "💎",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#0277BD"
+      },
+      {
+        "id": "eadj07",
+        "sound": "SLIMY",
+        "soundEn": "SLIMY",
+        "text": "Eww, so slimy!",
+        "emoji": "🐸",
+        "colorBg": "#E0F2F1",
+        "colorAccent": "#00695C"
+      },
+      {
+        "id": "eadj08",
+        "sound": "SWEET",
+        "soundEn": "SWEET",
+        "text": "Yummy and sweet!",
+        "emoji": "🍬",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#E91E63"
+      },
+      {
+        "id": "eadj09",
+        "sound": "SOUR",
+        "soundEn": "SOUR",
+        "text": "Ooh, so sour!",
+        "emoji": "🍋",
+        "colorBg": "#FFFDE7",
+        "colorAccent": "#F9A825"
+      },
+      {
+        "id": "eadj10",
+        "sound": "BITTER",
+        "soundEn": "BITTER",
+        "text": "Hmm, that's bitter!",
+        "emoji": "🍫",
+        "colorBg": "#EFEBE9",
+        "colorAccent": "#4E342E"
+      },
+      {
+        "id": "eadj11",
+        "sound": "SALTY",
+        "soundEn": "SALTY",
+        "text": "Salty like the sea!",
+        "emoji": "🧂",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#1565C0"
+      },
+      {
+        "id": "eadj12",
+        "sound": "BIG",
+        "soundEn": "BIG",
+        "text": "Big as an elephant!",
+        "emoji": "🐘",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100"
+      },
+      {
+        "id": "eadj13",
+        "sound": "SMALL",
+        "soundEn": "SMALL",
+        "text": "Tiny like a mouse!",
+        "emoji": "🐭",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#7B1FA2"
+      },
+      {
+        "id": "eadj14",
+        "sound": "LONG",
+        "soundEn": "LONG",
+        "text": "Long and stretchy!",
+        "emoji": "📏",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#1565C0"
+      },
+      {
+        "id": "eadj15",
+        "sound": "SHORT",
+        "soundEn": "SHORT",
+        "text": "Short and small!",
+        "emoji": "✂️",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#C62828"
+      },
+      {
+        "id": "eadj16",
+        "sound": "LOUD",
+        "soundEn": "LOUD",
+        "text": "Very loud!",
+        "emoji": "📢",
+        "colorBg": "#FFEBEE",
+        "colorAccent": "#C62828"
+      },
+      {
+        "id": "eadj17",
+        "sound": "QUIET",
+        "soundEn": "QUIET",
+        "text": "Shh, very quiet!",
+        "emoji": "🤫",
+        "colorBg": "#E0F2F1",
+        "colorAccent": "#00695C"
+      },
+      {
+        "id": "eadj18",
+        "sound": "FAST",
+        "soundEn": "FAST",
+        "text": "Fast like a cheetah!",
+        "emoji": "🐆",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FF8F00"
+      },
+      {
+        "id": "eadj19",
+        "sound": "SLOW",
+        "soundEn": "SLOW",
+        "text": "Slow as a turtle!",
+        "emoji": "🐢",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32"
+      },
+      {
+        "id": "eadj20",
+        "sound": "HARD",
+        "soundEn": "HARD",
+        "text": "Hard as a rock!",
+        "emoji": "💎",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#1565C0"
+      },
+      {
+        "id": "eadj21",
+        "sound": "SOFT",
+        "soundEn": "SOFT",
+        "text": "Soft as a pillow!",
+        "emoji": "🧸",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#E91E63"
+      },
+      {
+        "id": "eadj22",
+        "sound": "FULL",
+        "soundEn": "FULL",
+        "text": "The plate is full!",
+        "emoji": "🍽️",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#F57F17"
+      },
+      {
+        "id": "eadj23",
+        "sound": "EMPTY",
+        "soundEn": "EMPTY",
+        "text": "The plate is empty!",
+        "emoji": "🫙",
+        "colorBg": "#ECEFF1",
+        "colorAccent": "#607D8B"
+      }
+    ]
   }
 ]

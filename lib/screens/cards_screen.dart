@@ -76,7 +76,10 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     final visibleCards = widget.pack.isLocked
         ? allCards.take(PackModel.freePreviewCount + bonus).toList()
         : allCards.toList();
-    visibleCards.shuffle(Random());
+    // Opposites pack: keep pair order (A→B, A→B...) — do not shuffle
+    if (!widget.pack.id.contains('opposites')) {
+      visibleCards.shuffle(Random());
+    }
     _cards = visibleCards;
 
     // Restart auto-play countdown when mute is toggled

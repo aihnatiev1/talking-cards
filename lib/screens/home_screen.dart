@@ -83,10 +83,12 @@ const _packCategoriesEn = <String, String>{
   'en_body': 'Learning',
   'en_actions': 'Learning',
   'en_opposites': 'Learning',
+  'en_phrases': 'Speaking',
+  'en_adjectives': 'Learning',
 };
 
 const _allCategoriesUk = ['Все', 'Мовлення', 'Світ навколо', 'Побут', 'Розвиток', 'Звуки'];
-const _allCategoriesEn = ['All', 'Nature', 'Home', 'Feelings', 'Transport', 'Food', 'Learning'];
+const _allCategoriesEn = ['All', 'Nature', 'Home', 'Feelings', 'Transport', 'Food', 'Learning', 'Speaking'];
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
