@@ -11,6 +11,7 @@ import '../providers/game_stats_provider.dart';
 import '../providers/language_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
+import '../services/tts_service.dart';
 import '../utils/constants.dart';
 import '../utils/l10n.dart';
 import '../widgets/confetti_burst.dart';
@@ -125,6 +126,13 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
       HapticFeedback.lightImpact();
       _score++;
       _showConfetti();
+      Future.delayed(const Duration(milliseconds: 300), () {
+        final isEn = ref.read(languageProvider) == 'en';
+        TtsService.instance.speak(
+          isEn ? 'Great!' : 'Молодець!',
+          locale: isEn ? 'en-US' : 'uk-UA',
+        );
+      });
       if (!_questDone && _score >= 3) {
         _questDone = true;
         ref.read(dailyQuestProvider.notifier).completeTask(QuestTask.playQuiz);
@@ -227,9 +235,9 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
 
               const SizedBox(height: 16),
 
-              // Answer options — 3 cards in a row
+              // Answer options — vertical stack for big tap targets
               Expanded(
-                child: Row(
+                child: Column(
                   children: _round.options.map((card) {
                     final isCorrectCard = card.id == correct.id;
                     final isTapped = _tappedId == card.id;
@@ -261,15 +269,13 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
 
                     return Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 5),
+                        padding: const EdgeInsets.only(bottom: 10),
                         child: tile,
                       ),
                     );
                   }).toList(),
                 ),
               ),
-
-              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -417,56 +423,42 @@ class _OptionTile extends StatelessWidget {
             ),
           ],
         ),
-        child: Stack(
-          children: [
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (card.image != null)
-                      SizedBox(
-                        height: 60,
-                        child: Image.asset(
-                          'assets/images/webp/${card.image}.webp',
-                          fit: BoxFit.contain,
-                        ),
-                      )
-                    else
-                      Text(card.emoji,
-                          style: const TextStyle(fontSize: 44)),
-                    const SizedBox(height: 8),
-                    Text(
-                      card.sound,
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: showCorrect
-                            ? const Color(0xFF2E7D32)
-                            : showWrong
-                                ? const Color(0xFFC62828)
-                                : card.colorAccent,
-                      ),
-                    ),
-                  ],
+        // Horizontal layout: image/emoji on left, word on right
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: [
+              if (card.image != null)
+                SizedBox(
+                  width: 56,
+                  height: 56,
+                  child: Image.asset(
+                    'assets/images/webp/${card.image}.webp',
+                    fit: BoxFit.contain,
+                  ),
+                )
+              else
+                Text(card.emoji, style: const TextStyle(fontSize: 44)),
+              const SizedBox(width: 16),
+              Text(
+                card.sound,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: showCorrect
+                      ? const Color(0xFF2E7D32)
+                      : showWrong
+                          ? const Color(0xFFC62828)
+                          : card.colorAccent,
                 ),
               ),
-            ),
-            if (showCorrect)
-              const Positioned(
-                top: 6, right: 6,
-                child: Text('✅', style: TextStyle(fontSize: 16)),
-              ),
-            if (showWrong)
-              const Positioned(
-                top: 6, right: 6,
-                child: Text('❌', style: TextStyle(fontSize: 16)),
-              ),
-          ],
+              const Spacer(),
+              if (showCorrect)
+                const Text('✅', style: TextStyle(fontSize: 22)),
+              if (showWrong)
+                const Text('❌', style: TextStyle(fontSize: 22)),
+            ],
+          ),
         ),
       ),
     );

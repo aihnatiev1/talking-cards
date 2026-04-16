@@ -173,6 +173,13 @@ class _RhymeGameScreenState extends ConsumerState<RhymeGameScreen>
       HapticFeedback.lightImpact();
       _score++;
       _showConfetti();
+      Future.delayed(const Duration(milliseconds: 300), () {
+        final isEn = ref.read(languageProvider) == 'en';
+        TtsService.instance.speak(
+          isEn ? 'Great!' : 'Молодець!',
+          locale: isEn ? 'en-US' : 'uk-UA',
+        );
+      });
       if (!_questDone && _score >= 3) {
         _questDone = true;
         ref.read(dailyQuestProvider.notifier).completeTask(QuestTask.playQuiz);
@@ -274,9 +281,9 @@ class _RhymeGameScreenState extends ConsumerState<RhymeGameScreen>
 
               const SizedBox(height: 16),
 
-              // Options
+              // Options — vertical stack for big tap targets
               Expanded(
-                child: Row(
+                child: Column(
                   children: _round.options.map((w) {
                     final isCorrect = _answered && w.groupId == question.groupId;
                     final isTapped = _tappedWord == w.word;
@@ -291,7 +298,7 @@ class _RhymeGameScreenState extends ConsumerState<RhymeGameScreen>
 
                     Widget tile = Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 5),
+                        padding: const EdgeInsets.only(bottom: 10),
                         child: _WordCard(
                           rhymeWord: w,
                           state: state,
@@ -408,33 +415,23 @@ class _WordCard extends StatelessWidget {
             ),
           ],
         ),
-        child: Stack(
-          children: [
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    rhymeWord.emoji,
-                    style: TextStyle(fontSize: isQuestion ? 52 : 36),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    rhymeWord.word,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: isQuestion ? 24 : 14,
-                      fontWeight: FontWeight.bold,
-                      color: isCorrect
-                          ? const Color(0xFF2E7D32)
-                          : isWrong
-                              ? const Color(0xFFC62828)
-                              : isQuestion
-                                  ? kAccent
-                                  : Colors.grey[700],
+        child: isQuestion
+            // Question: centered vertical layout
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(rhymeWord.emoji,
+                        style: const TextStyle(fontSize: 56)),
+                    const SizedBox(height: 10),
+                    Text(
+                      rhymeWord.word,
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: kAccent,
+                      ),
                     ),
-                  ),
-                  if (isQuestion) ...[
                     const SizedBox(height: 6),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -448,19 +445,36 @@ class _WordCard extends StatelessWidget {
                       ],
                     ),
                   ],
-                ],
+                ),
+              )
+            // Option: horizontal layout — emoji left, word right
+            : Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    Text(rhymeWord.emoji,
+                        style: const TextStyle(fontSize: 44)),
+                    const SizedBox(width: 16),
+                    Text(
+                      rhymeWord.word,
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: isCorrect
+                            ? const Color(0xFF2E7D32)
+                            : isWrong
+                                ? const Color(0xFFC62828)
+                                : Colors.grey[800],
+                      ),
+                    ),
+                    const Spacer(),
+                    if (isCorrect)
+                      const Text('✅', style: TextStyle(fontSize: 22)),
+                    if (isWrong)
+                      const Text('❌', style: TextStyle(fontSize: 22)),
+                  ],
+                ),
               ),
-            ),
-            if (isCorrect)
-              const Positioned(
-                  top: 6, right: 6,
-                  child: Text('✅', style: TextStyle(fontSize: 16))),
-            if (isWrong)
-              const Positioned(
-                  top: 6, right: 6,
-                  child: Text('❌', style: TextStyle(fontSize: 16))),
-          ],
-        ),
       ),
     );
   }

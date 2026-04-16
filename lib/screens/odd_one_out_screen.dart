@@ -10,6 +10,7 @@ import '../providers/daily_quest_provider.dart';
 import '../providers/game_stats_provider.dart';
 import '../providers/language_provider.dart';
 import '../services/analytics_service.dart';
+import '../services/tts_service.dart';
 import '../utils/constants.dart';
 import '../utils/l10n.dart';
 import '../widgets/confetti_burst.dart';
@@ -102,6 +103,13 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
         _total++;
       });
       _showConfetti();
+      Future.delayed(const Duration(milliseconds: 300), () {
+        final isEn = ref.read(languageProvider) == 'en';
+        TtsService.instance.speak(
+          isEn ? 'Great!' : 'Молодець!',
+          locale: isEn ? 'en-US' : 'uk-UA',
+        );
+      });
       if (!_questDone && _score >= 3) {
         _questDone = true;
         ref.read(dailyQuestProvider.notifier).completeTask(QuestTask.playQuiz);

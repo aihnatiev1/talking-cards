@@ -11,6 +11,7 @@ import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
+import '../services/tts_service.dart';
 import '../utils/constants.dart';
 import '../utils/l10n.dart';
 import '../widgets/confetti_burst.dart';
@@ -231,6 +232,13 @@ class _SoundPositionGameScreenState
       HapticFeedback.lightImpact();
       _score++;
       _showConfetti();
+      Future.delayed(const Duration(milliseconds: 300), () {
+        final isEn = ref.read(languageProvider) == 'en';
+        TtsService.instance.speak(
+          isEn ? 'Great!' : 'Молодець!',
+          locale: isEn ? 'en-US' : 'uk-UA',
+        );
+      });
       if (!_questDone && _score >= 5) {
         _questDone = true;
         ref.read(dailyQuestProvider.notifier).completeTask(QuestTask.reviewOldCard);
@@ -350,19 +358,19 @@ class _SoundPositionGameScreenState
 
               const SizedBox(height: 20),
 
-              // Position buttons
+              // Position buttons — visual dots + label
               Expanded(
                 flex: 2,
                 child: Row(
                   children: [
-                    _posBtn('beginning', s('ПОЧАТОК', 'START'),
-                        Icons.first_page_rounded, correctPos),
+                    _posBtn('beginning', s('Початок', 'Start'),
+                        [true, false, false], correctPos),
                     const SizedBox(width: 10),
-                    _posBtn('middle', s('СЕРЕДИНА', 'MIDDLE'),
-                        Icons.linear_scale_rounded, correctPos),
+                    _posBtn('middle', s('Середина', 'Middle'),
+                        [false, true, false], correctPos),
                     const SizedBox(width: 10),
-                    _posBtn('end', s('КІНЕЦЬ', 'END'),
-                        Icons.last_page_rounded, correctPos),
+                    _posBtn('end', s('Кінець', 'End'),
+                        [false, false, true], correctPos),
                   ],
                 ),
               ),
@@ -375,7 +383,7 @@ class _SoundPositionGameScreenState
     );
   }
 
-  Widget _posBtn(String position, String label, IconData icon,
+  Widget _posBtn(String position, String label, List<bool> dots,
       String correctPos) {
     final isTapped = _tappedPosition == position;
     final isCorrect = _answered && position == correctPos;
@@ -406,25 +414,52 @@ class _SoundPositionGameScreenState
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                isCorrect
-                    ? Icons.check_circle_rounded
-                    : isWrong
-                        ? Icons.cancel_rounded
-                        : icon,
-                color: isCorrect
-                    ? const Color(0xFF43A047)
-                    : isWrong
-                        ? const Color(0xFFE53935)
-                        : kAccent,
-                size: 28,
-              ),
-              const SizedBox(height: 6),
+              // Visual position dots: ●○○ / ○●○ / ○○●
+              if (!isCorrect && !isWrong)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(3, (i) {
+                    final active = dots[i];
+                    return Container(
+                      width: active ? 18 : 10,
+                      height: active ? 18 : 10,
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: active
+                            ? kAccent
+                            : kAccent.withValues(alpha: 0.2),
+                      ),
+                      child: active
+                          ? Center(
+                              child: Text(
+                                'А',
+                                style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white),
+                              ),
+                            )
+                          : null,
+                    );
+                  }),
+                )
+              else
+                Icon(
+                  isCorrect
+                      ? Icons.check_circle_rounded
+                      : Icons.cancel_rounded,
+                  color: isCorrect
+                      ? const Color(0xFF43A047)
+                      : const Color(0xFFE53935),
+                  size: 28,
+                ),
+              const SizedBox(height: 8),
               Text(
                 label,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 13,
                   fontWeight: FontWeight.bold,
                   color: isCorrect
                       ? const Color(0xFF2E7D32)
