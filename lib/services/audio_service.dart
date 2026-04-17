@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:audio_session/audio_session.dart';
 
+import 'tts_service.dart';
+
 /// Maps card image key (kirilic) to latin wav filename
 const _audioMap = {
   // Розмовлялки
@@ -181,6 +183,42 @@ class AudioService {
       _currentHandle = await _soloud.play(source);
     } catch (e) {
       if (kDebugMode) debugPrint('AudioService: error in playSound "$audioKey": $e');
+    }
+  }
+
+  /// Play only the first word from a recorded audio file.
+  ///
+  /// Our audio files contain full sentences ("Коник каже іго-го!").
+  /// This method plays the file but stops after [stopAfterMs] ms —
+  /// long enough to hear just the word, before the sentence begins.
+  ///
+  /// Falls back to TTS if no audio file exists for this key.
+  Future<void> playWordOnly(
+    String? audioKey,
+    String fallbackWord, {
+    String locale = 'uk-UA',
+    int stopAfterMs = 1300,
+  }) async {
+    if (audioKey == null || !_sources.containsKey(audioKey)) {
+      // No recorded audio — use TTS word
+      await TtsService.instance.speak(fallbackWord, locale: locale);
+      return;
+    }
+    final source = _sources[audioKey]!;
+    try {
+      stop();
+      isSpeaking.value = true;
+      _currentHandle = await _soloud.play(source);
+      // Stop playback after stopAfterMs to cut before the sentence
+      Future.delayed(Duration(milliseconds: stopAfterMs), () {
+        if (_currentHandle != null) {
+          try { stop(); } catch (_) {}
+          isSpeaking.value = false;
+        }
+      });
+    } catch (e) {
+      isSpeaking.value = false;
+      if (kDebugMode) debugPrint('AudioService: playWordOnly error "$audioKey": $e');
     }
   }
 

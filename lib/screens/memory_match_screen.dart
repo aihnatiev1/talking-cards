@@ -104,7 +104,7 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
     if (tile.isFlipped || tile.isMatched) return;
 
     HapticFeedback.lightImpact();
-    TtsService.instance.speak(tile.card.sound, locale: 'uk-UA');
+    AudioService.instance.playWordOnly(tile.card.audioKey, tile.card.sound);
 
     setState(() => _tiles[index].isFlipped = true);
 

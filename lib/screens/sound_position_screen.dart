@@ -9,6 +9,7 @@ import '../providers/daily_quest_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../services/analytics_service.dart';
+import '../services/audio_service.dart';
 import '../services/tts_service.dart';
 import '../utils/constants.dart';
 import '../utils/l10n.dart';
@@ -237,7 +238,7 @@ class _SoundPositionGameScreenState
   }
 
   void _speakCurrent() {
-    TtsService.instance.speak(_current.sound, locale: 'uk-UA');
+    AudioService.instance.playWordOnly(_current.audioKey, _current.sound);
   }
 
   void _onTap(String position) {

@@ -88,7 +88,7 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
   CardModel get _current => _deck[_index];
 
   Future<void> _speakCurrent() async {
-    await TtsService.instance.speak(_current.sound, locale: 'uk-UA');
+    await AudioService.instance.playWordOnly(_current.audioKey, _current.sound);
   }
 
   Future<void> _startListening() async {
