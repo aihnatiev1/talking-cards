@@ -11,7 +11,10 @@ import '../utils/uk_grammar.dart';
 
 const _appStoreUrl = 'https://apps.apple.com/app/id6760210043';
 const _playStoreUrl = 'https://play.google.com/store/apps/details?id=com.talkingcards.app';
-const _storeUrl = '$_appStoreUrl\n$_playStoreUrl';
+
+/// Returns the relevant store URL for the current platform.
+String get _storeUrl =>
+    Platform.isAndroid ? _playStoreUrl : _appStoreUrl;
 
 /// Captures the share card as image and shares it.
 Future<void> shareProgress({
@@ -214,7 +217,7 @@ class ShareProgressContent extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               color: Colors.white.withValues(alpha: 0.2),
               child: const Text(
-                '📲 Скачай безкоштовно в App Store',
+                '📲 Скачай безкоштовно\nApp Store та Google Play',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 12,

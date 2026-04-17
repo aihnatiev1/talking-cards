@@ -379,8 +379,8 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
 
               // Controls
               if (!_answered) ...[
+                // Mic button — shown only when mic is available
                 if (hasMic) ...[
-                  // Mic button
                   GestureDetector(
                     onTap: _listening ? _stopListening : _startListening,
                     child: AnimatedBuilder(
@@ -390,8 +390,8 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
                         child: child,
                       ),
                       child: Container(
-                        width: 80,
-                        height: 80,
+                        width: 72,
+                        height: 72,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: _listening ? const Color(0xFFE53935) : kAccent,
@@ -401,64 +401,65 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
                                       ? const Color(0xFFE53935)
                                       : kAccent)
                                   .withValues(alpha: 0.35),
-                              blurRadius: 20,
-                              spreadRadius: 4,
+                              blurRadius: 16,
+                              spreadRadius: 3,
                             ),
                           ],
                         ),
                         child: Icon(
                           _listening ? Icons.stop_rounded : Icons.mic_rounded,
                           color: Colors.white,
-                          size: 36,
+                          size: 32,
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   Text(
                     _listening
-                        ? s('Слухаю... говори!', 'Listening...')
-                        : s('Натисни і скажи слово', 'Tap and say the word'),
-                    style: TextStyle(fontSize: 13, color: Colors.grey[500]),
-                  ),
-                ] else ...[
-                  // No mic — manual mode
-                  Text(
-                    s('Скажи: «${card.sound}»', 'Say: «${card.sound}»'),
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold),
+                        ? s('Слухаю...', 'Listening...')
+                        : s('🎤 Натисни і говори', 'Tap mic & speak'),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: _manualWrong,
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14)),
-                          ),
-                          child: Text(s('Не вийшло ❌', 'Not quite ❌')),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: _manualCorrect,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: kAccent,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14)),
-                          ),
-                          child: Text(s('Сказав! ✅', 'Said it! ✅')),
-                        ),
-                      ),
-                    ],
-                  ),
                 ],
+
+                // Manual confirm buttons — ALWAYS visible so user can proceed
+                Text(
+                  s('Скажи: «${card.sound}»', 'Say: «${card.sound}»'),
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: _manualWrong,
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
+                        ),
+                        child: Text(s('Не вийшло ❌', 'Not quite ❌')),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _manualCorrect,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kAccent,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
+                        ),
+                        child: Text(s('Сказав! ✅', 'Said it! ✅')),
+                      ),
+                    ),
+                  ],
+                ),
               ] else ...[
                 // Next card button
                 SizedBox(
