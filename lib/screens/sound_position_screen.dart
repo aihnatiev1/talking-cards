@@ -5,28 +5,35 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
-import '../models/pack_model.dart';
 import '../providers/daily_quest_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../services/analytics_service.dart';
-import '../services/audio_service.dart';
 import '../services/tts_service.dart';
 import '../utils/constants.dart';
 import '../utils/l10n.dart';
 import '../widgets/confetti_burst.dart';
 
-// ─── Pack ID → target sound letter ───────────
-const _soundMap = {
-  'sound_r':    'Р',
-  'sound_l':    'Л',
-  'sound_sh':   'Ш',
-  'sound_s':    'С',
-  'sound_z':    'З',
-  'sound_zh':   'Ж',
-  'sound_ch':   'Ч',
-  'sound_shch': 'Щ',
-  'sound_ts':   'Ц',
+/// Packs with abstract/emoji content excluded from sound position game
+const _excludedFromSoundPos = {
+  'rozmovlyalky', 'phrases', 'opposites', 'actions', 'adjectives',
+  'sound_r', 'sound_l', 'sound_sh', 'sound_s', 'sound_z',
+  'sound_zh', 'sound_ch', 'sound_shch', 'sound_ts',
+  'en_actions', 'en_opposites', 'en_phrases', 'en_adjectives',
+};
+
+const _soundLetters = ['Р', 'Л', 'Ш', 'С', 'З', 'Ж', 'Ч', 'Щ', 'Ц'];
+
+const _letterColors = {
+  'Р': Color(0xFFE53935),
+  'Л': Color(0xFF7B1FA2),
+  'Ш': Color(0xFF00838F),
+  'С': Color(0xFF1565C0),
+  'З': Color(0xFF2E7D32),
+  'Ж': Color(0xFFF57F17),
+  'Ч': Color(0xFF37474F),
+  'Щ': Color(0xFF004D40),
+  'Ц': Color(0xFFAD1457),
 };
 
 // ─────────────────────────────────────────────
@@ -55,9 +62,24 @@ class SoundPositionSetupScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, __) => const SizedBox.shrink(),
         data: (packs) {
-          final soundPacks = packs
-              .where((p) => _soundMap.containsKey(p.id))
+          // Collect illustrated cards from REAL packs (not emoji-only)
+          final allIllustrated = packs
+              .where((p) =>
+                  !p.isLocked &&
+                  !_excludedFromSoundPos.contains(p.id) &&
+                  !p.id.startsWith('_'))
+              .expand((p) => p.cards)
+              .where((c) => c.image != null)
               .toList();
+
+          // Build letter → cards map
+          final Map<String, List<CardModel>> letterCards = {};
+          for (final letter in _soundLetters) {
+            final cards = allIllustrated
+                .where((c) => c.sound.toUpperCase().contains(letter))
+                .toList();
+            if (cards.length >= 4) letterCards[letter] = cards;
+          }
 
           return Column(
             children: [
@@ -78,42 +100,48 @@ class SoundPositionSetupScreen extends ConsumerWidget {
                     crossAxisCount: 3,
                     mainAxisSpacing: 12,
                     crossAxisSpacing: 12,
-                    childAspectRatio: 1.0,
+                    childAspectRatio: 0.95,
                   ),
-                  itemCount: soundPacks.length,
+                  itemCount: letterCards.length,
                   itemBuilder: (_, i) {
-                    final pack = soundPacks[i];
-                    final letter = _soundMap[pack.id]!;
+                    final letter = letterCards.keys.elementAt(i);
+                    final cards = letterCards[letter]!;
+                    final color = _letterColors[letter] ?? kAccent;
                     return GestureDetector(
                       onTap: () => Navigator.of(context).pushReplacement(
                         MaterialPageRoute(
                           builder: (_) => SoundPositionGameScreen(
-                            pack: pack,
+                            cards: cards,
                             targetSound: letter,
                           ),
                         ),
                       ),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: pack.color.withValues(alpha: 0.1),
+                          color: color.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(18),
                           border: Border.all(
-                            color: pack.color.withValues(alpha: 0.3),
+                            color: color.withValues(alpha: 0.3),
                             width: 1.5,
                           ),
                         ),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(pack.icon,
-                                style: const TextStyle(fontSize: 32)),
-                            const SizedBox(height: 6),
                             Text(
                               letter,
                               style: TextStyle(
-                                fontSize: 22,
+                                fontSize: 36,
                                 fontWeight: FontWeight.bold,
-                                color: pack.color,
+                                color: color,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${cards.length} карток',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: color.withValues(alpha: 0.6),
                               ),
                             ),
                           ],
@@ -136,12 +164,12 @@ class SoundPositionSetupScreen extends ConsumerWidget {
 // ─────────────────────────────────────────────
 
 class SoundPositionGameScreen extends ConsumerStatefulWidget {
-  final PackModel pack;
+  final List<CardModel> cards; // illustrated cards from main packs
   final String targetSound;
 
   const SoundPositionGameScreen({
     super.key,
-    required this.pack,
+    required this.cards,
     required this.targetSound,
   });
 
@@ -182,11 +210,8 @@ class _SoundPositionGameScreenState
       }
     });
 
-    // Filter cards that actually contain the target sound
-    _deck = widget.pack.cards
-        .where((c) => c.sound.toUpperCase().contains(widget.targetSound))
-        .toList()
-      ..shuffle(Random());
+    // Cards already filtered for target sound + image in setup screen
+    _deck = List<CardModel>.from(widget.cards)..shuffle(Random());
 
     AnalyticsService.instance.logGameStart('sound_position');
     WidgetsBinding.instance.addPostFrameCallback((_) => _speakCurrent());
@@ -287,18 +312,13 @@ class _SoundPositionGameScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(widget.pack.icon,
-                style: const TextStyle(fontSize: 22)),
-            const SizedBox(width: 8),
-            Text(
-              s('Де звук ${widget.targetSound}?',
-                  'Where is ${widget.targetSound}?'),
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ],
+        title: Text(
+          s('Де звук ${widget.targetSound}?',
+              'Where is ${widget.targetSound}?'),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: _letterColors[widget.targetSound] ?? kAccent,
+          ),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
