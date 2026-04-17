@@ -11,13 +11,11 @@ import '../utils/l10n.dart';
 import '../utils/constants.dart';
 
 class SortGameScreen extends ConsumerStatefulWidget {
-  final PackModel packA;
-  final PackModel packB;
+  final List<PackModel> packs;
 
   const SortGameScreen({
     super.key,
-    required this.packA,
-    required this.packB,
+    required this.packs,
   });
 
   @override
@@ -41,7 +39,7 @@ class _SortGameScreenState extends ConsumerState<SortGameScreen>
   late Animation<double> _hintAnim;
 
   String? _shakingCardId;
-  String? _highlightZone; // 'a' or 'b' when hovering
+  int? _highlightZone; // pack index when hovering
 
   @override
   void initState() {
@@ -72,18 +70,15 @@ class _SortGameScreenState extends ConsumerState<SortGameScreen>
   }
 
   void _initCards() {
-    final cardsA = List<CardModel>.from(widget.packA.cards)
-      ..shuffle()
-      ..take(3);
-    final cardsB = List<CardModel>.from(widget.packB.cards)
-      ..shuffle()
-      ..take(3);
-
-    final picked = [
-      ...cardsA.take(3).map((c) => _SortCard(card: c, belongsToPackA: true)),
-      ...cardsB.take(3).map((c) => _SortCard(card: c, belongsToPackA: false)),
-    ]..shuffle();
-
+    final cardsPerPack = widget.packs.length == 2 ? 3 : 2;
+    final picked = <_SortCard>[];
+    for (int i = 0; i < widget.packs.length; i++) {
+      final cards = List<CardModel>.from(widget.packs[i].cards)..shuffle();
+      for (final c in cards.take(cardsPerPack)) {
+        picked.add(_SortCard(card: c, packIndex: i));
+      }
+    }
+    picked.shuffle();
     setState(() {
       _remaining = picked;
       _score = 0;
@@ -194,7 +189,7 @@ class _SortGameScreenState extends ConsumerState<SortGameScreen>
   @override
   Widget build(BuildContext context) {
     final s = AppS(ref.read(languageProvider) == 'en');
-    const total = 6;
+    final total = widget.packs.length == 2 ? 6 : widget.packs.length * 2;
     final sorted = _score;
 
     return Scaffold(
@@ -202,14 +197,14 @@ class _SortGameScreenState extends ConsumerState<SortGameScreen>
       appBar: AppBar(
         title: Row(
           mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(widget.packA.icon, style: const TextStyle(fontSize: 22)),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 6),
-              child: Icon(Icons.swap_horiz_rounded, size: 20),
-            ),
-            Text(widget.packB.icon, style: const TextStyle(fontSize: 22)),
-          ],
+          children: widget.packs.expand((p) => [
+            Text(p.icon, style: const TextStyle(fontSize: 22)),
+            if (p != widget.packs.last)
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 4),
+                child: Icon(Icons.swap_horiz_rounded, size: 18),
+              ),
+          ]).toList(),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -307,15 +302,13 @@ class _SortGameScreenState extends ConsumerState<SortGameScreen>
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
+                  children: widget.packs.asMap().entries.expand((e) => [
                     Expanded(
                         child: _buildDropZone(
-                            pack: widget.packA, isZoneA: true, s: s)),
-                    const SizedBox(width: 12),
-                    Expanded(
-                        child: _buildDropZone(
-                            pack: widget.packB, isZoneA: false, s: s)),
-                  ],
+                            pack: e.value, zoneIndex: e.key, s: s)),
+                    if (e.key < widget.packs.length - 1)
+                      const SizedBox(width: 12),
+                  ]).toList(),
                 ),
               ),
             ),
@@ -363,22 +356,21 @@ class _SortGameScreenState extends ConsumerState<SortGameScreen>
 
   Widget _buildDropZone({
     required PackModel pack,
-    required bool isZoneA,
+    required int zoneIndex,
     required AppS s,
   }) {
-    final zoneKey = isZoneA ? 'a' : 'b';
-    final isHighlighted = _highlightZone == zoneKey;
+    final isHighlighted = _highlightZone == zoneIndex;
 
     return DragTarget<_SortCard>(
       onWillAcceptWithDetails: (details) {
-        setState(() => _highlightZone = zoneKey);
+        setState(() => _highlightZone = zoneIndex);
         return true;
       },
       onLeave: (_) => setState(() => _highlightZone = null),
       onAcceptWithDetails: (details) {
         setState(() => _highlightZone = null);
         final sc = details.data;
-        final isCorrect = isZoneA ? sc.belongsToPackA : !sc.belongsToPackA;
+        final isCorrect = sc.packIndex == zoneIndex;
         if (isCorrect) {
           _onCorrectDrop(sc.card.id);
         } else {
@@ -462,8 +454,8 @@ class _SortGameScreenState extends ConsumerState<SortGameScreen>
 
 class _SortCard {
   final CardModel card;
-  final bool belongsToPackA;
-  _SortCard({required this.card, required this.belongsToPackA});
+  final int packIndex;
+  _SortCard({required this.card, required this.packIndex});
 }
 
 // ─────────────────────────────────────────────

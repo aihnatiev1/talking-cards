@@ -23,14 +23,15 @@ class _SortGameSetupScreenState extends ConsumerState<SortGameSetupScreen> {
   // Keeps insertion order so we know which was selected first
   final List<String> _selected = [];
 
+  static const _maxSelect = 3;
+
   void _togglePack(PackModel pack) {
     setState(() {
       if (_selected.contains(pack.id)) {
         _selected.remove(pack.id);
-      } else if (_selected.length < 2) {
+      } else if (_selected.length < _maxSelect) {
         _selected.add(pack.id);
       } else {
-        // Replace the first-selected with the new one
         _selected.removeAt(0);
         _selected.add(pack.id);
       }
@@ -39,20 +40,21 @@ class _SortGameSetupScreenState extends ConsumerState<SortGameSetupScreen> {
 
   void _randomize() {
     final pool = List<PackModel>.from(widget.packs)..shuffle(Random());
+    final count = pool.length >= 3 ? 3 : 2;
     setState(() {
       _selected.clear();
-      _selected.add(pool[0].id);
-      _selected.add(pool[1].id);
+      for (int i = 0; i < count; i++) _selected.add(pool[i].id);
     });
   }
 
   void _startGame() {
     if (_selected.length < 2) return;
-    final packA = widget.packs.firstWhere((p) => p.id == _selected[0]);
-    final packB = widget.packs.firstWhere((p) => p.id == _selected[1]);
+    final selectedPacks = _selected
+        .map((id) => widget.packs.firstWhere((p) => p.id == id))
+        .toList();
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (_) => SortGameScreen(packA: packA, packB: packB),
+        builder: (_) => SortGameScreen(packs: selectedPacks),
       ),
     );
   }
@@ -61,12 +63,12 @@ class _SortGameSetupScreenState extends ConsumerState<SortGameSetupScreen> {
   Widget build(BuildContext context) {
     final isEn = ref.read(languageProvider) == 'en';
     final s = AppS(isEn);
-    final ready = _selected.length == 2;
+    final ready = _selected.length >= 2;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          s('Оберіть 2 розділи', 'Choose 2 categories'),
+          s('Оберіть 2-3 розділи', 'Choose 2-3 categories'),
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
         backgroundColor: Colors.transparent,
@@ -169,25 +171,16 @@ class _SortGameSetupScreenState extends ConsumerState<SortGameSetupScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      if (ready && _selected.length == 2) ...[
-                        Text(
-                          widget.packs
-                              .firstWhere((p) => p.id == _selected[0])
-                              .icon,
-                          style: const TextStyle(fontSize: 20),
-                        ),
-                        const Text(' vs ',
-                            style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white70)),
-                        Text(
-                          widget.packs
-                              .firstWhere((p) => p.id == _selected[1])
-                              .icon,
-                          style: const TextStyle(fontSize: 20),
-                        ),
-                        const SizedBox(width: 12),
+                      if (ready) ...[
+                        ...List.generate(_selected.length, (i) => [
+                          Text(
+                            widget.packs.firstWhere((p) => p.id == _selected[i]).icon,
+                            style: const TextStyle(fontSize: 20),
+                          ),
+                          if (i < _selected.length - 1)
+                            const Text(' vs ', style: TextStyle(fontSize: 12, color: Colors.white70)),
+                        ]).expand((x) => x),
+                        const SizedBox(width: 8),
                       ],
                       Text(
                         s('Грати ▶', 'Play ▶'),
