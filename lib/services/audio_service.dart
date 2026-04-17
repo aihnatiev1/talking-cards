@@ -216,7 +216,7 @@ class AudioService {
         .where(vowels.contains)
         .length
         .clamp(1, 12);
-    final stopAfterMs = 900 + (syllables * 280);
+    final stopAfterMs = 400 + (syllables * 180);
 
     final source = _sources[audioKey]!;
     // Generation counter ensures only the latest call can stop the audio.
