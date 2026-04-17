@@ -537,10 +537,21 @@ class _FrontFace extends StatelessWidget {
               child: Icon(Icons.check_circle_rounded,
                   color: Color(0xFF4CAF50), size: 14),
             ),
-          Text(
-            tile.card.emoji,
-            style: TextStyle(fontSize: matched ? 28 : 30),
-          ),
+          // Real image if available, emoji as fallback
+          if (tile.card.image != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Image.asset(
+                'assets/images/webp/${tile.card.image}.webp',
+                height: matched ? 52 : 58,
+                fit: BoxFit.contain,
+              ),
+            )
+          else
+            Text(
+              tile.card.emoji,
+              style: TextStyle(fontSize: matched ? 28 : 32),
+            ),
           const SizedBox(height: 3),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 3),

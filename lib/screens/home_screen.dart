@@ -405,7 +405,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final lang = ref.read(languageProvider);
     final playable = lang == 'en'
         ? allCards.where((c) => c.image != null).toList()
-        : allCards.where((c) => c.audioKey != null).toList();
+        : allCards.where((c) => c.image != null).toList(); // images required for visual matching
     if (playable.length < 6) return;
     final packs = ref.read(packsProvider).valueOrNull ?? [];
     final pack = packs.firstWhere(
