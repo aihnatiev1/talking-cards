@@ -182,10 +182,13 @@ class SoundPositionGameScreen extends ConsumerStatefulWidget {
 class _SoundPositionGameScreenState
     extends ConsumerState<SoundPositionGameScreen>
     with SingleTickerProviderStateMixin {
+  static const _targetScore = 10;
+
   late List<CardModel> _deck;
   int _index = 0;
   int _score = 0;
   bool _answered = false;
+  bool _done = false;
   String? _tappedPosition;
   bool _questDone = false;
   OverlayEntry? _confettiEntry;
@@ -267,7 +270,13 @@ class _SoundPositionGameScreenState
         ref.read(dailyQuestProvider.notifier).completeTask(QuestTask.reviewOldCard);
         AnalyticsService.instance.logGameComplete('sound_position', _score);
       }
-      Future.delayed(const Duration(milliseconds: 900), _nextCard);
+      if (_score >= _targetScore) {
+        Future.delayed(const Duration(milliseconds: 700), () {
+          if (mounted) setState(() => _done = true);
+        });
+      } else {
+        Future.delayed(const Duration(milliseconds: 900), _nextCard);
+      }
     } else {
       HapticFeedback.mediumImpact();
       setState(() => _shakingPos = position);
@@ -308,6 +317,79 @@ class _SoundPositionGameScreenState
   @override
   Widget build(BuildContext context) {
     final s = AppS(ref.read(languageProvider) == 'en');
+    final color = _letterColors[widget.targetSound] ?? kAccent;
+
+    // Completion screen
+    if (_done) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFEEF5FF),
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(widget.targetSound,
+                      style: TextStyle(
+                          fontSize: 80, fontWeight: FontWeight.bold, color: color)),
+                  const SizedBox(height: 16),
+                  const Text('🎉', style: TextStyle(fontSize: 56)),
+                  const SizedBox(height: 12),
+                  Text(
+                    s('Чудово! $_score / $_targetScore правильно!',
+                        'Great! $_score / $_targetScore correct!'),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 32),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14)),
+                          ),
+                          child: Text(s('Назад', 'Back')),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              _score = 0;
+                              _index = 0;
+                              _done = false;
+                              _answered = false;
+                              _questDone = false;
+                            });
+                            _deck.shuffle(Random());
+                            _speakCurrent();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: color,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14)),
+                          ),
+                          child: Text(s('Ще раз 🔄', 'Again 🔄')),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     final card = _current;
     final correctPos = _getPosition(card.sound);
 
@@ -328,7 +410,7 @@ class _SoundPositionGameScreenState
             padding: const EdgeInsets.only(right: 16),
             child: Center(
               child: Text(
-                '⭐ $_score',
+                '⭐ $_score/$_targetScore',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -344,7 +426,19 @@ class _SoundPositionGameScreenState
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
             children: [
-              const SizedBox(height: 8),
+              // Progress bar
+              Padding(
+                padding: const EdgeInsets.fromLTRB(0, 4, 0, 8),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: _score / _targetScore,
+                    minHeight: 6,
+                    backgroundColor: color.withValues(alpha: 0.12),
+                    valueColor: AlwaysStoppedAnimation<Color>(color),
+                  ),
+                ),
+              ),
 
               // Card — tappable for audio
               Expanded(
