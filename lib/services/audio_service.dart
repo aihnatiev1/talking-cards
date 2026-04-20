@@ -186,16 +186,13 @@ class AudioService {
     }
   }
 
-  /// Play only the first word from a recorded audio file.
+  /// Play the pre-trimmed first-word recording for [audioKey].
   ///
-  /// Our audio files contain full sentences ("Коник каже іго-го!").
-  /// Stops after an adaptive duration based on word syllable count:
-  ///   900ms base (covers ~300ms leading silence) + 280ms per syllable.
-  ///
-  /// Examples:
-  ///   КІТ (1 syllable)       → 1180ms
-  ///   КОНИК (2 syllables)    → 1460ms
-  ///   ЧЕРЕПАХА (4 syllables) → 2020ms
+  /// Audio assets in assets/audio_mp3 have been batch-processed to contain
+  /// only the first word (~1–2s each, see tools/trim_audio_to_first_word.sh),
+  /// so we just play the file to its natural end. The generation counter
+  /// guards the isSpeaking flag against overlap when the user switches
+  /// cards before playback finishes.
   ///
   /// Falls back to TTS if no audio file exists for this key.
   Future<void> playWordOnly(
@@ -208,31 +205,22 @@ class AudioService {
       return;
     }
 
-    // Adaptive cutoff based on Ukrainian syllable count
-    const vowels = {'А', 'Е', 'И', 'І', 'О', 'У', 'Є', 'Ї', 'Ю', 'Я'};
-    final syllables = fallbackWord
-        .toUpperCase()
-        .split('')
-        .where(vowels.contains)
-        .length
-        .clamp(1, 12);
-    final stopAfterMs = 400 + (syllables * 180);
-
     final source = _sources[audioKey]!;
-    // Generation counter ensures only the latest call can stop the audio.
-    // If user flips card 2 while card 1 is still playing, card 1's timer
-    // sees a different generation and does nothing.
     final gen = ++_speakGeneration;
     try {
       stop();
       isSpeaking.value = true;
       _currentHandle = await _soloud.play(source);
-      Future.delayed(Duration(milliseconds: stopAfterMs), () {
-        if (_speakGeneration == gen && _currentHandle != null) {
-          try { stop(); } catch (_) {}
-          isSpeaking.value = false;
-        }
-      });
+      final handle = _currentHandle;
+      if (handle == null) {
+        if (_speakGeneration == gen) isSpeaking.value = false;
+        return;
+      }
+      while (_currentHandle == handle &&
+          _soloud.getIsValidVoiceHandle(handle)) {
+        await Future.delayed(const Duration(milliseconds: 50));
+      }
+      if (_speakGeneration == gen) isSpeaking.value = false;
     } catch (e) {
       if (_speakGeneration == gen) isSpeaking.value = false;
       if (kDebugMode) debugPrint('AudioService: playWordOnly error "$audioKey": $e');
