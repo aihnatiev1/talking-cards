@@ -48,3 +48,9 @@ app.*.map.json
 /png/
 *.py
 .claude/
+
+# Local audio backup (originals of batch-trimmed mp3s, kept locally only).
+assets/audio_mp3_full/
+
+# Marketing site (separate Node.js project with its own node_modules).
+marketing/
