@@ -2953,7 +2953,7 @@
     "title": "Дії",
     "icon": "🏃",
     "color": "#FF8C42",
-    "isLocked": false,
+    "isLocked": true,
     "cards": [
       {
         "id": "act01",
@@ -3162,7 +3162,7 @@
     "title": "Протилежності",
     "icon": "↔️",
     "color": "#8E44AD",
-    "isLocked": false,
+    "isLocked": true,
     "cards": [
       {
         "id": "opp01a",
@@ -3411,7 +3411,7 @@
     "title": "Звук Р",
     "icon": "🦁",
     "color": "#E53935",
-    "isLocked": false,
+    "isLocked": true,
     "cards": [
       {
         "id": "sr01",
@@ -3564,7 +3564,7 @@
     "title": "Звук Л",
     "icon": "🦋",
     "color": "#7B1FA2",
-    "isLocked": false,
+    "isLocked": true,
     "cards": [
       {
         "id": "sl01",
@@ -3717,7 +3717,7 @@
     "title": "Звук Ш",
     "icon": "🐍",
     "color": "#00838F",
-    "isLocked": false,
+    "isLocked": true,
     "cards": [
       {
         "id": "ss01",
@@ -3854,7 +3854,7 @@
     "title": "Звук С",
     "icon": "⭐",
     "color": "#1565C0",
-    "isLocked": false,
+    "isLocked": true,
     "cards": [
       {
         "id": "sc01",
@@ -3991,7 +3991,7 @@
     "title": "Звук З",
     "icon": "🌿",
     "color": "#2E7D32",
-    "isLocked": false,
+    "isLocked": true,
     "cards": [
       {
         "id": "sz01",
@@ -4128,7 +4128,7 @@
     "title": "Звук Ж",
     "icon": "🐝",
     "color": "#F57F17",
-    "isLocked": false,
+    "isLocked": true,
     "cards": [
       {
         "id": "szh01",
@@ -4241,7 +4241,7 @@
     "title": "Звук Ч",
     "icon": "🍵",
     "color": "#546E7A",
-    "isLocked": false,
+    "isLocked": true,
     "cards": [
       {
         "id": "sch01",
@@ -4370,7 +4370,7 @@
     "title": "Звук Щ",
     "icon": "🦔",
     "color": "#004D40",
-    "isLocked": false,
+    "isLocked": true,
     "cards": [
       {
         "id": "sshch01",
@@ -4467,7 +4467,7 @@
     "title": "Звук Ц",
     "icon": "🎪",
     "color": "#AD1457",
-    "isLocked": false,
+    "isLocked": true,
     "cards": [
       {
         "id": "sts01",
@@ -4572,7 +4572,7 @@
     "title": "Прикметники",
     "icon": "🎨",
     "color": "#E65100",
-    "isLocked": false,
+    "isLocked": true,
     "cards": [
       {
         "id": "adj01",
