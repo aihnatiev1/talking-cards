@@ -12,6 +12,13 @@ class NotificationService {
 
   final _plugin = FlutterLocalNotificationsPlugin();
   static const _enabledKey = 'notifications_enabled';
+  static const _paywallReminderId = 999;
+  static const _paywallScheduledKey = 'paywall_reminder_scheduled';
+  static const paywallNotificationPayload = 'open_paywall';
+
+  /// Set true on cold start when the OS launched the app via the paywall
+  /// reminder notification. Splash reads this and routes through paywall.
+  bool launchedFromPaywallReminder = false;
 
   // (title_emoji, body)
   final _cards = [
@@ -70,7 +77,23 @@ class NotificationService {
       android: androidSettings,
       iOS: iosSettings,
     );
-    await _plugin.initialize(settings);
+    await _plugin.initialize(
+      settings,
+      onDidReceiveNotificationResponse: (resp) {
+        if (resp.payload == paywallNotificationPayload) {
+          launchedFromPaywallReminder = true;
+        }
+      },
+    );
+
+    // Detect cold start via the paywall reminder so splash can route through
+    // PaywallScreen on the way to home.
+    final launchDetails = await _plugin.getNotificationAppLaunchDetails();
+    if ((launchDetails?.didNotificationLaunchApp ?? false) &&
+        launchDetails?.notificationResponse?.payload ==
+            paywallNotificationPayload) {
+      launchedFromPaywallReminder = true;
+    }
 
     // Enable by default on first launch, then re-schedule if enabled
     final prefs = await SharedPreferences.getInstance();
@@ -158,8 +181,60 @@ class NotificationService {
     }
   }
 
+  /// Schedules a one-time soft-paywall reminder 3 days after first launch.
+  /// No-op if already scheduled (tracked via SharedPreferences) or if
+  /// notifications are disabled. Cancelled when user becomes pro.
+  Future<void> schedulePaywallReminderIfNeeded() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool(_paywallScheduledKey) ?? false) return;
+    if (!(prefs.getBool(_enabledKey) ?? true)) return;
+
+    final scheduled =
+        tz.TZDateTime.now(tz.local).add(const Duration(days: 3));
+    // Aim for a parent-friendly hour (11:00) on day 3 instead of midnight.
+    final atElevenAM = tz.TZDateTime(
+      tz.local,
+      scheduled.year,
+      scheduled.month,
+      scheduled.day,
+      11,
+    );
+
+    await _plugin.zonedSchedule(
+      _paywallReminderId,
+      '🎁 Подарунок для нової родини',
+      '3 дні безкоштовно — відкрий 234 картки для розвитку мовлення',
+      atElevenAM,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'paywall_reminder',
+          'Пропозиції підписки',
+          channelDescription: 'Періодичні пропозиції безкоштовного періоду',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
+      payload: paywallNotificationPayload,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+    );
+
+    await prefs.setBool(_paywallScheduledKey, true);
+  }
+
+  /// Called when the user upgrades to pro — also locks future re-scheduling.
+  Future<void> cancelPaywallReminder() async {
+    await _plugin.cancel(_paywallReminderId);
+    final prefs = await SharedPreferences.getInstance();
+    // Keep the flag = true so we never reschedule for an existing paying user.
+    await prefs.setBool(_paywallScheduledKey, true);
+  }
+
   Future<void> _scheduleDailyNotification() async {
-    await _plugin.cancelAll();
+    // Preserve the paywall reminder when re-scheduling daily/seasonal notifs.
+    await _plugin.cancel(0);
     final random = Random();
     final card = _cards[random.nextInt(_cards.length)];
 

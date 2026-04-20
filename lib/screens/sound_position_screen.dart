@@ -8,12 +8,12 @@ import '../models/card_model.dart';
 import '../providers/daily_quest_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
-import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
-import '../services/tts_service.dart';
+import '../utils/confetti_overlay_mixin.dart';
 import '../utils/constants.dart';
+import '../utils/game_state_mixin.dart';
 import '../utils/l10n.dart';
-import '../widgets/confetti_burst.dart';
+import '../utils/shake_animation_mixin.dart';
 
 /// Packs with abstract/emoji content excluded from sound position game
 const _excludedFromSoundPos = {
@@ -181,50 +181,42 @@ class SoundPositionGameScreen extends ConsumerStatefulWidget {
 
 class _SoundPositionGameScreenState
     extends ConsumerState<SoundPositionGameScreen>
-    with SingleTickerProviderStateMixin {
-  static const _targetScore = 10;
+    with
+        TickerProviderStateMixin,
+        ShakeAnimationMixin,
+        ConfettiOverlayMixin,
+        GameStateMixin {
+  @override
+  String get gameId => 'sound_position';
+
+  @override
+  QuestTask get questTask => QuestTask.reviewOldCard;
+
+  // sound_position is not tracked in gameStatsProvider (not in gameDefinitions).
+  @override
+  bool get recordToStats => false;
 
   late List<CardModel> _deck;
   int _index = 0;
-  int _score = 0;
   bool _answered = false;
-  bool _done = false;
   String? _tappedPosition;
-  bool _questDone = false;
-  OverlayEntry? _confettiEntry;
-
-  late AnimationController _shakeCtrl;
-  late Animation<double> _shakeAnim;
-  String? _shakingPos;
 
   @override
   void initState() {
     super.initState();
-    _shakeCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 380),
-    );
-    _shakeAnim = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _shakeCtrl, curve: Curves.elasticIn),
-    );
-    _shakeCtrl.addStatusListener((s) {
-      if (s == AnimationStatus.completed) {
-        _shakeCtrl.reset();
-        setState(() => _shakingPos = null);
-      }
-    });
+    initShake();
 
     // Cards already filtered for target sound + image in setup screen
     _deck = List<CardModel>.from(widget.cards)..shuffle(Random());
 
-    AnalyticsService.instance.logGameStart('sound_position');
+    startGame();
     WidgetsBinding.instance.addPostFrameCallback((_) => _speakCurrent());
   }
 
   @override
   void dispose() {
-    _shakeCtrl.dispose();
-    _confettiEntry?.remove();
+    disposeShake();
+    disposeConfetti();
     super.dispose();
   }
 
@@ -256,31 +248,19 @@ class _SoundPositionGameScreenState
 
     if (isCorrect) {
       HapticFeedback.lightImpact();
-      _score++;
-      _showConfetti();
-      Future.delayed(const Duration(milliseconds: 300), () {
-        final isEn = ref.read(languageProvider) == 'en';
-        TtsService.instance.speak(
-          isEn ? 'Great!' : 'Молодець!',
-          locale: isEn ? 'en-US' : 'uk-UA',
-        );
-      });
-      if (!_questDone && _score >= 5) {
-        _questDone = true;
-        ref.read(dailyQuestProvider.notifier).completeTask(QuestTask.reviewOldCard);
-        AnalyticsService.instance.logGameComplete('sound_position', _score);
-      }
-      if (_score >= _targetScore) {
+      scorePoint();
+      showConfetti();
+      if (score >= maxRounds) {
         Future.delayed(const Duration(milliseconds: 700), () {
-          if (mounted) setState(() => _done = true);
+          if (!mounted) return;
+          completeGame();
         });
       } else {
         Future.delayed(const Duration(milliseconds: 900), _nextCard);
       }
     } else {
       HapticFeedback.mediumImpact();
-      setState(() => _shakingPos = position);
-      _shakeCtrl.forward();
+      shake(id: position);
       Future.delayed(const Duration(milliseconds: 1300), () {
         if (mounted) setState(() { _answered = false; _tappedPosition = null; });
       });
@@ -293,25 +273,8 @@ class _SoundPositionGameScreenState
       _index++;
       _answered = false;
       _tappedPosition = null;
-      _shakingPos = null;
     });
     _speakCurrent();
-  }
-
-  void _showConfetti() {
-    _confettiEntry?.remove();
-    final size = MediaQuery.of(context).size;
-    _confettiEntry = OverlayEntry(
-      builder: (_) => IgnorePointer(
-        child: ConfettiBurst(
-            origin: Offset(size.width / 2, size.height / 3)),
-      ),
-    );
-    Overlay.of(context).insert(_confettiEntry!);
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      _confettiEntry?.remove();
-      _confettiEntry = null;
-    });
   }
 
   @override
@@ -320,7 +283,7 @@ class _SoundPositionGameScreenState
     final color = _letterColors[widget.targetSound] ?? kAccent;
 
     // Completion screen
-    if (_done) {
+    if (finished) {
       return Scaffold(
         backgroundColor: const Color(0xFFEEF5FF),
         body: SafeArea(
@@ -337,8 +300,8 @@ class _SoundPositionGameScreenState
                   const Text('🎉', style: TextStyle(fontSize: 56)),
                   const SizedBox(height: 12),
                   Text(
-                    s('Чудово! $_score / $_targetScore правильно!',
-                        'Great! $_score / $_targetScore correct!'),
+                    s('Чудово! $score / $maxRounds правильно!',
+                        'Great! $score / $maxRounds correct!'),
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
@@ -360,12 +323,10 @@ class _SoundPositionGameScreenState
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
+                            resetGame();
                             setState(() {
-                              _score = 0;
                               _index = 0;
-                              _done = false;
                               _answered = false;
-                              _questDone = false;
                             });
                             _deck.shuffle(Random());
                             _speakCurrent();
@@ -410,7 +371,7 @@ class _SoundPositionGameScreenState
             padding: const EdgeInsets.only(right: 16),
             child: Center(
               child: Text(
-                '⭐ $_score/$_targetScore',
+                '⭐ $score/$maxRounds',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -432,7 +393,7 @@ class _SoundPositionGameScreenState
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
-                    value: _score / _targetScore,
+                    value: score / maxRounds,
                     minHeight: 6,
                     backgroundColor: color.withValues(alpha: 0.12),
                     valueColor: AlwaysStoppedAnimation<Color>(color),
@@ -503,95 +464,77 @@ class _SoundPositionGameScreenState
     final isTapped = _tappedPosition == position;
     final isCorrect = _answered && position == correctPos;
     final isWrong = _answered && isTapped && position != correctPos;
-    final isShaking = _shakingPos == position;
 
-    Widget btn = Expanded(
-      child: GestureDetector(
-        onTap: () => _onTap(position),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          decoration: BoxDecoration(
+    final inner = GestureDetector(
+      onTap: () => _onTap(position),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        decoration: BoxDecoration(
+          color: isCorrect
+              ? const Color(0xFFE8F5E9)
+              : isWrong
+                  ? const Color(0xFFFFEBEE)
+                  : kAccent.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
             color: isCorrect
-                ? const Color(0xFFE8F5E9)
+                ? const Color(0xFF43A047)
                 : isWrong
-                    ? const Color(0xFFFFEBEE)
-                    : kAccent.withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: isCorrect
-                  ? const Color(0xFF43A047)
-                  : isWrong
-                      ? const Color(0xFFE53935)
-                      : kAccent.withValues(alpha: 0.2),
-              width: isCorrect || isWrong ? 2.5 : 1.5,
-            ),
+                    ? const Color(0xFFE53935)
+                    : kAccent.withValues(alpha: 0.2),
+            width: isCorrect || isWrong ? 2.5 : 1.5,
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (isCorrect)
-                const Icon(Icons.check_circle_rounded,
-                    color: Color(0xFF43A047), size: 32)
-              else if (isWrong)
-                const Icon(Icons.cancel_rounded,
-                    color: Color(0xFFE53935), size: 32)
-              else ...[
-                // Position indicator: 3 squares, active one is filled
-                // [■□□] beginning / [□■□] middle / [□□■] end
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(3, (i) {
-                    final active = dots[i];
-                    return Container(
-                      width: 22,
-                      height: 22,
-                      margin: const EdgeInsets.symmetric(horizontal: 3),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(5),
-                        color: active
-                            ? kAccent
-                            : kAccent.withValues(alpha: 0.15),
-                      ),
-                    );
-                  }),
-                ),
-              ],
-              const SizedBox(height: 10),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: isCorrect
-                      ? const Color(0xFF2E7D32)
-                      : isWrong
-                          ? const Color(0xFFC62828)
-                          : kAccent,
-                ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (isCorrect)
+              const Icon(Icons.check_circle_rounded,
+                  color: Color(0xFF43A047), size: 32)
+            else if (isWrong)
+              const Icon(Icons.cancel_rounded,
+                  color: Color(0xFFE53935), size: 32)
+            else ...[
+              // Position indicator: 3 squares, active one is filled
+              // [■□□] beginning / [□■□] middle / [□□■] end
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(3, (i) {
+                  final active = dots[i];
+                  return Container(
+                    width: 22,
+                    height: 22,
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(5),
+                      color: active
+                          ? kAccent
+                          : kAccent.withValues(alpha: 0.15),
+                    ),
+                  );
+                }),
               ),
             ],
-          ),
+            const SizedBox(height: 10),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: isCorrect
+                    ? const Color(0xFF2E7D32)
+                    : isWrong
+                        ? const Color(0xFFC62828)
+                        : kAccent,
+              ),
+            ),
+          ],
         ),
       ),
     );
 
-    if (isShaking) {
-      btn = Expanded(
-        child: AnimatedBuilder(
-          animation: _shakeAnim,
-          builder: (_, child) {
-            final offset =
-                8 * (0.5 - (_shakeAnim.value % 0.25) / 0.25).abs() * 2 - 4;
-            return Transform.translate(
-                offset: Offset(offset, 0), child: child);
-          },
-          child: (btn as Expanded).child,
-        ),
-      );
-    }
-
-    return btn;
+    return Expanded(child: wrapShake(inner, id: position));
   }
 }
 

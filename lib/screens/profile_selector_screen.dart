@@ -56,7 +56,7 @@ class _ProfileSelectorSheet extends ConsumerWidget {
           const SizedBox(height: 16),
           Text(
             s('Профілі', 'Profiles'),
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w800,
               color: kAccent,

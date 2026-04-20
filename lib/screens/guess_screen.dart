@@ -222,13 +222,21 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
                     color: const Color(0xFFFFD93D).withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Text(
-                    '⭐ ${state.score}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: kStreakOrange,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.star_rounded,
+                          color: kStreakOrange, size: 18),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${state.score}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: kStreakOrange,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

@@ -5,10 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
 import '../providers/daily_quest_provider.dart';
-import '../providers/game_stats_provider.dart';
 import '../providers/language_provider.dart';
-import '../utils/l10n.dart';
+import '../services/audio_service.dart';
+import '../utils/confetti_overlay_mixin.dart';
 import '../utils/constants.dart';
+import '../utils/game_state_mixin.dart';
+import '../utils/l10n.dart';
+import '../utils/shake_animation_mixin.dart';
 
 class SortGameScreen extends ConsumerStatefulWidget {
   final List<PackModel> packs;
@@ -23,40 +26,35 @@ class SortGameScreen extends ConsumerStatefulWidget {
 }
 
 class _SortGameScreenState extends ConsumerState<SortGameScreen>
-    with TickerProviderStateMixin {
+    with
+        TickerProviderStateMixin,
+        ShakeAnimationMixin,
+        ConfettiOverlayMixin,
+        GameStateMixin {
+  @override
+  String get gameId => 'sort';
+
+  @override
+  QuestTask get questTask => QuestTask.reviewOldCard;
+
   late List<_SortCard> _remaining;
-  int _score = 0;
-  bool _done = false;
-  bool _questDone = false;
-  bool _showHint = true; // shown until first successful drag
+  int _total = 0;
+  bool _showHint = true; // hidden after first drag
 
-  // Shake animation controller for wrong drops
-  late AnimationController _shakeController;
-  late Animation<double> _shakeAnim;
-
-  // Hint bounce animation
+  // Hint bounce arrow
   late AnimationController _hintController;
   late Animation<double> _hintAnim;
 
-  String? _shakingCardId;
-  int? _highlightZone; // pack index when hovering
+  int? _highlightZone;
 
   @override
   void initState() {
     super.initState();
-    _shakeController = AnimationController(
-      vsync: this,
+
+    initShake(
       duration: const Duration(milliseconds: 400),
+      amplitude: 12,
     );
-    _shakeAnim = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _shakeController, curve: Curves.elasticIn),
-    );
-    _shakeController.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        _shakeController.reset();
-        setState(() => _shakingCardId = null);
-      }
-    });
 
     _hintController = AnimationController(
       vsync: this,
@@ -66,6 +64,7 @@ class _SortGameScreenState extends ConsumerState<SortGameScreen>
       CurvedAnimation(parent: _hintController, curve: Curves.easeInOut),
     );
 
+    startGame();
     _initCards();
   }
 
@@ -79,118 +78,51 @@ class _SortGameScreenState extends ConsumerState<SortGameScreen>
       }
     }
     picked.shuffle();
+    resetGame();
     setState(() {
       _remaining = picked;
-      _score = 0;
-      _done = false;
+      _total = picked.length;
       _showHint = true;
     });
+  }
+
+  @override
+  void dispose() {
+    disposeShake();
+    _hintController.dispose();
+    disposeConfetti();
+    super.dispose();
   }
 
   void _onCorrectDrop(String cardId) {
     HapticFeedback.lightImpact();
     setState(() {
       _remaining.removeWhere((s) => s.card.id == cardId);
-      _score++;
-      _showHint = false; // hide hint after first success
-      if (_remaining.isEmpty) _done = true;
+      scorePoint();
+      _showHint = false;
     });
-    if (_done && !_questDone) {
-      _questDone = true;
-      ref.read(dailyQuestProvider.notifier).completeTask(QuestTask.reviewOldCard);
-      ref.read(gameStatsProvider.notifier).record('sort', _score);
-      Future.delayed(const Duration(milliseconds: 300), _showCompletion);
+    if (_remaining.isEmpty) {
+      Future.delayed(const Duration(milliseconds: 200), () {
+        if (!mounted) return;
+        completeGame();
+        Future.delayed(
+          const Duration(milliseconds: 100),
+          () => showConfetti(linger: const Duration(milliseconds: 2000)),
+        );
+      });
     }
   }
 
   void _onWrongDrop(String cardId) {
     HapticFeedback.mediumImpact();
-    setState(() => _shakingCardId = cardId);
-    _shakeController.forward();
-  }
-
-  void _showCompletion() {
-    if (!mounted) return;
-    final s = AppS(ref.read(languageProvider) == 'en');
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(28, 32, 28, 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('🎉', style: TextStyle(fontSize: 64)),
-              const SizedBox(height: 12),
-              Text(
-                s('Все розкладено!', 'All sorted!'),
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('⭐', style: TextStyle(fontSize: 32)),
-                  Text('⭐', style: TextStyle(fontSize: 32)),
-                  Text('⭐', style: TextStyle(fontSize: 32)),
-                ],
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(ctx).pop();
-                    _initCards();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kAccent,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                  ),
-                  child: Text(
-                    s('Ще раз! 🔄', 'Play again! 🔄'),
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(ctx).pop();
-                  Navigator.of(context).pop();
-                },
-                child: Text(
-                  s('Додому', 'Home'),
-                  style: TextStyle(
-                      color: Colors.grey[500],
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _shakeController.dispose();
-    _hintController.dispose();
-    super.dispose();
+    shake(id: cardId);
   }
 
   @override
   Widget build(BuildContext context) {
     final s = AppS(ref.read(languageProvider) == 'en');
-    final total = widget.packs.length == 2 ? 6 : widget.packs.length * 2;
-    final sorted = _score;
+
+    if (finished) return _buildResultScreen(s);
 
     return Scaffold(
       backgroundColor: const Color(0xFFFFF4E8),
@@ -212,7 +144,7 @@ class _SortGameScreenState extends ConsumerState<SortGameScreen>
       body: SafeArea(
         child: Column(
           children: [
-            // ── Progress ──────────────────────────────
+            // ── Progress ─────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
               child: Row(
@@ -221,7 +153,7 @@ class _SortGameScreenState extends ConsumerState<SortGameScreen>
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(4),
                       child: LinearProgressIndicator(
-                        value: total > 0 ? sorted / total : 0,
+                        value: _total > 0 ? score / _total : 0,
                         minHeight: 7,
                         backgroundColor: Colors.grey.withValues(alpha: 0.15),
                         valueColor:
@@ -231,7 +163,7 @@ class _SortGameScreenState extends ConsumerState<SortGameScreen>
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    '$sorted/$total',
+                    '$score/$_total',
                     style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
@@ -243,39 +175,31 @@ class _SortGameScreenState extends ConsumerState<SortGameScreen>
 
             const SizedBox(height: 12),
 
-            // ── Cards ─────────────────────────────────
-            if (_remaining.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 20),
-                child: Text('✅', style: TextStyle(fontSize: 56)),
-              )
-            else ...[
+            // ── Cards (Wrap — all visible, no scroll) ─
+            if (_remaining.isNotEmpty) ...[
               AnimatedOpacity(
                 opacity: _showHint ? 1.0 : 0.0,
                 duration: const Duration(milliseconds: 400),
                 child: Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.only(bottom: 6),
                   child: Text(
                     s('Перетягни у правильну купку 👇',
                         'Drag to the right bin 👇'),
-                    style:
-                        TextStyle(fontSize: 12, color: Colors.grey[500]),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                   ),
                 ),
               ),
-              SizedBox(
-                height: 128,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  shrinkWrap: true,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  itemCount: _remaining.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 12),
-                  itemBuilder: (_, i) =>
-                      _buildDraggableCard(_remaining[i]),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  alignment: WrapAlignment.center,
+                  children:
+                      _remaining.map((sc) => _buildDraggableCard(sc)).toList(),
                 ),
               ),
-              // Bouncing arrow
+              // Bouncing hint arrow
               AnimatedOpacity(
                 opacity: _showHint ? 1.0 : 0.0,
                 duration: const Duration(milliseconds: 400),
@@ -284,7 +208,7 @@ class _SortGameScreenState extends ConsumerState<SortGameScreen>
                   builder: (_, __) => Transform.translate(
                     offset: Offset(0, _hintAnim.value),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Icon(
                         Icons.keyboard_double_arrow_down_rounded,
                         size: 26,
@@ -296,7 +220,7 @@ class _SortGameScreenState extends ConsumerState<SortGameScreen>
               ),
             ],
 
-            // ── Drop zones — fill all remaining space ──
+            // ── Drop zones ────────────────────────────
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
@@ -320,24 +244,8 @@ class _SortGameScreenState extends ConsumerState<SortGameScreen>
 
   Widget _buildDraggableCard(_SortCard sc) {
     final card = sc.card;
-    final isShaking = _shakingCardId == card.id;
 
-    Widget cardWidget = _CardChip(card: card);
-
-    if (isShaking) {
-      cardWidget = AnimatedBuilder(
-        animation: _shakeAnim,
-        builder: (_, child) {
-          final offset =
-              8 * (0.5 - (_shakeAnim.value % 0.25) / 0.25).abs() * 2 - 4;
-          return Transform.translate(
-            offset: Offset(offset, 0),
-            child: child,
-          );
-        },
-        child: cardWidget,
-      );
-    }
+    final Widget cardWidget = wrapShake(_CardChip(card: card), id: card.id);
 
     return Draggable<_SortCard>(
       data: sc,
@@ -349,7 +257,11 @@ class _SortGameScreenState extends ConsumerState<SortGameScreen>
         ),
       ),
       childWhenDragging: Opacity(opacity: 0.25, child: _CardChip(card: card)),
-      onDragStarted: () => setState(() => _showHint = false),
+      onDragStarted: () {
+        setState(() => _showHint = false);
+        // Play the word so the child hears what they're sorting
+        AudioService.instance.playWordOnly(card.audioKey, card.sound);
+      },
       child: cardWidget,
     );
   }
@@ -370,8 +282,7 @@ class _SortGameScreenState extends ConsumerState<SortGameScreen>
       onAcceptWithDetails: (details) {
         setState(() => _highlightZone = null);
         final sc = details.data;
-        final isCorrect = sc.packIndex == zoneIndex;
-        if (isCorrect) {
+        if (sc.packIndex == zoneIndex) {
           _onCorrectDrop(sc.card.id);
         } else {
           _onWrongDrop(sc.card.id);
@@ -444,6 +355,69 @@ class _SortGameScreenState extends ConsumerState<SortGameScreen>
           ),
         );
       },
+    );
+  }
+
+  Widget _buildResultScreen(AppS s) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFFF4E8),
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  s('Все розкладено! 🎉', 'All sorted! 🎉'),
+                  style: const TextStyle(
+                      fontSize: 30, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('⭐', style: TextStyle(fontSize: 48)),
+                    Text('⭐', style: TextStyle(fontSize: 48)),
+                    Text('⭐', style: TextStyle(fontSize: 48)),
+                  ],
+                ),
+                const SizedBox(height: 48),
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: _initCards,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kAccent,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18)),
+                    ),
+                    child: Text(
+                      s('Ще раз! 🔄', 'Play again! 🔄'),
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(
+                    s('Додому', 'Home'),
+                    style: TextStyle(
+                        color: Colors.grey[500],
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

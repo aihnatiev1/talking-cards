@@ -59,8 +59,10 @@ class SpeechService {
         localeId: 'uk-UA',
         listenFor: listenFor,
         pauseFor: pauseFor,
-        cancelOnError: true,
-        partialResults: false,
+        listenOptions: SpeechListenOptions(
+          cancelOnError: true,
+          partialResults: false,
+        ),
       );
     } catch (e) {
       if (kDebugMode) debugPrint('SpeechService: listen error — $e');

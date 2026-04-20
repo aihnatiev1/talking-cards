@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
-import '../models/pack_model.dart';
 import '../providers/daily_quest_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
-import '../services/tts_service.dart';
 import '../utils/constants.dart';
 import '../utils/l10n.dart';
 
@@ -100,7 +98,7 @@ class _SoundFilterScreenState extends ConsumerState<SoundFilterScreen> {
                               'Words with «$_selectedLetter» — ${filteredCards.length}',
                             )
                           : '',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: kAccent,

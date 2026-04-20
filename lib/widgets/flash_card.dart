@@ -14,12 +14,15 @@ class FlashCard extends ConsumerStatefulWidget {
   final ValueChanged<bool>? onFlipChanged;
   /// When non-null, card taps use TTS instead of recorded audio.
   final String? ttsLocale;
+  /// Only the active (current) card should pulse its word during audio.
+  final bool isActive;
 
   const FlashCard({
     super.key,
     required this.card,
     this.onFlipChanged,
     this.ttsLocale,
+    this.isActive = true,
   });
 
   @override
@@ -87,15 +90,32 @@ class _FlashCardState extends ConsumerState<FlashCard>
       }
     });
 
-    AudioService.instance.isSpeaking.addListener(_onSpeakingChanged);
-    if (AudioService.instance.isSpeaking.value) {
-      _pulseCtrl.repeat(reverse: true);
+    if (widget.isActive) {
+      AudioService.instance.isSpeaking.addListener(_onSpeakingChanged);
+      if (AudioService.instance.isSpeaking.value) {
+        _pulseCtrl.repeat(reverse: true);
+      }
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant FlashCard old) {
+    super.didUpdateWidget(old);
+    if (widget.isActive && !old.isActive) {
+      AudioService.instance.isSpeaking.addListener(_onSpeakingChanged);
+      _onSpeakingChanged(); // sync state immediately
+    } else if (!widget.isActive && old.isActive) {
+      AudioService.instance.isSpeaking.removeListener(_onSpeakingChanged);
+      _pulseCtrl.stop();
+      _pulseCtrl.value = 0.0;
     }
   }
 
   @override
   void dispose() {
-    AudioService.instance.isSpeaking.removeListener(_onSpeakingChanged);
+    if (widget.isActive) {
+      AudioService.instance.isSpeaking.removeListener(_onSpeakingChanged);
+    }
     _pressCtrl.dispose();
     _pulseCtrl.dispose();
     _entranceCtrl.dispose();

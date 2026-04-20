@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -284,7 +282,7 @@ class _ExerciseCard extends StatelessWidget {
                         ),
                         child: Text(
                           s,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
                             color: kAccent,
@@ -402,7 +400,7 @@ class _ExercisePlayerScreenState extends State<_ExercisePlayerScreen>
                   s('👨‍👧 Батьки читають вголос — дитина повторює рухи',
                       '👨‍👧 Parents read aloud — child mirrors the moves'),
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 12,
                     color: kAccent,
                     fontWeight: FontWeight.w500,

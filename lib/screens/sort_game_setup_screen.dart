@@ -43,7 +43,9 @@ class _SortGameSetupScreenState extends ConsumerState<SortGameSetupScreen> {
     final count = pool.length >= 3 ? 3 : 2;
     setState(() {
       _selected.clear();
-      for (int i = 0; i < count; i++) _selected.add(pool[i].id);
+      for (int i = 0; i < count; i++) {
+        _selected.add(pool[i].id);
+      }
     });
   }
 

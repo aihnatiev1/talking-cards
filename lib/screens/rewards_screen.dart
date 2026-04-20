@@ -27,7 +27,7 @@ class RewardsScreen extends ConsumerWidget {
         ),
         title: Text(
           s('Нагороди', 'Rewards'),
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
@@ -50,7 +50,9 @@ class RewardsScreen extends ConsumerWidget {
                   const Text('🔥', style: TextStyle(fontSize: 48)),
                   const SizedBox(height: 8),
                   Text(
-                    s.isEn ? '${streak.currentStreak} days' : '${streak.currentStreak} \${dayWord(streak.currentStreak)}',
+                    s.isEn
+                        ? '${streak.currentStreak} days'
+                        : '${streak.currentStreak} ${dayWord(streak.currentStreak)}',
                     style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
@@ -60,7 +62,7 @@ class RewardsScreen extends ConsumerWidget {
                   const SizedBox(height: 4),
                   Text(
                     s('поспіль', 'streak'),
-                    style: TextStyle(fontSize: 16, color: Colors.white70),
+                    style: const TextStyle(fontSize: 16, color: Colors.white70),
                   ),
                 ],
               ),

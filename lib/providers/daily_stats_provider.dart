@@ -37,7 +37,7 @@ class DailyStatsNotifier extends StateNotifier<Map<String, int>> {
     final current = state[key] ?? 0;
     state = {...state, key: current + 1};
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('${_fullPrefix}$key', current + 1);
+    await prefs.setInt('$_fullPrefix$key', current + 1);
   }
 
   /// Returns view counts for the last 7 days (oldest first).

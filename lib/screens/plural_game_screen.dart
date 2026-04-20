@@ -4,13 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../providers/daily_quest_provider.dart';
 import '../providers/language_provider.dart';
-import '../services/analytics_service.dart';
 import '../services/tts_service.dart';
+import '../utils/confetti_overlay_mixin.dart';
 import '../utils/constants.dart';
+import '../utils/game_state_mixin.dart';
 import '../utils/l10n.dart';
-import '../widgets/confetti_burst.dart';
 
 // ─────────────────────────────────────────────
 //  Word pairs — verified Ukrainian grammar
@@ -49,7 +48,6 @@ const _pairs = [
   _WordPair('ВЕДМЕДИК',  'ВЕДМЕДИКИ',  '🧸'),
   _WordPair('ГРИБ',      'ГРИБИ',      '🍄'),
   _WordPair('ДЕРЕВО',    'ДЕРЕВА',     '🌳'),
-  _WordPair('ГРИБ',      'ГРИБИ',      '🍄'),
 ];
 
 // ─────────────────────────────────────────────
@@ -64,13 +62,17 @@ class PluralGameScreen extends ConsumerStatefulWidget {
 }
 
 class _PluralGameScreenState extends ConsumerState<PluralGameScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, ConfettiOverlayMixin, GameStateMixin {
+  @override
+  String get gameId => 'plural_game';
+
+  // plural_game is not tracked in gameStatsProvider (not in gameDefinitions).
+  @override
+  bool get recordToStats => false;
+
   late List<_WordPair> _deck;
   int _index = 0;
   bool _isPlural = false; // false = showing singular, true = showing plural
-  int _seen = 0;
-  bool _questDone = false;
-  OverlayEntry? _confettiEntry;
 
   // Scale animation for the multiplication effect
   late AnimationController _scaleCtrl;
@@ -79,9 +81,7 @@ class _PluralGameScreenState extends ConsumerState<PluralGameScreen>
   @override
   void initState() {
     super.initState();
-    _deck = List<_WordPair>.from(_pairs)
-      ..remove(const _WordPair('ГРИБ', 'ГРИБИ', '🍄')) // remove duplicate
-      ..shuffle(Random());
+    _deck = List<_WordPair>.from(_pairs)..shuffle(Random());
 
     _scaleCtrl = AnimationController(
       vsync: this,
@@ -92,18 +92,18 @@ class _PluralGameScreenState extends ConsumerState<PluralGameScreen>
       curve: Curves.elasticOut,
     );
 
-    AnalyticsService.instance.logGameStart('plural_game');
+    startGame();
     WidgetsBinding.instance.addPostFrameCallback((_) => _speakSingular());
   }
 
   @override
   void dispose() {
-    _confettiEntry?.remove();
+    disposeConfetti();
     _scaleCtrl.dispose();
     super.dispose();
   }
 
-  _WordPair get _current => _deck[_index % _deck.length];
+  _WordPair get _current => _deck[_index];
 
   void _speakSingular() {
     TtsService.instance.speak(_current.singular, locale: 'uk-UA');
@@ -120,15 +120,10 @@ class _PluralGameScreenState extends ConsumerState<PluralGameScreen>
       setState(() => _isPlural = true);
       _scaleCtrl.forward(from: 0);
       Future.delayed(const Duration(milliseconds: 100), _speakPlural);
-      _showConfetti();
-      _seen++;
-      if (!_questDone && _seen >= 5) {
-        _questDone = true;
-        ref.read(dailyQuestProvider.notifier).completeTask(QuestTask.playQuiz);
-        AnalyticsService.instance.logGameComplete('plural_game', _seen);
-      }
+      final size = MediaQuery.of(context).size;
+      showConfetti(origin: Offset(size.width / 2, size.height / 2.5));
     } else {
-      // many → 1 (toggle back)
+      // many → 1 (toggle back to review)
       setState(() => _isPlural = false);
       _scaleCtrl.reverse();
       Future.delayed(const Duration(milliseconds: 100), _speakSingular);
@@ -136,6 +131,12 @@ class _PluralGameScreenState extends ConsumerState<PluralGameScreen>
   }
 
   void _nextCard() {
+    scorePoint(); // "completed" count (pairs advanced past)
+    final isLast = _index >= _deck.length - 1;
+    if (isLast) {
+      completeGame();
+      return;
+    }
     setState(() {
       _index++;
       _isPlural = false;
@@ -144,25 +145,12 @@ class _PluralGameScreenState extends ConsumerState<PluralGameScreen>
     Future.delayed(const Duration(milliseconds: 200), _speakSingular);
   }
 
-  void _showConfetti() {
-    _confettiEntry?.remove();
-    final size = MediaQuery.of(context).size;
-    _confettiEntry = OverlayEntry(
-      builder: (_) => IgnorePointer(
-        child: ConfettiBurst(
-            origin: Offset(size.width / 2, size.height / 2.5)),
-      ),
-    );
-    Overlay.of(context).insert(_confettiEntry!);
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      _confettiEntry?.remove();
-      _confettiEntry = null;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final s = AppS(ref.read(languageProvider) == 'en');
+
+    if (finished) return _buildFinishScreen(s);
+
     final pair = _current;
 
     return Scaffold(
@@ -179,7 +167,7 @@ class _PluralGameScreenState extends ConsumerState<PluralGameScreen>
             padding: const EdgeInsets.only(right: 16),
             child: Center(
               child: Text(
-                '⭐ $_seen',
+                '${_index + 1}/${_deck.length}',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -267,6 +255,82 @@ class _PluralGameScreenState extends ConsumerState<PluralGameScreen>
       ),
     );
   }
+
+  Widget _buildFinishScreen(AppS s) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFE8FFF8),
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  s('Чудово! 🎉', 'Excellent! 🎉'),
+                  style: const TextStyle(
+                      fontSize: 32, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('⭐', style: TextStyle(fontSize: 48)),
+                    Text('⭐', style: TextStyle(fontSize: 48)),
+                    Text('⭐', style: TextStyle(fontSize: 48)),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  s('${_deck.length} пар вивчено!',
+                      '${_deck.length} pairs learned!'),
+                  style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                ),
+                const SizedBox(height: 48),
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kAccent,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18)),
+                    ),
+                    child: Text(
+                      s('Готово', 'Done'),
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: () {
+                    resetGame();
+                    setState(() {
+                      _deck.shuffle(Random());
+                      _index = 0;
+                      _isPlural = false;
+                    });
+                    _scaleCtrl.reset();
+                    Future.delayed(
+                        const Duration(milliseconds: 200), _speakSingular);
+                  },
+                  child: Text(
+                    s('Грати ще раз 🔄', 'Play again 🔄'),
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 // ─────────────────────────────────────────────
@@ -289,7 +353,7 @@ class _SingularView extends StatelessWidget {
             color: kAccent.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(20),
           ),
-          child: Text(
+          child: const Text(
             '1',
             style: TextStyle(
               fontSize: 22,

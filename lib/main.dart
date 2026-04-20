@@ -45,7 +45,10 @@ class TalkingCardsApp extends ConsumerWidget {
     return MaterialApp(
       title: 'Розмовлялки',
       debugShowCheckedModeBanner: false,
-      navigatorObservers: [AnalyticsService.instance.observer],
+      navigatorObservers: [
+        if (AnalyticsService.instance.observer != null)
+          AnalyticsService.instance.observer!,
+      ],
       theme: ThemeData(
         colorSchemeSeed: kAccent,
         useMaterial3: true,

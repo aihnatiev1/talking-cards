@@ -36,7 +36,7 @@ class CardLastSeenNotifier extends StateNotifier<Map<String, String>> {
     final today = _todayKey();
     state = {...state, cardId: today};
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('${_fullPrefix}$cardId', today);
+    await prefs.setString('$_fullPrefix$cardId', today);
   }
 
   /// Returns card IDs not seen for 3+ days

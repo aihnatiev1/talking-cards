@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../providers/profile_provider.dart';
 import '../services/analytics_service.dart';
+import '../services/paywall_flow.dart';
 import '../utils/constants.dart';
 import 'home_screen.dart';
 
@@ -76,6 +77,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     await prefs.setBool('onboarding_done', true);
 
     AnalyticsService.instance.logOnboardingComplete();
+
+    if (!mounted) return;
+
+    // Show paywall right after onboarding — peak intent moment.
+    // Whether they convert or dismiss, we then proceed to HomeScreen.
+    await runPaywallFlow(context, ref, isOnboarding: true);
 
     if (!mounted) return;
     Navigator.of(context).pushReplacement(

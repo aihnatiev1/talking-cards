@@ -78,6 +78,13 @@ class _SplashScreenState extends State<SplashScreen>
       TtsService.instance.init(),
     ]);
 
+    // Schedule day-3 soft paywall reminder for non-pro users; cancel for pro.
+    if (PurchaseService.instance.isPro.value) {
+      await NotificationService.instance.cancelPaywallReminder();
+    } else {
+      await NotificationService.instance.schedulePaywallReminderIfNeeded();
+    }
+
     _deepLink = await EngageService.instance.getInitialLink();
     EngageService.instance.publishFromPrefs();
 

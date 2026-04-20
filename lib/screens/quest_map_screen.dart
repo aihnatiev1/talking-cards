@@ -54,7 +54,7 @@ const _stopPositions = [
   Offset(0.72, 0.50),  // Stop 3 — right
   Offset(0.22, 0.66),  // Stop 4 — left
 ];
-const _treasurePos = Offset(0.50, 0.83);
+const _treasurePos = Offset(0.50, 0.80);
 
 const _decorations = [
   ('🌳', 0.88, 0.01, 30.0),
@@ -69,12 +69,14 @@ const _decorations = [
 ];
 
 class QuestMapScreen extends ConsumerStatefulWidget {
+  final bool showBackButton;
   final CardModel? cardOfDay;
   final bool cardOfDayLocked;
   final VoidCallback onCardOfDayTap;
 
   const QuestMapScreen({
     super.key,
+    this.showBackButton = true,
     required this.cardOfDay,
     required this.cardOfDayLocked,
     required this.onCardOfDayTap,
@@ -175,11 +177,13 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              color: kStreakOrange, size: 22),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+        leading: widget.showBackButton
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                    color: kStreakOrange, size: 22),
+                onPressed: () => Navigator.of(context).pop(),
+              )
+            : null,
         title: Text(
           s('🗺️ Пригода дня', '🗺️ Adventure'),
           style: const TextStyle(
@@ -677,7 +681,7 @@ class _StopWaypointState extends ConsumerState<_StopWaypoint>
                   : widget.info.label,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 15,
                 fontWeight: FontWeight.w800,
                 color: labelColor,
                 height: 1.1,
@@ -909,7 +913,7 @@ class _TreasureWaypointState extends ConsumerState<_TreasureWaypoint>
               }(),
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 16,
                 fontWeight: FontWeight.w800,
                 height: 1.1,
                 color: canClaim

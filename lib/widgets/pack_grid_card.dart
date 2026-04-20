@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/pack_model.dart';
-import '../providers/language_provider.dart';
 
 class PackGridCard extends ConsumerStatefulWidget {
   final PackModel pack;
@@ -51,71 +50,66 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
     final hasProgress = widget.progress > 0 && !widget.isCompleted;
     final sw = MediaQuery.of(context).size.width;
     final scale = (sw / 375).clamp(0.85, 1.3);
-    final isEn = ref.watch(languageProvider) == 'en';
-    final cardsLabel = isEn ? 'cards' : 'карток';
 
     Widget card = GestureDetector(
       onTap: widget.onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: pack.color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(20 * scale),
+          color: pack.color.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: pack.color.withValues(alpha: 0.25),
+            color: pack.color.withValues(alpha: 0.30),
             width: 1.5,
           ),
         ),
-        padding: EdgeInsets.symmetric(vertical: 12 * scale, horizontal: 8 * scale),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(pack.icon, style: TextStyle(fontSize: 40 * scale)),
-            SizedBox(height: 6 * scale),
-            Text(
-              pack.title,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 14 * scale,
-                fontWeight: FontWeight.bold,
-                color: pack.color,
-              ),
-            ),
-            SizedBox(height: 4 * scale),
+            Text(pack.icon, style: const TextStyle(fontSize: 32)),
+            const SizedBox(height: 4),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8 * scale),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(3),
-                child: LinearProgressIndicator(
-                  value: hasProgress ? widget.progress / total : 0,
-                  minHeight: 6 * scale,
-                  backgroundColor: pack.color.withValues(alpha: 0.15),
-                  valueColor: AlwaysStoppedAnimation<Color>(pack.color),
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: Text(
+                pack.title,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: pack.color,
+                  height: 1.2,
                 ),
               ),
             ),
-            SizedBox(height: 3 * scale),
-            Text(
-              hasProgress ? '${widget.progress}/$total' : '$total $cardsLabel',
-              style: TextStyle(
-                fontSize: 11 * scale,
-                color: pack.color.withValues(alpha: 0.7),
+            if (hasProgress) ...[
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(3),
+                  child: LinearProgressIndicator(
+                    value: widget.progress / total,
+                    minHeight: 4,
+                    backgroundColor: pack.color.withValues(alpha: 0.15),
+                    valueColor: AlwaysStoppedAnimation<Color>(pack.color),
+                  ),
+                ),
               ),
-            ),
-            SizedBox(height: 2 * scale),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (widget.isCompleted)
-                  Text('⭐', style: TextStyle(fontSize: 13 * scale)),
-                if (pack.isLocked)
-                  Icon(Icons.lock_rounded,
-                      color: pack.color.withValues(alpha: 0.5), size: 15 * scale),
-                if (widget.isSeasonal)
-                  Text('✨', style: TextStyle(fontSize: 13 * scale)),
-              ],
-            ),
+            ],
+            if (widget.isCompleted || pack.isLocked || widget.isSeasonal) ...[
+              const SizedBox(height: 2),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (widget.isCompleted) const Text('⭐', style: TextStyle(fontSize: 12)),
+                  if (pack.isLocked)
+                    Icon(Icons.lock_rounded,
+                        color: pack.color.withValues(alpha: 0.5), size: 13),
+                  if (widget.isSeasonal) const Text('✨', style: TextStyle(fontSize: 12)),
+                ],
+              ),
+            ],
           ],
         ),
       ),

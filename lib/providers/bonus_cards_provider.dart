@@ -39,7 +39,7 @@ class BonusCardsNotifier extends StateNotifier<Map<String, int>> {
     final next = current + 1;
     state = {...state, packId: next};
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('${_fullPrefix}$packId', next);
+    await prefs.setInt('$_fullPrefix$packId', next);
     return next;
   }
 }

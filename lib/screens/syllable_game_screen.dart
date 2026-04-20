@@ -7,14 +7,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
 import '../providers/daily_quest_provider.dart';
-import '../providers/game_stats_provider.dart';
 import '../providers/language_provider.dart';
-import '../services/analytics_service.dart';
-import '../services/tts_service.dart';
 import '../services/audio_service.dart';
+import '../utils/confetti_overlay_mixin.dart';
 import '../utils/constants.dart';
+import '../utils/game_state_mixin.dart';
 import '../utils/l10n.dart';
-import '../widgets/confetti_burst.dart';
+import '../utils/ukrainian_phonetics.dart';
 
 class SyllableGameScreen extends ConsumerStatefulWidget {
   final List<CardModel> cards;
@@ -26,17 +25,23 @@ class SyllableGameScreen extends ConsumerStatefulWidget {
 }
 
 class _SyllableGameScreenState extends ConsumerState<SyllableGameScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, ConfettiOverlayMixin, GameStateMixin {
+  @override
+  String get gameId => 'syllable_game';
+
+  @override
+  int get maxRounds => _deck.length;
+
+  @override
+  QuestTask get questTask => QuestTask.reviewOldCard;
+
   late List<CardModel> _deck;
   int _index = 0;
   int _taps = 0;
-  int _score = 0;
   bool _evaluated = false;
   bool _correct = false;
-  bool _questDone = false;
 
   Timer? _evalTimer;
-  OverlayEntry? _confettiEntry;
 
   // Ripple animations for each tap
   final List<_RippleDot> _ripples = [];
@@ -49,10 +54,7 @@ class _SyllableGameScreenState extends ConsumerState<SyllableGameScreen>
   late AnimationController _resultCtrl;
   late Animation<double> _resultAnim;
 
-  static const _vowels = {'А', 'Е', 'И', 'І', 'О', 'У', 'Є', 'Ї', 'Ю', 'Я'};
-
-  static int _syllables(String word) =>
-      word.toUpperCase().split('').where(_vowels.contains).length.clamp(1, 99);
+  static int _syllables(String word) => countSyllables(word).clamp(1, 99);
 
   @override
   void initState() {
@@ -73,7 +75,7 @@ class _SyllableGameScreenState extends ConsumerState<SyllableGameScreen>
     );
     _resultAnim = CurvedAnimation(parent: _resultCtrl, curve: Curves.elasticOut);
 
-    AnalyticsService.instance.logGameStart('syllable_game');
+    startGame();
     WidgetsBinding.instance.addPostFrameCallback((_) => _speakCurrent());
   }
 
@@ -82,24 +84,8 @@ class _SyllableGameScreenState extends ConsumerState<SyllableGameScreen>
     _evalTimer?.cancel();
     _bounceCtrl.dispose();
     _resultCtrl.dispose();
-    _confettiEntry?.remove();
+    disposeConfetti();
     super.dispose();
-  }
-
-  void _showConfetti() {
-    _confettiEntry?.remove();
-    final size = MediaQuery.of(context).size;
-    _confettiEntry = OverlayEntry(
-      builder: (_) => IgnorePointer(
-        child: ConfettiBurst(
-            origin: Offset(size.width / 2, size.height / 3)),
-      ),
-    );
-    Overlay.of(context).insert(_confettiEntry!);
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      _confettiEntry?.remove();
-      _confettiEntry = null;
-    });
   }
 
   CardModel get _current => _deck[_index];
@@ -137,21 +123,8 @@ class _SyllableGameScreenState extends ConsumerState<SyllableGameScreen>
 
     if (isCorrect) {
       HapticFeedback.lightImpact();
-      _score++;
-      _showConfetti();
-      Future.delayed(const Duration(milliseconds: 300), () {
-        final isEn = ref.read(languageProvider) == 'en';
-        TtsService.instance.speak(
-          isEn ? 'Great!' : 'Молодець!',
-          locale: isEn ? 'en-US' : 'uk-UA',
-        );
-      });
-      if (!_questDone && _score >= 3) {
-        _questDone = true;
-        ref.read(dailyQuestProvider.notifier).completeTask(QuestTask.reviewOldCard);
-        AnalyticsService.instance.logGameComplete('syllable_game', _score);
-        ref.read(gameStatsProvider.notifier).record('syllable_game', _score);
-      }
+      scorePoint();
+      showConfetti();
     } else {
       HapticFeedback.mediumImpact();
     }
@@ -159,8 +132,13 @@ class _SyllableGameScreenState extends ConsumerState<SyllableGameScreen>
 
   void _nextCard() {
     _evalTimer?.cancel();
+    final isLast = _index >= _deck.length - 1;
+    if (isLast) {
+      completeGame();
+      return;
+    }
     setState(() {
-      _index = (_index + 1) % _deck.length;
+      _index++;
       _taps = 0;
       _evaluated = false;
       _correct = false;
@@ -176,7 +154,7 @@ class _SyllableGameScreenState extends ConsumerState<SyllableGameScreen>
     final card = _current;
     final syllableCount = _expected;
 
-    // Build syllable dots to show expected count
+    // Syllable dots — only shown AFTER evaluation (don't hint before)
     final syllableDots = Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(
@@ -187,13 +165,15 @@ class _SyllableGameScreenState extends ConsumerState<SyllableGameScreen>
           margin: const EdgeInsets.symmetric(horizontal: 3),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: _evaluated
-                ? (_correct ? const Color(0xFF43A047) : const Color(0xFFE53935))
-                : Colors.grey[300],
+            color: _correct
+                ? const Color(0xFF43A047)
+                : const Color(0xFFE53935),
           ),
         ),
       ),
     );
+
+    if (finished) return _buildFinishScreen(s);
 
     return Scaffold(
       backgroundColor: const Color(0xFFFFF0F5),
@@ -209,7 +189,7 @@ class _SyllableGameScreenState extends ConsumerState<SyllableGameScreen>
             padding: const EdgeInsets.only(right: 16),
             child: Center(
               child: Text(
-                '⭐ $_score',
+                '⭐ $score',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -328,39 +308,37 @@ class _SyllableGameScreenState extends ConsumerState<SyllableGameScreen>
 
             const SizedBox(height: 8),
 
-            // Result feedback
-            AnimatedBuilder(
-              animation: _resultAnim,
-              builder: (_, child) => Transform.scale(
-                scale: _evaluated ? _resultAnim.value : 1.0,
-                child: child,
-              ),
-              child: _evaluated
-                  ? Column(
-                      children: [
-                        // Big emoji result
-                        Text(
-                          _correct ? '🎉' : '🔄',
-                          style: const TextStyle(fontSize: 36),
+            // Result feedback — only shown after evaluation
+            if (_evaluated)
+              AnimatedBuilder(
+                animation: _resultAnim,
+                builder: (_, child) => Transform.scale(
+                  scale: _resultAnim.value,
+                  child: child,
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      _correct ? '🎉' : '🔄',
+                      style: const TextStyle(fontSize: 36),
+                    ),
+                    const SizedBox(height: 4),
+                    syllableDots,
+                    const SizedBox(height: 4),
+                    if (!_correct)
+                      Text(
+                        s('Треба: $syllableCount', 'Need: $syllableCount'),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFFC62828),
                         ),
-                        const SizedBox(height: 4),
-                        // Dots show correct count (lit up after eval)
-                        syllableDots,
-                        const SizedBox(height: 4),
-                        // Only show count on wrong so child learns
-                        if (!_correct)
-                          Text(
-                            s('Треба: $_syllableCount', 'Need: $_syllableCount'),
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFFC62828),
-                            ),
-                          ),
-                      ],
-                    )
-                  : syllableDots,
-            ),
+                      ),
+                  ],
+                ),
+              )
+            else
+              const SizedBox(height: 52), // reserve space so layout doesn't jump
 
             const SizedBox(height: 20),
 
@@ -446,15 +424,92 @@ class _SyllableGameScreenState extends ConsumerState<SyllableGameScreen>
     );
   }
 
-  // Ukrainian syllable ending helper
-  String _ru(int n) {
-    if (n == 1) return '';
-    if (n >= 2 && n <= 4) return 'и';
-    return 'ів';
-  }
+  Widget _buildFinishScreen(AppS s) {
+    final total = _deck.length;
+    final pct = total > 0 ? score / total : 0.0;
+    final stars = pct >= 0.8 ? 3 : pct >= 0.5 ? 2 : 1;
 
-  // Unused variable fix
-  int get _syllableCount => _expected;
+    return Scaffold(
+      backgroundColor: const Color(0xFFFFF0F5),
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  stars == 3
+                      ? s('Чудово! 🎉', 'Excellent! 🎉')
+                      : stars == 2
+                          ? s('Молодець! 👍', 'Well done! 👍')
+                          : s('Спробуй ще! 💪', 'Keep trying! 💪'),
+                  style: const TextStyle(
+                      fontSize: 32, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    3,
+                    (i) => Text(
+                      i < stars ? '⭐' : '☆',
+                      style: const TextStyle(fontSize: 48),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  s('$score з $total слів', '$score of $total words'),
+                  style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                ),
+                const SizedBox(height: 48),
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kAccent,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18)),
+                    ),
+                    child: Text(
+                      s('Готово', 'Done'),
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: () {
+                    resetGame();
+                    setState(() {
+                      _deck.shuffle(Random());
+                      _index = 0;
+                      _taps = 0;
+                      _evaluated = false;
+                      _correct = false;
+                      _ripples.clear();
+                    });
+                    _resultCtrl.reset();
+                    _speakCurrent();
+                  },
+                  child: Text(
+                    s('Грати ще раз 🔄', 'Play again 🔄'),
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 // ─────────────────────────────────────────────
@@ -466,8 +521,6 @@ class _SyllableWord extends StatelessWidget {
   final int syllableCount;
   final bool revealed;
   final Color color;
-
-  static const _vowels = {'А', 'Е', 'И', 'І', 'О', 'У', 'Є', 'Ї', 'Ю', 'Я'};
 
   const _SyllableWord({
     required this.word,
@@ -484,18 +537,18 @@ class _SyllableWord extends StatelessWidget {
     final parts = <String>[];
     String current = '';
     int vowelsSeen = 0;
-    final vowelsTotal = chars.where(_vowels.contains).length;
+    final vowelsTotal = chars.where(ukrainianVowels.contains).length;
 
     for (int i = 0; i < chars.length; i++) {
       current += chars[i];
-      if (_vowels.contains(chars[i])) {
+      if (ukrainianVowels.contains(chars[i])) {
         vowelsSeen++;
         // After each vowel except the last one, find a good split point
         if (vowelsSeen < vowelsTotal) {
           // Lookahead: if next char is a consonant followed by a vowel, split here
           // Simple rule: split after vowel if at least 1 more vowel remains
           final remaining = chars.sublist(i + 1);
-          final nextVowelIdx = remaining.indexWhere(_vowels.contains);
+          final nextVowelIdx = remaining.indexWhere(ukrainianVowels.contains);
           if (nextVowelIdx == 0) {
             // Next char is a vowel — split here
             parts.add(current);

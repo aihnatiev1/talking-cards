@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../providers/daily_quest_provider.dart';
 import '../providers/language_provider.dart';
-import '../services/analytics_service.dart';
 import '../services/tts_service.dart';
+import '../utils/confetti_overlay_mixin.dart';
 import '../utils/constants.dart';
+import '../utils/game_state_mixin.dart';
 import '../utils/l10n.dart';
-import '../widgets/confetti_burst.dart';
+import '../utils/shake_animation_mixin.dart';
 
 // ─────────────────────────────────────────────
 //  Rhyme groups — Ukrainian
@@ -83,47 +83,42 @@ class RhymeGameScreen extends ConsumerStatefulWidget {
 }
 
 class _RhymeGameScreenState extends ConsumerState<RhymeGameScreen>
-    with SingleTickerProviderStateMixin {
-  int _score = 0;
+    with
+        TickerProviderStateMixin,
+        ShakeAnimationMixin,
+        ConfettiOverlayMixin,
+        GameStateMixin {
+  @override
+  String get gameId => 'rhyme_game';
+
+  // rhyme_game doesn't track per-game plays/bestScore in gameStatsProvider
+  // (not declared in gameDefinitions).
+  @override
+  bool get recordToStats => false;
+
   bool _answered = false;
   String? _tappedWord;
-  bool _questDone = false;
-  OverlayEntry? _confettiEntry;
 
   late _Round _round;
-
-  late AnimationController _shakeCtrl;
-  late Animation<double> _shakeAnim;
-  String? _shakingWord;
 
   @override
   void initState() {
     super.initState();
-    _shakeCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 380),
-    );
-    _shakeAnim = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _shakeCtrl, curve: Curves.elasticIn),
-    );
-    _shakeCtrl.addStatusListener((s) {
-      if (s == AnimationStatus.completed) {
-        _shakeCtrl.reset();
-        setState(() => _shakingWord = null);
-      }
-    });
-    AnalyticsService.instance.logGameStart('rhyme_game');
+    initShake();
+    startGame();
     _buildRound();
   }
 
   @override
   void dispose() {
-    _shakeCtrl.dispose();
-    _confettiEntry?.remove();
+    disposeShake();
+    disposeConfetti();
     super.dispose();
   }
 
   void _buildRound() {
+    if (!nextRound()) return;
+
     // Group words by groupId
     final groups = <String, List<_RhymeWord>>{};
     for (final w in _rhymeWords) {
@@ -132,14 +127,16 @@ class _RhymeGameScreenState extends ConsumerState<RhymeGameScreen>
     final validGroups = groups.values.where((g) => g.length >= 2).toList();
 
     final rng = Random();
-    // Pick question group
     final qGroup = validGroups[rng.nextInt(validGroups.length)];
     final qGroupShuffled = List<_RhymeWord>.from(qGroup)..shuffle(rng);
     final question = qGroupShuffled[0];
     final correctAnswer = qGroupShuffled[1];
 
-    // Pick 2 distractors from other groups
-    final otherWords = _rhymeWords.where((w) => w.groupId != question.groupId).toList()..shuffle(rng);
+    // 2 distractors from other groups
+    final otherWords = _rhymeWords
+        .where((w) => w.groupId != question.groupId)
+        .toList()
+      ..shuffle(rng);
     final distractors = otherWords.take(2).toList();
 
     final options = [correctAnswer, ...distractors]..shuffle(rng);
@@ -148,7 +145,6 @@ class _RhymeGameScreenState extends ConsumerState<RhymeGameScreen>
       _round = _Round(question: question, correct: correctAnswer, options: options);
       _answered = false;
       _tappedWord = null;
-      _shakingWord = null;
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) => _speakWord(question.word));
@@ -171,51 +167,26 @@ class _RhymeGameScreenState extends ConsumerState<RhymeGameScreen>
 
     if (isCorrect) {
       HapticFeedback.lightImpact();
-      _score++;
-      _showConfetti();
-      Future.delayed(const Duration(milliseconds: 300), () {
-        final isEn = ref.read(languageProvider) == 'en';
-        TtsService.instance.speak(
-          isEn ? 'Great!' : 'Молодець!',
-          locale: isEn ? 'en-US' : 'uk-UA',
-        );
-      });
-      if (!_questDone && _score >= 3) {
-        _questDone = true;
-        ref.read(dailyQuestProvider.notifier).completeTask(QuestTask.playQuiz);
-        AnalyticsService.instance.logGameComplete('rhyme_game', _score);
-      }
+      scorePoint();
+      showConfetti();
       Future.delayed(const Duration(milliseconds: 1000), () {
         if (mounted) _buildRound();
       });
     } else {
       HapticFeedback.mediumImpact();
-      setState(() => _shakingWord = word.word);
-      _shakeCtrl.forward();
+      shake(id: word.word);
       Future.delayed(const Duration(milliseconds: 1300), () {
         if (mounted) setState(() { _answered = false; _tappedWord = null; });
       });
     }
   }
 
-  void _showConfetti() {
-    _confettiEntry?.remove();
-    final size = MediaQuery.of(context).size;
-    _confettiEntry = OverlayEntry(
-      builder: (_) => IgnorePointer(
-        child: ConfettiBurst(origin: Offset(size.width / 2, size.height / 3)),
-      ),
-    );
-    Overlay.of(context).insert(_confettiEntry!);
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      _confettiEntry?.remove();
-      _confettiEntry = null;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final s = AppS(ref.read(languageProvider) == 'en');
+
+    if (finished) return _buildFinishScreen(s);
+
     final question = _round.question;
 
     return Scaffold(
@@ -232,9 +203,9 @@ class _RhymeGameScreenState extends ConsumerState<RhymeGameScreen>
             padding: const EdgeInsets.only(right: 16),
             child: Center(
               child: Text(
-                '⭐ $_score',
+                '⭐ $score  $roundsPlayed/$maxRounds',
                 style: const TextStyle(
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: kAccent,
                 ),
@@ -269,7 +240,7 @@ class _RhymeGameScreenState extends ConsumerState<RhymeGameScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('🎵', style: const TextStyle(fontSize: 20)),
+                  const Text('🎵', style: TextStyle(fontSize: 20)),
                   const SizedBox(width: 8),
                   Text(
                     s('Що римується з цим словом?',
@@ -292,7 +263,6 @@ class _RhymeGameScreenState extends ConsumerState<RhymeGameScreen>
                     final isCorrect = _answered && w.groupId == question.groupId;
                     final isTapped = _tappedWord == w.word;
                     final isWrong = _answered && isTapped && w.groupId != question.groupId;
-                    final isShaking = _shakingWord == w.word;
 
                     final state = isCorrect
                         ? _WordState.correct
@@ -300,42 +270,102 @@ class _RhymeGameScreenState extends ConsumerState<RhymeGameScreen>
                             ? _WordState.wrong
                             : _WordState.option;
 
-                    Widget tile = Expanded(
+                    return Expanded(
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 10),
-                        child: _WordCard(
-                          rhymeWord: w,
-                          state: state,
-                          onTap: () => _onTap(w),
+                        child: wrapShake(
+                          _WordCard(
+                            rhymeWord: w,
+                            state: state,
+                            onTap: () => _onTap(w),
+                          ),
+                          id: w.word,
                         ),
                       ),
                     );
-
-                    if (isShaking) {
-                      tile = Expanded(
-                        child: AnimatedBuilder(
-                          animation: _shakeAnim,
-                          builder: (_, child) {
-                            final offset = 8 *
-                                (0.5 - (_shakeAnim.value % 0.25) / 0.25)
-                                    .abs() *
-                                2 -
-                                4;
-                            return Transform.translate(
-                                offset: Offset(offset, 0), child: child);
-                          },
-                          child: (tile as Expanded).child,
-                        ),
-                      );
-                    }
-
-                    return tile;
                   }).toList(),
                 ),
               ),
 
               const SizedBox(height: 24),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFinishScreen(AppS s) {
+    final pct = score / maxRounds;
+    final stars = pct >= 0.8 ? 3 : pct >= 0.5 ? 2 : 1;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFFFF0FB),
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  stars == 3
+                      ? s('Чудово! 🎉', 'Excellent! 🎉')
+                      : stars == 2
+                          ? s('Молодець! 👍', 'Well done! 👍')
+                          : s('Спробуй ще! 💪', 'Keep trying! 💪'),
+                  style: const TextStyle(
+                      fontSize: 32, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    3,
+                    (i) => Text(
+                      i < stars ? '⭐' : '☆',
+                      style: const TextStyle(fontSize: 48),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  s('$score з $maxRounds рим', '$score of $maxRounds rhymes'),
+                  style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                ),
+                const SizedBox(height: 48),
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kAccent,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18)),
+                    ),
+                    child: Text(
+                      s('Готово', 'Done'),
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: () {
+                    resetGame();
+                    _buildRound();
+                  },
+                  child: Text(
+                    s('Грати ще раз 🔄', 'Play again 🔄'),
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -430,7 +460,7 @@ class _WordCard extends StatelessWidget {
                     const SizedBox(height: 10),
                     Text(
                       rhymeWord.word,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                         color: kAccent,

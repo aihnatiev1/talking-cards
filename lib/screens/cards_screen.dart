@@ -20,13 +20,13 @@ import '../providers/language_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../services/engage_service.dart';
-import '../services/speech_service.dart';
 import '../services/tts_service.dart';
 import '../utils/constants.dart';
 import '../utils/l10n.dart';
 import '../services/paywall_flow.dart';
 import '../widgets/celebration_overlay.dart';
 import '../widgets/flash_card.dart';
+import '../widgets/parental_gate.dart';
 import '../widgets/share_progress_card.dart';
 import '../widgets/speaker_button.dart';
 import '../widgets/swipe_hint.dart';
@@ -52,12 +52,6 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   // Prevents dispose() from killing audio when navigating to "Play again"
   bool _celebrating = false;
   bool _isFlipped = false;
-
-  // ── Speech recognition state ─────────────────
-  bool _speechListening = false;
-  _SpeechResult? _speechResult; // null = no result shown
-  int _speechAttempts = 0; // resets on card change
-  static const _maxAttempts = 3;
 
   // Auto-play timer mode
   bool _autoPlayTimer = false;
@@ -244,67 +238,6 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     return null;
   }
 
-  // ── Speech recognition ────────────────────────
-
-  Future<void> _onMicTap() async {
-    if (!SpeechService.instance.isAvailable) return;
-    if (_speechListening) {
-      await SpeechService.instance.stopListening();
-      setState(() => _speechListening = false);
-      return;
-    }
-    // Stop audio to avoid echo during recognition
-    AudioService.instance.stop();
-
-    final card = _cards[_currentIndex];
-    AnalyticsService.instance.logEvent('speech_attempt',
-        parameters: {'card_id': card.id});
-
-    setState(() {
-      _speechListening = true;
-      _speechResult = null;
-    });
-
-    await SpeechService.instance.startListening(
-      onResult: (recognized) {
-        if (!mounted) return;
-        final correct = SpeechService.matches(recognized, card.sound);
-        _speechAttempts++;
-
-        AnalyticsService.instance.logEvent(
-          correct ? 'speech_correct' : 'speech_incorrect',
-          parameters: {'card_id': card.id, 'recognized': recognized},
-        );
-
-        if (correct) {
-          HapticFeedback.mediumImpact();
-          ref.read(dailyQuestProvider.notifier).recordSpeechCorrect();
-        } else {
-          HapticFeedback.lightImpact();
-        }
-
-        setState(() {
-          _speechListening = false;
-          _speechResult = _SpeechResult(
-            isCorrect: correct,
-            attemptsUsed: _speechAttempts,
-            correctWord: card.sound,
-          );
-        });
-
-        // Auto-dismiss result after 2.5 seconds
-        Future.delayed(const Duration(milliseconds: 2500), () {
-          if (mounted) setState(() => _speechResult = null);
-        });
-      },
-    );
-
-    // If listening stopped without a result (timeout, cancel)
-    if (mounted && _speechListening) {
-      setState(() => _speechListening = false);
-    }
-  }
-
   void _speakCardDebounced(int index) {
     _speakDebounce?.cancel();
     _speakDebounce = Timer(const Duration(milliseconds: 100), () {
@@ -319,7 +252,11 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     if (purchased && mounted) Navigator.of(context).pop();
   }
 
-  void _shareProgress() {
+  Future<void> _shareProgress() async {
+    // Parent gate — prevents toddlers from triggering the system share sheet
+    // (which can expose app data to other apps / contacts).
+    final passed = await ParentalGate.show(context);
+    if (!passed || !mounted) return;
     final completed = ref.read(completedPacksProvider);
     final packs = ref.read(packsProvider).valueOrNull ?? [];
     final progress = ref.read(packProgressProvider);
@@ -532,7 +469,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                         borderRadius: BorderRadius.circular(16)),
                   ),
                   child: Text(s('Розблокувати все', 'Unlock all'),
-                    style: TextStyle(
+                    style: const TextStyle(
                         fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -584,14 +521,30 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
             Text(widget.pack.icon, style: const TextStyle(fontSize: 24)),
             const SizedBox(width: 8),
             Flexible(
-              child: Text(
-                widget.pack.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: widget.pack.color,
-                  fontWeight: FontWeight.bold,
-                ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.pack.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: widget.pack.color,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  if (widget.pack.id == '_review')
+                    Text(
+                      AppS(ref.read(languageProvider) == 'en')(
+                          '🔄 Повторення', '🔄 Review'),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: widget.pack.color.withValues(alpha: 0.7),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                ],
               ),
             ),
           ],
@@ -705,12 +658,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                     setState(() {
                       _currentIndex = index;
                       _isFlipped = false;
-                      // Reset speech state on card change
-                      _speechListening = false;
-                      _speechResult = null;
-                      _speechAttempts = 0;
                     });
-                    SpeechService.instance.cancelListening();
                     // Track only forward progress
                     if (index > prev) {
                       AnalyticsService.instance.logCardView(
@@ -754,7 +702,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                           transform: Matrix4.identity()
                             ..setEntry(3, 2, 0.001)
                             ..rotateY(angle)
-                            ..scale(scale),
+                            ..scaleByDouble(scale, scale, scale, 1),
                           child: Opacity(
                             opacity: lerpDouble(1, 0.5, value.abs())!.clamp(0.0, 1.0),
                             child: child,
@@ -763,6 +711,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                       },
                       child: FlashCard(
                         card: cards[index],
+                        isActive: index == _currentIndex,
                         ttsLocale: _ttsLocaleForCard(cards[index]),
                         onFlipChanged: (flipped) {
                           setState(() => _isFlipped = flipped);
@@ -775,32 +724,53 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                   Positioned(
                     top: 36,
                     right: 28,
-                    child:
-                        SpeakerButton(onActivated: _speakCurrentCard),
-                  ),
-                // Mic button — only for unlocked UA packs where speech is available
-                if (!_isFlipped &&
-                    !widget.pack.isLocked &&
-                    ref.read(languageProvider) == 'uk' &&
-                    SpeechService.instance.isAvailable &&
-                    _speechAttempts < _maxAttempts)
-                  Positioned(
-                    bottom: 80,
-                    right: 28,
-                    child: _MicButton(
-                      isListening: _speechListening,
-                      onTap: _onMicTap,
-                    ),
-                  ),
-                // Speech result banner
-                if (_speechResult != null)
-                  Positioned(
-                    bottom: 24,
-                    left: 24,
-                    right: 24,
-                    child: _SpeechResultBanner(result: _speechResult!),
+                    child: SpeakerButton(onActivated: _speakCurrentCard),
                   ),
                 SwipeHint(key: _swipeHintKey),
+                // Auto-play countdown — visible on the card so toddlers see
+                // "next card coming". Single tap pauses (toggles auto-play off).
+                if (_autoPlayTimer && _countdownSeconds > 0)
+                  Positioned(
+                    top: 36,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: GestureDetector(
+                        onTap: _toggleAutoPlayTimer,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: widget.pack.color,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: widget.pack.color.withValues(alpha: 0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.pause_rounded,
+                                  color: Colors.white, size: 18),
+                              const SizedBox(width: 6),
+                              Text(
+                                '$_countdownSeconds',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -848,149 +818,3 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   }
 }
 
-// ─────────────────────────────────────────────
-//  Speech helpers
-// ─────────────────────────────────────────────
-
-class _SpeechResult {
-  final bool isCorrect;
-  final int attemptsUsed;
-  final String correctWord;
-  const _SpeechResult({
-    required this.isCorrect,
-    required this.attemptsUsed,
-    required this.correctWord,
-  });
-}
-
-class _MicButton extends StatefulWidget {
-  final bool isListening;
-  final VoidCallback onTap;
-  const _MicButton({required this.isListening, required this.onTap});
-
-  @override
-  State<_MicButton> createState() => _MicButtonState();
-}
-
-class _MicButtonState extends State<_MicButton>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _pulse;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulse = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 700),
-    );
-    if (widget.isListening) _pulse.repeat(reverse: true);
-  }
-
-  @override
-  void didUpdateWidget(covariant _MicButton old) {
-    super.didUpdateWidget(old);
-    if (widget.isListening && !_pulse.isAnimating) {
-      _pulse.repeat(reverse: true);
-    } else if (!widget.isListening && _pulse.isAnimating) {
-      _pulse.stop();
-      _pulse.value = 0;
-    }
-  }
-
-  @override
-  void dispose() {
-    _pulse.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    const color = Color(0xFF6C63FF);
-    return GestureDetector(
-      onTap: widget.onTap,
-      child: AnimatedBuilder(
-        animation: _pulse,
-        builder: (_, __) => Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: widget.isListening
-                ? color.withValues(alpha: 0.9 + _pulse.value * 0.1)
-                : Colors.white.withValues(alpha: 0.9),
-            boxShadow: [
-              BoxShadow(
-                color: color.withValues(
-                    alpha: widget.isListening ? 0.4 + _pulse.value * 0.3 : 0.2),
-                blurRadius: widget.isListening ? 12 + _pulse.value * 8 : 6,
-                spreadRadius: widget.isListening ? 2 : 0,
-              ),
-            ],
-          ),
-          child: Icon(
-            widget.isListening ? Icons.mic : Icons.mic_none_rounded,
-            color: widget.isListening ? Colors.white : color,
-            size: 22,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SpeechResultBanner extends StatelessWidget {
-  final _SpeechResult result;
-  const _SpeechResultBanner({required this.result});
-
-  @override
-  Widget build(BuildContext context) {
-    final isCorrect = result.isCorrect;
-    final attemptsLeft =
-        _CardsScreenState._maxAttempts - result.attemptsUsed;
-    final color = isCorrect ? Colors.green : Colors.orange;
-
-    return AnimatedOpacity(
-      opacity: 1.0,
-      duration: const Duration(milliseconds: 200),
-      child: Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.92),
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              isCorrect ? '✅' : '🔁',
-              style: const TextStyle(fontSize: 18),
-            ),
-            const SizedBox(width: 8),
-            Flexible(
-              child: Text(
-                isCorrect
-                    ? 'Правильно! Чудово!'
-                    : attemptsLeft > 0
-                        ? 'Ще раз! (залишилось $attemptsLeft)'
-                        : 'Слово: ${result.correctWord}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

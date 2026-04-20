@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'notification_service.dart';
+
 class PurchaseService {
   PurchaseService._();
   static final PurchaseService instance = PurchaseService._();
@@ -114,6 +116,8 @@ class PurchaseService {
     if (_productIds.contains(purchase.productID)) {
       isPro.value = true;
       await _persist();
+      // No reason to nag a paying user with the day-3 trial reminder.
+      await NotificationService.instance.cancelPaywallReminder();
     }
   }
 

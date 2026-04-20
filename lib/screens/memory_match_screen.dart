@@ -9,8 +9,9 @@ import '../models/pack_model.dart';
 import '../providers/daily_quest_provider.dart';
 import '../providers/game_stats_provider.dart';
 import '../providers/language_provider.dart';
+import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
-import '../services/tts_service.dart';
+import '../utils/confetti_overlay_mixin.dart';
 import '../utils/l10n.dart';
 
 // ─────────────────────────────────────────────
@@ -49,7 +50,8 @@ class MemoryMatchScreen extends ConsumerStatefulWidget {
   ConsumerState<MemoryMatchScreen> createState() => _MemoryMatchScreenState();
 }
 
-class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
+class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen>
+    with ConfettiOverlayMixin {
   static const _pairCount = 6; // 3×4 grid — bigger tiles
 
   late List<_Tile> _tiles;
@@ -63,7 +65,14 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
   @override
   void initState() {
     super.initState();
+    AnalyticsService.instance.logGameStart('memory_match');
     _initGame();
+  }
+
+  @override
+  void dispose() {
+    disposeConfetti();
+    super.dispose();
   }
 
   // ── Setup ───────────────────────────────────
@@ -132,19 +141,34 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
       _tiles[b].isMatched = true;
       _matched++;
     });
-    if (_matched == _pairCount) {
+    // Mini-celebration for every successful pair (not just the final match)
+    // — toddlers need immediate reinforcement to learn the loop.
+    if (_matched < _pairCount) {
+      final size = MediaQuery.of(context).size;
+      showConfetti(
+        origin: Offset(size.width / 2, size.height / 2.2),
+        linger: const Duration(milliseconds: 700),
+      );
+    } else {
       HapticFeedback.heavyImpact();
-      Future.delayed(const Duration(milliseconds: 400), () {
+      final size = MediaQuery.of(context).size;
+      showConfetti(
+        origin: Offset(size.width / 2, size.height / 2),
+        linger: const Duration(milliseconds: 2000),
+      );
+      Future.delayed(const Duration(milliseconds: 1200), () {
         if (mounted) setState(() => _done = true);
+        AnalyticsService.instance.logGameComplete('memory_match', _matched);
         ref
             .read(dailyQuestProvider.notifier)
-            .completeTask(QuestTask.playQuiz); // memory counts as the game task
+            .completeTask(QuestTask.playQuiz);
         ref.read(gameStatsProvider.notifier).record('memory', _matched);
       });
     }
   }
 
   void _onMismatch(int a, int b) {
+    HapticFeedback.mediumImpact();
     _isLocked = true;
     Future.delayed(const Duration(milliseconds: 900), () {
       if (!mounted) return;
@@ -308,13 +332,13 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
                   children: [
                     Icon(Icons.touch_app_rounded,
                         size: 14,
-                        color: color.withValues(alpha: 0.5)),
+                        color: isDark ? Colors.white70 : color.withValues(alpha: 0.5)),
                     const SizedBox(width: 5),
                     Text(
                       s('Спроб: $_attempts', 'Tries: $_attempts'),
                       style: TextStyle(
                         fontSize: 13,
-                        color: color.withValues(alpha: 0.6),
+                        color: isDark ? Colors.white : color.withValues(alpha: 0.6),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -350,14 +374,18 @@ class _TileWidget extends StatefulWidget {
 }
 
 class _TileWidgetState extends State<_TileWidget>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _ctrl;
   late final Animation<double> _anim;
+
+  late final AnimationController _bounceCtrl;
+  late final Animation<double> _bounceScale;
 
   // Track last-processed state to avoid mutable-object comparison issue.
   // _Tile is mutated in-place → old.tile == widget.tile (same ref), so
   // comparing old.tile.isFlipped gives the NEW value, not the old one.
   bool _lastFaceUp = false;
+  bool _lastMatched = false;
 
   bool get _faceUp => widget.tile.isFlipped || widget.tile.isMatched;
 
@@ -371,20 +399,35 @@ class _TileWidgetState extends State<_TileWidget>
     _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
     _lastFaceUp = _faceUp;
     if (_faceUp) _ctrl.value = 1.0;
+
+    _bounceCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 320),
+    );
+    _bounceScale = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.18), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 1.18, end: 1.0), weight: 1),
+    ]).animate(CurvedAnimation(parent: _bounceCtrl, curve: Curves.easeInOut));
+    _lastMatched = widget.tile.isMatched;
   }
 
   @override
   void didUpdateWidget(covariant _TileWidget old) {
     super.didUpdateWidget(old);
-    final now = _faceUp;
-    if (now && !_lastFaceUp) _ctrl.forward();
-    if (!now && _lastFaceUp) _ctrl.reverse();
-    _lastFaceUp = now;
+    final nowFace = _faceUp;
+    if (nowFace && !_lastFaceUp) _ctrl.forward();
+    if (!nowFace && _lastFaceUp) _ctrl.reverse();
+    _lastFaceUp = nowFace;
+
+    final nowMatched = widget.tile.isMatched;
+    if (nowMatched && !_lastMatched) _bounceCtrl.forward(from: 0);
+    _lastMatched = nowMatched;
   }
 
   @override
   void dispose() {
     _ctrl.dispose();
+    _bounceCtrl.dispose();
     super.dispose();
   }
 
@@ -393,7 +436,7 @@ class _TileWidgetState extends State<_TileWidget>
     return GestureDetector(
       onTap: widget.onTap,
       child: AnimatedBuilder(
-        animation: _anim,
+        animation: Listenable.merge([_anim, _bounceCtrl]),
         builder: (_, __) {
           final angle = _anim.value * pi;
           final showFront = angle > pi / 2;
@@ -407,12 +450,15 @@ class _TileWidgetState extends State<_TileWidget>
               : _BackFace(
                   packColor: widget.packColor, packIcon: widget.packIcon);
 
-          return Transform(
-            transform: Matrix4.identity()
-              ..setEntry(3, 2, 0.001)
-              ..rotateY(angle),
-            alignment: Alignment.center,
-            child: face,
+          return Transform.scale(
+            scale: _bounceScale.value,
+            child: Transform(
+              transform: Matrix4.identity()
+                ..setEntry(3, 2, 0.001)
+                ..rotateY(angle),
+              alignment: Alignment.center,
+              child: face,
+            ),
           );
         },
       ),
@@ -531,28 +577,19 @@ class _FrontFace extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          if (matched)
-            const Padding(
-              padding: EdgeInsets.only(bottom: 2),
-              child: Icon(Icons.check_circle_rounded,
-                  color: Color(0xFF4CAF50), size: 14),
-            ),
           // Real image if available, emoji as fallback
           if (tile.card.image != null)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Image.asset(
                 'assets/images/webp/${tile.card.image}.webp',
-                height: matched ? 52 : 58,
+                height: 58,
                 fit: BoxFit.contain,
               ),
             )
           else
-            Text(
-              tile.card.emoji,
-              style: TextStyle(fontSize: matched ? 28 : 32),
-            ),
-          const SizedBox(height: 3),
+            Text(tile.card.emoji, style: const TextStyle(fontSize: 32)),
+          const SizedBox(height: 4),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 3),
             child: Text(
@@ -561,12 +598,12 @@ class _FrontFace extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 9,
+                fontSize: 12,
                 fontWeight: FontWeight.w800,
                 color: matched
                     ? const Color(0xFF4CAF50)
                     : tile.card.colorAccent,
-                letterSpacing: 0.3,
+                letterSpacing: 0.2,
               ),
             ),
           ),
@@ -598,8 +635,8 @@ class _ResultScreen extends ConsumerWidget {
   String _timeLabel(bool isEn) {
     final sec = elapsed.inSeconds;
     final min = elapsed.inMinutes;
-    if (min > 0) return isEn ? '${min}m ${sec % 60}s' : '${min}хв ${sec % 60}с';
-    return isEn ? '${sec}s' : '${sec}с';
+    if (min > 0) return isEn ? '${min}m ${sec % 60}s' : '$min хв ${sec % 60} с';
+    return isEn ? '${sec}s' : '$sec с';
   }
 
   @override
@@ -614,7 +651,7 @@ class _ResultScreen extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('🎉', style: const TextStyle(fontSize: 64)),
+              const Text('🎉', style: TextStyle(fontSize: 64)),
               const SizedBox(height: 16),
               Text(
                 stars == 3
@@ -672,7 +709,7 @@ class _ResultScreen extends ConsumerWidget {
                   onPressed: onPlayAgain,
                   icon: const Icon(Icons.refresh_rounded),
                   label: Text(s('Грати знову', 'Play again'),
-                      style: TextStyle(
+                      style: const TextStyle(
                           fontSize: 17, fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: pack.color,

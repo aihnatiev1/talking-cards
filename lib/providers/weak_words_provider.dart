@@ -36,7 +36,7 @@ class WeakWordsNotifier extends StateNotifier<Map<String, int>> {
     final next = (state[cardId] ?? 0) + 1;
     state = {...state, cardId: next};
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('${_fullPrefix}$cardId', next);
+    await prefs.setInt('$_fullPrefix$cardId', next);
   }
 
   /// Returns up to [limit] cards sorted by mistake count descending.

@@ -6,15 +6,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
-import '../providers/daily_quest_provider.dart';
-import '../providers/game_stats_provider.dart';
 import '../providers/language_provider.dart';
-import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
-import '../services/tts_service.dart';
+import '../utils/confetti_overlay_mixin.dart';
 import '../utils/constants.dart';
+import '../utils/game_state_mixin.dart';
 import '../utils/l10n.dart';
-import '../widgets/confetti_burst.dart';
+import '../utils/shake_animation_mixin.dart';
 
 /// Game: show one card, pick its opposite from 3 options.
 ///
@@ -30,48 +28,37 @@ class OppositeGameScreen extends ConsumerStatefulWidget {
 }
 
 class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
-    with SingleTickerProviderStateMixin {
-  int _score = 0;
+    with
+        TickerProviderStateMixin,
+        ShakeAnimationMixin,
+        ConfettiOverlayMixin,
+        GameStateMixin {
+  @override
+  String get gameId => 'opposite_game';
+
   bool _answered = false;
   String? _tappedId;
-  bool _questDone = false;
-  OverlayEntry? _confettiEntry;
 
   late _Round _round;
-
-  // Shake for wrong answers
-  late AnimationController _shakeCtrl;
-  late Animation<double> _shakeAnim;
-  String? _shakingId;
 
   @override
   void initState() {
     super.initState();
-    _shakeCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 380),
-    );
-    _shakeAnim = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _shakeCtrl, curve: Curves.elasticIn),
-    );
-    _shakeCtrl.addStatusListener((s) {
-      if (s == AnimationStatus.completed) {
-        _shakeCtrl.reset();
-        setState(() => _shakingId = null);
-      }
-    });
-    AnalyticsService.instance.logGameStart('opposite_game');
+    initShake();
+    startGame();
     _buildRound();
   }
 
   @override
   void dispose() {
-    _shakeCtrl.dispose();
-    _confettiEntry?.remove();
+    disposeShake();
+    disposeConfetti();
     super.dispose();
   }
 
   void _buildRound() {
+    if (!nextRound()) return;
+
     final cards = widget.pack.cards;
     // Pairs: index 0↔1, 2↔3 … pick a random pair
     final pairCount = cards.length ~/ 2;
@@ -100,10 +87,8 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
       _round = _Round(question: question, correct: correct, options: options);
       _answered = false;
       _tappedId = null;
-      _shakingId = null;
     });
 
-    // Speak question after build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       AudioService.instance.speakCard(
         question.audioKey,
@@ -124,53 +109,30 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
 
     if (isCorrect) {
       HapticFeedback.lightImpact();
-      _score++;
-      _showConfetti();
-      Future.delayed(const Duration(milliseconds: 300), () {
-        final isEn = ref.read(languageProvider) == 'en';
-        TtsService.instance.speak(
-          isEn ? 'Great!' : 'Молодець!',
-          locale: isEn ? 'en-US' : 'uk-UA',
-        );
+      scorePoint();
+      showConfetti();
+      // Play the opposite word so child hears both words of the pair
+      Future.delayed(const Duration(milliseconds: 350), () {
+        if (mounted) AudioService.instance.playWordOnly(card.audioKey, card.sound);
       });
-      if (!_questDone && _score >= 3) {
-        _questDone = true;
-        ref.read(dailyQuestProvider.notifier).completeTask(QuestTask.playQuiz);
-        AnalyticsService.instance.logGameComplete('opposite_game', _score);
-        ref.read(gameStatsProvider.notifier).record('opposite_game', _score);
-      }
       Future.delayed(const Duration(milliseconds: 1000), () {
         if (mounted) _buildRound();
       });
     } else {
       HapticFeedback.mediumImpact();
-      setState(() => _shakingId = card.id);
-      _shakeCtrl.forward();
-      // Show wrong+correct highlight, then reset so user can try again
+      shake(id: card.id);
       Future.delayed(const Duration(milliseconds: 1300), () {
         if (mounted) setState(() { _answered = false; _tappedId = null; });
       });
     }
   }
 
-  void _showConfetti() {
-    _confettiEntry?.remove();
-    final size = MediaQuery.of(context).size;
-    _confettiEntry = OverlayEntry(
-      builder: (_) => IgnorePointer(
-        child: ConfettiBurst(origin: Offset(size.width / 2, size.height / 3)),
-      ),
-    );
-    Overlay.of(context).insert(_confettiEntry!);
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      _confettiEntry?.remove();
-      _confettiEntry = null;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final s = AppS(ref.read(languageProvider) == 'en');
+
+    if (finished) return _buildFinishScreen(s);
+
     final question = _round.question;
     final correct = _round.correct;
 
@@ -188,9 +150,9 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
             padding: const EdgeInsets.only(right: 16),
             child: Center(
               child: Text(
-                '⭐ $_score',
+                '⭐ $score  $roundsPlayed/$maxRounds',
                 style: const TextStyle(
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: kAccent,
                 ),
@@ -225,7 +187,7 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('↔️', style: const TextStyle(fontSize: 22)),
+                  const Text('↔️', style: TextStyle(fontSize: 22)),
                   const SizedBox(width: 8),
                   Text(
                     s('Що протилежне?', 'What is the opposite?'),
@@ -246,42 +208,102 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
                   children: _round.options.map((card) {
                     final isCorrectCard = card.id == correct.id;
                     final isTapped = _tappedId == card.id;
-                    final isShaking = _shakingId == card.id;
 
-                    Widget tile = _OptionTile(
+                    final tile = _OptionTile(
                       card: card,
                       showCorrect: _answered && isCorrectCard,
                       showWrong: _answered && isTapped && !isCorrectCard,
                       onTap: () => _onTap(card),
                     );
 
-                    if (isShaking) {
-                      tile = AnimatedBuilder(
-                        animation: _shakeAnim,
-                        builder: (_, child) {
-                          final offset = 8 *
-                              (0.5 - (_shakeAnim.value % 0.25) / 0.25).abs() *
-                              2 -
-                              4;
-                          return Transform.translate(
-                            offset: Offset(offset, 0),
-                            child: child,
-                          );
-                        },
-                        child: tile,
-                      );
-                    }
-
                     return Expanded(
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 10),
-                        child: tile,
+                        child: wrapShake(tile, id: card.id),
                       ),
                     );
                   }).toList(),
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFinishScreen(AppS s) {
+    final pct = score / maxRounds;
+    final stars = pct >= 0.8 ? 3 : pct >= 0.5 ? 2 : 1;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8F0FF),
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  stars == 3
+                      ? s('Чудово! 🎉', 'Excellent! 🎉')
+                      : stars == 2
+                          ? s('Молодець! 👍', 'Well done! 👍')
+                          : s('Спробуй ще! 💪', 'Keep trying! 💪'),
+                  style: const TextStyle(
+                      fontSize: 32, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    3,
+                    (i) => Text(
+                      i < stars ? '⭐' : '☆',
+                      style: const TextStyle(fontSize: 48),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  s('$score з $maxRounds протилежностей',
+                      '$score of $maxRounds opposites'),
+                  style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                ),
+                const SizedBox(height: 48),
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kAccent,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18)),
+                    ),
+                    child: Text(
+                      s('Готово', 'Done'),
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: () {
+                    resetGame();
+                    _buildRound();
+                  },
+                  child: Text(
+                    s('Грати ще раз 🔄', 'Play again 🔄'),
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

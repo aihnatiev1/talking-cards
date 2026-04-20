@@ -6,14 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
-import '../providers/daily_quest_provider.dart';
-import '../providers/game_stats_provider.dart';
 import '../providers/language_provider.dart';
-import '../services/analytics_service.dart';
-import '../services/tts_service.dart';
+import '../utils/confetti_overlay_mixin.dart';
 import '../utils/constants.dart';
+import '../utils/game_state_mixin.dart';
 import '../utils/l10n.dart';
-import '../widgets/confetti_burst.dart';
+import '../utils/shake_animation_mixin.dart';
 
 class OddOneOutScreen extends ConsumerStatefulWidget {
   final List<PackModel> packs;
@@ -25,44 +23,30 @@ class OddOneOutScreen extends ConsumerStatefulWidget {
 }
 
 class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
-    with SingleTickerProviderStateMixin {
-  int _score = 0;
-  int _total = 0;
+    with
+        TickerProviderStateMixin,
+        ShakeAnimationMixin,
+        ConfettiOverlayMixin,
+        GameStateMixin {
+  @override
+  String get gameId => 'odd_one_out';
+
   bool _answered = false;
   String? _tappedId;
   late List<_Slot> _slots;
-  bool _questDone = false;
-  OverlayEntry? _confettiEntry;
-
-  // Shake for wrong
-  late AnimationController _shakeCtrl;
-  late Animation<double> _shakeAnim;
-  String? _shakingId;
 
   @override
   void initState() {
     super.initState();
-    _shakeCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 400),
-    );
-    _shakeAnim = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _shakeCtrl, curve: Curves.elasticIn),
-    );
-    _shakeCtrl.addStatusListener((s) {
-      if (s == AnimationStatus.completed) {
-        _shakeCtrl.reset();
-        setState(() => _shakingId = null);
-      }
-    });
-    AnalyticsService.instance.logGameStart('odd_one_out');
+    initShake();
+    startGame();
     _buildRound();
   }
 
   @override
   void dispose() {
-    _shakeCtrl.dispose();
-    _confettiEntry?.remove();
+    disposeShake();
+    disposeConfetti();
     super.dispose();
   }
 
@@ -87,7 +71,6 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
       _slots = slots;
       _answered = false;
       _tappedId = null;
-      _shakingId = null;
     });
   }
 
@@ -99,54 +82,30 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
       HapticFeedback.lightImpact();
       setState(() {
         _answered = true;
-        _score++;
-        _total++;
+        scorePoint();
       });
-      _showConfetti();
-      Future.delayed(const Duration(milliseconds: 300), () {
-        final isEn = ref.read(languageProvider) == 'en';
-        TtsService.instance.speak(
-          isEn ? 'Great!' : 'Молодець!',
-          locale: isEn ? 'en-US' : 'uk-UA',
-        );
-      });
-      if (!_questDone && _score >= 3) {
-        _questDone = true;
-        ref.read(dailyQuestProvider.notifier).completeTask(QuestTask.playQuiz);
-        AnalyticsService.instance.logGameComplete('odd_one_out', _score);
-        ref.read(gameStatsProvider.notifier).record('odd_one_out', _score);
+      showConfetti();
+      if (score >= maxRounds) {
+        Future.delayed(const Duration(milliseconds: 900), () {
+          if (!mounted) return;
+          completeGame();
+        });
+      } else {
+        Future.delayed(const Duration(milliseconds: 900), () {
+          if (mounted) _buildRound();
+        });
       }
-      Future.delayed(const Duration(milliseconds: 900), () {
-        if (mounted) _buildRound();
-      });
     } else {
       HapticFeedback.mediumImpact();
-      setState(() {
-        _total++;
-        _shakingId = slot.card.id;
-      });
-      _shakeCtrl.forward();
+      shake(id: slot.card.id);
     }
-  }
-
-  void _showConfetti() {
-    _confettiEntry?.remove();
-    final size = MediaQuery.of(context).size;
-    _confettiEntry = OverlayEntry(
-      builder: (_) => IgnorePointer(
-        child: ConfettiBurst(origin: Offset(size.width / 2, size.height / 3)),
-      ),
-    );
-    Overlay.of(context).insert(_confettiEntry!);
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      _confettiEntry?.remove();
-      _confettiEntry = null;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     final s = AppS(ref.read(languageProvider) == 'en');
+
+    if (finished) return _buildFinishScreen(s);
 
     // Determine majority pack for the hint header
     final majorityPack = _slots.firstWhere((sl) => !sl.isOdd).pack;
@@ -165,9 +124,9 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
             padding: const EdgeInsets.only(right: 16),
             child: Center(
               child: Text(
-                '⭐ $_score',
+                '⭐ $score/$maxRounds',
                 style: const TextStyle(
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: kAccent,
                 ),
@@ -199,8 +158,8 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
                         Text(majorityPack.icon,
                             style: const TextStyle(fontSize: 40)),
                         const SizedBox(width: 12),
-                        Text('❓',
-                            style: const TextStyle(fontSize: 40)),
+                        const Text('❓',
+                            style: TextStyle(fontSize: 40)),
                       ],
                     ),
                     const SizedBox(height: 6),
@@ -244,29 +203,93 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
     final card = sl.card;
     final isCorrect = _answered && sl.isOdd;
     final isWrong = _answered && _tappedId == card.id && !sl.isOdd;
-    final isShaking = _shakingId == card.id;
 
-    Widget chip = _CardChip(
+    final chip = _CardChip(
       card: card,
       isCorrect: isCorrect,
       isWrong: isWrong,
     );
 
-    if (isShaking) {
-      chip = AnimatedBuilder(
-        animation: _shakeAnim,
-        builder: (_, child) {
-          final offset =
-              8 * (0.5 - (_shakeAnim.value % 0.25) / 0.25).abs() * 2 - 4;
-          return Transform.translate(offset: Offset(offset, 0), child: child);
-        },
-        child: chip,
-      );
-    }
-
     return GestureDetector(
       onTap: () => _onTap(sl),
-      child: chip,
+      child: wrapShake(chip, id: card.id),
+    );
+  }
+
+  Widget _buildFinishScreen(AppS s) {
+    final pct = score / maxRounds;
+    final stars = pct >= 0.8 ? 3 : pct >= 0.5 ? 2 : 1;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF0EEFF),
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  stars == 3
+                      ? s('Чудово! 🎉', 'Excellent! 🎉')
+                      : stars == 2
+                          ? s('Молодець! 👍', 'Well done! 👍')
+                          : s('Спробуй ще! 💪', 'Keep trying! 💪'),
+                  style: const TextStyle(
+                      fontSize: 32, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    3,
+                    (i) => Text(
+                      i < stars ? '⭐' : '☆',
+                      style: const TextStyle(fontSize: 48),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  s('$score з $maxRounds раундів', '$score of $maxRounds rounds'),
+                  style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                ),
+                const SizedBox(height: 48),
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kAccent,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18)),
+                    ),
+                    child: Text(
+                      s('Готово', 'Done'),
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: () {
+                    resetGame();
+                    _buildRound();
+                  },
+                  child: Text(
+                    s('Грати ще раз 🔄', 'Play again 🔄'),
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

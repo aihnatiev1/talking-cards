@@ -27,9 +27,6 @@ final packsProvider = FutureProvider<List<PackModel>>((ref) async {
       .map((e) => PackModel.fromJson(e as Map<String, dynamic>))
       .toList();
 
-  // EN packs are always free (no subscription required)
-  if (lang == 'en') return packs;
-
   if (!isPro) return packs;
 
   return packs
@@ -107,7 +104,7 @@ class PackProgressNotifier extends StateNotifier<Map<String, int>> {
     if (cardIndex + 1 > current) {
       state = {...state, packId: cardIndex + 1};
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt('${_fullPrefix}$packId', cardIndex + 1);
+      await prefs.setInt('$_fullPrefix$packId', cardIndex + 1);
     }
   }
 }

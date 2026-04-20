@@ -7,15 +7,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
 import '../providers/daily_quest_provider.dart';
-import '../providers/game_stats_provider.dart';
 import '../providers/language_provider.dart';
-import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
-import '../services/speech_service.dart';
-import '../services/tts_service.dart';
+import '../utils/confetti_overlay_mixin.dart';
 import '../utils/constants.dart';
+import '../utils/game_state_mixin.dart';
 import '../utils/l10n.dart';
-import '../widgets/confetti_burst.dart';
+import '../utils/shake_animation_mixin.dart';
 
 class RepeatGameScreen extends ConsumerStatefulWidget {
   final List<CardModel> cards;
@@ -27,61 +25,57 @@ class RepeatGameScreen extends ConsumerStatefulWidget {
 }
 
 class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
-    with TickerProviderStateMixin {
+    with
+        TickerProviderStateMixin,
+        ShakeAnimationMixin,
+        ConfettiOverlayMixin,
+        GameStateMixin {
+  @override
+  String get gameId => 'repeat_game';
+
+  @override
+  int get maxRounds => _deck.length;
+
+  // Speech games don't complete playQuiz — completion is via recordSpeechCorrect.
+  @override
+  QuestTask? get questTask => null;
+
   late List<CardModel> _deck;
   int _index = 0;
-  int _score = 0;
-  int _attempts = 0;
-  bool _listening = false;
-  bool _answered = false;
-  bool _correct = false;
-  String? _heard;
-  bool _questDone = false;
-  OverlayEntry? _confettiEntry;
+  bool _answered = false; // buttons locked during transition
 
-  // Mic pulse animation
-  late AnimationController _pulseCtrl;
-  late Animation<double> _pulseAnim;
-
-  // Card flip animation
-  late AnimationController _flipCtrl;
-  late Animation<double> _flipAnim;
-
-  Timer? _listenTimeout;
-  static const _maxAttempts = 2;
+  // Card slide-out when advancing to next
+  late AnimationController _exitCtrl;
+  late Animation<double> _exitSlide;
+  late Animation<double> _exitFade;
 
   @override
   void initState() {
     super.initState();
     _deck = List<CardModel>.from(widget.cards)..shuffle(Random());
 
-    _pulseCtrl = AnimationController(
+    _exitCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 700),
+      duration: const Duration(milliseconds: 320),
     );
-    _pulseAnim = Tween<double>(begin: 1.0, end: 1.18).animate(
-      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
+    _exitSlide = Tween<double>(begin: 0, end: -40).animate(
+      CurvedAnimation(parent: _exitCtrl, curve: Curves.easeIn),
+    );
+    _exitFade = Tween<double>(begin: 1, end: 0).animate(
+      CurvedAnimation(parent: _exitCtrl, curve: Curves.easeIn),
     );
 
-    _flipCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-    _flipAnim = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _flipCtrl, curve: Curves.easeInOut),
-    );
+    initShake();
 
-    AnalyticsService.instance.logGameStart('repeat_game');
+    startGame();
     WidgetsBinding.instance.addPostFrameCallback((_) => _speakCurrent());
   }
 
   @override
   void dispose() {
-    _listenTimeout?.cancel();
-    _pulseCtrl.dispose();
-    _flipCtrl.dispose();
-    _confettiEntry?.remove();
-    SpeechService.instance.cancelListening();
+    _exitCtrl.dispose();
+    disposeShake();
+    disposeConfetti();
     super.dispose();
   }
 
@@ -91,118 +85,68 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
     await AudioService.instance.playWordOnly(_current.audioKey, _current.sound);
   }
 
-  Future<void> _startListening() async {
-    if (_listening || _answered) return;
-    final speech = SpeechService.instance;
+  Future<void> _onCorrect() async {
+    if (_answered) return;
+    setState(() => _answered = true);
 
-    if (!speech.isAvailable) {
-      // No mic support — show manual confirm UI
-      setState(() => _listening = true);
-      return;
-    }
+    HapticFeedback.lightImpact();
+    scorePoint();
+    showConfetti();
+    ref.read(dailyQuestProvider.notifier).recordSpeechCorrect();
 
-    setState(() {
-      _listening = true;
-      _heard = null;
-    });
-    _pulseCtrl.repeat(reverse: true);
-
-    // Auto-stop after 6s if speech recognition produces no result
-    _listenTimeout?.cancel();
-    _listenTimeout = Timer(const Duration(seconds: 6), () {
-      if (mounted && _listening) _stopListening();
-    });
-
-    await speech.startListening(
-      pauseFor: const Duration(seconds: 3),
-      onResult: (text) {
-        _listenTimeout?.cancel();
-        _pulseCtrl.stop();
-        _pulseCtrl.reset();
-        _evaluateResult(text);
-      },
-    );
+    await Future.delayed(const Duration(milliseconds: 1400));
+    if (!mounted) return;
+    await _advance();
   }
 
-  void _stopListening() {
-    _listenTimeout?.cancel();
-    SpeechService.instance.stopListening();
-    _pulseCtrl.stop();
-    _pulseCtrl.reset();
-    setState(() => _listening = false);
+  Future<void> _onWrong() async {
+    if (_answered) return;
+    setState(() => _answered = true);
+
+    HapticFeedback.mediumImpact();
+
+    // Shake the card
+    await shakeController.forward();
+    shakeController.reset();
+    if (!mounted) return;
+
+    // Replay audio after brief pause
+    await Future.delayed(const Duration(milliseconds: 200));
+    await _speakCurrent();
+    if (!mounted) return;
+
+    // Unlock buttons — let them try again
+    setState(() => _answered = false);
   }
 
-  void _evaluateResult(String recognized) {
-    final isMatch = SpeechService.matches(recognized, _current.sound);
-    setState(() {
-      _listening = false;
-      _answered = true;
-      _correct = isMatch;
-      _heard = recognized;
-      _attempts++;
-    });
+  Future<void> _advance() async {
+    await _exitCtrl.forward();
+    _exitCtrl.reset();
+    if (!mounted) return;
 
-    if (isMatch) {
-      HapticFeedback.lightImpact();
-      _score++;
-      _showConfetti();
-      if (!_questDone) {
-        ref.read(dailyQuestProvider.notifier).recordSpeechCorrect();
-        if (_score >= 3) {
-          _questDone = true;
-          AnalyticsService.instance.logGameComplete('repeat_game', _score);
-          ref.read(gameStatsProvider.notifier).record('repeat_game', _score);
-        }
-      }
-    } else {
-      HapticFeedback.mediumImpact();
-    }
-  }
+    final isLast = _index >= _deck.length - 1;
 
-  // Manual confirm (when no mic) — user says they got it right
-  void _manualCorrect() {
-    _evaluateResult(_current.sound);
-  }
-
-  void _manualWrong() {
-    _evaluateResult('');
-  }
-
-  void _nextCard() {
-    _flipCtrl.forward().then((_) {
-      _flipCtrl.reset();
+    if (isLast) {
+      completeGame();
       setState(() {
-        _index = (_index + 1) % _deck.length;
         _answered = false;
-        _correct = false;
-        _heard = null;
-        _attempts = 0;
-        _listening = false;
+      });
+    } else {
+      setState(() {
+        _index++;
+        _answered = false;
       });
       _speakCurrent();
-    });
-  }
-
-  void _showConfetti() {
-    _confettiEntry?.remove();
-    final size = MediaQuery.of(context).size;
-    _confettiEntry = OverlayEntry(
-      builder: (_) => IgnorePointer(
-        child: ConfettiBurst(origin: Offset(size.width / 2, size.height / 3)),
-      ),
-    );
-    Overlay.of(context).insert(_confettiEntry!);
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      _confettiEntry?.remove();
-      _confettiEntry = null;
-    });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final s = AppS(ref.read(languageProvider) == 'en');
+
+    if (finished) return _buildFinishScreen(s);
+
     final card = _current;
-    final hasMic = SpeechService.instance.isAvailable;
 
     return Scaffold(
       backgroundColor: const Color(0xFFEAFFF5),
@@ -218,7 +162,7 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
             padding: const EdgeInsets.only(right: 16),
             child: Center(
               child: Text(
-                '⭐ $_score',
+                '⭐ $score',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -237,25 +181,7 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
               const SizedBox(height: 12),
 
               // Progress dots
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  min(_deck.length, 8),
-                  (i) => Container(
-                    width: 8,
-                    height: 8,
-                    margin: const EdgeInsets.symmetric(horizontal: 3),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: i == _index % 8
-                          ? kAccent
-                          : i < _index % 8
-                              ? kAccent.withValues(alpha: 0.3)
-                              : Colors.grey[300],
-                    ),
-                  ),
-                ),
-              ),
+              _buildProgressDots(),
 
               const SizedBox(height: 24),
 
@@ -263,11 +189,11 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
               Expanded(
                 flex: 5,
                 child: AnimatedBuilder(
-                  animation: _flipAnim,
-                  builder: (_, child) => Transform.scale(
-                    scale: 1.0 - (_flipAnim.value * 0.08),
+                  animation: Listenable.merge([_exitCtrl, shakeController]),
+                  builder: (_, child) => Transform.translate(
+                    offset: Offset(shakeOffset.value, _exitSlide.value),
                     child: Opacity(
-                      opacity: 1.0 - (_flipAnim.value * 0.5),
+                      opacity: _exitFade.value,
                       child: child,
                     ),
                   ),
@@ -279,12 +205,8 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
                         color: card.colorBg,
                         borderRadius: BorderRadius.circular(28),
                         border: Border.all(
-                          color: _answered
-                              ? (_correct
-                                  ? const Color(0xFF43A047)
-                                  : const Color(0xFFE53935))
-                              : card.colorAccent.withValues(alpha: 0.25),
-                          width: _answered ? 3 : 1.5,
+                          color: card.colorAccent.withValues(alpha: 0.25),
+                          width: 1.5,
                         ),
                         boxShadow: [
                           BoxShadow(
@@ -297,10 +219,9 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Image or emoji
                           if (card.image != null)
                             SizedBox(
-                              height: 140,
+                              height: 160,
                               child: Image.asset(
                                 'assets/images/webp/${card.image}.webp',
                                 fit: BoxFit.contain,
@@ -312,11 +233,10 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
 
                           const SizedBox(height: 16),
 
-                          // Word
                           Text(
                             card.sound,
                             style: TextStyle(
-                              fontSize: 32,
+                              fontSize: 34,
                               fontWeight: FontWeight.bold,
                               color: card.colorAccent,
                             ),
@@ -324,7 +244,6 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
 
                           const SizedBox(height: 8),
 
-                          // Speaker hint
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -332,42 +251,12 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
                                   color: Colors.grey[400], size: 16),
                               const SizedBox(width: 4),
                               Text(
-                                s('Натисни на картку, щоб послухати',
-                                    'Tap card to listen'),
+                                s('Натисни, щоб послухати', 'Tap to listen'),
                                 style: TextStyle(
                                     fontSize: 11, color: Colors.grey[400]),
                               ),
                             ],
                           ),
-
-                          const SizedBox(height: 16),
-
-                          // Result feedback
-                          if (_answered)
-                            AnimatedOpacity(
-                              opacity: 1,
-                              duration: const Duration(milliseconds: 300),
-                              child: Column(
-                                children: [
-                                  Text(
-                                    _correct
-                                        ? s('Чудово! ✅', 'Great! ✅')
-                                        : (_heard != null && _heard!.isNotEmpty
-                                            ? s('Почули: «$_heard» — спробуй ще!',
-                                                'Heard: «$_heard» — try again!')
-                                            : s('Спробуй ще раз!',
-                                                'Try again!')),
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: _correct
-                                          ? const Color(0xFF2E7D32)
-                                          : const Color(0xFFC62828),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
                         ],
                       ),
                     ),
@@ -377,129 +266,160 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
 
               const SizedBox(height: 24),
 
-              // Controls
-              if (!_answered) ...[
-                // Mic button — shown only when mic is available
-                if (hasMic) ...[
-                  GestureDetector(
-                    onTap: _listening ? _stopListening : _startListening,
-                    child: AnimatedBuilder(
-                      animation: _pulseAnim,
-                      builder: (_, child) => Transform.scale(
-                        scale: _listening ? _pulseAnim.value : 1.0,
-                        child: child,
+              // Parent controls
+              Text(
+                s('Скажи: «${card.sound}»', 'Say: «${card.sound}»'),
+                style: const TextStyle(
+                    fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 12),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _answered ? null : _onWrong,
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
                       ),
-                      child: Container(
-                        width: 72,
-                        height: 72,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: _listening ? const Color(0xFFE53935) : kAccent,
-                          boxShadow: [
-                            BoxShadow(
-                              color: (_listening
-                                      ? const Color(0xFFE53935)
-                                      : kAccent)
-                                  .withValues(alpha: 0.35),
-                              blurRadius: 16,
-                              spreadRadius: 3,
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          _listening ? Icons.stop_rounded : Icons.mic_rounded,
-                          color: Colors.white,
-                          size: 32,
-                        ),
+                      child: Text(
+                        s('Не вийшло ❌', 'Not quite ❌'),
+                        style: const TextStyle(fontSize: 15),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _listening
-                        ? s('Слухаю...', 'Listening...')
-                        : s('🎤 Натисни і говори', 'Tap mic & speak'),
-                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _answered ? null : _onCorrect,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kAccent,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: Text(
+                        s('Сказав! ✅', 'Said it! ✅'),
+                        style: const TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.bold),
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 16),
                 ],
+              ),
 
-                // Manual confirm buttons — ALWAYS visible so user can proceed
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProgressDots() {
+    final count = min(_deck.length, 10);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(count, (i) {
+        final done = i < _index;
+        final active = i == _index;
+        return Container(
+          width: active ? 10 : 8,
+          height: active ? 10 : 8,
+          margin: const EdgeInsets.symmetric(horizontal: 3),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: done
+                ? kAccent.withValues(alpha: 0.35)
+                : active
+                    ? kAccent
+                    : Colors.grey[300],
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _buildFinishScreen(AppS s) {
+    final total = _deck.length;
+    final pct = total > 0 ? score / total : 0.0;
+    final stars = pct >= 0.8 ? 3 : pct >= 0.5 ? 2 : 1;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFEAFFF5),
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
                 Text(
-                  s('Скажи: «${card.sound}»', 'Say: «${card.sound}»'),
+                  stars == 3
+                      ? s('Чудово! 🎉', 'Excellent! 🎉')
+                      : stars == 2
+                          ? s('Молодець! 👍', 'Well done! 👍')
+                          : s('Спробуй ще! 💪', 'Keep trying! 💪'),
                   style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w600),
+                      fontSize: 32, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    3,
+                    (i) => Text(
+                      i < stars ? '⭐' : '☆',
+                      style: const TextStyle(fontSize: 48),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: _manualWrong,
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14)),
-                        ),
-                        child: Text(s('Не вийшло ❌', 'Not quite ❌')),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _manualCorrect,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: kAccent,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14)),
-                        ),
-                        child: Text(s('Сказав! ✅', 'Said it! ✅')),
-                      ),
-                    ),
-                  ],
+                Text(
+                  s('$score з $total слів', '$score of $total words'),
+                  style: TextStyle(fontSize: 18, color: Colors.grey[600]),
                 ),
-              ] else ...[
-                // Next card button
+                const SizedBox(height: 48),
                 SizedBox(
                   width: double.infinity,
-                  height: 54,
+                  height: 56,
                   child: ElevatedButton(
-                    onPressed: _nextCard,
+                    onPressed: () => Navigator.of(context).pop(),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _correct ? kAccent : Colors.grey[700],
+                      backgroundColor: kAccent,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(18)),
                     ),
                     child: Text(
-                      s('Далі ▶', 'Next ▶'),
+                      s('Готово', 'Done'),
                       style: const TextStyle(
-                          fontSize: 17, fontWeight: FontWeight.bold),
+                          fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
-                if (!_correct && _attempts < _maxAttempts) ...[
-                  const SizedBox(height: 10),
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _answered = false;
-                        _heard = null;
-                      });
-                      _speakCurrent();
-                    },
-                    child: Text(
-                      s('Спробувати ще раз 🔄', 'Try again 🔄'),
-                      style: TextStyle(color: Colors.grey[600]),
-                    ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: () {
+                    resetGame();
+                    setState(() {
+                      _deck.shuffle(Random());
+                      _index = 0;
+                      _answered = false;
+                    });
+                    _speakCurrent();
+                  },
+                  child: Text(
+                    s('Грати ще раз 🔄', 'Play again 🔄'),
+                    style: TextStyle(color: Colors.grey[600]),
                   ),
-                ],
+                ),
               ],
-
-              const SizedBox(height: 24),
-            ],
+            ),
           ),
         ),
       ),
