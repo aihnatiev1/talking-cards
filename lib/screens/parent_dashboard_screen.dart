@@ -4,12 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/card_model.dart';
 import '../providers/daily_stats_provider.dart';
 import '../providers/game_stats_provider.dart';
+import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../providers/profile_provider.dart';
 import '../providers/streak_provider.dart';
 import '../providers/weak_words_provider.dart';
 import '../screens/profile_selector_screen.dart';
 import '../utils/constants.dart';
+import '../utils/l10n.dart';
 import '../widgets/activity_chart.dart';
 
 class ParentDashboardScreen extends ConsumerWidget {
@@ -18,6 +20,8 @@ class ParentDashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(profileProvider);
+    final isEn = ref.watch(languageProvider) == 'en';
+    final s = AppS(isEn);
 
     return DefaultTabController(
       length: 5,
@@ -41,7 +45,7 @@ class ParentDashboardScreen extends ConsumerWidget {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  profile.active?.name ?? 'Малюк',
+                  profile.active?.name ?? s('Малюк', 'Kiddo'),
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -54,17 +58,17 @@ class ParentDashboardScreen extends ConsumerWidget {
             ),
           ),
           centerTitle: false,
-          bottom: const TabBar(
+          bottom: TabBar(
             isScrollable: false,
             labelStyle:
-                TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-            unselectedLabelStyle: TextStyle(fontSize: 13),
+                const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            unselectedLabelStyle: const TextStyle(fontSize: 13),
             tabs: [
-              Tab(text: 'Огляд'),
-              Tab(text: 'Тиждень'),
-              Tab(text: 'Паки'),
-              Tab(text: 'Ігри'),
-              Tab(text: 'Помилки'),
+              Tab(text: s('Огляд', 'Overview')),
+              Tab(text: s('Тиждень', 'Week')),
+              Tab(text: s('Паки', 'Packs')),
+              Tab(text: s('Ігри', 'Games')),
+              Tab(text: s('Помилки', 'Mistakes')),
             ],
           ),
         ),
@@ -95,6 +99,8 @@ class _OverviewTab extends ConsumerWidget {
     final packProgress = ref.watch(packProgressProvider);
     final completedPacks = ref.watch(completedPacksProvider);
     final dailyStats = ref.watch(dailyStatsProvider);
+    final isEn = ref.watch(languageProvider) == 'en';
+    final s = AppS(isEn);
 
     final wordsSeenTotal = packProgress.values.fold(0, (a, b) => a + b);
     final activeDays = dailyStats.values
@@ -107,14 +113,18 @@ class _OverviewTab extends ConsumerWidget {
         _statRow([
           _StatCard(
             emoji: '🔥',
-            label: 'Серія',
-            value: '${streak.currentStreak} дн.',
+            label: s('Серія', 'Streak'),
+            value: isEn
+                ? '${streak.currentStreak} d.'
+                : '${streak.currentStreak} дн.',
             color: kStreakOrange,
           ),
           _StatCard(
             emoji: '📚',
-            label: 'Переглянуто',
-            value: '$wordsSeenTotal карток',
+            label: s('Переглянуто', 'Seen'),
+            value: isEn
+                ? '$wordsSeenTotal ${wordsSeenTotal == 1 ? 'card' : 'cards'}'
+                : '$wordsSeenTotal карток',
             color: kAccent,
           ),
         ]),
@@ -122,19 +132,19 @@ class _OverviewTab extends ConsumerWidget {
         _statRow([
           _StatCard(
             emoji: '✅',
-            label: 'Паки пройдено',
+            label: s('Паки пройдено', 'Packs done'),
             value: '${completedPacks.length}',
             color: Colors.green,
           ),
           _StatCard(
             emoji: '📅',
-            label: 'Активних днів',
+            label: s('Активних днів', 'Active days'),
             value: '$activeDays',
             color: kTeal,
           ),
         ]),
         const SizedBox(height: 24),
-        _sectionTitle('Досягнення'),
+        _sectionTitle(s('Досягнення', 'Achievements')),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
@@ -236,6 +246,19 @@ class _WeeklyTab extends ConsumerWidget {
     final chartData = ref.read(dailyStatsProvider.notifier).last7Days();
     final totalWeek =
         chartData.fold(0, (sum, e) => sum + e.value);
+    final isEn = ref.watch(languageProvider) == 'en';
+    final s = AppS(isEn);
+
+    final weeklyMsg = totalWeek == 0
+        ? s('Ще немає активності цього тижня.',
+            'No activity this week yet.')
+        : totalWeek < 20
+            ? s('Гарний початок! Продовжуй кожен день 💪',
+                'Nice start! Keep going every day 💪')
+            : totalWeek < 50
+                ? s('Чудовий прогрес! 🌟', 'Great progress! 🌟')
+                : s('Неймовірна активність цього тижня! 🏆',
+                    'Amazing week of activity! 🏆');
 
     return Padding(
       padding: const EdgeInsets.all(20),
@@ -243,23 +266,19 @@ class _WeeklyTab extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Карток за 7 днів: $totalWeek',
+            isEn
+                ? 'Cards in 7 days: $totalWeek'
+                : 'Карток за 7 днів: $totalWeek',
             style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 20),
-          ActivityChart(data: chartData),
+          ActivityChart(data: chartData, isEn: isEn),
           const SizedBox(height: 24),
           Text(
-            totalWeek == 0
-                ? 'Ще немає активності цього тижня.'
-                : totalWeek < 20
-                    ? 'Гарний початок! Продовжуй кожен день 💪'
-                    : totalWeek < 50
-                        ? 'Чудовий прогрес! 🌟'
-                        : 'Неймовірна активність цього тижня! 🏆',
+            weeklyMsg,
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey[600],
@@ -284,6 +303,8 @@ class _PacksTab extends ConsumerWidget {
     final packsAsync = ref.watch(packsProvider);
     final packProgress = ref.watch(packProgressProvider);
     final completedPacks = ref.watch(completedPacksProvider);
+    final isEn = ref.watch(languageProvider) == 'en';
+    final s = AppS(isEn);
 
     return packsAsync.when(
       data: (packs) {
@@ -348,7 +369,9 @@ class _PacksTab extends ConsumerWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '$seen / $total карток',
+                          isEn
+                              ? '$seen / $total ${total == 1 ? 'card' : 'cards'}'
+                              : '$seen / $total карток',
                           style: TextStyle(
                             fontSize: 11,
                             color: pack.color.withValues(alpha: 0.7),
@@ -365,7 +388,8 @@ class _PacksTab extends ConsumerWidget {
       },
       loading: () =>
           const Center(child: CircularProgressIndicator()),
-      error: (_, __) => const Center(child: Text('Помилка завантаження')),
+      error: (_, __) =>
+          Center(child: Text(s('Помилка завантаження', 'Loading error'))),
     );
   }
 }
@@ -380,6 +404,8 @@ class _GamesTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(gameStatsProvider);
+    final isEn = ref.watch(languageProvider) == 'en';
+    final s = AppS(isEn);
 
     return statsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -388,18 +414,20 @@ class _GamesTab extends ConsumerWidget {
         final played = stats.where((g) => g.plays > 0).toList();
 
         if (played.isEmpty) {
-          return const Center(
+          return Center(
             child: Padding(
-              padding: EdgeInsets.all(32),
+              padding: const EdgeInsets.all(32),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('🎮', style: TextStyle(fontSize: 48)),
-                  SizedBox(height: 12),
+                  const Text('🎮', style: TextStyle(fontSize: 48)),
+                  const SizedBox(height: 12),
                   Text(
-                    'Ще не грали в жодну гру.\nЗапустіть будь-яку гру з головного екрану!',
+                    s(
+                        'Ще не грали в жодну гру.\nЗапустіть будь-яку гру з головного екрану!',
+                        'No games played yet.\nTry any game from the home screen!'),
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 15, height: 1.5),
+                    style: const TextStyle(fontSize: 15, height: 1.5),
                   ),
                 ],
               ),
@@ -421,7 +449,7 @@ class _GamesTab extends ConsumerWidget {
                 Expanded(
                   child: _StatCard(
                     emoji: '🎮',
-                    label: 'Всього сесій',
+                    label: s('Всього сесій', 'Total sessions'),
                     value: '$totalPlays',
                     color: kAccent,
                   ),
@@ -430,8 +458,8 @@ class _GamesTab extends ConsumerWidget {
                 Expanded(
                   child: _StatCard(
                     emoji: favorite.emoji,
-                    label: 'Улюблена гра',
-                    value: favorite.labelUk,
+                    label: s('Улюблена гра', 'Favorite game'),
+                    value: isEn ? favorite.labelEn : favorite.labelUk,
                     color: const Color(0xFF7B1FA2),
                   ),
                 ),
@@ -439,14 +467,14 @@ class _GamesTab extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Всі ігри',
+              s('Всі ігри', 'All games'),
               style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(height: 12),
-            ...stats.map((g) => _GameStatRow(stat: g)),
+            ...stats.map((g) => _GameStatRow(stat: g, isEn: isEn)),
           ],
         );
       },
@@ -456,11 +484,13 @@ class _GamesTab extends ConsumerWidget {
 
 class _GameStatRow extends StatelessWidget {
   final GameStat stat;
-  const _GameStatRow({required this.stat});
+  final bool isEn;
+  const _GameStatRow({required this.stat, required this.isEn});
 
   @override
   Widget build(BuildContext context) {
     final hasPlays = stat.plays > 0;
+    final s = AppS(isEn);
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Container(
@@ -482,7 +512,7 @@ class _GameStatRow extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                stat.labelUk,
+                isEn ? stat.labelEn : stat.labelUk,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -495,7 +525,7 @@ class _GameStatRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '${stat.plays} ${_playsLabel(stat.plays)}',
+                    '${stat.plays} ${_playsLabel(stat.plays, isEn)}',
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
@@ -504,7 +534,7 @@ class _GameStatRow extends StatelessWidget {
                   ),
                   if (stat.bestScore > 0)
                     Text(
-                      'рекорд: ${stat.bestScore} ⭐',
+                      '${s('рекорд', 'best')}: ${stat.bestScore} ⭐',
                       style: TextStyle(
                         fontSize: 11,
                         color: Colors.grey[500],
@@ -514,7 +544,7 @@ class _GameStatRow extends StatelessWidget {
               ),
             ] else
               Text(
-                'не грали',
+                s('не грали', 'not played'),
                 style: TextStyle(fontSize: 12, color: Colors.grey[400]),
               ),
           ],
@@ -523,7 +553,8 @@ class _GameStatRow extends StatelessWidget {
     );
   }
 
-  String _playsLabel(int n) {
+  String _playsLabel(int n, bool isEn) {
+    if (isEn) return n == 1 ? 'time' : 'times';
     if (n == 1) return 'раз';
     if (n >= 2 && n <= 4) return 'рази';
     return 'разів';
@@ -541,20 +572,24 @@ class _WeakWordsTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final mistakes = ref.watch(weakWordsProvider);
     final packsAsync = ref.watch(packsProvider);
+    final isEn = ref.watch(languageProvider) == 'en';
+    final s = AppS(isEn);
 
     if (mistakes.isEmpty) {
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.all(32),
+          padding: const EdgeInsets.all(32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('🎉', style: TextStyle(fontSize: 48)),
-              SizedBox(height: 12),
+              const Text('🎉', style: TextStyle(fontSize: 48)),
+              const SizedBox(height: 12),
               Text(
-                'Поки немає помилок!\nПродовжуйте грати у вікторину.',
+                s(
+                    'Поки немає помилок!\nПродовжуйте грати у вікторину.',
+                    'No mistakes yet!\nKeep playing the quiz.'),
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 15, height: 1.5),
+                style: const TextStyle(fontSize: 15, height: 1.5),
               ),
             ],
           ),
