@@ -1,0 +1,32 @@
+# Home & Family pack voiceover — one filename stem per card, in recording order.
+# (Consumed by tools/split_pack_audio.py — lines beginning with # are ignored.)
+en_mommy
+en_dad
+en_grandma
+en_grandpa
+en_baby
+en_family
+en_hug
+en_morning
+en_evening
+en_smile
+en_kiss
+en_song
+en_ball
+en_doll
+en_toy_car
+en_book
+en_blocks
+en_porridge
+en_apple
+en_water
+en_walk
+en_bath
+en_hands
+en_teeth
+en_bed
+en_thank_you
+en_please
+en_love
+en_home
+en_play

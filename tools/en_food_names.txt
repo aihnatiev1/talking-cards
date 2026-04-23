@@ -1,0 +1,33 @@
+# Food & Fruits pack voiceover — one filename stem per card, in recording order.
+# Note: APPLE and PORRIDGE also appear in Home & Family with different sentences;
+# use _f suffix to avoid overwriting those files.
+en_apple_f
+en_banana
+en_grapes
+en_orange
+en_strawberry
+en_watermelon
+en_pear
+en_cherry
+en_peach
+en_lemon
+en_bread
+en_milk
+en_cheese
+en_porridge_f
+en_soup
+en_pie
+en_cookie
+en_cake
+en_ice_cream
+en_pancake
+en_carrot
+en_cucumber
+en_tomato
+en_potato
+en_corn
+en_pumpkin
+en_honey
+en_egg
+en_candy
+en_juice

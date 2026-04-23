@@ -1,0 +1,14 @@
+# Adjectives pack voiceover — one filename stem per card, in recording order.
+en_fluffy
+en_prickly
+en_smooth
+en_slimy
+en_bumpy
+en_sticky
+en_sweet
+en_sour
+en_bitter
+en_salty
+en_spicy
+en_juicy
+en_crunchy

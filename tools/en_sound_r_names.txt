@@ -1,0 +1,18 @@
+# Sound R pack voiceover — RED/CARROT/STAR/ROCKET/RAINBOW overlap other packs
+# (Colors, Food, Transport), so they get an _r suffix here.
+en_rabbit
+en_rocket_r
+en_rainbow_r
+en_river
+en_robot
+en_ring
+en_rose
+en_rain
+en_road
+en_red_r
+en_carrot_r
+en_tiger
+en_zebra
+en_giraffe
+en_drum
+en_star_r

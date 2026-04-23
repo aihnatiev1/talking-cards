@@ -1,0 +1,32 @@
+# Opposites pack voiceover — one filename stem per card, in recording order.
+# HAPPY/SAD/CLEAN overlap other packs; _o suffix for the opposites version.
+en_big
+en_small
+en_hot
+en_cold
+en_happy_o
+en_sad_o
+en_fast
+en_slow
+en_day
+en_night
+en_loud
+en_quiet
+en_clean_o
+en_dirty
+en_long
+en_short
+en_heavy
+en_light
+en_open
+en_closed
+en_up
+en_down
+en_hard
+en_soft
+en_full
+en_empty
+en_young
+en_old
+en_wet
+en_dry

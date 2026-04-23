@@ -1,0 +1,26 @@
+# Transport pack voiceover — one filename stem per card, in recording order.
+en_car
+en_bus
+en_train
+en_airplane
+en_ship
+en_bicycle
+en_motorcycle
+en_helicopter
+en_tram
+en_subway
+en_taxi
+en_fire_truck
+en_ambulance
+en_police_car
+en_truck
+en_tractor
+en_scooter
+en_rocket
+en_boat
+en_yacht
+en_hot_air_balloon
+en_sled
+en_skateboard
+en_excavator
+en_submarine

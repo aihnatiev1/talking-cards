@@ -1,0 +1,16 @@
+# Sound SH pack — SHIP/SHY/FISH/WASH overlap other packs: _sh suffix.
+en_ship_sh
+en_shoe
+en_shark
+en_sheep
+en_shirt
+en_shower
+en_shell
+en_shop
+en_shy_sh
+en_fish_sh
+en_dish
+en_brush
+en_wash_sh
+en_push
+en_bushy

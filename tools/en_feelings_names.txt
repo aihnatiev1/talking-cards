@@ -1,0 +1,13 @@
+# Feelings pack voiceover — one filename stem per card, in recording order.
+en_happy
+en_sad
+en_angry
+en_scared
+en_tired
+en_surprised
+en_excited
+en_calm
+en_shy
+en_silly
+en_proud
+en_loved

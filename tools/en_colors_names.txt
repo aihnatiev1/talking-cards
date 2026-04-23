@@ -1,0 +1,32 @@
+# Colors & Shapes pack voiceover — one filename stem per card, in recording order.
+# ORANGE also appears in Food; use _c suffix for the color version.
+en_red
+en_blue
+en_yellow
+en_green
+en_white
+en_black
+en_orange_c
+en_pink
+en_purple
+en_brown
+en_gray
+en_sky_blue
+en_gold
+en_circle
+en_square
+en_triangle
+en_star
+en_heart
+en_oval
+en_diamond
+en_rectangle
+en_cross
+en_arrow
+en_moon
+en_flower
+en_spiral
+en_cloud
+en_lightning
+en_rainbow
+en_sun

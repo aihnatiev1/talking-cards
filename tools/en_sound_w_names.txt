@@ -1,0 +1,15 @@
+# Sound W pack — WATER/WATCH/WALK/WOLF/WHITE overlap other packs: _w suffix.
+en_water_w
+en_window
+en_whale
+en_wave
+en_wheel
+en_watch_w
+en_walk_w
+en_wind
+en_wall
+en_winter
+en_web
+en_wolf_w
+en_worm
+en_white_w

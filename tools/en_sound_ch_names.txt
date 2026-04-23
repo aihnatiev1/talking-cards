@@ -1,0 +1,16 @@
+# Sound CH pack — CHEESE/CHICKEN/CHERRY/CHIN/LUNCH/PEACH overlap: _ch suffix.
+en_chair
+en_cheese_ch
+en_chicken_ch
+en_cherry_ch
+en_church
+en_chocolate
+en_chips
+en_chin_ch
+en_beach
+en_teach
+en_watch
+en_match
+en_lunch_ch
+en_peach_ch
+en_bench

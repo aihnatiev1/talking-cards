@@ -1,0 +1,32 @@
+# Body Parts pack voiceover — one filename stem per card, in recording order.
+# HEART/HANDS/TEETH/SMILE overlap other packs; use _b suffix for the body version.
+en_head
+en_eyes
+en_ears
+en_nose
+en_mouth
+en_teeth_b
+en_tongue
+en_hair
+en_neck
+en_shoulders
+en_hands_b
+en_fingers
+en_tummy
+en_back
+en_legs
+en_knees
+en_feet
+en_heart_b
+en_lungs
+en_elbow
+en_palms
+en_eyebrows
+en_cheeks
+en_forehead
+en_chin
+en_nails
+en_skin
+en_belly_button
+en_smile_b
+en_toes

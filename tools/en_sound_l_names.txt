@@ -1,0 +1,17 @@
+# Sound L pack voiceover — many words overlap other packs: _l suffix.
+en_lion_l
+en_lemon_l
+en_leaf
+en_lamp
+en_ladder
+en_light_l
+en_lake
+en_lunch
+en_leg
+en_lock
+en_elephant_l
+en_hello_l
+en_yellow_l
+en_ball_l
+en_apple_l
+en_owl_l

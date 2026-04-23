@@ -1,0 +1,14 @@
+# Sound Z pack — ZEBRA/CHEESE/NOSE/ROSE/EYES overlap other packs: _z suffix.
+en_zebra_z
+en_zoo
+en_zipper
+en_zero
+en_breeze
+en_cheese_z
+en_nose_z
+en_rose_z
+en_eyes_z
+en_bees
+en_lazy
+en_freeze
+en_music

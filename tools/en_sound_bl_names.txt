@@ -1,0 +1,19 @@
+# Consonant Blends — many overlap other packs: _bl suffix for the blend version.
+en_spoon_bl
+en_star_bl
+en_snow
+en_smile_bl
+en_skate
+en_sleep_bl
+en_swing
+en_train_bl
+en_tree
+en_truck_bl
+en_drum_bl
+en_dragon
+en_bridge
+en_bread_bl
+en_clock
+en_cloud_bl
+en_flower_bl
+en_frog_bl

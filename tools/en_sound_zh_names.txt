@@ -1,0 +1,7 @@
+# Sound ZH pack voiceover.
+en_vision
+en_treasure
+en_garage
+en_beige
+en_measure
+en_pleasure

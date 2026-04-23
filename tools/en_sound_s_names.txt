@@ -1,0 +1,17 @@
+# Sound S pack voiceover — SUN/STAR/SOUP/SONG overlap other packs: _s suffix.
+en_sun_s
+en_snake
+en_star_s
+en_soup_s
+en_sock
+en_spoon
+en_seal
+en_sand
+en_seven
+en_salt
+en_song_s
+en_six
+en_sea
+en_pencil
+en_grass
+en_mouse

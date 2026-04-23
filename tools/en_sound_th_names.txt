@@ -1,0 +1,17 @@
+# Sound TH pack — BATH overlaps Home: _th suffix.
+en_three
+en_thumb
+en_thank
+en_think
+en_thorn
+en_thick
+en_thin
+en_tooth
+en_bath_th
+en_math
+en_this
+en_that
+en_they
+en_mother
+en_father
+en_brother

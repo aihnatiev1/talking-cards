@@ -1,0 +1,27 @@
+# Actions pack voiceover — one filename stem per card, in recording order.
+# PLAY/WALK/HUG also appear in Home; _a suffix for the action version.
+en_run
+en_jump
+en_eat
+en_drink
+en_sleep
+en_play_a
+en_draw
+en_dance
+en_swim
+en_laugh
+en_cry
+en_wash
+en_walk_a
+en_sit
+en_look
+en_listen
+en_hug_a
+en_sing
+en_throw
+en_catch
+en_read
+en_build
+en_cook
+en_clean
+en_help
