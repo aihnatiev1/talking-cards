@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/card_model.dart';
 import '../providers/language_provider.dart';
 import '../providers/srs_provider.dart';
+import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 
 /// Banner prompting the user to do today's SRS review.
@@ -29,22 +30,42 @@ class SrsReviewBanner extends ConsumerWidget {
         .toList();
     if (dueCards.isEmpty) return const SizedBox.shrink();
 
-    const color = Color(0xFF00BCD4);
+    const color = DT.sky;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
       child: GestureDetector(
         onTap: () => onTap(dueCards),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
+            color: color.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(DT.rLg),
+            border: Border.all(
+              color: color.withValues(alpha: 0.35),
+              width: 1.5,
+            ),
+            boxShadow: DT.shadowSoft(color),
           ),
           child: Row(
             children: [
-              const Text('🔁', style: TextStyle(fontSize: 20)),
-              const SizedBox(width: 10),
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: DT.surfaceWhite,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: const Text('🔁', style: TextStyle(fontSize: 22)),
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,23 +73,48 @@ class SrsReviewBanner extends ConsumerWidget {
                     Text(
                       s('Повторити сьогодні', 'Review today'),
                       style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
                         color: color,
                       ),
                     ),
+                    const SizedBox(height: 2),
                     Text(
                       s('${dueCards.length} карток чекають',
                           '${dueCards.length} cards waiting'),
                       style: TextStyle(
-                        fontSize: 11,
-                        color: color.withValues(alpha: 0.8),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: color.withValues(alpha: 0.85),
                       ),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: color),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: const Row(
+                  children: [
+                    Text(
+                      'GO',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    SizedBox(width: 4),
+                    Icon(Icons.arrow_forward_ios_rounded,
+                        size: 11, color: Colors.white),
+                  ],
+                ),
+              ),
             ],
           ),
         ),

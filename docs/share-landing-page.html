@@ -1,0 +1,133 @@
+<!--
+  Smart-link landing page for "Talking Cards" / Картки-розмовлялки.
+  Deploy this file as `index.html` (or `get.html`) in the GitHub Pages repo
+  that serves https://aihnatiev1.github.io/talking-cards/ . When the app
+  shares a progress card, it shares this single URL. The page:
+    - Sniffs the recipient's user-agent and redirects mobile users
+      straight to the right store (App Store or Google Play).
+    - Shows clickable badges + Open Graph preview for everyone else
+      (desktop, WhatsApp link previews, Twitter cards, etc.).
+  No JS frameworks, no tracking — just a ~60-line static page.
+-->
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Картки-розмовлялки / Talking Cards</title>
+  <meta name="description" content="Яскраві картки зі звуками для найменших. Слухай — вивчай — повторюй! Talking Cards: flash cards with sounds for little ones.">
+
+  <!-- Open Graph (WhatsApp / Telegram / Facebook link previews). -->
+  <meta property="og:title" content="Картки-розмовлялки · Talking Cards">
+  <meta property="og:description" content="Яскраві картки зі звуками для малят. Встанови безкоштовно / Install free.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://aihnatiev1.github.io/talking-cards/">
+  <meta property="og:image" content="https://aihnatiev1.github.io/talking-cards/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <!-- Apple smart banner for iOS Safari visitors (legacy but still works). -->
+  <meta name="apple-itunes-app" content="app-id=6760210043">
+
+  <style>
+    :root {
+      --accent: #6C63FF;
+      --ink: #1f1f1f;
+      --muted: #636363;
+      --bg: #f7f4ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    main {
+      max-width: 420px;
+      text-align: center;
+    }
+    .logo { font-size: 72px; line-height: 1; margin-bottom: 16px; }
+    h1 { font-size: 28px; margin: 0 0 8px; font-weight: 800; }
+    h2 { font-size: 18px; margin: 0 0 24px; color: var(--muted); font-weight: 500; }
+    .stores {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .store {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 22px;
+      background: var(--ink);
+      color: #fff;
+      border-radius: 14px;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 600;
+      transition: transform 120ms ease;
+    }
+    .store:hover { transform: translateY(-2px); }
+    .store span.small { font-size: 11px; opacity: 0.7; display: block; font-weight: 400; }
+    footer { margin-top: 32px; font-size: 13px; color: var(--muted); }
+    footer a { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="logo">🗣️</div>
+    <h1>Картки-розмовлялки</h1>
+    <h2>Talking Cards · for little ones</h2>
+
+    <div class="stores">
+      <a class="store" id="ios" href="https://apps.apple.com/app/id6760210043">
+        <span>🍎</span>
+        <span>
+          <span class="small">Download on the</span>
+          App Store
+        </span>
+      </a>
+      <a class="store" id="android" href="https://play.google.com/store/apps/details?id=com.talkingcards.app">
+        <span>🤖</span>
+        <span>
+          <span class="small">Get it on</span>
+          Google Play
+        </span>
+      </a>
+    </div>
+
+    <footer>
+      <a href="privacy-policy.html">Privacy</a>
+      &nbsp;·&nbsp;
+      aihnatiev · 2026
+    </footer>
+  </main>
+
+  <script>
+    // Auto-redirect mobile visitors straight to their platform store.
+    // Desktops and link-preview bots stay on the page.
+    (function () {
+      var ua = navigator.userAgent || '';
+      var isIOS = /iPhone|iPad|iPod/i.test(ua);
+      var isAndroid = /Android/i.test(ua);
+      var target = isIOS
+        ? document.getElementById('ios').href
+        : isAndroid
+          ? document.getElementById('android').href
+          : null;
+      if (target) {
+        // Tiny delay so the user sees the landing briefly (nicer than an
+        // instant jump, and gives OG bots time to scrape).
+        setTimeout(function () { location.replace(target); }, 300);
+      }
+    })();
+  </script>
+</body>
+</html>

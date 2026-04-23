@@ -149,7 +149,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final s = AppS(ref.watch(languageProvider) == 'en');
+    final isEn = ref.watch(languageProvider) == 'en';
+    final s = AppS(isEn);
     final plans = _buildPlans(s);
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -319,11 +320,15 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                         children: [
                           _legalLink(
                               s('Умови використання', 'Terms of Use'),
-                              'https://aihnatiev1.github.io/talking-cards/terms.html'),
+                              isEn
+                                  ? 'https://aihnatiev1.github.io/talking-cards/terms-en.html'
+                                  : 'https://aihnatiev1.github.io/talking-cards/terms.html'),
                           _legalLink('EULA', 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/'),
                           _legalLink(
                               s('Конфіденційність', 'Privacy'),
-                              'https://aihnatiev1.github.io/talking-cards/privacy-policy.html'),
+                              isEn
+                                  ? 'https://aihnatiev1.github.io/talking-cards/privacy-policy-en.html'
+                                  : 'https://aihnatiev1.github.io/talking-cards/privacy-policy.html'),
                         ],
                       ),
                     ),

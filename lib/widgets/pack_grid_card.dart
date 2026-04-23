@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../models/card_model.dart';
 import '../models/pack_model.dart';
+import '../utils/design_tokens.dart';
 
 class PackGridCard extends ConsumerStatefulWidget {
   final PackModel pack;
@@ -26,6 +28,7 @@ class PackGridCard extends ConsumerStatefulWidget {
 class _PackGridCardState extends ConsumerState<PackGridCard>
     with SingleTickerProviderStateMixin {
   late final AnimationController _shimmer;
+  bool _pressed = false;
 
   @override
   void initState() {
@@ -43,97 +46,202 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
     super.dispose();
   }
 
+  CardModel? _thumb() {
+    // Prefer the first card with a real webp illustration — a readable preview
+    // for a non-reader. Falls back to the pack emoji when nothing fits.
+    for (final c in widget.pack.cards) {
+      if (c.image != null) return c;
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final pack = widget.pack;
     final total = pack.cards.length;
     final hasProgress = widget.progress > 0 && !widget.isCompleted;
-    final sw = MediaQuery.of(context).size.width;
-    final scale = (sw / 375).clamp(0.85, 1.3);
+    final thumb = _thumb();
+    final accent = pack.color;
 
-    Widget card = GestureDetector(
+    Widget tile = GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
       onTap: widget.onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: pack.color.withValues(alpha: 0.10),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: pack.color.withValues(alpha: 0.30),
-            width: 1.5,
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(pack.icon, style: const TextStyle(fontSize: 32)),
-            const SizedBox(height: 4),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: Text(
-                pack.title,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: pack.color,
-                  height: 1.2,
-                ),
-              ),
+      child: AnimatedScale(
+        scale: _pressed ? DT.pressScale : 1.0,
+        duration: DT.pressMs,
+        curve: Curves.easeOut,
+        child: Container(
+          decoration: BoxDecoration(
+            color: DT.surfaceWhite,
+            borderRadius: BorderRadius.circular(DT.rLg),
+            border: Border.all(
+              color: accent.withValues(alpha: 0.28),
+              width: 2,
             ),
-            if (hasProgress) ...[
-              const SizedBox(height: 4),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(3),
-                  child: LinearProgressIndicator(
-                    value: widget.progress / total,
-                    minHeight: 4,
-                    backgroundColor: pack.color.withValues(alpha: 0.15),
-                    valueColor: AlwaysStoppedAnimation<Color>(pack.color),
+            boxShadow: DT.shadowSoft(accent),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(DT.rLg - 2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Illustration area
+                Expanded(
+                  flex: 3,
+                  child: Container(
+                    color: accent.withValues(alpha: 0.10),
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: thumb?.image != null
+                              ? Padding(
+                                  padding: const EdgeInsets.all(6),
+                                  child: Image.asset(
+                                    'assets/images/webp/${thumb!.image}.webp',
+                                    fit: BoxFit.contain,
+                                  ),
+                                )
+                              : Center(
+                                  child: Text(
+                                    pack.icon,
+                                    style: const TextStyle(fontSize: 44),
+                                  ),
+                                ),
+                        ),
+                        // Status badge (top-right)
+                        if (widget.isCompleted ||
+                            pack.isLocked ||
+                            widget.isSeasonal)
+                          Positioned(
+                            top: 6,
+                            right: 6,
+                            child: _StatusBadge(
+                              completed: widget.isCompleted,
+                              locked: pack.isLocked,
+                              seasonal: widget.isSeasonal,
+                              accent: accent,
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
-            if (widget.isCompleted || pack.isLocked || widget.isSeasonal) ...[
-              const SizedBox(height: 2),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (widget.isCompleted) const Text('⭐', style: TextStyle(fontSize: 12)),
-                  if (pack.isLocked)
-                    Icon(Icons.lock_rounded,
-                        color: pack.color.withValues(alpha: 0.5), size: 13),
-                  if (widget.isSeasonal) const Text('✨', style: TextStyle(fontSize: 12)),
-                ],
-              ),
-            ],
-          ],
+                // Title strip — adaptive text so it fits narrow 3-col tiles
+                Expanded(
+                  flex: 2,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(6, 4, 6, 6),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            pack.title,
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: accent,
+                              height: 1.1,
+                            ),
+                          ),
+                        ),
+                        if (hasProgress) ...[
+                          const SizedBox(height: 4),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(2),
+                            child: LinearProgressIndicator(
+                              value: total > 0
+                                  ? widget.progress / total
+                                  : 0,
+                              minHeight: 3,
+                              backgroundColor:
+                                  accent.withValues(alpha: 0.15),
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(accent),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
 
-    // Shimmer glow border for seasonal packs
-    if (!widget.isSeasonal) return card;
+    // Seasonal shimmer — ambient glow around the tile
+    if (!widget.isSeasonal) return tile;
     return AnimatedBuilder(
       animation: _shimmer,
       builder: (_, child) => Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20 * scale),
+          borderRadius: BorderRadius.circular(DT.rLg + 4),
           boxShadow: [
             BoxShadow(
-              color: pack.color
-                  .withValues(alpha: 0.3 + _shimmer.value * 0.35),
-              blurRadius: 10 + _shimmer.value * 8,
+              color: accent.withValues(alpha: 0.25 + _shimmer.value * 0.35),
+              blurRadius: 14 + _shimmer.value * 10,
               spreadRadius: _shimmer.value * 2,
             ),
           ],
         ),
         child: child,
       ),
-      child: card,
+      child: tile,
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  final bool completed;
+  final bool locked;
+  final bool seasonal;
+  final Color accent;
+
+  const _StatusBadge({
+    required this.completed,
+    required this.locked,
+    required this.seasonal,
+    required this.accent,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    Widget child;
+    Color bg;
+    if (completed) {
+      child = const Text('⭐', style: TextStyle(fontSize: 14));
+      bg = DT.sunBurst;
+    } else if (locked) {
+      child = Icon(Icons.lock_rounded, size: 15, color: accent);
+      bg = DT.surfaceWhite;
+    } else {
+      child = const Text('✨', style: TextStyle(fontSize: 14));
+      bg = DT.sunBurst;
+    }
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: bg,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: child,
     );
   }
 }

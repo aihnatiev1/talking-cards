@@ -216,31 +216,31 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
 
   void _speakCard(CardModel card) {
     final lang = ref.read(languageProvider);
-    if (lang == 'en') {
-      TtsService.instance.speak(card.sound, locale: 'en-US');
-    } else if (card.audioKey == null ||
-        !AudioService.instance.hasSound(card.audioKey)) {
-      // No recorded audio (e.g. phrases pack) → Ukrainian TTS
-      TtsService.instance.speak(card.sound, locale: 'uk-UA');
-    } else {
+    // Prefer a recorded mp3 whenever one exists — applies to both UA and
+    // EN now that English voice-overs are bundled. Fall back to TTS only
+    // when the card has no audio asset.
+    if (AudioService.instance.hasSound(card.audioKey)) {
       AudioService.instance.speakCard(card.audioKey, card.sound, card.text);
+      return;
     }
+    TtsService.instance.speak(
+      card.sound,
+      locale: lang == 'en' ? 'en-US' : 'uk-UA',
+    );
   }
 
-  /// TTS locale for FlashCard: EN → en-US, no audio → uk-UA, else null.
+  /// TTS locale for FlashCard: recorded audio → null; otherwise per-language.
   String? _ttsLocaleForCard(CardModel card) {
+    if (AudioService.instance.hasSound(card.audioKey)) return null;
     final lang = ref.read(languageProvider);
-    if (lang == 'en') return 'en-US';
-    if (card.audioKey == null ||
-        !AudioService.instance.hasSound(card.audioKey)) {
-      return 'uk-UA';
-    }
-    return null;
+    return lang == 'en' ? 'en-US' : 'uk-UA';
   }
 
   void _speakCardDebounced(int index) {
     _speakDebounce?.cancel();
-    _speakDebounce = Timer(const Duration(milliseconds: 100), () {
+    // Small breather after the swipe settles so the word doesn't start
+    // playing while the card is still moving into place.
+    _speakDebounce = Timer(const Duration(milliseconds: 500), () {
       if (!mounted) return;
       _speakCard(_cards[index]);
       if (_autoPlayTimer) _startAutoPlayCountdown();
@@ -269,6 +269,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
       totalCards: packs.fold<int>(0, (s, p) => s + p.cards.length),
       streak: streak.currentStreak,
       badges: streak.unlockedRewards,
+      isEn: ref.read(languageProvider) == 'en',
     );
   }
 
@@ -318,25 +319,39 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
       AnalyticsService.instance.logPackComplete(widget.pack.id);
       ref.read(completedPacksProvider.notifier).markCompleted(widget.pack.id);
     }
-    Navigator.of(context).push(
+    // Capture the route's own Navigator and overlay context up-front so the
+    // celebration buttons never try to pop through a stale ancestor — a bug
+    // where finishing a pack left the overlay stuck on the home screen.
+    final navigator = Navigator.of(context);
+    var overlayDismissed = false;
+    void dismissOverlay() {
+      if (overlayDismissed) return;
+      overlayDismissed = true;
+      if (navigator.canPop()) navigator.pop();
+    }
+
+    final isEn = ref.read(languageProvider) == 'en';
+    navigator.push(
       PageRouteBuilder(
         opaque: false,
         pageBuilder: (_, __, ___) => CelebrationOverlay(
           packTitle: widget.pack.title,
           packIcon: widget.pack.icon,
           color: widget.pack.color,
+          isEn: isEn,
           onShare: _shareProgress,
           onReplay: () {
-            Navigator.of(context).pop();
-            Navigator.of(context).pushReplacement(
+            dismissOverlay();
+            if (!mounted) return;
+            navigator.pushReplacement(
               MaterialPageRoute(
                   builder: (_) => CardsScreen(pack: widget.pack)),
             );
           },
           onDone: () async {
-            Navigator.of(context).pop();
+            dismissOverlay();
             await _maybeShowRatePrompt();
-            if (mounted) Navigator.of(context).pop();
+            if (mounted && navigator.canPop()) navigator.pop();
           },
         ),
       ),

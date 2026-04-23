@@ -9,12 +9,11 @@ import 'package:share_plus/share_plus.dart';
 import '../utils/constants.dart';
 import '../utils/uk_grammar.dart';
 
-const _appStoreUrl = 'https://apps.apple.com/app/id6760210043';
-const _playStoreUrl = 'https://play.google.com/store/apps/details?id=com.talkingcards.app';
-
-/// Returns the relevant store URL for the current platform.
-String get _storeUrl =>
-    Platform.isAndroid ? _playStoreUrl : _appStoreUrl;
+/// Universal "get the app" link. Served by a small landing page on our
+/// GitHub Pages site that sniffs the user-agent of the recipient and
+/// redirects to App Store or Play Store automatically. See
+/// `docs/share-landing-page.html` for the HTML to deploy there.
+const _storeUrl = 'https://aihnatiev1.github.io/talking-cards/';
 
 /// Captures the share card as image and shares it.
 Future<void> shareProgress({
@@ -80,11 +79,14 @@ Future<void> shareProgress({
     );
   } catch (e, st) {
     debugPrint('Share error: $e\n$st');
-    // Last resort: text share
+    // Last resort: text share (respects current language).
     try {
       await Share.share(
-        'Мій малюк вивчає слова з Картками-розмовлялками! 🗣️\n'
-        'Скачай безкоштовно: $_storeUrl',
+        isEn
+          ? 'My child is learning words with Talking Cards! 🗣️\n'
+            'Download free: $_storeUrl'
+          : 'Мій малюк вивчає слова з Картками-розмовлялками! 🗣️\n'
+            'Скачай безкоштовно: $_storeUrl',
         sharePositionOrigin: sharePositionOrigin,
       );
     } catch (_) {}

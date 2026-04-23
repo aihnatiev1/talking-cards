@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/language_provider.dart';
 import '../utils/constants.dart';
 import '../utils/l10n.dart';
+import '../widgets/confetti_burst.dart';
 
 // ─────────────────────────────────────────────
 //  Exercise data
@@ -316,7 +318,7 @@ class _ExercisePlayerScreen extends StatefulWidget {
 }
 
 class _ExercisePlayerScreenState extends State<_ExercisePlayerScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   int _stepIndex = 0;
   bool _done = false;
   int _reps = 0;
@@ -325,6 +327,12 @@ class _ExercisePlayerScreenState extends State<_ExercisePlayerScreen>
   // Hold timer — shown on the last "Тримай!" step
   late AnimationController _holdCtrl;
   bool _holding = false;
+
+  // Bounce for the big emoji on rep complete — immediate visual reward.
+  late AnimationController _bounceCtrl;
+  late Animation<double> _bounceScale;
+
+  OverlayEntry? _confettiEntry;
 
   List<String> get steps =>
       widget.isEn ? widget.exercise.stepsEn : widget.exercise.steps;
@@ -338,15 +346,56 @@ class _ExercisePlayerScreenState extends State<_ExercisePlayerScreen>
     );
     _holdCtrl.addStatusListener((status) {
       if (status == AnimationStatus.completed && mounted) {
-        setState(() {
-          _holding = false;
-          _reps++;
-          if (_reps >= _maxReps) {
-            _done = true;
-          } else {
-            _stepIndex = 0;
-          }
-        });
+        _onRepComplete();
+      }
+    });
+
+    _bounceCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _bounceScale = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.25), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 1.25, end: 1.0), weight: 1),
+    ]).animate(CurvedAnimation(parent: _bounceCtrl, curve: Curves.easeOutBack));
+  }
+
+  void _onRepComplete() {
+    HapticFeedback.mediumImpact();
+    _bounceCtrl.forward(from: 0);
+
+    final willFinish = _reps + 1 >= _maxReps;
+    _burstConfetti(linger: willFinish ? 1800 : 700);
+
+    setState(() {
+      _holding = false;
+      _reps++;
+      if (willFinish) {
+        _done = true;
+        HapticFeedback.heavyImpact();
+      } else {
+        _stepIndex = 0;
+      }
+    });
+  }
+
+  void _burstConfetti({required int linger}) {
+    if (!mounted) return;
+    _confettiEntry?.remove();
+    final size = MediaQuery.of(context).size;
+    final entry = OverlayEntry(
+      builder: (_) => IgnorePointer(
+        child: ConfettiBurst(
+          origin: Offset(size.width / 2, size.height / 2.4),
+        ),
+      ),
+    );
+    _confettiEntry = entry;
+    Overlay.of(context).insert(entry);
+    Future.delayed(Duration(milliseconds: linger), () {
+      if (_confettiEntry == entry) {
+        _confettiEntry?.remove();
+        _confettiEntry = null;
       }
     });
   }
@@ -354,6 +403,8 @@ class _ExercisePlayerScreenState extends State<_ExercisePlayerScreen>
   @override
   void dispose() {
     _holdCtrl.dispose();
+    _bounceCtrl.dispose();
+    _confettiEntry?.remove();
     super.dispose();
   }
 
@@ -408,22 +459,34 @@ class _ExercisePlayerScreenState extends State<_ExercisePlayerScreen>
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
 
-              // Big emoji
-              Text(widget.exercise.emoji,
-                  style: const TextStyle(fontSize: 88)),
+              // Big emoji — bounces on each rep completion for instant reward
+              ScaleTransition(
+                scale: _bounceScale,
+                child: Text(widget.exercise.emoji,
+                    style: const TextStyle(fontSize: 128)),
+              ),
 
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
 
-              // Reps counter
-              Text(
-                '${_reps + 1} / $_maxReps',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[500],
-                  fontWeight: FontWeight.w600,
-                ),
+              // Reps counter — dots grow as reps complete
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(_maxReps, (i) {
+                  final done = i < _reps;
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 280),
+                    curve: Curves.easeOutBack,
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    width: done ? 22 : 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: done ? kAccent : kAccent.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                  );
+                }),
               ),
 
               const SizedBox(height: 16),
@@ -528,7 +591,7 @@ class _ExercisePlayerScreenState extends State<_ExercisePlayerScreen>
               if (!_done) ...[
                 SizedBox(
                   width: double.infinity,
-                  height: 52,
+                  height: 64,
                   child: ElevatedButton(
                     onPressed: _isLastStep && _holding ? null : _nextStep,
                     style: ElevatedButton.styleFrom(
@@ -537,14 +600,15 @@ class _ExercisePlayerScreenState extends State<_ExercisePlayerScreen>
                           kAccent.withValues(alpha: 0.3),
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
+                          borderRadius: BorderRadius.circular(20)),
+                      elevation: 3,
                     ),
                     child: Text(
                       _isLastStep
                           ? s('Тримай... ⏳', 'Hold... ⏳')
                           : s('Далі ▶', 'Next ▶'),
                       style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold),
+                          fontSize: 19, fontWeight: FontWeight.w800),
                     ),
                   ),
                 ),

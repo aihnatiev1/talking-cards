@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
 import '../providers/language_provider.dart';
+import '../services/audio_service.dart';
 import '../utils/confetti_overlay_mixin.dart';
 import '../utils/constants.dart';
 import '../utils/game_state_mixin.dart';
@@ -77,6 +78,10 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
   void _onTap(_Slot slot) {
     if (_answered) return;
     _tappedId = slot.card.id;
+
+    // Play the tapped card's word — child hears the item they're evaluating,
+    // which anchors the sort-by-category reasoning in speech, not silence.
+    AudioService.instance.playWordOnly(slot.card.audioKey, slot.card.sound);
 
     if (slot.isOdd) {
       HapticFeedback.lightImpact();

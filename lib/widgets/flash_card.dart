@@ -270,7 +270,7 @@ class _FlashCardState extends ConsumerState<FlashCard>
                             ),
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 3),
                         Text(
                           widget.card.text,
                           textAlign: TextAlign.center,

@@ -53,16 +53,41 @@ class _SoundFilterScreenState extends ConsumerState<SoundFilterScreen> {
             allCards.addAll(pack.cards);
           }
 
+          // De-duplicate by word — many adjectives/sound packs re-use the
+          // same word (e.g. ЖОВТИЙ, ЧЕРВОНИЙ) without a recording, which
+          // made the game show a human-voiced card and a TTS-only twin
+          // side-by-side. Keep the richest copy (recorded audio > image).
+          final Map<String, CardModel> uniq = {};
+          int score(CardModel c) {
+            var s = 0;
+            if (AudioService.instance.hasSound(c.audioKey)) s += 2;
+            if (c.image != null) s += 1;
+            return s;
+          }
+          for (final c in allCards) {
+            final key = c.sound.trim().toUpperCase();
+            final prev = uniq[key];
+            if (prev == null || score(c) > score(prev)) uniq[key] = c;
+          }
+
           // Build letter → cards map (by first letter of sound)
           final Map<String, List<CardModel>> byLetter = {};
-          for (final card in allCards) {
+          for (final card in uniq.values) {
             final word = card.sound.trim();
             if (word.isEmpty || card.sound.contains('-')) continue;
             final letter = word[0].toUpperCase();
             byLetter.putIfAbsent(letter, () => []).add(card);
           }
 
-          final letters = byLetter.keys.toList()..sort();
+          // Sort letters by the Ukrainian alphabet (default String.sort uses
+          // Unicode codepoints, which places Є/І/Ї before А).
+          const ukAlphabet = 'АБВГҐДЕЄЖЗИІЇЙКЛМНОПРСТУФХЦЧШЩЬЮЯ';
+          int orderOf(String l) {
+            final idx = ukAlphabet.indexOf(l);
+            return idx >= 0 ? idx : 999 + l.codeUnitAt(0); // non-UA letters after
+          }
+          final letters = byLetter.keys.toList()
+            ..sort((a, b) => orderOf(a).compareTo(orderOf(b)));
 
           // Auto-select first letter if none chosen
           if (_selectedLetter == null && letters.isNotEmpty) {

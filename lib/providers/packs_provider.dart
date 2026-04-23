@@ -27,7 +27,11 @@ final packsProvider = FutureProvider<List<PackModel>>((ref) async {
       .map((e) => PackModel.fromJson(e as Map<String, dynamic>))
       .toList();
 
-  if (!isPro) return packs;
+  // TEST MODE: unlock all packs regardless of Pro status.
+  // TODO: revert — remove this unconditional unlock and restore the
+  //       `if (!isPro) return packs;` gate before shipping.
+  // ignore: dead_code
+  if (false && !isPro) return packs;
 
   return packs
       .map((p) => p.isLocked ? p.copyWith(isLocked: false) : p)

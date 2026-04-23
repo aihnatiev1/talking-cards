@@ -4,10 +4,6 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Скажи слово вголос — і ми перевіримо правильну вимову!</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Мікрофон потрібен, щоб дитина могла вимовляти слова вголос.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -51,8 +47,6 @@
 			</array>
 		</dict>
 	</dict>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>This app does not use the microphone.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

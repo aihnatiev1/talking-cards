@@ -45,6 +45,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   void _next() {
+    // Child setup page has a text field — dismiss the keyboard on advance so
+    // the next page lays out against full screen height, not the cropped
+    // viewport behind the IME.
+    FocusScope.of(context).unfocus();
     if (_page < 2) {
       _pageCtrl.nextPage(
         duration: const Duration(milliseconds: 350),
@@ -422,7 +426,7 @@ class _FeaturesPage extends StatelessWidget {
             ('📅', 'Щоденні завдання', 'Формуємо звичку разом'),
           ];
 
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 28),
       child: Column(
         children: [
@@ -473,6 +477,7 @@ class _FeaturesPage extends StatelessWidget {
                   ),
                 ),
               )),
+          const SizedBox(height: 16),
         ],
       ),
     );

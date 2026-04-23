@@ -107,6 +107,10 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
   /// Returns true if the user has exhausted the free allowance and is not Pro.
   /// Callers should skip card-loading and let the build show the paywall banner.
   bool _isGated() {
+    // TEST MODE: never gate the coloring screen.
+    // TODO: revert — restore the real check below before shipping.
+    return false;
+    // ignore: dead_code
     final isPro = ref.read(isProProvider);
     return !isPro && _completedCount >= _freeAllowance;
   }
@@ -244,10 +248,11 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
       if (!mounted) return;
       showConfetti();
       if (card != null) {
-        // EN packs have no recorded audio → force en-US TTS so the word
-        // is spoken in English, not read with a Ukrainian voice.
+        // playWordOnly uses the recorded mp3 when available (UA and EN
+        // voiceovers are both bundled), falling back to TTS in the given
+        // locale when a card has no audio asset.
         AudioService.instance.playWordOnly(
-          isEn ? null : card.audioKey,
+          card.audioKey,
           card.sound,
           locale: isEn ? 'en-US' : 'uk-UA',
         );
@@ -479,11 +484,14 @@ class _ColoringPainter extends CustomPainter {
     required this.brushRadius,
   });
 
-  // Desaturate + lift toward white so "unrevealed" looks like faded paper.
+  // Desaturate to luma and keep darks dark so outlines stay visible on every
+  // card. Formula per channel: out = 0.3*R + 0.59*G + 0.11*B  (human-eye
+  // weights), with a small +30 lift so mid-tones still feel faded. Pure
+  // black stays at ~30 (clear contour); pure white lands near 255.
   static const ColorFilter _desatFilter = ColorFilter.matrix([
-    0.45, 0.45, 0.45, 0, 120,
-    0.45, 0.45, 0.45, 0, 120,
-    0.45, 0.45, 0.45, 0, 120,
+    0.30, 0.59, 0.11, 0, 30,
+    0.30, 0.59, 0.11, 0, 30,
+    0.30, 0.59, 0.11, 0, 30,
     0,    0,    0,    1, 0,
   ]);
 

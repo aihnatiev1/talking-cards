@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import '../utils/constants.dart';
+import '../utils/l10n.dart';
 
 /// Full-screen celebration overlay with falling stars and confetti.
 class CelebrationOverlay extends StatefulWidget {
@@ -11,6 +12,7 @@ class CelebrationOverlay extends StatefulWidget {
   final VoidCallback onDone;
   final VoidCallback? onReplay;
   final VoidCallback? onShare;
+  final bool isEn;
 
   const CelebrationOverlay({
     super.key,
@@ -20,6 +22,7 @@ class CelebrationOverlay extends StatefulWidget {
     required this.onDone,
     this.onReplay,
     this.onShare,
+    this.isEn = false,
   });
 
   @override
@@ -65,6 +68,7 @@ class _CelebrationOverlayState extends State<CelebrationOverlay>
 
   @override
   Widget build(BuildContext context) {
+    final s = AppS(widget.isEn);
     return GestureDetector(
       onTap: widget.onDone,
       child: Material(
@@ -110,7 +114,7 @@ class _CelebrationOverlayState extends State<CelebrationOverlay>
                       const Text('⭐', style: TextStyle(fontSize: 48)),
                       const SizedBox(height: 12),
                       Text(
-                        'Молодець!',
+                        s('Молодець!', 'Well done!'),
                         style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
@@ -119,7 +123,9 @@ class _CelebrationOverlayState extends State<CelebrationOverlay>
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '${widget.packTitle} пройдено!',
+                        widget.isEn
+                            ? '${widget.packTitle} complete!'
+                            : '${widget.packTitle} пройдено!',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 18,
@@ -133,9 +139,9 @@ class _CelebrationOverlayState extends State<CelebrationOverlay>
                           child: ElevatedButton.icon(
                             onPressed: widget.onReplay,
                             icon: const Icon(Icons.replay_rounded),
-                            label: const Text(
-                              'Грати знову',
-                              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                            label: Text(
+                              s('Грати знову', 'Play again'),
+                              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
                             ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: widget.color,
@@ -155,9 +161,9 @@ class _CelebrationOverlayState extends State<CelebrationOverlay>
                           child: ElevatedButton.icon(
                             onPressed: widget.onShare,
                             icon: const Icon(Icons.share_rounded),
-                            label: const Text(
-                              'Поділитись 🎉',
-                              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                            label: Text(
+                              s('Поділитись 🎉', 'Share 🎉'),
+                              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
                             ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: kTeal,
@@ -183,9 +189,9 @@ class _CelebrationOverlayState extends State<CelebrationOverlay>
                               borderRadius: BorderRadius.circular(20),
                             ),
                           ),
-                          child: const Text(
-                            'На головну',
-                            style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                          child: Text(
+                            s('На головну', 'Back to home'),
+                            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
                           ),
                         ),
                       ),

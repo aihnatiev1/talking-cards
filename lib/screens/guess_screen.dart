@@ -46,12 +46,12 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
   @override
   void initState() {
     super.initState();
-    // EN mode: use cards with images; UA mode: use cards with recorded audio
-    final soundCards = widget.ttsLocale != null
-        ? widget.cards.where((c) => c.image != null).toList()
-        : widget.cards
-            .where((c) => AudioService.instance.hasSound(c.audioKey))
-            .toList();
+    // Playable = recorded audio OR TTS-capable (ttsLocale + image). A card
+    // with both recorded audio and an image qualifies either way.
+    final soundCards = widget.cards.where((c) {
+      if (AudioService.instance.hasSound(c.audioKey)) return true;
+      return widget.ttsLocale != null && c.image != null;
+    }).toList();
     _provider = StateNotifierProvider.autoDispose<QuizNotifier, QuizState?>((ref) {
       return QuizNotifier(soundCards);
     });
@@ -68,6 +68,20 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
 
     AnalyticsService.instance.logQuizStart();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Quiz requires at least 4 image-bearing cards to build its MCQ
+      // options. If the caller (e.g. SRS banner with <4 due) didn't pad
+      // enough, close the screen instead of hanging on the loader.
+      final playable = soundCards.where((c) => c.image != null).length;
+      if (playable < 4) {
+        final s = AppS(ref.read(languageProvider) == 'en');
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(s('Ще не достатньо карток для гри',
+              'Not enough cards to play')),
+          behavior: SnackBarBehavior.floating,
+        ));
+        Navigator.of(context).pop();
+        return;
+      }
       ref.read(_provider.notifier).start();
       Future.delayed(const Duration(milliseconds: 300), () {
         if (mounted) _playCurrentSound();
@@ -89,10 +103,12 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
     final state = ref.read(_provider);
     if (state == null || state.finished) return;
     final card = state.correctCard;
-    if (widget.ttsLocale != null) {
-      TtsService.instance.speak(card.sound, locale: widget.ttsLocale!);
-    } else {
+    // Prefer recorded mp3 whenever available (EN voiceovers too), fall back
+    // to TTS only when no audio asset exists for this card.
+    if (AudioService.instance.hasSound(card.audioKey)) {
       AudioService.instance.speakCard(card.audioKey, card.sound, card.text);
+    } else if (widget.ttsLocale != null) {
+      TtsService.instance.speak(card.sound, locale: widget.ttsLocale!);
     }
   }
 

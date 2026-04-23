@@ -5,7 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/audio_service.dart';
 import '../services/engage_service.dart';
 import '../services/remote_config_service.dart';
-import '../services/speech_service.dart';
 import '../services/tts_service.dart';
 import '../services/widget_service.dart';
 import '../utils/constants.dart';
@@ -74,7 +73,6 @@ class _SplashScreenState extends State<SplashScreen>
       PurchaseService.instance.init(),
       AudioService.instance.precache(),
       NotificationService.instance.init(),
-      SpeechService.instance.init(),
       TtsService.instance.init(),
     ]);
 

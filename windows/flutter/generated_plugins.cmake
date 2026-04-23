@@ -8,7 +8,6 @@ list(APPEND FLUTTER_PLUGIN_LIST
   flutter_timezone
   flutter_tts
   share_plus
-  speech_to_text_windows
   url_launcher_windows
 )
 

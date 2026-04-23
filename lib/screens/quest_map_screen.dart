@@ -160,6 +160,7 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
             totalCards:
                 allPacks.fold<int>(0, (s, p) => s + p.cards.length),
             streak: 0,
+            isEn: ref.read(languageProvider) == 'en',
             badges: {},
           );
         },
@@ -425,6 +426,7 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
                   allPacks.fold<int>(0, (s, p) => s + p.cards.length),
               streak: 0,
               badges: {},
+              isEn: ref.read(languageProvider) == 'en',
             );
           },
           onGoToPack: () {

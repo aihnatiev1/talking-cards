@@ -96,8 +96,11 @@ class _PacksTabState extends ConsumerState<PacksTab> {
               TextButton.icon(
                 onPressed: () {
                   Navigator.of(ctx).pop();
+                  final isEn = ref.read(languageProvider) == 'en';
                   launchUrl(
-                    Uri.parse('https://aihnatiev1.github.io/talking-cards/privacy-policy.html'),
+                    Uri.parse(isEn
+                        ? 'https://aihnatiev1.github.io/talking-cards/privacy-policy-en.html'
+                        : 'https://aihnatiev1.github.io/talking-cards/privacy-policy.html'),
                     mode: LaunchMode.externalApplication,
                   );
                 },
@@ -295,7 +298,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                       color: card.colorAccent,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 3),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Text(

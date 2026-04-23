@@ -43,16 +43,24 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
   late List<CardModel> _deck;
   int _index = 0;
   bool _answered = false; // buttons locked during transition
+  // Cards the child pressed "not quite" on — we'll offer a practice round
+  // with just these at the end.
+  final List<CardModel> _missed = [];
 
   // Card slide-out when advancing to next
   late AnimationController _exitCtrl;
   late Animation<double> _exitSlide;
   late Animation<double> _exitFade;
 
+  static const _sessionLength = 10;
+
   @override
   void initState() {
     super.initState();
-    _deck = List<CardModel>.from(widget.cards)..shuffle(Random());
+    // Cap the session so a pack of 200+ cards doesn't become an endless loop.
+    // 10 is the sweet spot for toddler attention span (30-60s each).
+    final shuffled = List<CardModel>.from(widget.cards)..shuffle(Random());
+    _deck = shuffled.take(_sessionLength).toList();
 
     _exitCtrl = AnimationController(
       vsync: this,
@@ -104,19 +112,27 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
     setState(() => _answered = true);
 
     HapticFeedback.mediumImpact();
+    _missed.add(_current);
 
-    // Shake the card
+    // Quick shake so the tap feels acknowledged, then move on — we'll come
+    // back to this card in the optional practice round at the end.
     await shakeController.forward();
     shakeController.reset();
     if (!mounted) return;
 
-    // Replay audio after brief pause
-    await Future.delayed(const Duration(milliseconds: 200));
-    await _speakCurrent();
-    if (!mounted) return;
+    await _advance();
+  }
 
-    // Unlock buttons — let them try again
-    setState(() => _answered = false);
+  void _startMissedRound() {
+    final missed = List<CardModel>.from(_missed);
+    resetGame();
+    setState(() {
+      _deck = missed..shuffle(Random());
+      _index = 0;
+      _answered = false;
+      _missed.clear();
+    });
+    _speakCurrent();
   }
 
   Future<void> _advance() async {
@@ -220,16 +236,19 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           if (card.image != null)
-                            SizedBox(
-                              height: 160,
-                              child: Image.asset(
-                                'assets/images/webp/${card.image}.webp',
-                                fit: BoxFit.contain,
+                            Expanded(
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 8),
+                                child: Image.asset(
+                                  'assets/images/webp/${card.image}.webp',
+                                  fit: BoxFit.contain,
+                                ),
                               ),
                             )
                           else
                             Text(card.emoji,
-                                style: const TextStyle(fontSize: 100)),
+                                style: const TextStyle(fontSize: 140)),
 
                           const SizedBox(height: 16),
 
@@ -384,6 +403,29 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
                   style: TextStyle(fontSize: 18, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 48),
+                if (_missed.isNotEmpty) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton.icon(
+                      onPressed: _startMissedRound,
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: Text(
+                        s('Попрацювати над ${_missed.length}',
+                            'Practice ${_missed.length} again'),
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFFF8C42),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 SizedBox(
                   width: double.infinity,
                   height: 56,
@@ -410,6 +452,7 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
                       _deck.shuffle(Random());
                       _index = 0;
                       _answered = false;
+                      _missed.clear();
                     });
                     _speakCurrent();
                   },

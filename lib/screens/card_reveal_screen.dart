@@ -443,7 +443,7 @@ class _CardRevealScreenState extends State<CardRevealScreen>
               color: card.colorAccent,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 3),
 
           // Description
           Text(
