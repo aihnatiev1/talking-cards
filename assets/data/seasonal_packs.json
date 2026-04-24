@@ -23,7 +23,8 @@
         "text": "Подарунок під ялинкою",
         "emoji": "🎁",
         "colorBg": "#FCE4EC",
-        "colorAccent": "#AD1457"
+        "colorAccent": "#AD1457",
+        "image": "podarunok"
       },
       {
         "id": "sx03",
@@ -79,7 +80,8 @@
         "text": "Дзвіночок дзвенить весело",
         "emoji": "🔔",
         "colorBg": "#FFFDE7",
-        "colorAccent": "#F9A825"
+        "colorAccent": "#F9A825",
+        "image": "dzvinochok"
       },
       {
         "id": "sx10",
@@ -87,7 +89,8 @@
         "text": "Солодкий мандарин на Новий рік",
         "emoji": "🍊",
         "colorBg": "#FFF3E0",
-        "colorAccent": "#E65100"
+        "colorAccent": "#E65100",
+        "image": "mandaryn"
       },
       {
         "id": "sx11",
@@ -103,7 +106,8 @@
         "text": "Яскрава гірлянда на вікні",
         "emoji": "🎇",
         "colorBg": "#FCE4EC",
-        "colorAccent": "#AD1457"
+        "colorAccent": "#AD1457",
+        "image": "hirlyanda"
       },
       {
         "id": "sx13",
@@ -119,7 +123,8 @@
         "text": "Новорічна казка для всіх",
         "emoji": "📖",
         "colorBg": "#F3E5F5",
-        "colorAccent": "#6A1B9A"
+        "colorAccent": "#6A1B9A",
+        "image": "kazka"
       },
       {
         "id": "sx15",
@@ -172,7 +177,8 @@
         "text": "Солодкий кавун влітку",
         "emoji": "🍉",
         "colorBg": "#E8F5E9",
-        "colorAccent": "#388E3C"
+        "colorAccent": "#388E3C",
+        "image": "kavun"
       },
       {
         "id": "ss05",
@@ -204,7 +210,8 @@
         "text": "Краб йде по піску",
         "emoji": "🦀",
         "colorBg": "#FFF3E0",
-        "colorAccent": "#E65100"
+        "colorAccent": "#E65100",
+        "image": "krab"
       },
       {
         "id": "ss09",
@@ -220,7 +227,8 @@
         "text": "М'яч летить над сіткою",
         "emoji": "⚽",
         "colorBg": "#ECEFF1",
-        "colorAccent": "#546E7A"
+        "colorAccent": "#546E7A",
+        "image": "myach"
       },
       {
         "id": "ss11",
@@ -260,7 +268,8 @@
         "text": "Дельфін стрибає у хвилях",
         "emoji": "🐬",
         "colorBg": "#E1F5FE",
-        "colorAccent": "#0277BD"
+        "colorAccent": "#0277BD",
+        "image": "delfin"
       }
     ],
     "titleEn": "Summer"
@@ -289,7 +298,8 @@
         "text": "Жовте листя падає з дерев",
         "emoji": "🍂",
         "colorBg": "#FFF8E1",
-        "colorAccent": "#FF8F00"
+        "colorAccent": "#FF8F00",
+        "image": "lystya"
       },
       {
         "id": "sa03",
@@ -313,7 +323,8 @@
         "text": "Лісові гриби після дощу",
         "emoji": "🍄",
         "colorBg": "#FFF3E0",
-        "colorAccent": "#E65100"
+        "colorAccent": "#E65100",
+        "image": "hryby"
       },
       {
         "id": "sa06",
@@ -321,7 +332,8 @@
         "text": "Осінній холодний дощ",
         "emoji": "🌧️",
         "colorBg": "#E3F2FD",
-        "colorAccent": "#1565C0"
+        "colorAccent": "#1565C0",
+        "image": "doshch"
       },
       {
         "id": "sa07",
@@ -329,7 +341,8 @@
         "text": "Жолудь впав з дуба",
         "emoji": "🌰",
         "colorBg": "#FFF8E1",
-        "colorAccent": "#6D4C41"
+        "colorAccent": "#6D4C41",
+        "image": "zholud"
       },
       {
         "id": "sa08",
@@ -337,7 +350,8 @@
         "text": "Горобець сидить на гілці",
         "emoji": "🐦",
         "colorBg": "#ECEFF1",
-        "colorAccent": "#546E7A"
+        "colorAccent": "#546E7A",
+        "image": "horobets"
       },
       {
         "id": "sa09",
@@ -377,7 +391,8 @@
         "text": "Соснова шишка в лісі",
         "emoji": "🌲",
         "colorBg": "#E8F5E9",
-        "colorAccent": "#2E7D32"
+        "colorAccent": "#2E7D32",
+        "image": "shyshka"
       },
       {
         "id": "sa14",
