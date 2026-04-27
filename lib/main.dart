@@ -88,7 +88,7 @@ class _TalkingCardsAppState extends ConsumerState<TalkingCardsApp>
       // Per-locale OS-level display name lives in:
       //   • Android: res/values/strings.xml + values-uk/strings.xml
       //   • iOS:     ios/Runner/{en,uk}.lproj/InfoPlist.strings
-      title: 'TalkCards',
+      title: 'FirstWords Cards',
       debugShowCheckedModeBanner: false,
       navigatorObservers: [
         if (AnalyticsService.instance.observer != null)

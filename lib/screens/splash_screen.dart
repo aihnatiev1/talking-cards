@@ -197,7 +197,7 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  _isEnLang ? 'TalkCards' : 'Картки-розмовлялки',
+                  _isEnLang ? 'FirstWords Cards' : 'Картки-розмовлялки',
                   style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,

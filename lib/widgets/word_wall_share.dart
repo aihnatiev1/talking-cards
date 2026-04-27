@@ -30,7 +30,7 @@ Future<void> shareWordWall({
   final count = learnedCards.length;
   final preview = learnedCards.take(12).toList();
   final fallbackText = isEn
-      ? '$childName has learned $count words with TalkCards! 🗣️\nDownload free: $_storeUrl'
+      ? '$childName has learned $count words with FirstWords Cards! 🗣️\nDownload free: $_storeUrl'
       : '$childName вже вивчає слова з Картками-розмовлялками! 🗣️\nВивчено: $count\nСкачай безкоштовно: $_storeUrl';
 
   try {

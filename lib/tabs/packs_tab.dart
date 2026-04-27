@@ -125,7 +125,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
               const Text('🗣️', style: TextStyle(fontSize: 48)),
               const SizedBox(height: 12),
               Text(
-                s('Картки-розмовлялки', 'TalkCards'),
+                s('Картки-розмовлялки', 'FirstWords Cards'),
                 style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 4),
@@ -822,7 +822,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                 ),
               ),
               Text(
-                s('🗣️ Картки-розмовлялки', '🗣️ TalkCards'),
+                s('🗣️ Картки-розмовлялки', '🗣️ FirstWords Cards'),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(fontSize: 24 * scale, fontWeight: FontWeight.bold),
