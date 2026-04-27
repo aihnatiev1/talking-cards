@@ -51,7 +51,7 @@ Future<void> shareProgress({
       // Fallback: text-only share
       await Share.share(
         isEn
-          ? 'My child is learning words with Talking Cards! 🗣️\n'
+          ? 'My child is learning words with TalkCards! 🗣️\n'
             '⭐ Packs: $completedPacks/$totalPacks\n'
             '🃏 Cards: $seenCards/$totalCards'
             '${streak > 0 ? '\n🔥 Streak: $streak days' : ''}'
@@ -73,7 +73,7 @@ Future<void> shareProgress({
     await Share.shareXFiles(
       [XFile(file.path)],
       text: isEn
-          ? 'My child is learning words with Talking Cards! 🗣️\nDownload free: $_storeUrl'
+          ? 'My child is learning words with TalkCards! 🗣️\nDownload free: $_storeUrl'
           : 'Мій малюк вивчає слова з Картками-розмовлялками! 🗣️\nСкачай безкоштовно: $_storeUrl',
       sharePositionOrigin: sharePositionOrigin,
     );
@@ -83,7 +83,7 @@ Future<void> shareProgress({
     try {
       await Share.share(
         isEn
-          ? 'My child is learning words with Talking Cards! 🗣️\n'
+          ? 'My child is learning words with TalkCards! 🗣️\n'
             'Download free: $_storeUrl'
           : 'Мій малюк вивчає слова з Картками-розмовлялками! 🗣️\n'
             'Скачай безкоштовно: $_storeUrl',

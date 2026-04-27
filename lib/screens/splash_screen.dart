@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -29,6 +31,7 @@ class _SplashScreenState extends State<SplashScreen>
   bool _imageReady = false;
   bool _showOnboarding = false;
   String? _deepLink;
+  bool _isEnLang = false;
 
   @override
   void initState() {
@@ -98,15 +101,29 @@ class _SplashScreenState extends State<SplashScreen>
     });
     EngageService.instance.publishFromPrefs();
 
-    // Check if onboarding was completed before
+    // Read the active profile's learning language so the splash title
+    // matches before MaterialApp picks it up.
     final prefs = await SharedPreferences.getInstance();
+    try {
+      final activeId = prefs.getString('active_profile_id') ?? 'default';
+      final raw = prefs.getStringList('app_profiles') ?? const [];
+      for (final s in raw) {
+        final j = json.decode(s) as Map<String, dynamic>;
+        if (j['id'] == activeId && j['lang'] == 'en') {
+          if (mounted) setState(() => _isEnLang = true);
+          break;
+        }
+      }
+    } catch (_) {}
     final onboardingDone = prefs.getBool('onboarding_done') ?? false;
     if (!onboardingDone) {
-      // Existing user upgrading from <1.1.0: they have pack progress data
-      // but no onboarding_done flag. Detect by checking for any saved data.
+      // Existing user upgrading from <1.1.0: they have real pack progress
+      // but no onboarding_done flag. We must NOT key on streak_current —
+      // StreakNotifier auto-writes that on every cold start, so a fresh
+      // install would already look "existing" by the time splash reads
+      // prefs and the kid would never see onboarding (iOS first launch bug).
       final hasExistingData = prefs.getKeys().any((k) =>
           k.startsWith('pack_progress_') ||
-          k.startsWith('streak_current') ||
           k.startsWith('completed_packs'));
       if (hasExistingData) {
         // Silently mark done — don't interrupt an existing user with onboarding
@@ -179,9 +196,9 @@ class _SplashScreenState extends State<SplashScreen>
                   fit: BoxFit.contain,
                 ),
                 const SizedBox(height: 24),
-                const Text(
-                  'Картки-розмовлялки',
-                  style: TextStyle(
+                Text(
+                  _isEnLang ? 'TalkCards' : 'Картки-розмовлялки',
+                  style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
                     color: kAccent,

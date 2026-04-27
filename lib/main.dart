@@ -84,7 +84,11 @@ class _TalkingCardsAppState extends ConsumerState<TalkingCardsApp>
     final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp(
-      title: 'Розмовлялки',
+      // App switcher / a11y title — neutralized brand for the bilingual build.
+      // Per-locale OS-level display name lives in:
+      //   • Android: res/values/strings.xml + values-uk/strings.xml
+      //   • iOS:     ios/Runner/{en,uk}.lproj/InfoPlist.strings
+      title: 'TalkCards',
       debugShowCheckedModeBanner: false,
       navigatorObservers: [
         if (AnalyticsService.instance.observer != null)

@@ -125,7 +125,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
               const Text('🗣️', style: TextStyle(fontSize: 48)),
               const SizedBox(height: 12),
               Text(
-                s('Картки-розмовлялки', 'Talking Cards'),
+                s('Картки-розмовлялки', 'TalkCards'),
                 style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 4),
@@ -749,7 +749,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
           }
 
           // Inject seasonal packs as highlighted first items — only in "World" tab
-          if (_selectedCategory == 'Світ') {
+          if (_selectedCategory == 'Світ' || _selectedCategory == 'World') {
             final seasonalPacks =
                 ref.watch(activeSeasonalPacksProvider).valueOrNull ?? [];
             for (int i = seasonalPacks.length - 1; i >= 0; i--) {
@@ -822,18 +822,15 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                 ),
               ),
               Text(
-                s('🗣️ Картки-розмовлялки', '🗣️ Talking Cards'),
+                s('🗣️ Картки-розмовлялки', '🗣️ TalkCards'),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(fontSize: 24 * scale, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 6 * scale),
 
-              // Subtitle with inline streak
-              _buildSubtitle(
-                  packs.length, completedPacks.length, streak.currentStreak,
-                  packProgress.values.fold(0, (a, b) => a + b)),
-
+              // Streak/progress chip lives in the top header now (StreakChip);
+              // the inline subtitle here was a duplicate readout — removed.
               const SizedBox(height: 6),
 
               // Hero: Continue or Card of the Day — full-width
@@ -1181,8 +1178,8 @@ class _TodayPlanIntroHint extends StatelessWidget {
               Expanded(
                 child: Text(
                   isEn
-                      ? 'Tap any stone to start — finish all 3 to unlock a card!'
-                      : 'Тапни будь-який камінь щоб почати — пройди всі 3 і отримаєш картку!',
+                      ? 'Finish 3 daily steps to unlock a new card 🎁'
+                      : 'Виконай 3 щоденні кроки і отримай нову картку 🎁',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,

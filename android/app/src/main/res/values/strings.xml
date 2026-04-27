@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Default (English) — shown on EN device locales and other unsupported locales. -->
+    <string name="app_name">TalkCards</string>
+</resources>

@@ -1,4 +1,4 @@
-# Talking Cards — English Voiceover Script (v2)
+# Talking Cards — English Voiceover Script (v3, TTS-safe)
 
 Format: each card has the WORD on its own line; the sentence follows on the next line.
 Read the word clearly, then the sentence after a short pause (0.5–1.0 s).
@@ -7,9 +7,10 @@ File naming:
   <ID>_word.wav    — word
   <ID>_phrase.wav  — sentence
 
-NOTE: Some words repeat across packs for phonetic training (CHEESE in Z/CH,
-STAR in R/S/Blends, etc.) — this is intentional. Sentences are different
-so each recording is unique.
+NOTE: This version is optimized for AI/TTS voiceover.
+All onomatopoeia (woof, meow, moo, rrrr, ha-ha, brrr, etc.)
+has been replaced with descriptive sentences that TTS can
+pronounce naturally.
 
 ======================================================================
 
@@ -18,58 +19,58 @@ so each recording is unique.
 ----------------------------------------------------------------------
 
 CAT
-The cat says meow!
+The cat is soft and fluffy!
 
 DOG
-The dog says woof!
+The dog wags its tail!
 
 COW
-The cow says moo!
+The cow gives us milk!
 
 HORSE
-The horse runs fast!
+The horse runs very fast!
 
 PIG
-The pig says oink!
+The pig has a curly tail!
 
 CHICKEN
-The chicken says cluck!
+The chicken lays eggs!
 
 ROOSTER
-The rooster crows at sunrise!
+The rooster wakes up at sunrise!
 
 DUCK
-The duck says quack!
+The duck swims in the pond!
 
 FROG
-The frog jumps high!
+The frog jumps very high!
 
 FISH
 The fish swims in water!
 
 BIRD
-The bird sings a song!
+The bird sings a sweet song!
 
 BUTTERFLY
-The butterfly flutters by!
+The butterfly has bright wings!
 
 BEE
-The bee says buzz!
+The bee makes sweet honey!
 
 SNAIL
-The snail moves slowly!
+The snail moves very slowly!
 
 BUNNY
-The bunny hops-hops!
+The bunny has long ears!
 
 BEAR
-The big brown bear!
+The big brown bear lives in the forest!
 
 FOX
 The clever red fox!
 
 WOLF
-The wolf howls at the moon!
+The wolf lives in the forest!
 
 DEER
 The deer has pretty antlers!
@@ -78,31 +79,31 @@ HEDGEHOG
 The hedgehog is spiky!
 
 OWL
-The owl says hoo-hoo!
+The owl is awake at night!
 
 PENGUIN
-The penguin waddles on ice!
+The penguin waddles on the ice!
 
 ELEPHANT
 The elephant has a long trunk!
 
 LION
-The lion roars: so loud!
+The lion has a big mane!
 
 MONKEY
-The monkey climbs trees!
+The monkey climbs tall trees!
 
 CROCODILE
 The crocodile swims in the river!
 
 TURTLE
-The turtle moves slowly!
+The turtle moves very slowly!
 
 DOLPHIN
 The dolphin jumps in the sea!
 
 SQUIRREL
-The squirrel loves nuts!
+The squirrel loves to eat nuts!
 
 
 ## Home & Family (30 cards)
@@ -118,7 +119,7 @@ GRANDMA
 Grandma gives warm hugs!
 
 GRANDPA
-Grandpa tells stories!
+Grandpa tells fun stories!
 
 BABY
 The baby is sleeping!
@@ -142,7 +143,7 @@ KISS
 A sweet little kiss!
 
 SONG
-Sing a lullaby!
+Sing a sweet lullaby!
 
 BALL
 Bounce the ball!
@@ -151,7 +152,7 @@ DOLL
 My favorite doll!
 
 TOY CAR
-Zoom goes the toy car!
+Push the toy car!
 
 BOOK
 Let's read a book!
@@ -172,7 +173,7 @@ WALK
 Let's go for a walk!
 
 BATH
-Splash, splash in the bath!
+Take a warm bath!
 
 HANDS
 Wash your hands!
@@ -218,10 +219,10 @@ TIRED
 I feel tired and sleepy.
 
 SURPRISED
-Wow, what a surprise!
+What a big surprise!
 
 EXCITED
-I'm so excited!
+I am so excited!
 
 CALM
 I feel nice and calm.
@@ -230,7 +231,7 @@ SHY
 I feel a little shy.
 
 SILLY
-I'm being silly!
+I am being silly!
 
 PROUD
 I feel so proud!
@@ -243,49 +244,49 @@ I feel loved and safe!
 ----------------------------------------------------------------------
 
 CAR
-The car goes beep-beep!
+The car drives on the road!
 
 BUS
 The bus takes us home!
 
 TRAIN
-The train goes choo-choo!
+The train rides on tracks!
 
 AIRPLANE
-The airplane flies high!
+The airplane flies up high!
 
 SHIP
-The big ship sails!
+The big ship sails on the sea!
 
 BICYCLE
 Ride the bicycle!
 
 MOTORCYCLE
-The motorcycle goes vroom!
+The motorcycle rides fast!
 
 HELICOPTER
 The helicopter spins its blades!
 
 TRAM
-The tram rings its bell!
+The tram rides on rails!
 
 SUBWAY
-The subway goes underground!
+The subway rides underground!
 
 TAXI
-The yellow taxi stops!
+The yellow taxi stops here!
 
 FIRE TRUCK
-The fire truck goes wee-ooo!
+The fire truck helps people!
 
 AMBULANCE
-The ambulance helps people!
+The ambulance helps sick people!
 
 POLICE CAR
-The police car flashes lights!
+The police car flashes its lights!
 
 TRUCK
-The truck carries things!
+The truck carries big things!
 
 TRACTOR
 The tractor works on the farm!
@@ -294,10 +295,10 @@ SCOOTER
 Push the scooter fast!
 
 ROCKET
-The rocket blasts off!
+The rocket flies to space!
 
 BOAT
-The boat floats on water!
+The boat floats on the water!
 
 YACHT
 A fancy white yacht!
@@ -306,7 +307,7 @@ HOT AIR BALLOON
 The hot air balloon goes up!
 
 SLED
-The sled slides on snow!
+The sled slides on the snow!
 
 SKATEBOARD
 Ride the skateboard!
@@ -315,7 +316,7 @@ EXCAVATOR
 The excavator digs big holes!
 
 SUBMARINE
-The submarine dives deep!
+The submarine dives very deep!
 
 
 ## Food & Fruits (30 cards)
@@ -403,7 +404,7 @@ HONEY
 Sweet golden honey!
 
 EGG
-An egg goes crack!
+A small white egg!
 
 CANDY
 A sweet little candy!
@@ -458,7 +459,7 @@ CIRCLE
 Round like a ball!
 
 SQUARE
-Four sides equal!
+Four equal sides!
 
 TRIANGLE
 Three pointy sides!
@@ -491,7 +492,7 @@ FLOWER
 A flower with petals!
 
 SPIRAL
-A spiral goes round and round!
+A spiral curls around!
 
 CLOUD
 A fluffy white cloud!
@@ -561,7 +562,7 @@ FEET
 Stomp your feet!
 
 HEART
-Your heart goes thump-thump!
+Your heart beats inside!
 
 LUNGS
 Your lungs fill with air!
@@ -604,49 +605,49 @@ Wiggle your toes!
 ----------------------------------------------------------------------
 
 RUN
-Let's run fast!
+Let us run very fast!
 
 JUMP
 Jump like a bunny!
 
 EAT
-Yum-yum, eating!
+Eat your tasty food!
 
 DRINK
-Drinking water!
+Drink some cool water!
 
 SLEEP
-Shh, sleeping...
+Time to sleep tight!
 
 PLAY
 Let's play together!
 
 DRAW
-Drawing a picture!
+Draw a pretty picture!
 
 DANCE
-Dancing together!
+Dance with me!
 
 SWIM
-Splashing in water!
+Swim in the water!
 
 LAUGH
-Ha-ha, so funny!
+Laughing makes us happy!
 
 CRY
-Don't cry, it's okay!
+Do not cry, all is well!
 
 WASH
-Wash your hands!
+Wash your hands clean!
 
 WALK
-Let's go walking!
+Let us go walking!
 
 SIT
 Sit down quietly!
 
 LOOK
-Look carefully!
+Look very carefully!
 
 LISTEN
 Listen to the sound!
@@ -655,25 +656,25 @@ HUG
 Big warm hug!
 
 SING
-Sing la-la-la!
+Sing a happy song!
 
 THROW
 Throw the ball!
 
 CATCH
-Catch it!
+Catch the ball!
 
 READ
-Reading a book!
+Read a fun book!
 
 BUILD
-Building a tower!
+Build a tall tower!
 
 COOK
-Cooking yummy food!
+Cook some yummy food!
 
 CLEAN
-Cleaning up toys!
+Clean up the toys!
 
 HELP
 Help your mom!
@@ -698,7 +699,7 @@ HAPPY
 Happy and smiling!
 
 SAD
-Don't be sad!
+Do not be sad!
 
 FAST
 Fast as a cheetah!
@@ -713,10 +714,10 @@ NIGHT
 Starry night!
 
 LOUD
-So loud!
+A very loud sound!
 
 QUIET
-Shh, quiet!
+A nice quiet sound!
 
 CLEAN
 Squeaky clean!
@@ -725,7 +726,7 @@ DIRTY
 Got all muddy!
 
 LONG
-Very long neck!
+A very long neck!
 
 SHORT
 Short little legs!
@@ -737,16 +738,16 @@ LIGHT
 Light as a feather!
 
 OPEN
-Door is open!
+The door is open!
 
 CLOSED
-Door is closed!
+The door is closed!
 
 UP
 Flying up high!
 
 DOWN
-Falling down!
+Falling down low!
 
 HARD
 Hard as a diamond!
@@ -755,10 +756,10 @@ SOFT
 Soft as a teddy bear!
 
 FULL
-Plate is full!
+The plate is full!
 
 EMPTY
-Plate is empty!
+The plate is empty!
 
 YOUNG
 A young puppy!
@@ -777,19 +778,19 @@ Warm and dry!
 ----------------------------------------------------------------------
 
 I'M THIRSTY
-I need water!
+I need water.
 
 I'M HUNGRY
-I want to eat!
+I want to eat.
 
 I'M SLEEPY
-I want to sleep!
+I want to sleep.
 
 I'M COLD
-Brrr, so cold!
+I am very cold.
 
 I'M HOT
-It's so hot!
+I am very hot.
 
 WHERE'S MOMMY?
 Where is mommy?
@@ -798,22 +799,22 @@ WHERE'S DADDY?
 Where is daddy?
 
 COME HERE
-Come to me!
+Come to me.
 
 I LOVE YOU
-I love you so much!
+I love you so much.
 
 HUG ME
-Give me a hug!
+Give me a hug.
 
 THANK YOU
-Thank you very much!
+Thank you very much.
 
 PLEASE
-Please!
+Please.
 
 SORRY
-I'm sorry!
+I am sorry.
 
 HELLO!
 Hello there!
@@ -828,44 +829,47 @@ HELP ME
 Can you help me?
 
 AGAIN
-Do it again!
+Do it again.
 
 NO!
-No, I don't want to.
+No, I do not want to.
 
 WAIT
-Please wait!
+Please wait.
 
 IT HURTS
-Ouch, that hurts!
+My knee hurts.
 
 I'M SAD
 I feel sad.
 
 I'M HAPPY
-I feel happy!
+I feel happy.
 
 I'M SCARED
-I'm a little scared.
+I feel a little scared.
 
 I DON'T KNOW
-I'm not sure.
+I am not sure.
 
 
-## Adjectives (13 cards)
+## Adjectives (13 cards — textures & tastes only)
 ----------------------------------------------------------------------
+
+Note: Colors, shapes, and size adjectives are in Colors & Shapes
+and Opposites packs. This pack covers unique textures and tastes.
 
 FLUFFY
 Soft and fluffy!
 
 PRICKLY
-Careful, it's prickly!
+Careful, it is prickly!
 
 SMOOTH
 Smooth like glass!
 
 SLIMY
-Eww, so slimy!
+Wet and slimy!
 
 BUMPY
 Bumpy like a road!
@@ -877,16 +881,16 @@ SWEET
 Yummy and sweet!
 
 SOUR
-Ooh, so sour!
+Very sour taste!
 
 BITTER
-Hmm, that's bitter!
+A bitter taste!
 
 SALTY
 Salty like the sea!
 
 SPICY
-Spicy hot!
+Spicy and hot!
 
 JUICY
 Juicy and fresh!
@@ -911,7 +915,7 @@ RIVER
 Fish swim in the river!
 
 ROBOT
-The robot says hello!
+The robot helps us!
 
 RING
 A shiny gold ring!
@@ -929,19 +933,19 @@ RED
 An apple is red!
 
 CARROT
-Bunny eats the carrot!
+The bunny eats the carrot!
 
 TIGER
-Tiger roars: rrrr!
+The tiger has orange stripes!
 
 ZEBRA
-Zebra has black and white stripes!
+The zebra has black and white stripes!
 
 GIRAFFE
 A tall spotted giraffe!
 
 DRUM
-The drum goes boom-boom!
+Hit the drum loud!
 
 STAR
 A shiny little star!
@@ -951,7 +955,7 @@ A shiny little star!
 ----------------------------------------------------------------------
 
 LION
-The lion is king!
+The lion is the king!
 
 LEMON
 A yellow lemon!
@@ -996,7 +1000,7 @@ APPLE
 A crunchy sweet apple!
 
 OWL
-An owl says hoo!
+A wise old owl!
 
 
 ## Sound S (16 cards)
@@ -1006,7 +1010,7 @@ SUN
 The sun is shining!
 
 SNAKE
-A long snake hisses!
+A long snake slides!
 
 STAR
 A twinkling bright star!
@@ -1066,8 +1070,8 @@ Close the zipper!
 ZERO
 Zero means none!
 
-BUZZ
-Bees buzz: bzzz!
+BREEZE
+A cool gentle breeze!
 
 CHEESE
 A slice of cheese!
@@ -1082,7 +1086,7 @@ EYES
 Two bright eyes!
 
 BEES
-Bees make honey!
+Bees make sweet honey!
 
 LAZY
 A lazy afternoon!
@@ -1113,7 +1117,7 @@ SHIRT
 A clean shirt!
 
 SHOWER
-Warm morning shower!
+A warm morning shower!
 
 SHELL
 A pretty seashell!
@@ -1162,7 +1166,7 @@ MEASURE
 Measure the table!
 
 PLEASURE
-It's a pleasure!
+It is a pleasure!
 
 
 ## Sound CH (15 cards)
@@ -1175,13 +1179,13 @@ CHEESE
 A tasty slice of cheese!
 
 CHICKEN
-Chicken says cluck-cluck!
+A small yellow chicken!
 
 CHERRY
 A sweet red cherry!
 
 CHURCH
-Bells ring at church!
+Bells ring at the church!
 
 CHOCOLATE
 Sweet yummy chocolate!
@@ -1291,7 +1295,7 @@ WALK
 Walk in the park!
 
 WIND
-The wind blows!
+The wind blows softly!
 
 WALL
 A tall brick wall!
@@ -1303,7 +1307,7 @@ WEB
 A spider web!
 
 WOLF
-A gray wolf howls!
+A gray wolf in the forest!
 
 WORM
 A wiggly worm!
@@ -1358,7 +1362,7 @@ BREAD
 Fresh warm bread!
 
 CLOCK
-Tick-tock clock!
+A round wall clock!
 
 CLOUD
 A fluffy cloud!
@@ -1395,4 +1399,42 @@ PACK SUMMARY:
   Sound W              14 cards
   Consonant Blends     18 cards
   ----------------------------------
-  TOTAL:              424 cards
+  TOTAL:              424 cards = 848 audio files
+
+======================================================================
+
+KEY CHANGES vs v2 (TTS-safe):
+
+REMOVED ALL ONOMATOPOEIA:
+  • Animal sounds: meow, woof, moo, oink, cluck, quack,
+    hoo-hoo, hiss, buzz — replaced with descriptive sentences
+  • Vehicle sounds: beep-beep, choo-choo, vroom, wee-ooo,
+    boom-boom — replaced with action descriptions
+  • Human sounds: ha-ha, yum-yum, shh, brrr, ouch, la-la-la
+    — replaced with simple statements
+  • Letter-stretches: rrrr, bzzz, roar (as standalone) —
+    removed entirely
+
+CONTRACTIONS HANDLING:
+  • Phrases pack keeps contractions in WORD line (I'M, WHERE'S)
+    because the visual/text form matters there
+  • SENTENCE lines avoid "let's", "don't", "can't" where
+    possible (some TTS read them choppy)
+  • Periods used instead of exclamations where tone is calm
+
+SPECIFIC FIXES:
+  • LION: "is the king" instead of "rrrr"
+  • TIGER: "has orange stripes" instead of "roars rrrr"
+  • DRUM: "Hit the drum loud" instead of "boom-boom"
+  • CAR: "drives on the road" instead of "beep-beep"
+  • TRAIN: "rides on tracks" instead of "choo-choo"
+  • OWL: "is awake at night" instead of "hoo-hoo"
+  • BUNNY: "has long ears" instead of "hops-hops"
+  • Sound Z BUZZ → BREEZE (BUZZ is onomatopoeia)
+  • EAT: "Eat your tasty food" instead of "Yum-yum, eating"
+  • LAUGH: "Laughing makes us happy" instead of "Ha-ha"
+  • SLEEP: "Time to sleep tight" instead of "Shh, sleeping..."
+  • SING: "Sing a happy song" instead of "Sing la-la-la"
+  • IT HURTS: "My knee hurts" instead of "Ouch, that hurts"
+
+======================================================================
