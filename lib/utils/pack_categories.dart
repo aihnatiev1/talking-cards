@@ -6,17 +6,10 @@ import '../models/pack_model.dart';
 /// Pack id → category name (Ukrainian).
 const packCategoriesUk = <String, String>{
   'rozmovlyalky': 'Мовлення',
-  'animals': 'Світ навколо',
-  'transport': 'Світ навколо',
-  'home': 'Побут',
-  'food': 'Побут',
-  'emotions': 'Розвиток',
-  'colors': 'Розвиток',
-  'body': 'Розвиток',
   'phrases': 'Мовлення',
-  'actions': 'Розвиток',
-  'opposites': 'Розвиток',
-  'adjectives': 'Розвиток',
+  'actions': 'Мовлення',
+  'opposites': 'Мовлення',
+  'adjectives': 'Мовлення',
   'sound_r': 'Звуки',
   'sound_l': 'Звуки',
   'sound_sh': 'Звуки',
@@ -26,21 +19,21 @@ const packCategoriesUk = <String, String>{
   'sound_ch': 'Звуки',
   'sound_shch': 'Звуки',
   'sound_ts': 'Звуки',
+  'animals': 'Світ',
+  'transport': 'Світ',
+  'home': 'Світ',
+  'food': 'Світ',
+  'body': 'Світ',
+  'emotions': 'Світ',
+  'colors': 'Світ',
 };
 
 /// Pack id → category name (English).
 const packCategoriesEn = <String, String>{
-  'en_animals': 'Nature',
-  'en_home': 'Home',
-  'en_emotions': 'Feelings',
-  'en_transport': 'Transport',
-  'en_food': 'Food',
-  'en_colors': 'Learning',
-  'en_body': 'Learning',
-  'en_actions': 'Learning',
-  'en_opposites': 'Learning',
   'en_phrases': 'Speaking',
-  'en_adjectives': 'Learning',
+  'en_actions': 'Speaking',
+  'en_opposites': 'Speaking',
+  'en_adjectives': 'Speaking',
   'en_sound_r': 'Sounds',
   'en_sound_l': 'Sounds',
   'en_sound_s': 'Sounds',
@@ -51,10 +44,17 @@ const packCategoriesEn = <String, String>{
   'en_sound_th': 'Sounds',
   'en_sound_w': 'Sounds',
   'en_sound_bl': 'Sounds',
+  'en_animals': 'World',
+  'en_transport': 'World',
+  'en_home': 'World',
+  'en_food': 'World',
+  'en_body': 'World',
+  'en_emotions': 'World',
+  'en_colors': 'World',
 };
 
-const allCategoriesUk = ['Все', 'Мовлення', 'Світ навколо', 'Побут', 'Розвиток', 'Звуки'];
-const allCategoriesEn = ['All', 'Nature', 'Home', 'Feelings', 'Transport', 'Food', 'Learning', 'Speaking', 'Sounds'];
+const allCategoriesUk = ['Мовлення', 'Звуки', 'Світ'];
+const allCategoriesEn = ['Speaking', 'Sounds', 'World'];
 
 /// Deterministic daily card based on date seed.
 /// Returns `(card, isFromLockedPack)` or null if no cards.

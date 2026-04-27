@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'analytics_service.dart';
 import 'notification_service.dart';
 
 class PurchaseService {
@@ -14,8 +15,7 @@ class PurchaseService {
   static const _installedKey = 'installed';
   static const _yearlyId = 'yearly_premium';
   static const _monthlyId = 'monthly_premium';
-  static const lifetimeId = 'lifetime_premium';
-  static const _productIds = {_yearlyId, _monthlyId, lifetimeId};
+  static const _productIds = {_yearlyId, _monthlyId};
 
   final ValueNotifier<bool> isPro = ValueNotifier(false);
   bool _initialized = false;
@@ -29,6 +29,10 @@ class PurchaseService {
 
     final prefs = await SharedPreferences.getInstance();
     isPro.value = prefs.getBool(_prefKey) ?? false;
+    AnalyticsService.instance.setProProperty(isPro.value);
+    isPro.addListener(() {
+      AnalyticsService.instance.setProProperty(isPro.value);
+    });
 
     final available = await _iap.isAvailable();
     if (!available) {
@@ -45,8 +49,8 @@ class PurchaseService {
     final response = await _iap.queryProductDetails(_productIds);
     products = response.productDetails;
 
-    // Sort: yearly → monthly → lifetime
-    const order = [_yearlyId, _monthlyId, lifetimeId];
+    // Sort: yearly → monthly
+    const order = [_yearlyId, _monthlyId];
     products.sort((a, b) {
       final ai = order.indexOf(a.id);
       final bi = order.indexOf(b.id);
@@ -72,7 +76,7 @@ class PurchaseService {
     return _iap.buyNonConsumable(purchaseParam: param);
   }
 
-  /// Purchase by product ID directly (used by the paywall for the lifetime option).
+  /// Purchase by product ID directly (used by the paywall tile selection).
   Future<bool> purchaseByProductId(String productId) async {
     final product = products.where((p) => p.id == productId).firstOrNull;
     if (product == null) return false;

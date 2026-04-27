@@ -26,6 +26,18 @@ class AnalyticsService {
     }
   }
 
+  Future<void> _safeSetUserProperty(String name, String? value) async {
+    final a = _analytics;
+    if (a == null) return;
+    try {
+      await a.setUserProperty(name: name, value: value);
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('AnalyticsService: setUserProperty "$name" error: $e');
+      }
+    }
+  }
+
   FirebaseAnalyticsObserver? get observer {
     final a = _analytics;
     return a == null ? null : FirebaseAnalyticsObserver(analytics: a);
@@ -69,11 +81,24 @@ class AnalyticsService {
   Future<void> logPaywallView(String source) =>
       _safeLog('paywall_view', {'source': source});
 
+  Future<void> logPaywallDismiss(String source) =>
+      _safeLog('paywall_dismiss', {'source': source});
+
+  Future<void> logPaywallProductSelect(String productId) =>
+      _safeLog('paywall_product_select', {'product_id': productId});
+
   Future<void> logPurchaseStart(String productId) =>
       _safeLog('purchase_start', {'product_id': productId});
 
   Future<void> logPurchaseSuccess(String productId) =>
       _safeLog('purchase_success', {'product_id': productId});
+
+  Future<void> logPurchaseCancel(String productId) =>
+      _safeLog('purchase_cancel', {'product_id': productId});
+
+  Future<void> logPurchaseError(String productId, String reason) =>
+      _safeLog('purchase_error',
+          {'product_id': productId, 'reason': reason});
 
   Future<void> logPurchaseRestore() => _safeLog('purchase_restore');
 
@@ -88,7 +113,64 @@ class AnalyticsService {
 
   // --- Onboarding ---
 
+  Future<void> logOnboardingStart() => _safeLog('onboarding_start');
+
+  Future<void> logOnboardingLangSelected(String lang) =>
+      _safeLog('onboarding_lang_selected', {'lang': lang});
+
+  Future<void> logOnboardingNameEntered() =>
+      _safeLog('onboarding_name_entered');
+
+  Future<void> logOnboardingAgeSelected(int level) =>
+      _safeLog('onboarding_age_selected', {'level': level});
+
+  Future<void> logOnboardingMagicMomentStart() =>
+      _safeLog('onboarding_magic_moment_start');
+
+  Future<void> logOnboardingMagicMomentCardTap(int order) =>
+      _safeLog('onboarding_magic_moment_card_tap', {'order': order});
+
+  Future<void> logOnboardingMagicMomentComplete() =>
+      _safeLog('onboarding_magic_moment_complete');
+
   Future<void> logOnboardingComplete() => _safeLog('tutorial_complete');
+
+  // --- Home / Today's Plan ---
+
+  Future<void> logContinueHeroTap(String packId) =>
+      _safeLog('continue_hero_tap', {'pack_id': packId});
+
+  Future<void> logTodayPlanStoneTap({
+    required int stoneId,
+    required bool wasDone,
+    required bool wasActive,
+  }) =>
+      _safeLog('today_plan_stone_tap', {
+        'stone_id': stoneId,
+        'was_done': wasDone.toString(),
+        'was_active': wasActive.toString(),
+      });
+
+  Future<void> logTodayPlanComplete() => _safeLog('today_plan_complete');
+
+  Future<void> logCategorySwitch(String category) =>
+      _safeLog('category_switch', {'category': category});
+
+  // --- Notifications ---
+
+  Future<void> logNotificationOpened(String type) =>
+      _safeLog('notification_opened', {'type': type});
+
+  // --- User properties (for cohort slicing) ---
+
+  Future<void> setLanguageProperty(String lang) =>
+      _safeSetUserProperty('app_language', lang);
+
+  Future<void> setAgeLevelProperty(int level) =>
+      _safeSetUserProperty('age_level', level.toString());
+
+  Future<void> setProProperty(bool isPro) =>
+      _safeSetUserProperty('is_pro', isPro.toString());
 
   // --- Games ---
 

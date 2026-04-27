@@ -46,7 +46,7 @@ Future<void> shareProgress({
       badges: badges,
     );
 
-    final image = await _renderWidgetToImage(widget, 340, context);
+    final image = await renderWidgetToImage(widget, 340, context);
     if (image == null) {
       // Fallback: text-only share
       await Share.share(
@@ -94,7 +94,7 @@ Future<void> shareProgress({
 }
 
 /// Renders a widget to a PNG image bytes using an offscreen pipeline.
-Future<List<int>?> _renderWidgetToImage(
+Future<List<int>?> renderWidgetToImage(
   Widget widget,
   double width,
   BuildContext context,
@@ -148,7 +148,7 @@ Future<List<int>?> _renderWidgetToImage(
     if (byteData == null) return null;
     return byteData.buffer.asUint8List();
   } catch (e) {
-    debugPrint('_renderWidgetToImage error: $e');
+    debugPrint('renderWidgetToImage error: $e');
     return null;
   }
 }

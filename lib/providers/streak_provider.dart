@@ -7,13 +7,29 @@ class StreakState {
   final int currentStreak;
   final String lastActiveDate;
   final Set<String> unlockedRewards;
+  /// Milestone emojis the user has already seen the celebration overlay for.
+  /// Used to fire `pendingCelebration` exactly once per new milestone.
+  final Set<String> celebratedRewards;
 
   const StreakState({
     this.currentStreak = 0,
     this.lastActiveDate = '',
     this.unlockedRewards = const {},
+    this.celebratedRewards = const {},
   });
 
+  StreakState copyWith({
+    int? currentStreak,
+    String? lastActiveDate,
+    Set<String>? unlockedRewards,
+    Set<String>? celebratedRewards,
+  }) =>
+      StreakState(
+        currentStreak: currentStreak ?? this.currentStreak,
+        lastActiveDate: lastActiveDate ?? this.lastActiveDate,
+        unlockedRewards: unlockedRewards ?? this.unlockedRewards,
+        celebratedRewards: celebratedRewards ?? this.celebratedRewards,
+      );
 }
 
 /// Milestones: days required → (badge, bonus emoji, label)
@@ -60,10 +76,13 @@ class StreakNotifier extends StateNotifier<StreakState> {
     final streak = prefs.getInt('${_p}streak_current') ?? 0;
     final lastDate = prefs.getString('${_p}streak_last_date') ?? '';
     final rewards = (prefs.getStringList('${_p}streak_rewards') ?? []).toSet();
+    final celebrated =
+        (prefs.getStringList('${_p}streak_celebrated') ?? []).toSet();
     state = StreakState(
       currentStreak: streak,
       lastActiveDate: lastDate,
       unlockedRewards: rewards,
+      celebratedRewards: celebrated,
     );
     // Auto-update on load
     recordActivity();
@@ -88,7 +107,7 @@ class StreakNotifier extends StateNotifier<StreakState> {
       }
     }
 
-    state = StreakState(
+    state = state.copyWith(
       currentStreak: newStreak,
       lastActiveDate: today,
       unlockedRewards: newRewards,
@@ -98,6 +117,26 @@ class StreakNotifier extends StateNotifier<StreakState> {
     await prefs.setInt('${_p}streak_current', newStreak);
     await prefs.setString('${_p}streak_last_date', today);
     await prefs.setStringList('${_p}streak_rewards', newRewards.toList());
+  }
+
+  /// Highest unlocked milestone the user hasn't seen the celebration for yet.
+  /// Returns null when nothing pending.
+  Milestone? get pendingCelebration {
+    for (final m in milestones.reversed) {
+      if (state.unlockedRewards.contains(m.bonusEmoji) &&
+          !state.celebratedRewards.contains(m.bonusEmoji)) {
+        return m;
+      }
+    }
+    return null;
+  }
+
+  Future<void> markCelebrated(String emoji) async {
+    if (state.celebratedRewards.contains(emoji)) return;
+    final next = {...state.celebratedRewards, emoji};
+    state = state.copyWith(celebratedRewards: next);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('${_p}streak_celebrated', next.toList());
   }
 
   /// Next milestone the user hasn't reached yet

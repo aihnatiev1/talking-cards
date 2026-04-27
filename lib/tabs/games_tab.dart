@@ -6,6 +6,7 @@ import '../models/pack_model.dart';
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../screens/articulation_screen.dart';
+import '../screens/bubble_pop_screen.dart';
 import '../screens/guess_screen.dart';
 import '../screens/memory_match_screen.dart';
 import '../screens/odd_one_out_screen.dart';
@@ -85,11 +86,17 @@ class _GamesTabState extends ConsumerState<GamesTab> {
         _gameRoute(OddOneOutScreen(packs: playablePacks)));
   }
 
-  void _openRepeatGame(List<CardModel> allCards) {
-    final lang = ref.read(languageProvider);
-    final cards = lang == 'en'
-        ? allCards.where((c) => c.image != null).toList()
-        : allCards;
+  void _openRepeatGame(List<PackModel> packs) {
+    // Repeat After Me asks the child to say a real word. Rozmovlyalky
+    // ("розмовлялки") are babble-sound combos (ай / ба / ва) — not words, so
+    // exclude them. Also require a webp illustration so the child has
+    // something to anchor the word to visually.
+    const excluded = {'rozmovlyalky'};
+    final cards = packs
+        .where((p) => !p.id.startsWith('_') && !excluded.contains(p.id))
+        .expand((p) => p.cards)
+        .where((c) => c.image != null)
+        .toList();
     if (cards.length < 4) return;
     Navigator.of(context).push(_gameRoute(RepeatGameScreen(cards: cards)));
   }
@@ -99,7 +106,9 @@ class _GamesTabState extends ConsumerState<GamesTab> {
   }
 
   void _openOppositeGame(List<PackModel> packs) {
-    final oppPack = packs.where((p) => p.id == 'opposites').firstOrNull;
+    final isEn = ref.read(languageProvider) == 'en';
+    final id = isEn ? 'en_opposites' : 'opposites';
+    final oppPack = packs.where((p) => p.id == id).firstOrNull;
     if (oppPack == null || oppPack.cards.length < 4) return;
     Navigator.of(context)
         .push(_gameRoute(OppositeGameScreen(pack: oppPack)));
@@ -183,13 +192,28 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                   : 'Спочатку відкрий більше карток',
             ),
             _BigGame(
+              title: isEn ? 'Pop the bubbles' : 'Лопай бульбашки',
+              subtitle: isEn ? 'Pop, pop, pop!' : 'Лоп-лоп-лоп!',
+              color: DT.coral,
+              bg: DT.coralTint,
+              thumb: _pickThumb(allCards, skip: 9),
+              badge: '🫧',
+              onTap: playableCount >= 5
+                  ? () => Navigator.of(context)
+                      .push(_gameRoute(const BubblePopScreen()))
+                  : null,
+              lockedHint: isEn
+                  ? 'Open more cards in Packs first'
+                  : 'Спочатку відкрий більше карток',
+            ),
+            _BigGame(
               title: isEn ? 'Repeat after me' : 'Повтори за мною',
               subtitle: isEn ? 'Say the word, grown-up taps' : 'Скажи слово, дорослий натискає',
               color: DT.peach,
               bg: DT.peachTint,
               thumb: _pickThumb(allCards, skip: 12),
               badge: '🎤',
-              onTap: playableCount >= 4 ? () => _openRepeatGame(allCards) : null,
+              onTap: playableCount >= 4 ? () => _openRepeatGame(packs) : null,
               lockedHint: isEn
                   ? 'Open more cards in Packs first'
                   : 'Спочатку відкрий більше карток',
@@ -219,13 +243,14 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                   p.cards.length >= 4 &&
                   (isEn ? p.cards.any((c) => c.image != null) : true))
               .toList();
+          final oppPackId = isEn ? 'en_opposites' : 'opposites';
           final hasOpposites = packs
-                  .where((p) => p.id == 'opposites')
+                  .where((p) => p.id == oppPackId)
                   .firstOrNull
                   ?.cards
                   .length ??
               0;
-          final oppPack = packs.where((p) => p.id == 'opposites').firstOrNull;
+          final oppPack = packs.where((p) => p.id == oppPackId).firstOrNull;
           final advancedGames = <_BigGame>[
             _BigGame(
               title: isEn ? 'Odd one out' : 'Знайди зайве',

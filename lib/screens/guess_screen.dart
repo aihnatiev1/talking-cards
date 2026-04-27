@@ -13,7 +13,6 @@ import '../providers/srs_provider.dart';
 import '../providers/weak_words_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
-import '../services/tts_service.dart';
 import '../utils/constants.dart';
 import '../utils/l10n.dart';
 import '../widgets/confetti_burst.dart';
@@ -103,12 +102,9 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
     final state = ref.read(_provider);
     if (state == null || state.finished) return;
     final card = state.correctCard;
-    // Prefer recorded mp3 whenever available (EN voiceovers too), fall back
-    // to TTS only when no audio asset exists for this card.
+    // Only recorded audio — no TTS fallback (see pubspec: flutter_tts removed).
     if (AudioService.instance.hasSound(card.audioKey)) {
-      AudioService.instance.speakCard(card.audioKey, card.sound, card.text);
-    } else if (widget.ttsLocale != null) {
-      TtsService.instance.speak(card.sound, locale: widget.ttsLocale!);
+      AudioService.instance.playWordOnly(card.audioKey, card.sound);
     }
   }
 
@@ -210,17 +206,17 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
           children: [
             const Text('🎧', style: TextStyle(fontSize: 22)),
             const SizedBox(width: 8),
-            Text(
-              () {
-                final isEn = ref.read(languageProvider) == 'en';
-                final base = isEn ? 'Guess the word' : 'Вгадай звук';
-                return state != null && !state.finished
-                    ? '$base ${state.round}/${state.totalRounds}'
-                    : base;
-              }(),
-              style: const TextStyle(
-                color: _accent,
-                fontWeight: FontWeight.bold,
+            Flexible(
+              child: Text(
+                ref.read(languageProvider) == 'en'
+                    ? 'Guess the word'
+                    : 'Вгадай звук',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: _accent,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
@@ -229,11 +225,11 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
         actions: [
           if (state != null && !state.finished)
             Padding(
-              padding: const EdgeInsets.only(right: 16),
+              padding: const EdgeInsets.only(right: 12),
               child: Center(
                 child: Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFFD93D).withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(14),
@@ -242,12 +238,12 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Icon(Icons.star_rounded,
-                          color: kStreakOrange, size: 18),
-                      const SizedBox(width: 4),
+                          color: kStreakOrange, size: 16),
+                      const SizedBox(width: 3),
                       Text(
-                        '${state.score}',
+                        '${state.score}/${state.totalRounds}',
                         style: const TextStyle(
-                          fontSize: 16,
+                          fontSize: 14,
                           fontWeight: FontWeight.bold,
                           color: kStreakOrange,
                         ),

@@ -20,13 +20,11 @@ import '../providers/language_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../services/engage_service.dart';
-import '../services/tts_service.dart';
 import '../utils/constants.dart';
 import '../utils/l10n.dart';
 import '../services/paywall_flow.dart';
 import '../widgets/celebration_overlay.dart';
 import '../widgets/flash_card.dart';
-import '../widgets/parental_gate.dart';
 import '../widgets/share_progress_card.dart';
 import '../widgets/speaker_button.dart';
 import '../widgets/swipe_hint.dart';
@@ -215,26 +213,16 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   }
 
   void _speakCard(CardModel card) {
-    final lang = ref.read(languageProvider);
-    // Prefer a recorded mp3 whenever one exists — applies to both UA and
-    // EN now that English voice-overs are bundled. Fall back to TTS only
-    // when the card has no audio asset.
+    // Only recorded audio — TTS was removed per user feedback ("after my
+    // voiceover TTS speaks again"). If a card has no recording, stay silent.
     if (AudioService.instance.hasSound(card.audioKey)) {
       AudioService.instance.speakCard(card.audioKey, card.sound, card.text);
-      return;
     }
-    TtsService.instance.speak(
-      card.sound,
-      locale: lang == 'en' ? 'en-US' : 'uk-UA',
-    );
   }
 
-  /// TTS locale for FlashCard: recorded audio → null; otherwise per-language.
-  String? _ttsLocaleForCard(CardModel card) {
-    if (AudioService.instance.hasSound(card.audioKey)) return null;
-    final lang = ref.read(languageProvider);
-    return lang == 'en' ? 'en-US' : 'uk-UA';
-  }
+  /// FlashCard no longer uses TTS at all — always pass null so the card
+  /// widget falls through to the recorded-audio branch or silence.
+  String? _ttsLocaleForCard(CardModel card) => null;
 
   void _speakCardDebounced(int index) {
     _speakDebounce?.cancel();
@@ -253,10 +241,10 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   }
 
   Future<void> _shareProgress() async {
-    // Parent gate — prevents toddlers from triggering the system share sheet
-    // (which can expose app data to other apps / contacts).
-    final passed = await ParentalGate.show(context);
-    if (!passed || !mounted) return;
+    // No parental gate — app is rated 4+ (not in Apple Kids Category / Google
+    // Families), so store guidelines don't require it. Share button lives
+    // deep in the parent-facing results sheet anyway.
+    if (!mounted) return;
     final completed = ref.read(completedPacksProvider);
     final packs = ref.read(packsProvider).valueOrNull ?? [];
     final progress = ref.read(packProgressProvider);
@@ -273,16 +261,25 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     );
   }
 
-  /// Waits for sound to finish + 1s (or 3s if no sound), then shows celebration.
+  /// Waits for the last-card audio to fully finish, then adds a 2-second
+  /// breather before revealing the celebration. The swipe triggers the voice
+  /// via a 500ms debounce, so we poll `isSpeaking` for up to 1.5s to give it
+  /// a chance to start — otherwise the modal can pop before the file even
+  /// begins.
   Future<void> _showCelebrationAfterSound() async {
     final audio = AudioService.instance;
 
-    // Wait for debounced speak to kick in (debounce is 100ms)
-    await Future.delayed(const Duration(milliseconds: 200));
-    if (!mounted) return;
+    // Wait up to 1.5s for the speak-debounce timer to fire and audio to start.
+    final startDeadline =
+        DateTime.now().add(const Duration(milliseconds: 1500));
+    while (!audio.isSpeaking.value &&
+        DateTime.now().isBefore(startDeadline)) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (!mounted) return;
+    }
 
     if (audio.isSpeaking.value) {
-      // Sound is playing — wait for it to finish
+      // Audio is (or just became) playing — wait for it to end
       final completer = Completer<void>();
       void listener() {
         if (!audio.isSpeaking.value) {
@@ -296,10 +293,13 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
         completer.future,
         Future.delayed(const Duration(seconds: 10)),
       ]);
-      // Extra pause after sound ends
-      await Future.delayed(const Duration(seconds: 1));
+      // 2-second breather after the audio fully finishes — lets the child
+      // register the last card and prevents the celebration modal from
+      // cutting off the tail of the voiceover.
+      await Future.delayed(const Duration(seconds: 2));
     } else {
-      // No sound playing — wait 3 seconds so user can see the last card
+      // No audio started within 1.5s — card has no recording. Wait 3s so
+      // the user still sees the final illustration before the modal pops.
       await Future.delayed(const Duration(seconds: 3));
     }
 
@@ -337,6 +337,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
         pageBuilder: (_, __, ___) => CelebrationOverlay(
           packTitle: widget.pack.title,
           packIcon: widget.pack.icon,
+          packCover: widget.pack.cover,
           color: widget.pack.color,
           isEn: isEn,
           onShare: _shareProgress,

@@ -5,7 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/audio_service.dart';
 import '../services/engage_service.dart';
 import '../services/remote_config_service.dart';
-import '../services/tts_service.dart';
 import '../services/widget_service.dart';
 import '../utils/constants.dart';
 import '../services/notification_service.dart';
@@ -67,23 +66,36 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _initServices() async {
+    // Each service swallows its own errors so a single failing init never
+    // strands the splash on an infinite loader.
+    Future<void> guard(String name, Future<void> Function() body) async {
+      try {
+        await body();
+      } catch (e, st) {
+        debugPrint('splash: $name failed: $e\n$st');
+      }
+    }
+
     await Future.wait([
-      RemoteConfigService.instance.init(),
-      WidgetService.instance.init(),
-      PurchaseService.instance.init(),
-      AudioService.instance.precache(),
-      NotificationService.instance.init(),
-      TtsService.instance.init(),
+      guard('remoteConfig', () => RemoteConfigService.instance.init()),
+      guard('widget', () => WidgetService.instance.init()),
+      guard('purchase', () => PurchaseService.instance.init()),
+      guard('audio', () => AudioService.instance.precache()),
+      guard('notifications', () => NotificationService.instance.init()),
     ]);
 
     // Schedule day-3 soft paywall reminder for non-pro users; cancel for pro.
-    if (PurchaseService.instance.isPro.value) {
-      await NotificationService.instance.cancelPaywallReminder();
-    } else {
-      await NotificationService.instance.schedulePaywallReminderIfNeeded();
-    }
+    await guard('paywallReminder', () async {
+      if (PurchaseService.instance.isPro.value) {
+        await NotificationService.instance.cancelPaywallReminder();
+      } else {
+        await NotificationService.instance.schedulePaywallReminderIfNeeded();
+      }
+    });
 
-    _deepLink = await EngageService.instance.getInitialLink();
+    await guard('deepLink', () async {
+      _deepLink = await EngageService.instance.getInitialLink();
+    });
     EngageService.instance.publishFromPrefs();
 
     // Check if onboarding was completed before

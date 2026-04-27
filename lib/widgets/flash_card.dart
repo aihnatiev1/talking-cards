@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/card_model.dart';
 import '../providers/favorites_provider.dart';
 import '../services/audio_service.dart';
-import '../services/tts_service.dart';
 
 class FlashCard extends ConsumerStatefulWidget {
   final CardModel card;
@@ -162,9 +161,6 @@ class _FlashCardState extends ConsumerState<FlashCard>
           _pressCtrl.reverse();
           if (_hasEnglish) {
             _toggleFlip();
-          } else if (widget.ttsLocale != null) {
-            TtsService.instance.speak(
-                widget.card.sound, locale: widget.ttsLocale!);
           } else {
             AudioService.instance.speakCard(
               widget.card.audioKey,
@@ -226,22 +222,27 @@ class _FlashCardState extends ConsumerState<FlashCard>
               child: Container(
                 width: double.infinity,
                 color: widget.card.colorBg,
-                child: widget.card.image != null
-                    ? Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Image.asset(
-                          'assets/images/webp/${widget.card.image}.webp',
-                          fit: BoxFit.contain,
-                          width: double.infinity,
-                          height: double.infinity,
-                        ),
+                child: widget.card.letter != null
+                    ? _LetterArt(
+                        letter: widget.card.letter!,
+                        accent: widget.card.colorAccent,
                       )
-                    : Center(
-                        child: Text(
-                          widget.card.emoji,
-                          style: const TextStyle(fontSize: 120),
-                        ),
-                      ),
+                    : widget.card.image != null
+                        ? Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Image.asset(
+                              'assets/images/webp/${widget.card.image}.webp',
+                              fit: BoxFit.contain,
+                              width: double.infinity,
+                              height: double.infinity,
+                            ),
+                          )
+                        : Center(
+                            child: Text(
+                              widget.card.emoji,
+                              style: const TextStyle(fontSize: 120),
+                            ),
+                          ),
               ),
             ),
             Expanded(
@@ -270,19 +271,21 @@ class _FlashCardState extends ConsumerState<FlashCard>
                             ),
                           ),
                         ),
-                        const SizedBox(height: 3),
-                        Text(
-                          widget.card.text,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            color: theme.brightness == Brightness.dark
-                                ? Colors.grey[300]
-                                : const Color(0xFF4A4A4A),
-                            height: 1.3,
+                        if (widget.card.text.isNotEmpty) ...[
+                          const SizedBox(height: 3),
+                          Text(
+                            widget.card.text,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: theme.brightness == Brightness.dark
+                                  ? Colors.grey[300]
+                                  : const Color(0xFF4A4A4A),
+                              height: 1.3,
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ),
@@ -418,6 +421,67 @@ class _FlashCardState extends ConsumerState<FlashCard>
           ),
         ),
       ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+//  Sound-pack letter tile — the target phoneme IS the visual. Used instead
+//  of a webp for cards like sound_r/sound_sh/sound_ts, where the child is
+//  learning to produce the sound rather than associate it with an object.
+// ─────────────────────────────────────────────
+
+class _LetterArt extends StatelessWidget {
+  final String letter;
+  final Color accent;
+
+  const _LetterArt({required this.letter, required this.accent});
+
+  @override
+  Widget build(BuildContext context) {
+    final deep = Color.lerp(accent, Colors.black, 0.20)!;
+    return Container(
+      margin: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [accent.withValues(alpha: 0.85), deep],
+        ),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.35),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Center(
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            child: Text(
+              letter,
+              style: const TextStyle(
+                fontSize: 220,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+                height: 1.0,
+                letterSpacing: -4,
+                shadows: [
+                  Shadow(
+                    color: Color(0x55000000),
+                    blurRadius: 14,
+                    offset: Offset(0, 6),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

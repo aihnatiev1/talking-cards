@@ -1,445 +1,610 @@
-# Talking Cards — English Voiceover Script
+# Talking Cards — English Voiceover Script (v2)
 
-Total: 462 cards across 21 packs
+Format: each card has the WORD on its own line; the sentence follows on the next line.
+Read the word clearly, then the sentence after a short pause (0.5–1.0 s).
 
-Format: each card has the WORD on its own line; if the card has a sentence, the sentence follows on the next line. Read the word clearly, then (if present) the sentence after a short pause.
+File naming:
+  <ID>_word.wav    — word
+  <ID>_phrase.wav  — sentence
+
+NOTE: Some words repeat across packs for phonetic training (CHEESE in Z/CH,
+STAR in R/S/Blends, etc.) — this is intentional. Sentences are different
+so each recording is unique.
+
+======================================================================
+
 
 ## Animals (29 cards)
+----------------------------------------------------------------------
 
 CAT
+The cat says meow!
 
 DOG
+The dog says woof!
 
 COW
+The cow says moo!
 
 HORSE
+The horse runs fast!
 
 PIG
+The pig says oink!
 
 CHICKEN
+The chicken says cluck!
 
 ROOSTER
+The rooster crows at sunrise!
 
 DUCK
+The duck says quack!
 
 FROG
+The frog jumps high!
 
 FISH
+The fish swims in water!
 
 BIRD
+The bird sings a song!
 
 BUTTERFLY
+The butterfly flutters by!
 
 BEE
+The bee says buzz!
 
 SNAIL
+The snail moves slowly!
 
 BUNNY
+The bunny hops-hops!
 
 BEAR
+The big brown bear!
 
 FOX
+The clever red fox!
 
 WOLF
+The wolf howls at the moon!
 
 DEER
+The deer has pretty antlers!
 
 HEDGEHOG
+The hedgehog is spiky!
 
 OWL
+The owl says hoo-hoo!
 
 PENGUIN
+The penguin waddles on ice!
 
 ELEPHANT
+The elephant has a long trunk!
 
 LION
+The lion roars: so loud!
 
 MONKEY
+The monkey climbs trees!
 
 CROCODILE
+The crocodile swims in the river!
 
 TURTLE
+The turtle moves slowly!
 
 DOLPHIN
+The dolphin jumps in the sea!
 
 SQUIRREL
+The squirrel loves nuts!
+
 
 ## Home & Family (30 cards)
+----------------------------------------------------------------------
 
 MOM
+I love my mom!
 
 DAD
+I love my dad!
 
 GRANDMA
+Grandma gives warm hugs!
 
 GRANDPA
+Grandpa tells stories!
 
 BABY
+The baby is sleeping!
 
 FAMILY
+My family loves me!
 
 HUG
+Give me a big hug!
 
 MORNING
+Good morning, sunshine!
 
 EVENING
-
-JOY
-
-SAD
-
-ANGRY
-
-FEAR
-
-SURPRISE
-
-BALL
-
-DOLL
-
-TOY CAR
-
-BOOK
-
-BLOCKS
-
-PORRIDGE
-
-APPLE
-
-WATER
-
-WALK
-
-BATH
-
-HANDS
-
-TEETH
-
-BED
-
-THANK YOU
-
-PLEASE
-
-LOVE
-
-## Feelings (30 cards)
-
-JOY
-
-SAD
-
-ANGER
-
-FEAR
-
-SURPRISE
-
-LOVE
-
-SHAME
-
-TIRED
-
-PRIDE
-
-CURIOSITY
-
-CALM
-
-TENDERNESS
-
-HAPPINESS
-
-CARE
-
-LAUGHTER
-
-TRUST
-
-KINDNESS
-
-BRAVERY
-
-GRATITUDE
-
-AMAZEMENT
-
-ATTENTION
-
-BOREDOM
-
-SYMPATHY
-
-INSPIRATION
-
-WARMTH
-
-WORRY
-
-PLEASURE
-
-OFFENSE
-
-THANKS
-
-PEACE
-
-## Transport (30 cards)
-
-CAR
-
-BUS
-
-TRAIN
-
-AIRPLANE
-
-SHIP
-
-BICYCLE
-
-MOTORCYCLE
-
-HELICOPTER
-
-TRAM
-
-METRO
-
-TAXI
-
-FIRE TRUCK
-
-AMBULANCE
-
-POLICE
-
-TRUCK
-
-TRACTOR
-
-SCOOTER
-
-ROCKET
-
-BOAT
-
-YACHT
-
-BALLOON
-
-SLED
-
-PONY
-
-CARRIAGE
-
-SKATEBOARD
-
-CABLE CAR
-
-COMMUTER TRAIN
-
-EXCAVATOR
-
-SUBMARINE
-
-PARAGLIDER
-
-## Food & Fruits (30 cards)
-
-APPLE
-
-BANANA
-
-GRAPES
-
-ORANGE
-
-STRAWBERRY
-
-WATERMELON
-
-PEAR
-
-CHERRY
-
-PEACH
-
-LEMON
-
-BREAD
-
-MILK
-
-CHEESE
-
-PORRIDGE
-
-SOUP
-
-PIE
-
-COOKIE
-
-CAKE
-
-ICE CREAM
-
-DUMPLING
-
-CARROT
-
-CUCUMBER
-
-TOMATO
-
-POTATO
-
-CORN
-
-PUMPKIN
-
-HONEY
-
-EGG
-
-CANDY
-
-WATER
-
-## Colors & Shapes (30 cards)
-
-RED
-
-BLUE
-
-YELLOW
-
-GREEN
-
-WHITE
-
-BLACK
-
-ORANGE
-
-PINK
-
-PURPLE
-
-BROWN
-
-GRAY
-
-SKY BLUE
-
-GOLD
-
-CIRCLE
-
-SQUARE
-
-TRIANGLE
-
-STAR
-
-HEART
-
-OVAL
-
-DIAMOND
-
-BIG
-
-LITTLE
-
-LONG
-
-ROUND
-
-FLUFFY
-
-BRIGHT
-
-STRIPED
-
-SPOTTED
-
-TRANSPARENT
-
-COLORFUL
-
-## Body Parts (30 cards)
-
-HEAD
-
-EYES
-
-EARS
-
-NOSE
-
-MOUTH
-
-TEETH
-
-TONGUE
-
-HAIR
-
-NECK
-
-SHOULDERS
-
-HANDS
-
-FINGERS
-
-TUMMY
-
-BACK
-
-LEGS
-
-KNEES
-
-FEET
-
-HEART
-
-LUNGS
-
-ELBOW
-
-PALMS
-
-EYEBROWS
-
-CHEEKS
-
-FOREHEAD
-
-CHIN
-
-NAILS
-
-SKIN
-
-BELLY BUTTON
+Good evening, time to rest!
 
 SMILE
+A happy little smile!
 
-BODY
+KISS
+A sweet little kiss!
+
+SONG
+Sing a lullaby!
+
+BALL
+Bounce the ball!
+
+DOLL
+My favorite doll!
+
+TOY CAR
+Zoom goes the toy car!
+
+BOOK
+Let's read a book!
+
+BLOCKS
+Build a tower with blocks!
+
+PORRIDGE
+Yummy warm porridge!
+
+APPLE
+A red juicy apple!
+
+WATER
+Fresh cool water!
+
+WALK
+Let's go for a walk!
+
+BATH
+Splash, splash in the bath!
+
+HANDS
+Wash your hands!
+
+TEETH
+Brush your teeth!
+
+BED
+Time to go to bed!
+
+THANK YOU
+Thank you so much!
+
+PLEASE
+Say please!
+
+LOVE
+I love you!
+
+HOME
+Home sweet home!
+
+PLAY
+Let's play together!
+
+
+## Feelings (12 cards)
+----------------------------------------------------------------------
+
+HAPPY
+I feel so happy!
+
+SAD
+I feel a little sad.
+
+ANGRY
+I feel angry right now.
+
+SCARED
+I feel scared.
+
+TIRED
+I feel tired and sleepy.
+
+SURPRISED
+Wow, what a surprise!
+
+EXCITED
+I'm so excited!
+
+CALM
+I feel nice and calm.
+
+SHY
+I feel a little shy.
+
+SILLY
+I'm being silly!
+
+PROUD
+I feel so proud!
+
+LOVED
+I feel loved and safe!
+
+
+## Transport (25 cards)
+----------------------------------------------------------------------
+
+CAR
+The car goes beep-beep!
+
+BUS
+The bus takes us home!
+
+TRAIN
+The train goes choo-choo!
+
+AIRPLANE
+The airplane flies high!
+
+SHIP
+The big ship sails!
+
+BICYCLE
+Ride the bicycle!
+
+MOTORCYCLE
+The motorcycle goes vroom!
+
+HELICOPTER
+The helicopter spins its blades!
+
+TRAM
+The tram rings its bell!
+
+SUBWAY
+The subway goes underground!
+
+TAXI
+The yellow taxi stops!
+
+FIRE TRUCK
+The fire truck goes wee-ooo!
+
+AMBULANCE
+The ambulance helps people!
+
+POLICE CAR
+The police car flashes lights!
+
+TRUCK
+The truck carries things!
+
+TRACTOR
+The tractor works on the farm!
+
+SCOOTER
+Push the scooter fast!
+
+ROCKET
+The rocket blasts off!
+
+BOAT
+The boat floats on water!
+
+YACHT
+A fancy white yacht!
+
+HOT AIR BALLOON
+The hot air balloon goes up!
+
+SLED
+The sled slides on snow!
+
+SKATEBOARD
+Ride the skateboard!
+
+EXCAVATOR
+The excavator digs big holes!
+
+SUBMARINE
+The submarine dives deep!
+
+
+## Food & Fruits (30 cards)
+----------------------------------------------------------------------
+
+APPLE
+A crunchy red apple!
+
+BANANA
+A sweet yellow banana!
+
+GRAPES
+Juicy little grapes!
+
+ORANGE
+A round orange fruit!
+
+STRAWBERRY
+A bright red strawberry!
+
+WATERMELON
+A big juicy watermelon!
+
+PEAR
+A sweet green pear!
+
+CHERRY
+A tiny red cherry!
+
+PEACH
+A soft fuzzy peach!
+
+LEMON
+A sour yellow lemon!
+
+BREAD
+Fresh warm bread!
+
+MILK
+A glass of milk!
+
+CHEESE
+Yummy yellow cheese!
+
+PORRIDGE
+Warm tasty porridge!
+
+SOUP
+Hot tasty soup!
+
+PIE
+A sweet fruit pie!
+
+COOKIE
+A crunchy cookie!
+
+CAKE
+A yummy birthday cake!
+
+ICE CREAM
+Cold sweet ice cream!
+
+PANCAKE
+A fluffy pancake!
+
+CARROT
+A crunchy orange carrot!
+
+CUCUMBER
+A cool green cucumber!
+
+TOMATO
+A round red tomato!
+
+POTATO
+A big brown potato!
+
+CORN
+Sweet yellow corn!
+
+PUMPKIN
+A big orange pumpkin!
+
+HONEY
+Sweet golden honey!
+
+EGG
+An egg goes crack!
+
+CANDY
+A sweet little candy!
+
+JUICE
+Yummy fruit juice!
+
+
+## Colors & Shapes (30 cards)
+----------------------------------------------------------------------
+
+RED
+Red like an apple!
+
+BLUE
+Blue like the sky!
+
+YELLOW
+Yellow like the sun!
+
+GREEN
+Green like grass!
+
+WHITE
+White like snow!
+
+BLACK
+Black like night!
+
+ORANGE
+Orange like a pumpkin!
+
+PINK
+Pink like a flower!
+
+PURPLE
+Purple like grapes!
+
+BROWN
+Brown like chocolate!
+
+GRAY
+Gray like a cloud!
+
+SKY BLUE
+Sky blue like the ocean!
+
+GOLD
+Gold like sunshine!
+
+CIRCLE
+Round like a ball!
+
+SQUARE
+Four sides equal!
+
+TRIANGLE
+Three pointy sides!
+
+STAR
+A shiny bright star!
+
+HEART
+A love-shaped heart!
+
+OVAL
+Oval like an egg!
+
+DIAMOND
+A sparkly diamond!
+
+RECTANGLE
+Long on two sides!
+
+CROSS
+A plus-shaped cross!
+
+ARROW
+An arrow points the way!
+
+MOON
+A curved crescent moon!
+
+FLOWER
+A flower with petals!
+
+SPIRAL
+A spiral goes round and round!
+
+CLOUD
+A fluffy white cloud!
+
+LIGHTNING
+A lightning bolt shape!
+
+RAINBOW
+A rainbow of colors!
+
+SUN
+A bright shining sun!
+
+
+## Body Parts (30 cards)
+----------------------------------------------------------------------
+
+HEAD
+Touch your head!
+
+EYES
+Blink your eyes!
+
+EARS
+Wiggle your ears!
+
+NOSE
+Touch your nose!
+
+MOUTH
+Open your mouth!
+
+TEETH
+Show your teeth!
+
+TONGUE
+Stick out your tongue!
+
+HAIR
+Brush your hair!
+
+NECK
+Turn your neck!
+
+SHOULDERS
+Shrug your shoulders!
+
+HANDS
+Clap your hands!
+
+FINGERS
+Wiggle your fingers!
+
+TUMMY
+Rub your tummy!
+
+BACK
+Straighten your back!
+
+LEGS
+Stretch your legs!
+
+KNEES
+Bend your knees!
+
+FEET
+Stomp your feet!
+
+HEART
+Your heart goes thump-thump!
+
+LUNGS
+Your lungs fill with air!
+
+ELBOW
+Bend your elbow!
+
+PALMS
+Open your palms!
+
+EYEBROWS
+Raise your eyebrows!
+
+CHEEKS
+Puff your cheeks!
+
+FOREHEAD
+Touch your forehead!
+
+CHIN
+Tap your chin!
+
+NAILS
+Clean your nails!
+
+SKIN
+Soft warm skin!
+
+BELLY BUTTON
+Find your belly button!
+
+SMILE
+A big happy smile!
+
+TOES
+Wiggle your toes!
+
 
 ## Actions (25 cards)
+----------------------------------------------------------------------
 
 RUN
-Running fast!
+Let's run fast!
 
 JUMP
 Jump like a bunny!
@@ -507,13 +672,15 @@ Building a tower!
 COOK
 Cooking yummy food!
 
-HELP
-Helping is kind!
+CLEAN
+Cleaning up toys!
 
 HELP
 Help your mom!
 
+
 ## Opposites (30 cards)
+----------------------------------------------------------------------
 
 BIG
 Big as an elephant!
@@ -594,10 +761,10 @@ EMPTY
 Plate is empty!
 
 YOUNG
-Young baby!
+A young puppy!
 
 OLD
-Wise grandpa!
+A wise grandpa!
 
 WET
 All wet from rain!
@@ -605,7 +772,9 @@ All wet from rain!
 DRY
 Warm and dry!
 
+
 ## Phrases (25 cards)
+----------------------------------------------------------------------
 
 I'M THIRSTY
 I need water!
@@ -653,7 +822,7 @@ BYE-BYE!
 See you later!
 
 GIVE ME
-Please give me
+Please give me.
 
 HELP ME
 Can you help me?
@@ -662,7 +831,7 @@ AGAIN
 Do it again!
 
 NO!
-No, I don't want to
+No, I don't want to.
 
 WAIT
 Please wait!
@@ -671,27 +840,20 @@ IT HURTS
 Ouch, that hurts!
 
 I'M SAD
-I feel sad
+I feel sad.
 
 I'M HAPPY
 I feel happy!
 
 I'M SCARED
-I'm a little scared
+I'm a little scared.
 
 I DON'T KNOW
-I'm not sure
+I'm not sure.
 
-## Adjectives (23 cards)
 
-ROUND
-Round like a ball!
-
-SQUARE
-Square like a box!
-
-TRIANGULAR
-Pointy like a mountain!
+## Adjectives (13 cards)
+----------------------------------------------------------------------
 
 FLUFFY
 Soft and fluffy!
@@ -705,6 +867,12 @@ Smooth like glass!
 SLIMY
 Eww, so slimy!
 
+BUMPY
+Bumpy like a road!
+
+STICKY
+Sticky like honey!
+
 SWEET
 Yummy and sweet!
 
@@ -717,43 +885,18 @@ Hmm, that's bitter!
 SALTY
 Salty like the sea!
 
-BIG
-Big as an elephant!
+SPICY
+Spicy hot!
 
-SMALL
-Tiny like a mouse!
+JUICY
+Juicy and fresh!
 
-LONG
-Long and stretchy!
+CRUNCHY
+Crunchy like a carrot!
 
-SHORT
-Short and small!
-
-LOUD
-Very loud!
-
-QUIET
-Shh, very quiet!
-
-FAST
-Fast like a cheetah!
-
-SLOW
-Slow as a turtle!
-
-HARD
-Hard as a rock!
-
-SOFT
-Soft as a pillow!
-
-FULL
-The plate is full!
-
-EMPTY
-The plate is empty!
 
 ## Sound R (16 cards)
+----------------------------------------------------------------------
 
 RABBIT
 A fluffy rabbit hops!
@@ -792,18 +935,20 @@ TIGER
 Tiger roars: rrrr!
 
 ZEBRA
-Zebra has stripes!
+Zebra has black and white stripes!
 
 GIRAFFE
-A tall giraffe!
+A tall spotted giraffe!
 
 DRUM
-Drum goes boom!
+The drum goes boom-boom!
 
 STAR
-A shiny star!
+A shiny little star!
+
 
 ## Sound L (16 cards)
+----------------------------------------------------------------------
 
 LION
 The lion is king!
@@ -812,7 +957,7 @@ LEMON
 A yellow lemon!
 
 LEAF
-A green leaf!
+A green little leaf!
 
 LAMP
 The lamp glows warm!
@@ -836,24 +981,26 @@ LOCK
 The lock keeps it safe!
 
 ELEPHANT
-A big elephant!
+A big gray elephant!
 
 HELLO
-Say hello!
+Say hello to friends!
 
 YELLOW
 Yellow like the sun!
 
 BALL
-Throw the ball!
+Roll the ball!
 
 APPLE
-A crunchy apple!
+A crunchy sweet apple!
 
 OWL
-An owl hoots!
+An owl says hoo!
+
 
 ## Sound S (16 cards)
+----------------------------------------------------------------------
 
 SUN
 The sun is shining!
@@ -862,7 +1009,7 @@ SNAKE
 A long snake hisses!
 
 STAR
-A twinkling star!
+A twinkling bright star!
 
 SOUP
 Hot tasty soup!
@@ -901,12 +1048,14 @@ GRASS
 Green grass grows!
 
 MOUSE
-A tiny mouse!
+A tiny gray mouse!
+
 
 ## Sound Z (13 cards)
+----------------------------------------------------------------------
 
 ZEBRA
-Zebra has stripes!
+A zebra with stripes!
 
 ZOO
 Animals live at the zoo!
@@ -921,7 +1070,7 @@ BUZZ
 Bees buzz: bzzz!
 
 CHEESE
-Yummy yellow cheese!
+A slice of cheese!
 
 NOSE
 Sniff with your nose!
@@ -944,7 +1093,9 @@ Ice cubes freeze!
 MUSIC
 Dance to the music!
 
+
 ## Sound SH (15 cards)
+----------------------------------------------------------------------
 
 SHIP
 A big ship sails!
@@ -989,15 +1140,14 @@ PUSH
 Push the button!
 
 BUSHY
-A bushy tail!
+A bushy fox tail!
 
-## Sound ZH (11 cards)
+
+## Sound ZH (6 cards)
+----------------------------------------------------------------------
 
 VISION
 I have good vision!
-
-MEASURE
-Measure the table!
 
 TREASURE
 A pirate treasure!
@@ -1008,43 +1158,33 @@ The car is in the garage!
 BEIGE
 A beige teddy bear!
 
-USUAL
-My usual breakfast!
+MEASURE
+Measure the table!
 
 PLEASURE
 It's a pleasure!
 
-LEISURE
-Leisure time is fun!
-
-MIRAGE
-A desert mirage!
-
-COLLAGE
-Make a paper collage!
-
-CASUAL
-Casual Friday fun!
 
 ## Sound CH (15 cards)
+----------------------------------------------------------------------
 
 CHAIR
 Sit on the chair!
 
 CHEESE
-A slice of cheese!
+A tasty slice of cheese!
 
 CHICKEN
-Chicken says cluck!
+Chicken says cluck-cluck!
 
 CHERRY
-A red cherry!
+A sweet red cherry!
 
 CHURCH
 Bells ring at church!
 
 CHOCOLATE
-Sweet chocolate!
+Sweet yummy chocolate!
 
 CHIPS
 Crunchy chips!
@@ -1073,7 +1213,9 @@ A juicy peach!
 BENCH
 Sit on the bench!
 
+
 ## Sound TH (16 cards)
+----------------------------------------------------------------------
 
 THREE
 Count to three!
@@ -1123,7 +1265,9 @@ Hug your father!
 BROTHER
 My little brother!
 
+
 ## Sound W (14 cards)
+----------------------------------------------------------------------
 
 WATER
 Clear fresh water!
@@ -1132,7 +1276,7 @@ WINDOW
 Look out the window!
 
 WHALE
-A giant whale!
+A giant blue whale!
 
 WAVE
 Wave hello!
@@ -1165,21 +1309,23 @@ WORM
 A wiggly worm!
 
 WHITE
-White like snow!
+White like clouds!
+
 
 ## Consonant Blends (18 cards)
+----------------------------------------------------------------------
 
 SPOON
 A shiny spoon!
 
 STAR
-A twinkling star!
+A twinkling star above!
 
 SNOW
 White fluffy snow!
 
 SMILE
-A bright smile!
+A bright happy smile!
 
 SKATE
 Skate on the ice!
@@ -1203,7 +1349,7 @@ DRUM
 Beat the drum!
 
 DRAGON
-A fierce dragon!
+A friendly dragon!
 
 BRIDGE
 Cross the bridge!
@@ -1221,4 +1367,32 @@ FLOWER
 A pretty flower!
 
 FROG
-A green frog!
+A green jumping frog!
+
+
+======================================================================
+PACK SUMMARY:
+
+  Animals              29 cards
+  Home & Family        30 cards
+  Feelings             12 cards
+  Transport            25 cards
+  Food & Fruits        30 cards
+  Colors & Shapes      30 cards
+  Body Parts           30 cards
+  Actions              25 cards
+  Opposites            30 cards
+  Phrases              25 cards
+  Adjectives           13 cards
+  Sound R              16 cards
+  Sound L              16 cards
+  Sound S              16 cards
+  Sound Z              13 cards
+  Sound SH             15 cards
+  Sound ZH              6 cards
+  Sound CH             15 cards
+  Sound TH             16 cards
+  Sound W              14 cards
+  Consonant Blends     18 cards
+  ----------------------------------
+  TOTAL:              424 cards

@@ -13,7 +13,8 @@
         "emoji": "☀️",
         "colorBg": "#FFF8E1",
         "colorAccent": "#D63031",
-        "image": "syl_as"
+        "image": "syl_as",
+        "audio": "as"
       },
       {
         "id": "r23",
@@ -22,7 +23,8 @@
         "emoji": "🤗",
         "colorBg": "#FFE8EC",
         "colorAccent": "#D63031",
-        "image": "syl_mu"
+        "image": "syl_mu",
+        "audio": "mu"
       },
       {
         "id": "r11",
@@ -31,7 +33,8 @@
         "emoji": "🐟",
         "colorBg": "#E3F2FD",
         "colorAccent": "#D63031",
-        "image": "syl_ot"
+        "image": "syl_ot",
+        "audio": "ot"
       },
       {
         "id": "r15",
@@ -40,7 +43,8 @@
         "emoji": "🌳",
         "colorBg": "#E8F5E9",
         "colorAccent": "#D63031",
-        "image": "tree"
+        "image": "tree",
+        "audio": "ba"
       },
       {
         "id": "r21",
@@ -49,7 +53,8 @@
         "emoji": "🚂",
         "colorBg": "#E3F2FD",
         "colorAccent": "#D63031",
-        "image": "bridge"
+        "image": "bridge",
+        "audio": "tu"
       },
       {
         "id": "r06",
@@ -58,7 +63,8 @@
         "emoji": "🍌",
         "colorBg": "#FFF8E1",
         "colorAccent": "#D63031",
-        "image": "syl_an"
+        "image": "syl_an",
+        "audio": "an"
       },
       {
         "id": "r18",
@@ -67,7 +73,8 @@
         "emoji": "🐝",
         "colorBg": "#FFF8E1",
         "colorAccent": "#D63031",
-        "image": "syl_la"
+        "image": "syl_la",
+        "audio": "la"
       },
       {
         "id": "r08",
@@ -76,7 +83,8 @@
         "emoji": "👏",
         "colorBg": "#FFE8EC",
         "colorAccent": "#D63031",
-        "image": "syl_op"
+        "image": "syl_op",
+        "audio": "op"
       },
       {
         "id": "r14",
@@ -85,7 +93,8 @@
         "emoji": "🪲",
         "colorBg": "#E8F5E9",
         "colorAccent": "#D63031",
-        "image": "syl_uk"
+        "image": "syl_uk",
+        "audio": "uk"
       },
       {
         "id": "r24",
@@ -94,7 +103,8 @@
         "emoji": "🐐",
         "colorBg": "#F3E5F5",
         "colorAccent": "#D63031",
-        "image": "syl_ga"
+        "image": "syl_ga",
+        "audio": "ga"
       },
       {
         "id": "r01",
@@ -103,7 +113,8 @@
         "emoji": "🌙",
         "colorBg": "#E8EAF6",
         "colorAccent": "#D63031",
-        "image": "moon"
+        "image": "moon",
+        "audio": "no"
       },
       {
         "id": "r17",
@@ -112,7 +123,8 @@
         "emoji": "💧",
         "colorBg": "#E3F2FD",
         "colorAccent": "#D63031",
-        "image": "syl_da"
+        "image": "syl_da",
+        "audio": "da"
       },
       {
         "id": "r09",
@@ -121,7 +133,8 @@
         "emoji": "🍅",
         "colorBg": "#FFE6E6",
         "colorAccent": "#D63031",
-        "image": "syl_or"
+        "image": "syl_or",
+        "audio": "or"
       },
       {
         "id": "r22",
@@ -130,7 +143,8 @@
         "emoji": "🎺",
         "colorBg": "#FFF3E0",
         "colorAccent": "#D63031",
-        "image": "syl_bi"
+        "image": "syl_bi",
+        "audio": "bi"
       },
       {
         "id": "r03",
@@ -139,7 +153,8 @@
         "emoji": "🛏️",
         "colorBg": "#F3E5F5",
         "colorAccent": "#D63031",
-        "image": "syl_le"
+        "image": "syl_le",
+        "audio": "le"
       },
       {
         "id": "r13",
@@ -148,7 +163,8 @@
         "emoji": "🍲",
         "colorBg": "#FFF3E0",
         "colorAccent": "#D63031",
-        "image": "syl_up"
+        "image": "syl_up",
+        "audio": "up"
       },
       {
         "id": "r20",
@@ -157,7 +173,8 @@
         "emoji": "🧚",
         "colorBg": "#E8EAF6",
         "colorAccent": "#D63031",
-        "image": "syl_ah"
+        "image": "syl_ah",
+        "audio": "ah"
       },
       {
         "id": "r07",
@@ -166,7 +183,8 @@
         "emoji": "🦸",
         "colorBg": "#E3F2FD",
         "colorAccent": "#D63031",
-        "image": "syl_oi"
+        "image": "syl_oi",
+        "audio": "oi"
       },
       {
         "id": "r16",
@@ -175,7 +193,8 @@
         "emoji": "🦉",
         "colorBg": "#F5F0E6",
         "colorAccent": "#D63031",
-        "image": "syl_va"
+        "image": "syl_va",
+        "audio": "va"
       },
       {
         "id": "r25",
@@ -184,7 +203,8 @@
         "emoji": "🌬️",
         "colorBg": "#F0FFFF",
         "colorAccent": "#D63031",
-        "image": "wind"
+        "image": "wind",
+        "audio": "uh"
       },
       {
         "id": "r05",
@@ -193,7 +213,8 @@
         "emoji": "🐱",
         "colorBg": "#FFF3E0",
         "colorAccent": "#D63031",
-        "image": "syl_om"
+        "image": "syl_om",
+        "audio": "om"
       },
       {
         "id": "r19",
@@ -202,7 +223,8 @@
         "emoji": "🐐",
         "colorBg": "#E8F5E9",
         "colorAccent": "#D63031",
-        "image": "syl_za"
+        "image": "syl_za",
+        "audio": "za"
       },
       {
         "id": "r02",
@@ -211,7 +233,8 @@
         "emoji": "🌳",
         "colorBg": "#E8F5E9",
         "colorAccent": "#D63031",
-        "image": "syl_ai"
+        "image": "syl_ai",
+        "audio": "ai"
       },
       {
         "id": "r10",
@@ -220,7 +243,8 @@
         "emoji": "🍑",
         "colorBg": "#FFF3E0",
         "colorAccent": "#D63031",
-        "image": "syl_os"
+        "image": "syl_os",
+        "audio": "os"
       },
       {
         "id": "r12",
@@ -229,7 +253,8 @@
         "emoji": "🌸",
         "colorBg": "#F3E5F5",
         "colorAccent": "#D63031",
-        "image": "syl_ok"
+        "image": "syl_ok",
+        "audio": "ok"
       }
     ]
   },
@@ -249,7 +274,8 @@
         "emoji": "🐱",
         "colorBg": "#FFF5E6",
         "colorAccent": "#F0B27A",
-        "image": "cat"
+        "image": "cat",
+        "audio": "kotik"
       },
       {
         "id": "a02",
@@ -260,7 +286,8 @@
         "emoji": "🐕",
         "colorBg": "#FFF0E6",
         "colorAccent": "#E67E22",
-        "image": "dog"
+        "image": "dog",
+        "audio": "sobachka"
       },
       {
         "id": "a03",
@@ -271,7 +298,8 @@
         "emoji": "🐄",
         "colorBg": "#F0FFF0",
         "colorAccent": "#58D68D",
-        "image": "cow"
+        "image": "cow",
+        "audio": "korova"
       },
       {
         "id": "a04",
@@ -282,7 +310,8 @@
         "emoji": "🐴",
         "colorBg": "#FFF5E6",
         "colorAccent": "#D4A373",
-        "image": "horse"
+        "image": "horse",
+        "audio": "konik"
       },
       {
         "id": "a05",
@@ -293,7 +322,8 @@
         "emoji": "🐷",
         "colorBg": "#FFE6F0",
         "colorAccent": "#FF85A1",
-        "image": "pig"
+        "image": "pig",
+        "audio": "svinka"
       },
       {
         "id": "a06",
@@ -304,7 +334,8 @@
         "emoji": "🐔",
         "colorBg": "#FFFFF0",
         "colorAccent": "#F4D03F",
-        "image": "chicken"
+        "image": "chicken",
+        "audio": "kurochka"
       },
       {
         "id": "a07",
@@ -315,7 +346,8 @@
         "emoji": "🐓",
         "colorBg": "#FFE6E6",
         "colorAccent": "#E74C3C",
-        "image": "rooster"
+        "image": "rooster",
+        "audio": "pivnik"
       },
       {
         "id": "a08",
@@ -326,7 +358,8 @@
         "emoji": "🦆",
         "colorBg": "#E6FFFF",
         "colorAccent": "#45B7D1",
-        "image": "duck"
+        "image": "duck",
+        "audio": "kachechka"
       },
       {
         "id": "a09",
@@ -337,7 +370,8 @@
         "emoji": "🐸",
         "colorBg": "#E6FFE6",
         "colorAccent": "#4CAF50",
-        "image": "frog"
+        "image": "frog",
+        "audio": "jabka"
       },
       {
         "id": "a10",
@@ -348,7 +382,8 @@
         "emoji": "🐟",
         "colorBg": "#E6F0FF",
         "colorAccent": "#3498DB",
-        "image": "fish"
+        "image": "fish",
+        "audio": "ribka"
       },
       {
         "id": "a11",
@@ -359,7 +394,8 @@
         "emoji": "🐦",
         "colorBg": "#F0FFFF",
         "colorAccent": "#76D7EA",
-        "image": "bird"
+        "image": "bird",
+        "audio": "ptashka"
       },
       {
         "id": "a12",
@@ -370,7 +406,8 @@
         "emoji": "🦋",
         "colorBg": "#F5E6FF",
         "colorAccent": "#9B59B6",
-        "image": "butterfly"
+        "image": "butterfly",
+        "audio": "metelik"
       },
       {
         "id": "a13",
@@ -381,7 +418,8 @@
         "emoji": "🐝",
         "colorBg": "#FFFFF0",
         "colorAccent": "#F5B041",
-        "image": "bee"
+        "image": "bee",
+        "audio": "bjilka"
       },
       {
         "id": "a14",
@@ -392,7 +430,8 @@
         "emoji": "🐌",
         "colorBg": "#FFF5F0",
         "colorAccent": "#D4A373",
-        "image": "snail"
+        "image": "snail",
+        "audio": "ravlik"
       },
       {
         "id": "a15",
@@ -403,7 +442,8 @@
         "emoji": "🐰",
         "colorBg": "#F5F0FF",
         "colorAccent": "#A78BFA",
-        "image": "bunny"
+        "image": "bunny",
+        "audio": "zaichik"
       },
       {
         "id": "a16",
@@ -414,7 +454,8 @@
         "emoji": "🐻",
         "colorBg": "#FFF0E6",
         "colorAccent": "#CD853F",
-        "image": "bear"
+        "image": "bear",
+        "audio": "vednid"
       },
       {
         "id": "a17",
@@ -425,7 +466,7 @@
         "emoji": "🦊",
         "colorBg": "#FFF5E6",
         "colorAccent": "#FF8C42",
-        "audio": "лисиця",
+        "audio": "lisicia",
         "image": "lisichka"
       },
       {
@@ -437,7 +478,8 @@
         "emoji": "🐺",
         "colorBg": "#F0F0F5",
         "colorAccent": "#7F8C8D",
-        "image": "wolf"
+        "image": "wolf",
+        "audio": "vovchik"
       },
       {
         "id": "a19",
@@ -448,7 +490,8 @@
         "emoji": "🦌",
         "colorBg": "#FFF5E6",
         "colorAccent": "#A0522D",
-        "image": "deer"
+        "image": "deer",
+        "audio": "olen"
       },
       {
         "id": "a20",
@@ -459,7 +502,8 @@
         "emoji": "🦔",
         "colorBg": "#FFF5F0",
         "colorAccent": "#C4A882",
-        "image": "hedgehog"
+        "image": "hedgehog",
+        "audio": "ijachok"
       },
       {
         "id": "a21",
@@ -470,7 +514,8 @@
         "emoji": "🦉",
         "colorBg": "#F5F0E6",
         "colorAccent": "#8B7355",
-        "image": "owl"
+        "image": "owl",
+        "audio": "sova"
       },
       {
         "id": "a22",
@@ -481,7 +526,7 @@
         "emoji": "🐧",
         "colorBg": "#E6F0FF",
         "colorAccent": "#2C3E50",
-        "audio": "пінгвін",
+        "audio": "pingvin",
         "image": "pingvin"
       },
       {
@@ -493,7 +538,7 @@
         "emoji": "🐘",
         "colorBg": "#F0F0F5",
         "colorAccent": "#95A5A6",
-        "audio": "слон",
+        "audio": "slon",
         "image": "slon"
       },
       {
@@ -505,7 +550,7 @@
         "emoji": "🦁",
         "colorBg": "#FFFFF0",
         "colorAccent": "#DAA520",
-        "audio": "лев",
+        "audio": "lev",
         "image": "lev"
       },
       {
@@ -517,7 +562,7 @@
         "emoji": "🐒",
         "colorBg": "#FFF5E6",
         "colorAccent": "#A0522D",
-        "audio": "мавпочка",
+        "audio": "mavpochka",
         "image": "mavpochka"
       },
       {
@@ -529,7 +574,7 @@
         "emoji": "🐊",
         "colorBg": "#E6FFE6",
         "colorAccent": "#228B22",
-        "audio": "крокодил",
+        "audio": "krokodil",
         "image": "krokodil"
       },
       {
@@ -541,7 +586,7 @@
         "emoji": "🐢",
         "colorBg": "#E6FFE6",
         "colorAccent": "#6BCB77",
-        "audio": "черепаха",
+        "audio": "cherepaha",
         "image": "cherepaha"
       },
       {
@@ -553,7 +598,7 @@
         "emoji": "🐬",
         "colorBg": "#E6F0FF",
         "colorAccent": "#5DADE2",
-        "audio": "дельфін",
+        "audio": "delfin",
         "image": "delfin"
       },
       {
@@ -565,7 +610,7 @@
         "emoji": "🐿️",
         "colorBg": "#FFF5E6",
         "colorAccent": "#D4A373",
-        "audio": "білочка",
+        "audio": "bilochka",
         "image": "bilochka"
       }
     ]
@@ -586,7 +631,8 @@
         "emoji": "🤱",
         "colorBg": "#FFF0F5",
         "colorAccent": "#FF69B4",
-        "image": "mommy"
+        "image": "mommy",
+        "audio": "mama"
       },
       {
         "id": "h02",
@@ -597,7 +643,8 @@
         "emoji": "👨‍👧",
         "colorBg": "#E6F0FF",
         "colorAccent": "#5B9BD5",
-        "image": "dad"
+        "image": "dad",
+        "audio": "tato"
       },
       {
         "id": "h03",
@@ -608,7 +655,8 @@
         "emoji": "👵",
         "colorBg": "#FFF5E6",
         "colorAccent": "#FFB347",
-        "image": "grandma"
+        "image": "grandma",
+        "audio": "babusia"
       },
       {
         "id": "h04",
@@ -619,7 +667,8 @@
         "emoji": "👴",
         "colorBg": "#F0F5FF",
         "colorAccent": "#7F8C8D",
-        "image": "grandpa"
+        "image": "grandpa",
+        "audio": "didus"
       },
       {
         "id": "h05",
@@ -630,7 +679,8 @@
         "emoji": "👶",
         "colorBg": "#FFF0F0",
         "colorAccent": "#FF85A1",
-        "image": "baby"
+        "image": "baby",
+        "audio": "lialia"
       },
       {
         "id": "h06",
@@ -641,7 +691,8 @@
         "emoji": "👨‍👩‍👧",
         "colorBg": "#FFE8EC",
         "colorAccent": "#E91E63",
-        "image": "family"
+        "image": "family",
+        "audio": "rodina"
       },
       {
         "id": "h07",
@@ -652,7 +703,8 @@
         "emoji": "🫂",
         "colorBg": "#F3E5F5",
         "colorAccent": "#9B59B6",
-        "image": "hug"
+        "image": "hug",
+        "audio": "obiimi"
       },
       {
         "id": "h08",
@@ -663,7 +715,8 @@
         "emoji": "🌅",
         "colorBg": "#FFF8E1",
         "colorAccent": "#FFB347",
-        "image": "morning"
+        "image": "morning",
+        "audio": "ranok"
       },
       {
         "id": "h09",
@@ -674,7 +727,8 @@
         "emoji": "🌙",
         "colorBg": "#E8EAF6",
         "colorAccent": "#8E44AD",
-        "image": "evening"
+        "image": "evening",
+        "audio": "vechir"
       },
       {
         "id": "h10",
@@ -685,7 +739,8 @@
         "emoji": "😄",
         "colorBg": "#FFF8E1",
         "colorAccent": "#F5B041",
-        "image": "happy"
+        "image": "happy",
+        "audio": "radist"
       },
       {
         "id": "h11",
@@ -696,7 +751,8 @@
         "emoji": "🥺",
         "colorBg": "#E3F2FD",
         "colorAccent": "#5B9BD5",
-        "image": "sad"
+        "image": "sad",
+        "audio": "sumno"
       },
       {
         "id": "h12",
@@ -707,7 +763,8 @@
         "emoji": "😤",
         "colorBg": "#FFE6E6",
         "colorAccent": "#E74C3C",
-        "image": "angry"
+        "image": "angry",
+        "audio": "serditii"
       },
       {
         "id": "h13",
@@ -719,7 +776,7 @@
         "colorBg": "#E8EAF6",
         "colorAccent": "#7F8C8D",
         "image": "afraid",
-        "audio": "страшно_д"
+        "audio": "strah"
       },
       {
         "id": "h14",
@@ -730,7 +787,8 @@
         "emoji": "😲",
         "colorBg": "#F3E5F5",
         "colorAccent": "#9B59B6",
-        "image": "surprised"
+        "image": "surprised",
+        "audio": "podiv"
       },
       {
         "id": "h15",
@@ -741,7 +799,8 @@
         "emoji": "⚽",
         "colorBg": "#E6FFE6",
         "colorAccent": "#6BCB77",
-        "image": "ball"
+        "image": "ball",
+        "audio": "miach"
       },
       {
         "id": "h16",
@@ -752,7 +811,8 @@
         "emoji": "🧸",
         "colorBg": "#FFE6F5",
         "colorAccent": "#E91E63",
-        "image": "doll"
+        "image": "doll",
+        "audio": "lialka"
       },
       {
         "id": "h17",
@@ -763,7 +823,8 @@
         "emoji": "🚗",
         "colorBg": "#FFE6E6",
         "colorAccent": "#E74C3C",
-        "image": "toy_car"
+        "image": "toy_car",
+        "audio": "mashinka"
       },
       {
         "id": "h18",
@@ -774,7 +835,8 @@
         "emoji": "📖",
         "colorBg": "#F0E6FF",
         "colorAccent": "#8E44AD",
-        "image": "book"
+        "image": "book",
+        "audio": "knijka"
       },
       {
         "id": "h19",
@@ -785,7 +847,8 @@
         "emoji": "🧱",
         "colorBg": "#FFF5E6",
         "colorAccent": "#E67E22",
-        "image": "blocks"
+        "image": "blocks",
+        "audio": "kubiki"
       },
       {
         "id": "h20",
@@ -796,7 +859,8 @@
         "emoji": "🥣",
         "colorBg": "#FFF3E0",
         "colorAccent": "#D4A373",
-        "image": "porridge"
+        "image": "porridge",
+        "audio": "kasha"
       },
       {
         "id": "h21",
@@ -807,7 +871,8 @@
         "emoji": "🍎",
         "colorBg": "#FFE6E6",
         "colorAccent": "#E74C3C",
-        "image": "apple"
+        "image": "apple",
+        "audio": "yabluko"
       },
       {
         "id": "h22",
@@ -818,7 +883,8 @@
         "emoji": "💧",
         "colorBg": "#E6F0FF",
         "colorAccent": "#3498DB",
-        "image": "water"
+        "image": "water",
+        "audio": "vodichka"
       },
       {
         "id": "h23",
@@ -829,7 +895,8 @@
         "emoji": "🌳",
         "colorBg": "#E8F5E9",
         "colorAccent": "#6BCB77",
-        "image": "walk"
+        "image": "walk",
+        "audio": "guliati"
       },
       {
         "id": "h24",
@@ -840,7 +907,8 @@
         "emoji": "🛁",
         "colorBg": "#E6FFFF",
         "colorAccent": "#76D7EA",
-        "image": "bath"
+        "image": "bath",
+        "audio": "vanna"
       },
       {
         "id": "h25",
@@ -851,7 +919,8 @@
         "emoji": "🧼",
         "colorBg": "#F0FFFF",
         "colorAccent": "#1ABC9C",
-        "image": "wash_hands"
+        "image": "wash_hands",
+        "audio": "ruchki"
       },
       {
         "id": "h26",
@@ -862,7 +931,8 @@
         "emoji": "🪥",
         "colorBg": "#F0FFFF",
         "colorAccent": "#48C9B0",
-        "image": "brush_teeth"
+        "image": "brush_teeth",
+        "audio": "zubki"
       },
       {
         "id": "h27",
@@ -873,7 +943,8 @@
         "emoji": "🛏️",
         "colorBg": "#F0E6FF",
         "colorAccent": "#9B59B6",
-        "image": "bed"
+        "image": "bed",
+        "audio": "lijko"
       },
       {
         "id": "h28",
@@ -884,7 +955,8 @@
         "emoji": "🙏",
         "colorBg": "#E8F5E9",
         "colorAccent": "#6BCB77",
-        "image": "thanks"
+        "image": "thanks",
+        "audio": "diakuiu"
       },
       {
         "id": "h29",
@@ -895,7 +967,8 @@
         "emoji": "✨",
         "colorBg": "#FFF8E1",
         "colorAccent": "#FFD700",
-        "image": "please_uk"
+        "image": "please_uk",
+        "audio": "budlaska"
       },
       {
         "id": "h30",
@@ -906,7 +979,8 @@
         "emoji": "❤️",
         "colorBg": "#FFE8EC",
         "colorAccent": "#E74C3C",
-        "image": "love"
+        "image": "love",
+        "audio": "lubluiu"
       }
     ]
   },
@@ -927,7 +1001,7 @@
         "colorBg": "#FFF8E1",
         "colorAccent": "#F5B041",
         "image": "happy",
-        "audio": "радість_е"
+        "audio": "radist"
       },
       {
         "id": "e02",
@@ -939,7 +1013,7 @@
         "colorBg": "#E3F2FD",
         "colorAccent": "#5DADE2",
         "image": "sad",
-        "audio": "сумно_е"
+        "audio": "sumno"
       },
       {
         "id": "e03",
@@ -950,7 +1024,8 @@
         "emoji": "😤",
         "colorBg": "#FFE6E6",
         "colorAccent": "#E74C3C",
-        "image": "angry_uk"
+        "image": "angry_uk",
+        "audio": "zlist"
       },
       {
         "id": "e04",
@@ -961,7 +1036,8 @@
         "emoji": "😨",
         "colorBg": "#E8EAF6",
         "colorAccent": "#7986CB",
-        "image": "scared"
+        "image": "scared",
+        "audio": "strah"
       },
       {
         "id": "e05",
@@ -973,7 +1049,7 @@
         "colorBg": "#F3E5F5",
         "colorAccent": "#AB47BC",
         "image": "surprised",
-        "audio": "подив_е"
+        "audio": "podiv"
       },
       {
         "id": "e06",
@@ -985,7 +1061,7 @@
         "colorBg": "#FFE8EC",
         "colorAccent": "#E74C3C",
         "image": "love",
-        "audio": "любов_е"
+        "audio": "lubluiu"
       },
       {
         "id": "e07",
@@ -996,7 +1072,8 @@
         "emoji": "😳",
         "colorBg": "#FFE8EC",
         "colorAccent": "#FF85A1",
-        "image": "shy"
+        "image": "shy",
+        "audio": "sorom"
       },
       {
         "id": "e08",
@@ -1007,7 +1084,8 @@
         "emoji": "😮‍💨",
         "colorBg": "#F0F0F5",
         "colorAccent": "#95A5A6",
-        "image": "tired"
+        "image": "tired",
+        "audio": "vtoma"
       },
       {
         "id": "e09",
@@ -1018,7 +1096,8 @@
         "emoji": "🏆",
         "colorBg": "#FFF8E1",
         "colorAccent": "#FFD700",
-        "image": "proud"
+        "image": "proud",
+        "audio": "gordist"
       },
       {
         "id": "e10",
@@ -1029,7 +1108,8 @@
         "emoji": "🤔",
         "colorBg": "#E8F5E9",
         "colorAccent": "#66BB6A",
-        "image": "curious"
+        "image": "curious",
+        "audio": "cikavist"
       },
       {
         "id": "e11",
@@ -1040,7 +1120,8 @@
         "emoji": "😌",
         "colorBg": "#E3F2FD",
         "colorAccent": "#42A5F5",
-        "image": "calm"
+        "image": "calm",
+        "audio": "spokii"
       },
       {
         "id": "e12",
@@ -1051,7 +1132,8 @@
         "emoji": "🥰",
         "colorBg": "#FFE8EC",
         "colorAccent": "#EC407A",
-        "image": "tenderness"
+        "image": "tenderness",
+        "audio": "nijnist"
       },
       {
         "id": "e13",
@@ -1062,7 +1144,8 @@
         "emoji": "🤩",
         "colorBg": "#FFF8E1",
         "colorAccent": "#FFA726",
-        "image": "excited"
+        "image": "excited",
+        "audio": "schastia"
       },
       {
         "id": "e14",
@@ -1073,7 +1156,8 @@
         "emoji": "💝",
         "colorBg": "#F3E5F5",
         "colorAccent": "#CE93D8",
-        "image": "care"
+        "image": "care",
+        "audio": "turbota"
       },
       {
         "id": "e15",
@@ -1084,7 +1168,8 @@
         "emoji": "😂",
         "colorBg": "#FFF8E1",
         "colorAccent": "#FFB300",
-        "image": "laugh"
+        "image": "laugh",
+        "audio": "smih"
       },
       {
         "id": "e16",
@@ -1095,7 +1180,7 @@
         "emoji": "🤝",
         "colorBg": "#E8F5E9",
         "colorAccent": "#4CAF50",
-        "audio": "довіра",
+        "audio": "dovira",
         "image": "dovira"
       },
       {
@@ -1107,7 +1192,7 @@
         "emoji": "💕",
         "colorBg": "#FFE8EC",
         "colorAccent": "#F06292",
-        "audio": "доброта",
+        "audio": "dobrota",
         "image": "dobrota"
       },
       {
@@ -1119,7 +1204,7 @@
         "emoji": "💪",
         "colorBg": "#FFF3E0",
         "colorAccent": "#FF7043",
-        "audio": "сміливість",
+        "audio": "smilivist",
         "image": "smilivist"
       },
       {
@@ -1131,7 +1216,8 @@
         "emoji": "🙏",
         "colorBg": "#E8F5E9",
         "colorAccent": "#66BB6A",
-        "image": "gratitude"
+        "image": "gratitude",
+        "audio": "vdiachnist"
       },
       {
         "id": "e20",
@@ -1142,7 +1228,8 @@
         "emoji": "😯",
         "colorBg": "#E3F2FD",
         "colorAccent": "#42A5F5",
-        "image": "surprised_uk"
+        "image": "surprised_uk",
+        "audio": "zdivuvanna"
       },
       {
         "id": "e21",
@@ -1153,7 +1240,7 @@
         "emoji": "🫶",
         "colorBg": "#F3E5F5",
         "colorAccent": "#AB47BC",
-        "audio": "увага",
+        "audio": "uvaga",
         "image": "uvaga"
       },
       {
@@ -1165,7 +1252,8 @@
         "emoji": "🥱",
         "colorBg": "#F0F0F5",
         "colorAccent": "#90A4AE",
-        "image": "bored"
+        "image": "bored",
+        "audio": "nudga"
       },
       {
         "id": "e23",
@@ -1176,7 +1264,7 @@
         "emoji": "🫂",
         "colorBg": "#E3F2FD",
         "colorAccent": "#5DADE2",
-        "audio": "співчуття",
+        "audio": "spivchutta",
         "image": "spivchuttia"
       },
       {
@@ -1188,7 +1276,7 @@
         "emoji": "✨",
         "colorBg": "#FFF8E1",
         "colorAccent": "#FFD54F",
-        "audio": "натхнення",
+        "audio": "nathnennia",
         "image": "nathnenia"
       },
       {
@@ -1200,7 +1288,7 @@
         "emoji": "☀️",
         "colorBg": "#FFF3E0",
         "colorAccent": "#FFA726",
-        "audio": "тепло",
+        "audio": "teplo",
         "image": "teplo"
       },
       {
@@ -1212,7 +1300,7 @@
         "emoji": "😬",
         "colorBg": "#FFF3E0",
         "colorAccent": "#FFB74D",
-        "audio": "хвилювання",
+        "audio": "hviluvania",
         "image": "nervue"
       },
       {
@@ -1224,7 +1312,7 @@
         "emoji": "👍",
         "colorBg": "#E8F5E9",
         "colorAccent": "#66BB6A",
-        "audio": "задоволення",
+        "audio": "zadovolennia",
         "image": "zadovolennia"
       },
       {
@@ -1236,7 +1324,7 @@
         "emoji": "😔",
         "colorBg": "#E3F2FD",
         "colorAccent": "#78909C",
-        "audio": "образа",
+        "audio": "obraza",
         "image": "obraza"
       },
       {
@@ -1248,7 +1336,7 @@
         "emoji": "🌟",
         "colorBg": "#FFF8E1",
         "colorAccent": "#FFD700",
-        "audio": "подяка",
+        "audio": "podiaka",
         "image": "podiaka"
       },
       {
@@ -1260,7 +1348,7 @@
         "emoji": "🕊️",
         "colorBg": "#E8F5E9",
         "colorAccent": "#81C784",
-        "audio": "мир",
+        "audio": "mir",
         "image": "mir"
       }
     ]
@@ -1281,7 +1369,7 @@
         "emoji": "🚗",
         "colorBg": "#FFE6E6",
         "colorAccent": "#E74C3C",
-        "audio": "автомобіль",
+        "audio": "avtomobil",
         "image": "avtomobil"
       },
       {
@@ -1293,7 +1381,7 @@
         "emoji": "🚌",
         "colorBg": "#FFF3E0",
         "colorAccent": "#FF9800",
-        "audio": "автобус",
+        "audio": "avtobus",
         "image": "avtobus"
       },
       {
@@ -1305,7 +1393,7 @@
         "emoji": "🚂",
         "colorBg": "#E3F2FD",
         "colorAccent": "#1976D2",
-        "audio": "потяг",
+        "audio": "potiag",
         "image": "poizd"
       },
       {
@@ -1317,7 +1405,7 @@
         "emoji": "✈️",
         "colorBg": "#E3F2FD",
         "colorAccent": "#42A5F5",
-        "audio": "літак",
+        "audio": "litak",
         "image": "litak"
       },
       {
@@ -1329,7 +1417,7 @@
         "emoji": "🚢",
         "colorBg": "#E0F7FA",
         "colorAccent": "#00838F",
-        "audio": "корабель",
+        "audio": "korabel",
         "image": "korabel"
       },
       {
@@ -1341,7 +1429,7 @@
         "emoji": "🚲",
         "colorBg": "#E8F5E9",
         "colorAccent": "#43A047",
-        "audio": "велосипед",
+        "audio": "velosiped",
         "image": "velosiped"
       },
       {
@@ -1353,7 +1441,7 @@
         "emoji": "🏍️",
         "colorBg": "#F0F0F5",
         "colorAccent": "#546E7A",
-        "audio": "мотоцикл",
+        "audio": "motocikl",
         "image": "motocikl"
       },
       {
@@ -1365,7 +1453,7 @@
         "emoji": "🚁",
         "colorBg": "#E8F5E9",
         "colorAccent": "#66BB6A",
-        "audio": "гелікоптер",
+        "audio": "gelikopter",
         "image": "gelicopter"
       },
       {
@@ -1377,7 +1465,7 @@
         "emoji": "🚋",
         "colorBg": "#FFF8E1",
         "colorAccent": "#FDD835",
-        "audio": "трамвай",
+        "audio": "tramvai",
         "image": "tramvai"
       },
       {
@@ -1389,7 +1477,7 @@
         "emoji": "🚇",
         "colorBg": "#E8EAF6",
         "colorAccent": "#5C6BC0",
-        "audio": "метро",
+        "audio": "metro",
         "image": "metro"
       },
       {
@@ -1401,7 +1489,7 @@
         "emoji": "🚕",
         "colorBg": "#FFF8E1",
         "colorAccent": "#FBC02D",
-        "audio": "таксі",
+        "audio": "taksi",
         "image": "taxi"
       },
       {
@@ -1413,7 +1501,7 @@
         "emoji": "🚒",
         "colorBg": "#FFE6E6",
         "colorAccent": "#D32F2F",
-        "audio": "пожежна",
+        "audio": "pojejna",
         "image": "pojejna"
       },
       {
@@ -1425,7 +1513,7 @@
         "emoji": "🚑",
         "colorBg": "#FFE8EC",
         "colorAccent": "#E91E63",
-        "audio": "швидка",
+        "audio": "shvidka",
         "image": "shvidka"
       },
       {
@@ -1437,7 +1525,7 @@
         "emoji": "🚓",
         "colorBg": "#E3F2FD",
         "colorAccent": "#1565C0",
-        "audio": "поліція",
+        "audio": "policia",
         "image": "policia"
       },
       {
@@ -1449,7 +1537,7 @@
         "emoji": "🚛",
         "colorBg": "#FFF3E0",
         "colorAccent": "#E65100",
-        "audio": "вантажівка",
+        "audio": "vantajivka",
         "image": "vantajivka"
       },
       {
@@ -1461,7 +1549,7 @@
         "emoji": "🚜",
         "colorBg": "#E8F5E9",
         "colorAccent": "#558B2F",
-        "audio": "трактор",
+        "audio": "traktor",
         "image": "tractor"
       },
       {
@@ -1473,7 +1561,7 @@
         "emoji": "🛴",
         "colorBg": "#E8F5E9",
         "colorAccent": "#66BB6A",
-        "audio": "самокат",
+        "audio": "samokat",
         "image": "samokat"
       },
       {
@@ -1485,7 +1573,7 @@
         "emoji": "🚀",
         "colorBg": "#E8EAF6",
         "colorAccent": "#7C4DFF",
-        "audio": "ракета",
+        "audio": "raketa",
         "image": "raketa"
       },
       {
@@ -1497,7 +1585,7 @@
         "emoji": "🚣",
         "colorBg": "#E0F7FA",
         "colorAccent": "#00ACC1",
-        "audio": "човник",
+        "audio": "chovnik",
         "image": "chovnik"
       },
       {
@@ -1509,7 +1597,7 @@
         "emoji": "⛵",
         "colorBg": "#E3F2FD",
         "colorAccent": "#1E88E5",
-        "audio": "яхта",
+        "audio": "yahta",
         "image": "yahta"
       },
       {
@@ -1533,7 +1621,7 @@
         "emoji": "🛷",
         "colorBg": "#E3F2FD",
         "colorAccent": "#42A5F5",
-        "audio": "санки",
+        "audio": "sanki",
         "image": "sanki"
       },
       {
@@ -1545,7 +1633,7 @@
         "emoji": "🐎",
         "colorBg": "#FFF3E0",
         "colorAccent": "#A0522D",
-        "audio": "конячка",
+        "audio": "konyachka",
         "image": "konik"
       },
       {
@@ -1557,7 +1645,7 @@
         "emoji": "👸",
         "colorBg": "#F3E5F5",
         "colorAccent": "#AB47BC",
-        "audio": "карета",
+        "audio": "kareta",
         "image": "kareta"
       },
       {
@@ -1569,7 +1657,7 @@
         "emoji": "🛹",
         "colorBg": "#FFF3E0",
         "colorAccent": "#FF7043",
-        "audio": "скейтборд",
+        "audio": "skateboard",
         "image": "skateboard"
       },
       {
@@ -1593,7 +1681,7 @@
         "emoji": "🚆",
         "colorBg": "#E3F2FD",
         "colorAccent": "#1976D2",
-        "audio": "електричка",
+        "audio": "electrichka",
         "image": "electrichka"
       },
       {
@@ -1605,7 +1693,7 @@
         "emoji": "🏗️",
         "colorBg": "#FFF3E0",
         "colorAccent": "#E65100",
-        "audio": "екскаватор",
+        "audio": "ekskavator",
         "image": "ekskavator"
       },
       {
@@ -1629,7 +1717,7 @@
         "emoji": "🪂",
         "colorBg": "#E3F2FD",
         "colorAccent": "#42A5F5",
-        "audio": "параплан",
+        "audio": "paraplan",
         "image": "aeroplan"
       }
     ]
@@ -1651,7 +1739,7 @@
         "colorBg": "#FFE6E6",
         "colorAccent": "#E74C3C",
         "image": "apple",
-        "audio": "яблуко_ї"
+        "audio": "yabluko"
       },
       {
         "id": "f02",
@@ -1662,7 +1750,8 @@
         "emoji": "🍌",
         "colorBg": "#FFF8E1",
         "colorAccent": "#FDD835",
-        "image": "banana"
+        "image": "banana",
+        "audio": "banan"
       },
       {
         "id": "f03",
@@ -1673,7 +1762,8 @@
         "emoji": "🍇",
         "colorBg": "#F3E5F5",
         "colorAccent": "#9C27B0",
-        "image": "grapes"
+        "image": "grapes",
+        "audio": "vinograd"
       },
       {
         "id": "f04",
@@ -1684,7 +1774,7 @@
         "emoji": "🍊",
         "colorBg": "#FFF3E0",
         "colorAccent": "#FF9800",
-        "audio": "апельсин",
+        "audio": "apelsin",
         "image": "apelsin"
       },
       {
@@ -1696,7 +1786,7 @@
         "emoji": "🍓",
         "colorBg": "#FFE8EC",
         "colorAccent": "#E91E63",
-        "audio": "полуниця",
+        "audio": "polunicia",
         "image": "polunicia"
       },
       {
@@ -1708,7 +1798,7 @@
         "emoji": "🍉",
         "colorBg": "#E8F5E9",
         "colorAccent": "#43A047",
-        "audio": "кавун",
+        "audio": "kavun",
         "image": "kavun"
       },
       {
@@ -1720,7 +1810,7 @@
         "emoji": "🍐",
         "colorBg": "#F1F8E9",
         "colorAccent": "#7CB342",
-        "audio": "груша",
+        "audio": "grusha",
         "image": "grusha"
       },
       {
@@ -1732,7 +1822,7 @@
         "emoji": "🍒",
         "colorBg": "#FFE6E6",
         "colorAccent": "#C62828",
-        "audio": "вишня",
+        "audio": "vishnia",
         "image": "vishnia"
       },
       {
@@ -1744,7 +1834,7 @@
         "emoji": "🍑",
         "colorBg": "#FFF3E0",
         "colorAccent": "#FF8A65",
-        "audio": "персик",
+        "audio": "persik",
         "image": "persik"
       },
       {
@@ -1756,7 +1846,7 @@
         "emoji": "🍋",
         "colorBg": "#FFF8E1",
         "colorAccent": "#FBC02D",
-        "audio": "лимон",
+        "audio": "limon",
         "image": "limon"
       },
       {
@@ -1768,7 +1858,7 @@
         "emoji": "🍞",
         "colorBg": "#EFEBE9",
         "colorAccent": "#A1887F",
-        "audio": "хліб",
+        "audio": "hlib",
         "image": "hlib"
       },
       {
@@ -1780,7 +1870,7 @@
         "emoji": "🥛",
         "colorBg": "#F5F5F5",
         "colorAccent": "#90A4AE",
-        "audio": "молоко",
+        "audio": "moloko",
         "image": "moloko"
       },
       {
@@ -1792,7 +1882,7 @@
         "emoji": "🧀",
         "colorBg": "#FFF8E1",
         "colorAccent": "#FFB300",
-        "audio": "сир",
+        "audio": "sir",
         "image": "sir"
       },
       {
@@ -1804,7 +1894,7 @@
         "emoji": "🥣",
         "colorBg": "#FFF3E0",
         "colorAccent": "#D4A373",
-        "audio": "каша_ї",
+        "audio": "kasha",
         "image": "kasha"
       },
       {
@@ -1816,7 +1906,7 @@
         "emoji": "🍲",
         "colorBg": "#FFF3E0",
         "colorAccent": "#E65100",
-        "audio": "суп",
+        "audio": "sup",
         "image": "sup"
       },
       {
@@ -1828,7 +1918,7 @@
         "emoji": "🥟",
         "colorBg": "#EFEBE9",
         "colorAccent": "#8D6E63",
-        "audio": "пиріжок",
+        "audio": "pirijok",
         "image": "pirijok"
       },
       {
@@ -1840,7 +1930,7 @@
         "emoji": "🍪",
         "colorBg": "#FFF3E0",
         "colorAccent": "#FF8F00",
-        "audio": "печиво",
+        "audio": "pechivo",
         "image": "pechivo"
       },
       {
@@ -1852,7 +1942,7 @@
         "emoji": "🎂",
         "colorBg": "#FFE8EC",
         "colorAccent": "#EC407A",
-        "audio": "торт",
+        "audio": "tort",
         "image": "tort"
       },
       {
@@ -1864,7 +1954,7 @@
         "emoji": "🍦",
         "colorBg": "#E0F7FA",
         "colorAccent": "#00ACC1",
-        "audio": "морозиво",
+        "audio": "morozivo",
         "image": "morozivo"
       },
       {
@@ -1876,7 +1966,7 @@
         "emoji": "🥟",
         "colorBg": "#FFE8EC",
         "colorAccent": "#E91E63",
-        "audio": "вареник",
+        "audio": "varenik",
         "image": "varenik"
       },
       {
@@ -1888,7 +1978,7 @@
         "emoji": "🥕",
         "colorBg": "#FFF3E0",
         "colorAccent": "#FF9800",
-        "audio": "морква",
+        "audio": "morkva",
         "image": "morkva"
       },
       {
@@ -1900,7 +1990,7 @@
         "emoji": "🥒",
         "colorBg": "#E8F5E9",
         "colorAccent": "#43A047",
-        "audio": "огірок",
+        "audio": "ogirok",
         "image": "ogirok"
       },
       {
@@ -1912,7 +2002,7 @@
         "emoji": "🍅",
         "colorBg": "#FFE6E6",
         "colorAccent": "#E53935",
-        "audio": "помідор",
+        "audio": "pomidor",
         "image": "pomidor"
       },
       {
@@ -1924,7 +2014,7 @@
         "emoji": "🥔",
         "colorBg": "#EFEBE9",
         "colorAccent": "#A1887F",
-        "audio": "картопля",
+        "audio": "kartoplia",
         "image": "kartoplia"
       },
       {
@@ -1936,7 +2026,7 @@
         "emoji": "🌽",
         "colorBg": "#FFF8E1",
         "colorAccent": "#FDD835",
-        "audio": "кукурудза",
+        "audio": "kukurudza",
         "image": "kukurudza"
       },
       {
@@ -1948,7 +2038,7 @@
         "emoji": "🎃",
         "colorBg": "#FFF3E0",
         "colorAccent": "#FF6D00",
-        "audio": "гарбуз",
+        "audio": "garbuz",
         "image": "garbuz"
       },
       {
@@ -1960,7 +2050,7 @@
         "emoji": "🍯",
         "colorBg": "#FFF8E1",
         "colorAccent": "#FFB300",
-        "audio": "мед",
+        "audio": "med",
         "image": "med"
       },
       {
@@ -1972,7 +2062,7 @@
         "emoji": "🥚",
         "colorBg": "#FFF8E1",
         "colorAccent": "#D4A373",
-        "audio": "яєчко",
+        "audio": "yayechko",
         "image": "yaice"
       },
       {
@@ -1984,7 +2074,7 @@
         "emoji": "🍬",
         "colorBg": "#F3E5F5",
         "colorAccent": "#AB47BC",
-        "audio": "цукерка",
+        "audio": "cukerka",
         "image": "cukerka"
       },
       {
@@ -1996,7 +2086,7 @@
         "emoji": "💧",
         "colorBg": "#E3F2FD",
         "colorAccent": "#42A5F5",
-        "audio": "водичка_ї",
+        "audio": "vodichka",
         "image": "voda"
       }
     ]
@@ -2017,7 +2107,7 @@
         "emoji": "🍎",
         "colorBg": "#FFE6E6",
         "colorAccent": "#E74C3C",
-        "audio": "червоний",
+        "audio": "red",
         "image": "red"
       },
       {
@@ -2029,7 +2119,7 @@
         "emoji": "🌌",
         "colorBg": "#E3F2FD",
         "colorAccent": "#1976D2",
-        "audio": "синій",
+        "audio": "blue",
         "image": "blue"
       },
       {
@@ -2041,7 +2131,7 @@
         "emoji": "☀️",
         "colorBg": "#FFF8E1",
         "colorAccent": "#FDD835",
-        "audio": "жовтий",
+        "audio": "yellow",
         "image": "yellow"
       },
       {
@@ -2053,7 +2143,7 @@
         "emoji": "🌿",
         "colorBg": "#E8F5E9",
         "colorAccent": "#43A047",
-        "audio": "зелений",
+        "audio": "green",
         "image": "green"
       },
       {
@@ -2065,7 +2155,7 @@
         "emoji": "❄️",
         "colorBg": "#F5F5F5",
         "colorAccent": "#90A4AE",
-        "audio": "білий",
+        "audio": "white",
         "image": "white"
       },
       {
@@ -2077,7 +2167,7 @@
         "emoji": "🐈‍⬛",
         "colorBg": "#E8EAF6",
         "colorAccent": "#37474F",
-        "audio": "чорний",
+        "audio": "black",
         "image": "black"
       },
       {
@@ -2089,7 +2179,7 @@
         "emoji": "🍊",
         "colorBg": "#FFF3E0",
         "colorAccent": "#FF9800",
-        "audio": "помаранчевий",
+        "audio": "orange",
         "image": "orange"
       },
       {
@@ -2101,7 +2191,7 @@
         "emoji": "🌸",
         "colorBg": "#FFE8EC",
         "colorAccent": "#E91E63",
-        "audio": "рожевий",
+        "audio": "pink",
         "image": "pink"
       },
       {
@@ -2113,7 +2203,7 @@
         "emoji": "🍇",
         "colorBg": "#F3E5F5",
         "colorAccent": "#9C27B0",
-        "audio": "фіолетовий",
+        "audio": "purple",
         "image": "purple"
       },
       {
@@ -2125,7 +2215,7 @@
         "emoji": "🧸",
         "colorBg": "#EFEBE9",
         "colorAccent": "#8D6E63",
-        "audio": "коричневий",
+        "audio": "brown",
         "image": "brown"
       },
       {
@@ -2137,7 +2227,7 @@
         "emoji": "☁️",
         "colorBg": "#F0F0F5",
         "colorAccent": "#78909C",
-        "audio": "сірий",
+        "audio": "gray",
         "image": "gray"
       },
       {
@@ -2149,7 +2239,7 @@
         "emoji": "🌊",
         "colorBg": "#E0F7FA",
         "colorAccent": "#00ACC1",
-        "audio": "блакитний",
+        "audio": "sky-blue",
         "image": "sky-blue"
       },
       {
@@ -2161,7 +2251,7 @@
         "emoji": "⭐",
         "colorBg": "#FFF8E1",
         "colorAccent": "#FFD700",
-        "audio": "золотий",
+        "audio": "gold",
         "image": "gold"
       },
       {
@@ -2173,7 +2263,7 @@
         "emoji": "⚽",
         "colorBg": "#E8F5E9",
         "colorAccent": "#66BB6A",
-        "audio": "коло",
+        "audio": "circle",
         "image": "circle"
       },
       {
@@ -2185,7 +2275,7 @@
         "emoji": "🪟",
         "colorBg": "#E3F2FD",
         "colorAccent": "#42A5F5",
-        "audio": "квадрат",
+        "audio": "square",
         "image": "square"
       },
       {
@@ -2197,7 +2287,7 @@
         "emoji": "🏠",
         "colorBg": "#FFF3E0",
         "colorAccent": "#FF7043",
-        "audio": "трикутник",
+        "audio": "triangle",
         "image": "triangle"
       },
       {
@@ -2209,7 +2299,7 @@
         "emoji": "🌟",
         "colorBg": "#FFF8E1",
         "colorAccent": "#FBC02D",
-        "audio": "зірка",
+        "audio": "star",
         "image": "star"
       },
       {
@@ -2233,7 +2323,7 @@
         "emoji": "🥚",
         "colorBg": "#FFF8E1",
         "colorAccent": "#FFB300",
-        "audio": "овал",
+        "audio": "oval",
         "image": "oval"
       },
       {
@@ -2245,7 +2335,7 @@
         "emoji": "🪁",
         "colorBg": "#E8EAF6",
         "colorAccent": "#7C4DFF",
-        "audio": "ромб",
+        "audio": "diamond",
         "image": "diamond"
       },
       {
@@ -2257,7 +2347,7 @@
         "emoji": "🐘",
         "colorBg": "#F0F0F5",
         "colorAccent": "#78909C",
-        "audio": "великий",
+        "audio": "big",
         "image": "big"
       },
       {
@@ -2269,7 +2359,7 @@
         "emoji": "🐭",
         "colorBg": "#FFF3E0",
         "colorAccent": "#D4A373",
-        "audio": "маленький",
+        "audio": "little",
         "image": "little"
       },
       {
@@ -2281,7 +2371,7 @@
         "emoji": "🐍",
         "colorBg": "#E8F5E9",
         "colorAccent": "#66BB6A",
-        "audio": "довгий",
+        "audio": "long",
         "image": "long"
       },
       {
@@ -2293,7 +2383,7 @@
         "emoji": "🏀",
         "colorBg": "#FFF3E0",
         "colorAccent": "#FF9800",
-        "audio": "круглий",
+        "audio": "round",
         "image": "round"
       },
       {
@@ -2305,7 +2395,7 @@
         "emoji": "🐱",
         "colorBg": "#FFF8E1",
         "colorAccent": "#FFB347",
-        "audio": "пухнастий",
+        "audio": "fluffy",
         "image": "fluffy"
       },
       {
@@ -2317,7 +2407,7 @@
         "emoji": "🌈",
         "colorBg": "#F3E5F5",
         "colorAccent": "#AB47BC",
-        "audio": "яскравий",
+        "audio": "bright",
         "image": "bright"
       },
       {
@@ -2329,7 +2419,7 @@
         "emoji": "🐝",
         "colorBg": "#FFF8E1",
         "colorAccent": "#FDD835",
-        "audio": "смугастий",
+        "audio": "striped",
         "image": "striped"
       },
       {
@@ -2341,7 +2431,7 @@
         "emoji": "🦒",
         "colorBg": "#FFF3E0",
         "colorAccent": "#D4A373",
-        "audio": "плямистий",
+        "audio": "spotted",
         "image": "spotted"
       },
       {
@@ -2353,7 +2443,7 @@
         "emoji": "💧",
         "colorBg": "#E3F2FD",
         "colorAccent": "#42A5F5",
-        "audio": "прозорий",
+        "audio": "transparent",
         "image": "transparent"
       },
       {
@@ -2365,7 +2455,7 @@
         "emoji": "🦋",
         "colorBg": "#F3E5F5",
         "colorAccent": "#9C27B0",
-        "audio": "різнобарвний",
+        "audio": "variegated",
         "image": "variegated"
       }
     ]
@@ -2386,7 +2476,7 @@
         "emoji": "🧠",
         "colorBg": "#F3E5F5",
         "colorAccent": "#9C27B0",
-        "audio": "голова",
+        "audio": "head",
         "image": "head"
       },
       {
@@ -2398,7 +2488,7 @@
         "emoji": "👀",
         "colorBg": "#E3F2FD",
         "colorAccent": "#1976D2",
-        "audio": "очі",
+        "audio": "eyes",
         "image": "eyes"
       },
       {
@@ -2410,7 +2500,7 @@
         "emoji": "👂",
         "colorBg": "#FFF8E1",
         "colorAccent": "#FFB300",
-        "audio": "вуха",
+        "audio": "ears",
         "image": "ears"
       },
       {
@@ -2422,7 +2512,7 @@
         "emoji": "👃",
         "colorBg": "#FFE8EC",
         "colorAccent": "#E91E63",
-        "audio": "ніс",
+        "audio": "nose",
         "image": "nose"
       },
       {
@@ -2434,7 +2524,7 @@
         "emoji": "👄",
         "colorBg": "#FFE6E6",
         "colorAccent": "#E74C3C",
-        "audio": "рот",
+        "audio": "mouse",
         "image": "mouse"
       },
       {
@@ -2446,7 +2536,7 @@
         "emoji": "🦷",
         "colorBg": "#F5F5F5",
         "colorAccent": "#90A4AE",
-        "audio": "зуби",
+        "audio": "teeth",
         "image": "teeth"
       },
       {
@@ -2458,7 +2548,7 @@
         "emoji": "👅",
         "colorBg": "#FFE8EC",
         "colorAccent": "#EC407A",
-        "audio": "язик",
+        "audio": "tonge",
         "image": "tonge"
       },
       {
@@ -2470,7 +2560,7 @@
         "emoji": "💇",
         "colorBg": "#FFF3E0",
         "colorAccent": "#D4A373",
-        "audio": "волосся",
+        "audio": "hair",
         "image": "hair"
       },
       {
@@ -2482,7 +2572,7 @@
         "emoji": "🦒",
         "colorBg": "#E8F5E9",
         "colorAccent": "#66BB6A",
-        "audio": "шия",
+        "audio": "neck",
         "image": "neck"
       },
       {
@@ -2494,7 +2584,7 @@
         "emoji": "💪",
         "colorBg": "#E3F2FD",
         "colorAccent": "#42A5F5",
-        "audio": "плечі",
+        "audio": "sholdes",
         "image": "sholdes"
       },
       {
@@ -2506,7 +2596,7 @@
         "emoji": "🤗",
         "colorBg": "#FFE8EC",
         "colorAccent": "#E91E63",
-        "audio": "руки",
+        "audio": "hands",
         "image": "hands"
       },
       {
@@ -2518,7 +2608,7 @@
         "emoji": "✋",
         "colorBg": "#FFF8E1",
         "colorAccent": "#FDD835",
-        "audio": "пальчики",
+        "audio": "fingers",
         "image": "fingers"
       },
       {
@@ -2530,7 +2620,7 @@
         "emoji": "🍽️",
         "colorBg": "#FFF3E0",
         "colorAccent": "#FF9800",
-        "audio": "живіт",
+        "audio": "stomack",
         "image": "stomack"
       },
       {
@@ -2542,7 +2632,7 @@
         "emoji": "🧘",
         "colorBg": "#E8F5E9",
         "colorAccent": "#43A047",
-        "audio": "спина",
+        "audio": "back",
         "image": "back"
       },
       {
@@ -2554,7 +2644,7 @@
         "emoji": "🦵",
         "colorBg": "#E3F2FD",
         "colorAccent": "#5DADE2",
-        "audio": "ноги",
+        "audio": "legs",
         "image": "legs"
       },
       {
@@ -2566,7 +2656,7 @@
         "emoji": "🏃",
         "colorBg": "#FFF3E0",
         "colorAccent": "#FF7043",
-        "audio": "коліна",
+        "audio": "knees",
         "image": "knees"
       },
       {
@@ -2578,7 +2668,7 @@
         "emoji": "🦶",
         "colorBg": "#EFEBE9",
         "colorAccent": "#8D6E63",
-        "audio": "ступні",
+        "audio": "foots",
         "image": "foots"
       },
       {
@@ -2602,7 +2692,7 @@
         "emoji": "🫁",
         "colorBg": "#E0F7FA",
         "colorAccent": "#00ACC1",
-        "audio": "легені",
+        "audio": "lungs",
         "image": "lungs"
       },
       {
@@ -2614,7 +2704,7 @@
         "emoji": "💪",
         "colorBg": "#E8EAF6",
         "colorAccent": "#7C4DFF",
-        "audio": "лікоть",
+        "audio": "elbow",
         "image": "elbow"
       },
       {
@@ -2626,7 +2716,7 @@
         "emoji": "👏",
         "colorBg": "#FFF8E1",
         "colorAccent": "#FFB347",
-        "audio": "долоні",
+        "audio": "palms",
         "image": "palms"
       },
       {
@@ -2638,7 +2728,7 @@
         "emoji": "🤨",
         "colorBg": "#F3E5F5",
         "colorAccent": "#AB47BC",
-        "audio": "брови",
+        "audio": "eyebrows",
         "image": "eyebrows"
       },
       {
@@ -2650,7 +2740,7 @@
         "emoji": "😊",
         "colorBg": "#FFE8EC",
         "colorAccent": "#F06292",
-        "audio": "щоки",
+        "audio": "cheeks",
         "image": "cheeks"
       },
       {
@@ -2662,7 +2752,7 @@
         "emoji": "😌",
         "colorBg": "#E8F5E9",
         "colorAccent": "#66BB6A",
-        "audio": "чоло",
+        "audio": "forehead",
         "image": "forehead"
       },
       {
@@ -2674,7 +2764,7 @@
         "emoji": "🧔",
         "colorBg": "#EFEBE9",
         "colorAccent": "#A1887F",
-        "audio": "підборіддя",
+        "audio": "chin",
         "image": "chin"
       },
       {
@@ -2686,7 +2776,7 @@
         "emoji": "💅",
         "colorBg": "#F3E5F5",
         "colorAccent": "#CE93D8",
-        "audio": "нігті",
+        "audio": "neils",
         "image": "neils"
       },
       {
@@ -2698,7 +2788,7 @@
         "emoji": "🤚",
         "colorBg": "#FFF3E0",
         "colorAccent": "#D4A373",
-        "audio": "шкіра",
+        "audio": "skin",
         "image": "skin"
       },
       {
@@ -2710,7 +2800,7 @@
         "emoji": "😄",
         "colorBg": "#FFF8E1",
         "colorAccent": "#FDD835",
-        "audio": "пупок",
+        "audio": "jellybutton",
         "image": "jellybutton"
       },
       {
@@ -2722,7 +2812,7 @@
         "emoji": "😁",
         "colorBg": "#FFF0F5",
         "colorAccent": "#FF69B4",
-        "audio": "усмішка",
+        "audio": "smile",
         "image": "smile"
       },
       {
@@ -2734,7 +2824,7 @@
         "emoji": "🧒",
         "colorBg": "#E8EAF6",
         "colorAccent": "#5C6BC0",
-        "audio": "тіло",
+        "audio": "body",
         "image": "body"
       }
     ]
@@ -2754,7 +2844,9 @@
         "colorBg": "#E3F2FD",
         "colorAccent": "#0277BD",
         "image": "voda",
-        "audio": "ph01"
+        "audio": "ph01",
+        "soundEn": "I'm thirsty",
+        "transcription": "[aɪm ˈθɜːrsti]"
       },
       {
         "id": "ph02",
@@ -2764,7 +2856,9 @@
         "colorBg": "#FFF3E0",
         "colorAccent": "#E65100",
         "image": "stomack",
-        "audio": "ph02"
+        "audio": "ph02",
+        "soundEn": "I'm hungry",
+        "transcription": "[aɪm ˈhʌŋɡri]"
       },
       {
         "id": "ph03",
@@ -2774,7 +2868,9 @@
         "colorBg": "#EDE7F6",
         "colorAccent": "#6A1B9A",
         "image": "en_im_sleepy",
-        "audio": "ph03"
+        "audio": "ph03",
+        "soundEn": "I'm sleepy",
+        "transcription": "[aɪm ˈsliːpi]"
       },
       {
         "id": "ph04",
@@ -2784,7 +2880,9 @@
         "colorBg": "#E3F2FD",
         "colorAccent": "#1565C0",
         "image": "en_im_cold",
-        "audio": "ph04"
+        "audio": "ph04",
+        "soundEn": "I'm cold",
+        "transcription": "[aɪm koʊld]"
       },
       {
         "id": "ph05",
@@ -2794,7 +2892,9 @@
         "colorBg": "#FFF8E1",
         "colorAccent": "#FF8F00",
         "image": "en_im_hot",
-        "audio": "ph05"
+        "audio": "ph05",
+        "soundEn": "I'm hot",
+        "transcription": "[aɪm hɒt]"
       },
       {
         "id": "ph06",
@@ -2804,7 +2904,9 @@
         "colorBg": "#FCE4EC",
         "colorAccent": "#AD1457",
         "image": "en_wheres_mommy",
-        "audio": "ph06"
+        "audio": "ph06",
+        "soundEn": "Where's Mommy?",
+        "transcription": "[weərz ˈmɒmi]"
       },
       {
         "id": "ph07",
@@ -2814,7 +2916,9 @@
         "colorBg": "#E8EAF6",
         "colorAccent": "#3949AB",
         "image": "en_wheres_daddy",
-        "audio": "ph07"
+        "audio": "ph07",
+        "soundEn": "Where's Daddy?",
+        "transcription": "[weərz ˈdædi]"
       },
       {
         "id": "ph08",
@@ -2824,7 +2928,9 @@
         "colorBg": "#FFF8E1",
         "colorAccent": "#FF8F00",
         "image": "en_come_here",
-        "audio": "ph08"
+        "audio": "ph08",
+        "soundEn": "Come to me",
+        "transcription": "[kʌm tuː miː]"
       },
       {
         "id": "ph09",
@@ -2834,7 +2940,9 @@
         "colorBg": "#FCE4EC",
         "colorAccent": "#C62828",
         "image": "love",
-        "audio": "ph09"
+        "audio": "ph09",
+        "soundEn": "I love you",
+        "transcription": "[aɪ lʌv juː]"
       },
       {
         "id": "ph10",
@@ -2844,7 +2952,9 @@
         "colorBg": "#FFF3E0",
         "colorAccent": "#E65100",
         "image": "hug",
-        "audio": "ph10"
+        "audio": "ph10",
+        "soundEn": "Hug me",
+        "transcription": "[hʌɡ miː]"
       },
       {
         "id": "ph11",
@@ -2854,7 +2964,9 @@
         "colorBg": "#E8F5E9",
         "colorAccent": "#2E7D32",
         "image": "thanks",
-        "audio": "ph11"
+        "audio": "ph11",
+        "soundEn": "Thank you",
+        "transcription": "[ˈθæŋk juː]"
       },
       {
         "id": "ph12",
@@ -2864,7 +2976,9 @@
         "colorBg": "#E8F5E9",
         "colorAccent": "#388E3C",
         "image": "please_uk",
-        "audio": "ph12"
+        "audio": "ph12",
+        "soundEn": "Please",
+        "transcription": "[pliːz]"
       },
       {
         "id": "ph13",
@@ -2874,7 +2988,9 @@
         "colorBg": "#EDE7F6",
         "colorAccent": "#6A1B9A",
         "image": "en_sorry",
-        "audio": "ph13"
+        "audio": "ph13",
+        "soundEn": "Sorry",
+        "transcription": "[ˈsɒri]"
       },
       {
         "id": "ph14",
@@ -2884,7 +3000,9 @@
         "colorBg": "#E1F5FE",
         "colorAccent": "#0288D1",
         "image": "en_hello",
-        "audio": "ph14"
+        "audio": "ph14",
+        "soundEn": "Hello!",
+        "transcription": "[həˈloʊ]"
       },
       {
         "id": "ph15",
@@ -2894,7 +3012,9 @@
         "colorBg": "#F3E5F5",
         "colorAccent": "#7B1FA2",
         "image": "en_bye_bye",
-        "audio": "ph15"
+        "audio": "ph15",
+        "soundEn": "Goodbye",
+        "transcription": "[ɡʊdˈbaɪ]"
       },
       {
         "id": "ph16",
@@ -2904,7 +3024,9 @@
         "colorBg": "#FFF8E1",
         "colorAccent": "#FF8F00",
         "image": "en_give_me",
-        "audio": "ph16"
+        "audio": "ph16",
+        "soundEn": "Give me",
+        "transcription": "[ɡɪv miː]"
       },
       {
         "id": "ph17",
@@ -2914,7 +3036,9 @@
         "colorBg": "#FFEBEE",
         "colorAccent": "#C62828",
         "image": "en_help_me",
-        "audio": "ph17"
+        "audio": "ph17",
+        "soundEn": "Help me",
+        "transcription": "[help miː]"
       },
       {
         "id": "ph18",
@@ -2924,7 +3048,9 @@
         "colorBg": "#E1F5FE",
         "colorAccent": "#0277BD",
         "image": "en_again",
-        "audio": "ph18"
+        "audio": "ph18",
+        "soundEn": "Again",
+        "transcription": "[əˈɡen]"
       },
       {
         "id": "ph19",
@@ -2934,7 +3060,9 @@
         "colorBg": "#FFEBEE",
         "colorAccent": "#B71C1C",
         "image": "en_no",
-        "audio": "ph19"
+        "audio": "ph19",
+        "soundEn": "I don't want to",
+        "transcription": "[aɪ doʊnt wɒnt tuː]"
       },
       {
         "id": "ph20",
@@ -2944,7 +3072,9 @@
         "colorBg": "#FFF9C4",
         "colorAccent": "#F57F17",
         "image": "en_wait",
-        "audio": "ph20"
+        "audio": "ph20",
+        "soundEn": "Wait",
+        "transcription": "[weɪt]"
       },
       {
         "id": "ph21",
@@ -2954,7 +3084,9 @@
         "colorBg": "#FCE4EC",
         "colorAccent": "#AD1457",
         "image": "en_it_hurts",
-        "audio": "ph21"
+        "audio": "ph21",
+        "soundEn": "It hurts",
+        "transcription": "[ɪt hɜːrts]"
       },
       {
         "id": "ph22",
@@ -2964,7 +3096,9 @@
         "colorBg": "#EDE7F6",
         "colorAccent": "#4527A0",
         "image": "sad",
-        "audio": "ph22"
+        "audio": "ph22",
+        "soundEn": "I'm sad",
+        "transcription": "[aɪm sæd]"
       },
       {
         "id": "ph23",
@@ -2974,7 +3108,9 @@
         "colorBg": "#FFF9C4",
         "colorAccent": "#F9A825",
         "image": "happy",
-        "audio": "ph23"
+        "audio": "ph23",
+        "soundEn": "I'm happy",
+        "transcription": "[aɪm ˈhæpi]"
       },
       {
         "id": "ph24",
@@ -2984,7 +3120,9 @@
         "colorBg": "#E8EAF6",
         "colorAccent": "#283593",
         "image": "scared",
-        "audio": "ph24"
+        "audio": "ph24",
+        "soundEn": "I'm scared",
+        "transcription": "[aɪm skerd]"
       },
       {
         "id": "ph25",
@@ -2994,7 +3132,9 @@
         "colorBg": "#F3E5F5",
         "colorAccent": "#7B1FA2",
         "image": "en_i_dont_know",
-        "audio": "ph25"
+        "audio": "ph25",
+        "soundEn": "I don't know",
+        "transcription": "[aɪ doʊnt noʊ]"
       }
     ]
   },
@@ -3013,7 +3153,9 @@
         "colorBg": "#FFF3E0",
         "colorAccent": "#E65100",
         "image": "en_run",
-        "audio": "act01"
+        "audio": "act01",
+        "soundEn": "RUN",
+        "transcription": "[rʌn]"
       },
       {
         "id": "act02",
@@ -3023,7 +3165,9 @@
         "colorBg": "#F1F8E9",
         "colorAccent": "#558B2F",
         "image": "bunny",
-        "audio": "act02"
+        "audio": "act02",
+        "soundEn": "JUMP",
+        "transcription": "[dʒʌmp]"
       },
       {
         "id": "act03",
@@ -3033,7 +3177,9 @@
         "colorBg": "#FFF8E1",
         "colorAccent": "#F9A825",
         "image": "kasha",
-        "audio": "act03"
+        "audio": "act03",
+        "soundEn": "EAT",
+        "transcription": "[iːt]"
       },
       {
         "id": "act04",
@@ -3043,7 +3189,9 @@
         "colorBg": "#E3F2FD",
         "colorAccent": "#1565C0",
         "image": "voda",
-        "audio": "act04"
+        "audio": "act04",
+        "soundEn": "DRINK",
+        "transcription": "[drɪŋk]"
       },
       {
         "id": "act05",
@@ -3053,7 +3201,9 @@
         "colorBg": "#EDE7F6",
         "colorAccent": "#6A1B9A",
         "image": "baby",
-        "audio": "act05"
+        "audio": "act05",
+        "soundEn": "SLEEP",
+        "transcription": "[sliːp]"
       },
       {
         "id": "act06",
@@ -3063,7 +3213,9 @@
         "colorBg": "#FCE4EC",
         "colorAccent": "#C62828",
         "image": "en_play",
-        "audio": "act06"
+        "audio": "act06",
+        "soundEn": "PLAY",
+        "transcription": "[pleɪ]"
       },
       {
         "id": "act07",
@@ -3073,7 +3225,9 @@
         "colorBg": "#FFF9C4",
         "colorAccent": "#F57F17",
         "image": "nathnenia",
-        "audio": "act07"
+        "audio": "act07",
+        "soundEn": "DRAW",
+        "transcription": "[drɔː]"
       },
       {
         "id": "act08",
@@ -3083,7 +3237,9 @@
         "colorBg": "#FCE4EC",
         "colorAccent": "#AD1457",
         "image": "en_dance",
-        "audio": "act08"
+        "audio": "act08",
+        "soundEn": "DANCE",
+        "transcription": "[dæns]"
       },
       {
         "id": "act09",
@@ -3093,7 +3249,9 @@
         "colorBg": "#E0F7FA",
         "colorAccent": "#00838F",
         "image": "plavati",
-        "audio": "act09"
+        "audio": "act09",
+        "soundEn": "SWIM",
+        "transcription": "[swɪm]"
       },
       {
         "id": "act10",
@@ -3103,7 +3261,9 @@
         "colorBg": "#FFFDE7",
         "colorAccent": "#F9A825",
         "image": "laugh",
-        "audio": "act10"
+        "audio": "act10",
+        "soundEn": "LAUGH",
+        "transcription": "[læf]"
       },
       {
         "id": "act11",
@@ -3113,7 +3273,9 @@
         "colorBg": "#E3F2FD",
         "colorAccent": "#1976D2",
         "image": "sad",
-        "audio": "act11"
+        "audio": "act11",
+        "soundEn": "CRY",
+        "transcription": "[kraɪ]"
       },
       {
         "id": "act12",
@@ -3123,7 +3285,9 @@
         "colorBg": "#E0F2F1",
         "colorAccent": "#00695C",
         "image": "wash_hands",
-        "audio": "act12"
+        "audio": "act12",
+        "soundEn": "WASH",
+        "transcription": "[wɒʃ]"
       },
       {
         "id": "act13",
@@ -3133,7 +3297,9 @@
         "colorBg": "#F3E5F5",
         "colorAccent": "#7B1FA2",
         "audio": "act13",
-        "image": "walk"
+        "image": "walk",
+        "soundEn": "GET DRESSED",
+        "transcription": "[ɡet drest]"
       },
       {
         "id": "act14",
@@ -3143,7 +3309,9 @@
         "colorBg": "#FFF3E0",
         "colorAccent": "#E65100",
         "image": "jti",
-        "audio": "act14"
+        "audio": "act14",
+        "soundEn": "WALK",
+        "transcription": "[wɔːk]"
       },
       {
         "id": "act15",
@@ -3153,7 +3321,9 @@
         "colorBg": "#F1F8E9",
         "colorAccent": "#33691E",
         "image": "en_sit",
-        "audio": "act15"
+        "audio": "act15",
+        "soundEn": "SIT",
+        "transcription": "[sɪt]"
       },
       {
         "id": "act16",
@@ -3163,7 +3333,9 @@
         "colorBg": "#E8EAF6",
         "colorAccent": "#283593",
         "image": "eyebrows",
-        "audio": "act16"
+        "audio": "act16",
+        "soundEn": "LOOK",
+        "transcription": "[lʊk]"
       },
       {
         "id": "act17",
@@ -3173,7 +3345,9 @@
         "colorBg": "#FFF8E1",
         "colorAccent": "#FF8F00",
         "image": "ears",
-        "audio": "act17"
+        "audio": "act17",
+        "soundEn": "LISTEN",
+        "transcription": "[ˈlɪsən]"
       },
       {
         "id": "act18",
@@ -3183,7 +3357,9 @@
         "colorBg": "#FCE4EC",
         "colorAccent": "#E91E63",
         "image": "hug",
-        "audio": "act18"
+        "audio": "act18",
+        "soundEn": "HUG",
+        "transcription": "[hʌɡ]"
       },
       {
         "id": "act19",
@@ -3193,7 +3369,9 @@
         "colorBg": "#F3E5F5",
         "colorAccent": "#8E24AA",
         "image": "en_sing",
-        "audio": "act19"
+        "audio": "act19",
+        "soundEn": "SING",
+        "transcription": "[sɪŋ]"
       },
       {
         "id": "act20",
@@ -3203,7 +3381,9 @@
         "colorBg": "#FFF3E0",
         "colorAccent": "#BF360C",
         "image": "en_throw",
-        "audio": "act20"
+        "audio": "act20",
+        "soundEn": "THROW",
+        "transcription": "[θroʊ]"
       },
       {
         "id": "act21",
@@ -3213,7 +3393,9 @@
         "colorBg": "#E8F5E9",
         "colorAccent": "#2E7D32",
         "image": "en_catch",
-        "audio": "act21"
+        "audio": "act21",
+        "soundEn": "CATCH",
+        "transcription": "[kætʃ]"
       },
       {
         "id": "act22",
@@ -3223,7 +3405,9 @@
         "colorBg": "#E8EAF6",
         "colorAccent": "#1A237E",
         "image": "book",
-        "audio": "act22"
+        "audio": "act22",
+        "soundEn": "READ",
+        "transcription": "[riːd]"
       },
       {
         "id": "act23",
@@ -3233,7 +3417,9 @@
         "colorBg": "#FFF3E0",
         "colorAccent": "#E65100",
         "image": "en_build",
-        "audio": "act23"
+        "audio": "act23",
+        "soundEn": "BUILD",
+        "transcription": "[bɪld]"
       },
       {
         "id": "act24",
@@ -3243,7 +3429,9 @@
         "colorBg": "#FFF8E1",
         "colorAccent": "#F57F17",
         "image": "en_cook",
-        "audio": "act24"
+        "audio": "act24",
+        "soundEn": "COOK",
+        "transcription": "[kʊk]"
       },
       {
         "id": "act25",
@@ -3253,7 +3441,9 @@
         "colorBg": "#E0F2F1",
         "colorAccent": "#004D40",
         "image": "en_help",
-        "audio": "act25"
+        "audio": "act25",
+        "soundEn": "HELP",
+        "transcription": "[help]"
       }
     ]
   },
@@ -3271,7 +3461,10 @@
         "emoji": "🐘",
         "colorBg": "#EDE7F6",
         "colorAccent": "#6A1B9A",
-        "image": "big"
+        "image": "big",
+        "audio": "opp01a",
+        "soundEn": "BIG",
+        "transcription": "[bɪɡ]"
       },
       {
         "id": "opp01b",
@@ -3280,7 +3473,10 @@
         "emoji": "🐭",
         "colorBg": "#F3E5F5",
         "colorAccent": "#AB47BC",
-        "image": "little"
+        "image": "little",
+        "audio": "opp01b",
+        "soundEn": "SMALL",
+        "transcription": "[smɔːl]"
       },
       {
         "id": "opp02a",
@@ -3289,7 +3485,10 @@
         "emoji": "🔥",
         "colorBg": "#FFF3E0",
         "colorAccent": "#E65100",
-        "image": "en_hot"
+        "image": "en_hot",
+        "audio": "opp02a",
+        "soundEn": "HOT",
+        "transcription": "[hɒt]"
       },
       {
         "id": "opp02b",
@@ -3298,7 +3497,10 @@
         "emoji": "❄️",
         "colorBg": "#E3F2FD",
         "colorAccent": "#1565C0",
-        "image": "en_cold"
+        "image": "en_cold",
+        "audio": "opp02b",
+        "soundEn": "COLD",
+        "transcription": "[koʊld]"
       },
       {
         "id": "opp03a",
@@ -3307,7 +3509,10 @@
         "emoji": "😄",
         "colorBg": "#FFFDE7",
         "colorAccent": "#F9A825",
-        "image": "happy"
+        "image": "happy",
+        "audio": "opp03a",
+        "soundEn": "HAPPY",
+        "transcription": "[ˈhæpi]"
       },
       {
         "id": "opp03b",
@@ -3316,7 +3521,10 @@
         "emoji": "😢",
         "colorBg": "#EDE7F6",
         "colorAccent": "#7B1FA2",
-        "image": "sad"
+        "image": "sad",
+        "audio": "opp03b",
+        "soundEn": "SAD",
+        "transcription": "[sæd]"
       },
       {
         "id": "opp04a",
@@ -3325,7 +3533,10 @@
         "emoji": "🐆",
         "colorBg": "#FFF8E1",
         "colorAccent": "#FF8F00",
-        "image": "en_fast"
+        "image": "en_fast",
+        "audio": "opp04a",
+        "soundEn": "FAST",
+        "transcription": "[fæst]"
       },
       {
         "id": "opp04b",
@@ -3334,7 +3545,10 @@
         "emoji": "🐢",
         "colorBg": "#E8F5E9",
         "colorAccent": "#2E7D32",
-        "image": "en_slow"
+        "image": "en_slow",
+        "audio": "opp04b",
+        "soundEn": "SLOW",
+        "transcription": "[sloʊ]"
       },
       {
         "id": "opp05a",
@@ -3343,7 +3557,10 @@
         "emoji": "☀️",
         "colorBg": "#FFFDE7",
         "colorAccent": "#F57F17",
-        "image": "en_day"
+        "image": "en_day",
+        "audio": "opp05a",
+        "soundEn": "DAY",
+        "transcription": "[deɪ]"
       },
       {
         "id": "opp05b",
@@ -3352,7 +3569,10 @@
         "emoji": "🌙",
         "colorBg": "#E8EAF6",
         "colorAccent": "#283593",
-        "image": "en_night"
+        "image": "en_night",
+        "audio": "opp05b",
+        "soundEn": "NIGHT",
+        "transcription": "[naɪt]"
       },
       {
         "id": "opp06a",
@@ -3361,7 +3581,10 @@
         "emoji": "📢",
         "colorBg": "#FCE4EC",
         "colorAccent": "#C62828",
-        "image": "en_loud"
+        "image": "en_loud",
+        "audio": "opp06a",
+        "soundEn": "LOUD",
+        "transcription": "[laʊd]"
       },
       {
         "id": "opp06b",
@@ -3370,7 +3593,10 @@
         "emoji": "🤫",
         "colorBg": "#E0F2F1",
         "colorAccent": "#00695C",
-        "image": "en_quiet"
+        "image": "en_quiet",
+        "audio": "opp06b",
+        "soundEn": "QUIET",
+        "transcription": "[ˈkwaɪət]"
       },
       {
         "id": "opp07a",
@@ -3379,7 +3605,10 @@
         "emoji": "🧼",
         "colorBg": "#E0F7FA",
         "colorAccent": "#00838F",
-        "image": "en_clean"
+        "image": "en_clean",
+        "audio": "opp07a",
+        "soundEn": "CLEAN",
+        "transcription": "[kliːn]"
       },
       {
         "id": "opp07b",
@@ -3388,7 +3617,10 @@
         "emoji": "🤧",
         "colorBg": "#FFF3E0",
         "colorAccent": "#BF360C",
-        "image": "en_dirty"
+        "image": "en_dirty",
+        "audio": "opp07b",
+        "soundEn": "DIRTY",
+        "transcription": "[ˈdɜːrti]"
       },
       {
         "id": "opp08a",
@@ -3397,7 +3629,10 @@
         "emoji": "🏜️",
         "colorBg": "#FFF8E1",
         "colorAccent": "#E65100",
-        "image": "en_dry"
+        "image": "en_dry",
+        "audio": "opp08a",
+        "soundEn": "DRY",
+        "transcription": "[draɪ]"
       },
       {
         "id": "opp08b",
@@ -3406,7 +3641,10 @@
         "emoji": "🌊",
         "colorBg": "#E3F2FD",
         "colorAccent": "#0277BD",
-        "image": "en_wet"
+        "image": "en_wet",
+        "audio": "opp08b",
+        "soundEn": "WET",
+        "transcription": "[wet]"
       },
       {
         "id": "opp09a",
@@ -3415,7 +3653,10 @@
         "emoji": "🦒",
         "colorBg": "#FFF8E1",
         "colorAccent": "#F57F17",
-        "image": "long"
+        "image": "long",
+        "audio": "opp09a",
+        "soundEn": "LONG",
+        "transcription": "[lɒŋ]"
       },
       {
         "id": "opp09b",
@@ -3424,7 +3665,10 @@
         "emoji": "🐧",
         "colorBg": "#E3F2FD",
         "colorAccent": "#1565C0",
-        "image": "en_short"
+        "image": "en_short",
+        "audio": "opp09b",
+        "soundEn": "SHORT",
+        "transcription": "[ʃɔːrt]"
       },
       {
         "id": "opp10a",
@@ -3433,7 +3677,10 @@
         "emoji": "🪨",
         "colorBg": "#ECEFF1",
         "colorAccent": "#455A64",
-        "image": "en_heavy"
+        "image": "en_heavy",
+        "audio": "opp10a",
+        "soundEn": "HEAVY",
+        "transcription": "[ˈhevi]"
       },
       {
         "id": "opp10b",
@@ -3442,7 +3689,10 @@
         "emoji": "🪶",
         "colorBg": "#F1F8E9",
         "colorAccent": "#558B2F",
-        "image": "fluffy"
+        "image": "fluffy",
+        "audio": "opp10b",
+        "soundEn": "LIGHT",
+        "transcription": "[laɪt]"
       },
       {
         "id": "opp11a",
@@ -3451,7 +3701,10 @@
         "emoji": "🚪",
         "colorBg": "#FFF3E0",
         "colorAccent": "#E65100",
-        "image": "en_open"
+        "image": "en_open",
+        "audio": "opp11a",
+        "soundEn": "OPEN",
+        "transcription": "[ˈoʊpən]"
       },
       {
         "id": "opp11b",
@@ -3460,7 +3713,10 @@
         "emoji": "🔒",
         "colorBg": "#ECEFF1",
         "colorAccent": "#37474F",
-        "image": "en_closed"
+        "image": "en_closed",
+        "audio": "opp11b",
+        "soundEn": "CLOSED",
+        "transcription": "[kloʊzd]"
       },
       {
         "id": "opp12a",
@@ -3469,7 +3725,10 @@
         "emoji": "⬆️",
         "colorBg": "#E8EAF6",
         "colorAccent": "#3949AB",
-        "image": "en_up"
+        "image": "en_up",
+        "audio": "opp12a",
+        "soundEn": "UP",
+        "transcription": "[ʌp]"
       },
       {
         "id": "opp12b",
@@ -3478,7 +3737,10 @@
         "emoji": "⬇️",
         "colorBg": "#FCE4EC",
         "colorAccent": "#C62828",
-        "image": "en_down"
+        "image": "en_down",
+        "audio": "opp12b",
+        "soundEn": "DOWN",
+        "transcription": "[daʊn]"
       },
       {
         "id": "opp13a",
@@ -3487,7 +3749,10 @@
         "emoji": "💎",
         "colorBg": "#E3F2FD",
         "colorAccent": "#1565C0",
-        "image": "en_hard"
+        "image": "en_hard",
+        "audio": "opp13a",
+        "soundEn": "HARD",
+        "transcription": "[hɑːrd]"
       },
       {
         "id": "opp13b",
@@ -3496,7 +3761,10 @@
         "emoji": "🧸",
         "colorBg": "#FCE4EC",
         "colorAccent": "#E91E63",
-        "image": "en_soft"
+        "image": "en_im_sleepy",
+        "audio": "opp13b",
+        "soundEn": "SOFT",
+        "transcription": "[sɒft]"
       },
       {
         "id": "opp14a",
@@ -3505,7 +3773,10 @@
         "emoji": "🍽️",
         "colorBg": "#FFF8E1",
         "colorAccent": "#F57F17",
-        "image": "en_full"
+        "image": "en_full",
+        "audio": "opp14a",
+        "soundEn": "FULL",
+        "transcription": "[fʊl]"
       },
       {
         "id": "opp14b",
@@ -3514,7 +3785,10 @@
         "emoji": "🫙",
         "colorBg": "#ECEFF1",
         "colorAccent": "#607D8B",
-        "image": "en_empty"
+        "image": "en_empty",
+        "audio": "opp14b",
+        "soundEn": "EMPTY",
+        "transcription": "[ˈempti]"
       },
       {
         "id": "opp15a",
@@ -3523,7 +3797,10 @@
         "emoji": "👶",
         "colorBg": "#FCE4EC",
         "colorAccent": "#E91E63",
-        "image": "en_young"
+        "image": "syl_op",
+        "audio": "opp15a",
+        "soundEn": "YOUNG",
+        "transcription": "[jʌŋ]"
       },
       {
         "id": "opp15b",
@@ -3532,7 +3809,10 @@
         "emoji": "👴",
         "colorBg": "#FFF3E0",
         "colorAccent": "#8D6E63",
-        "image": "en_old"
+        "image": "en_old",
+        "audio": "opp15b",
+        "soundEn": "OLD",
+        "transcription": "[oʊld]"
       }
     ]
   },
@@ -3551,43 +3831,49 @@
         "colorBg": "#FFEBEE",
         "colorAccent": "#C62828",
         "letter": null,
-        "image": "rak"
+        "image": "rak",
+        "audio": "sr01",
+        "soundEn": "CRAYFISH",
+        "transcription": "[ˈkreɪfɪʃ]"
       },
       {
         "id": "sr02",
-        "sound": "РИБКА",
-        "text": "Рибка плаває: буль-буль!",
+        "sound": "РИБА",
+        "text": "Риба плаває у воді!",
         "emoji": "🐟",
         "colorBg": "#E6F0FF",
         "colorAccent": "#3498DB",
         "image": "fish",
         "soundEn": "FISH",
         "transcription": "[fɪʃ]",
-        "letter": null
+        "letter": null,
+        "audio": "sr02"
       },
       {
         "id": "sr03",
         "sound": "РАКЕТА",
-        "text": "Ракета летить у космос!",
+        "text": "Ракета летить до зірок!",
         "emoji": "🚀",
         "colorBg": "#E8EAF6",
         "colorAccent": "#7C4DFF",
         "image": "raketa",
         "soundEn": "ROCKET",
         "transcription": "[ˈrɒkɪt]",
-        "letter": null
+        "letter": null,
+        "audio": "sr03"
       },
       {
         "id": "sr04",
         "sound": "РАВЛИК",
-        "text": "Равлик повзе повільненько",
+        "text": "Равлик повзе повільно!",
         "emoji": "🐌",
         "colorBg": "#FFF5F0",
         "colorAccent": "#D4A373",
         "image": "snail",
         "soundEn": "SNAIL",
         "transcription": "[sneɪl]",
-        "letter": null
+        "letter": null,
+        "audio": "sr04"
       },
       {
         "id": "sr05",
@@ -3597,7 +3883,10 @@
         "colorBg": "#FFEBEE",
         "colorAccent": "#C62828",
         "image": "en_robot",
-        "letter": null
+        "letter": null,
+        "audio": "sr05",
+        "soundEn": "ROBOT",
+        "transcription": "[ˈroʊbɒt]"
       },
       {
         "id": "sr06",
@@ -3607,17 +3896,10 @@
         "colorBg": "#FFEBEE",
         "colorAccent": "#C62828",
         "letter": null,
-        "image": "romashka"
-      },
-      {
-        "id": "sr07",
-        "sound": "РАКУН",
-        "text": "Ракун миє лапки!",
-        "emoji": "🦝",
-        "colorBg": "#FFEBEE",
-        "colorAccent": "#C62828",
-        "letter": null,
-        "image": null
+        "image": "romashka",
+        "audio": "sr06",
+        "soundEn": "DAISY",
+        "transcription": "[ˈdeɪzi]"
       },
       {
         "id": "sr08",
@@ -3627,7 +3909,10 @@
         "colorBg": "#FFEBEE",
         "colorAccent": "#C62828",
         "letter": null,
-        "image": "ryukzak"
+        "image": "ryukzak",
+        "audio": "sr08",
+        "soundEn": "BACKPACK",
+        "transcription": "[ˈbækpæk]"
       },
       {
         "id": "sr09",
@@ -3637,7 +3922,10 @@
         "colorBg": "#FFEBEE",
         "colorAccent": "#C62828",
         "letter": null,
-        "image": null
+        "image": "ruka",
+        "audio": "sr09",
+        "soundEn": "HAND",
+        "transcription": "[hænd]"
       },
       {
         "id": "sr10",
@@ -3647,7 +3935,10 @@
         "colorBg": "#FFEBEE",
         "colorAccent": "#C62828",
         "letter": null,
-        "image": null
+        "image": "proud",
+        "audio": "sr10",
+        "soundEn": "MOUTH",
+        "transcription": "[maʊθ]"
       },
       {
         "id": "sr11",
@@ -3657,7 +3948,10 @@
         "colorBg": "#FFEBEE",
         "colorAccent": "#C62828",
         "image": "en_zebra",
-        "letter": null
+        "letter": null,
+        "audio": "sr11",
+        "soundEn": "ZEBRA",
+        "transcription": "[ˈzebrə]"
       },
       {
         "id": "sr12",
@@ -3667,19 +3961,23 @@
         "colorBg": "#FFEBEE",
         "colorAccent": "#C62828",
         "image": "en_giraffe",
-        "letter": null
+        "letter": null,
+        "audio": "sr12",
+        "soundEn": "GIRAFFE",
+        "transcription": "[dʒəˈræf]"
       },
       {
         "id": "sr13",
         "sound": "МОРКВА",
-        "text": "Морква — зайчик хрумає!",
+        "text": "Морква — смачна і помаранчева!",
         "emoji": "🥕",
         "colorBg": "#FFF3E0",
         "colorAccent": "#FF9800",
         "image": "morkva",
         "soundEn": "CARROT",
         "transcription": "[ˈkærət]",
-        "letter": null
+        "letter": null,
+        "audio": "sr13"
       },
       {
         "id": "sr14",
@@ -3689,7 +3987,10 @@
         "colorBg": "#FFEBEE",
         "colorAccent": "#C62828",
         "image": "en_tiger",
-        "letter": null
+        "letter": null,
+        "audio": "sr14",
+        "soundEn": "TIGER",
+        "transcription": "[ˈtaɪɡər]"
       },
       {
         "id": "sr15",
@@ -3699,7 +4000,10 @@
         "colorBg": "#FFEBEE",
         "colorAccent": "#C62828",
         "image": "en_drum",
-        "letter": null
+        "letter": null,
+        "audio": "sr15",
+        "soundEn": "DRUM",
+        "transcription": "[drʌm]"
       },
       {
         "id": "sr16",
@@ -3709,7 +4013,10 @@
         "colorBg": "#FFEBEE",
         "colorAccent": "#C62828",
         "letter": null,
-        "image": "krab"
+        "image": "krab",
+        "audio": "sr16",
+        "soundEn": "CRAB",
+        "transcription": "[kræb]"
       },
       {
         "id": "sr17",
@@ -3719,7 +4026,10 @@
         "colorBg": "#FFEBEE",
         "colorAccent": "#C62828",
         "letter": null,
-        "image": "horikh"
+        "image": "horikh",
+        "audio": "sr17",
+        "soundEn": "NUT",
+        "transcription": "[nʌt]"
       },
       {
         "id": "sr18",
@@ -3729,7 +4039,10 @@
         "colorBg": "#FFEBEE",
         "colorAccent": "#C62828",
         "letter": null,
-        "image": null
+        "image": "en_spicy",
+        "audio": "sr18",
+        "soundEn": "PEPPER",
+        "transcription": "[ˈpepər]"
       }
     ],
     "cover": "sound_r"
@@ -3744,50 +4057,54 @@
       {
         "id": "sl01",
         "sound": "ЛЕВ",
-        "text": "Лев хоробрий: р-р-р!",
+        "text": "Лев — цар звірів!",
         "emoji": "🦁",
         "colorBg": "#FFFFF0",
         "colorAccent": "#DAA520",
         "image": "lev",
         "soundEn": "LION",
         "transcription": "[ˈlaɪən]",
-        "letter": null
+        "letter": null,
+        "audio": "sl01"
       },
       {
         "id": "sl02",
         "sound": "ЛИСИЦЯ",
-        "text": "Лисичка руда і спритна",
+        "text": "Лисиця — хитра!",
         "emoji": "🦊",
         "colorBg": "#FFF5E6",
         "colorAccent": "#FF8C42",
         "image": "lisichka",
         "soundEn": "FOX",
         "transcription": "[fɒks]",
-        "letter": null
+        "letter": null,
+        "audio": "sl02"
       },
       {
         "id": "sl03",
         "sound": "ЛИМОН",
-        "text": "Лимон кислий — ой!",
+        "text": "Лимон — кислий!",
         "emoji": "🍋",
         "colorBg": "#FFF8E1",
         "colorAccent": "#FBC02D",
         "image": "limon",
         "soundEn": "LEMON",
         "transcription": "[ˈlemən]",
-        "letter": null
+        "letter": null,
+        "audio": "sl03"
       },
       {
         "id": "sl04",
         "sound": "ЛІТАК",
-        "text": "Літак летить високо!",
+        "text": "Літак летить у небі!",
         "emoji": "✈️",
         "colorBg": "#E3F2FD",
         "colorAccent": "#42A5F5",
         "image": "litak",
         "soundEn": "AIRPLANE",
         "transcription": "[ˈeərpleɪn]",
-        "letter": null
+        "letter": null,
+        "audio": "sl04"
       },
       {
         "id": "sl05",
@@ -3797,7 +4114,10 @@
         "colorBg": "#F3E5F5",
         "colorAccent": "#6A1B9A",
         "letter": null,
-        "image": "leleka"
+        "image": "leleka",
+        "audio": "sl05",
+        "soundEn": "STORK",
+        "transcription": "[stɔːrk]"
       },
       {
         "id": "sl06",
@@ -3807,7 +4127,10 @@
         "colorBg": "#F3E5F5",
         "colorAccent": "#6A1B9A",
         "image": "en_spoon",
-        "letter": null
+        "letter": null,
+        "audio": "sl06",
+        "soundEn": "SPOON",
+        "transcription": "[spuːn]"
       },
       {
         "id": "sl07",
@@ -3817,7 +4140,10 @@
         "colorBg": "#F3E5F5",
         "colorAccent": "#6A1B9A",
         "letter": null,
-        "image": "lebid"
+        "image": "lebid",
+        "audio": "sl07",
+        "soundEn": "SWAN",
+        "transcription": "[swɒn]"
       },
       {
         "id": "sl08",
@@ -3827,7 +4153,10 @@
         "colorBg": "#F3E5F5",
         "colorAccent": "#6A1B9A",
         "letter": null,
-        "image": "likhtar"
+        "image": "likhtar",
+        "audio": "sl08",
+        "soundEn": "LANTERN",
+        "transcription": "[ˈlæntərn]"
       },
       {
         "id": "sl09",
@@ -3837,55 +4166,62 @@
         "colorBg": "#F3E5F5",
         "colorAccent": "#6A1B9A",
         "letter": null,
-        "image": "lopata"
+        "image": "lopata",
+        "audio": "sl09",
+        "soundEn": "SHOVEL",
+        "transcription": "[ˈʃʌvəl]"
       },
       {
         "id": "sl10",
         "sound": "СЛОН",
-        "text": "Слоник великий і добрий",
+        "text": "Слон великий і сильний!",
         "emoji": "🐘",
         "colorBg": "#F0F0F5",
         "colorAccent": "#95A5A6",
         "image": "slon",
         "soundEn": "ELEPHANT",
         "transcription": "[ˈelɪfənt]",
-        "letter": null
+        "letter": null,
+        "audio": "sl10"
       },
       {
         "id": "sl11",
-        "sound": "БІЛОЧКА",
-        "text": "Білочка збирає горішки",
+        "sound": "БІЛКА",
+        "text": "Білка стрибає по деревах!",
         "emoji": "🐿️",
         "colorBg": "#FFF5E6",
         "colorAccent": "#D4A373",
         "image": "bilochka",
         "soundEn": "SQUIRREL",
         "transcription": "[ˈskwɪrəl]",
-        "letter": null
+        "letter": null,
+        "audio": "sl11"
       },
       {
         "id": "sl12",
         "sound": "МОЛОКО",
-        "text": "Молочко біле — корисне!",
+        "text": "Молоко — смачне і корисне!",
         "emoji": "🥛",
         "colorBg": "#F5F5F5",
         "colorAccent": "#90A4AE",
         "image": "moloko",
         "soundEn": "MILK",
         "transcription": "[mɪlk]",
-        "letter": null
+        "letter": null,
+        "audio": "sl12"
       },
       {
         "id": "sl13",
         "sound": "ОЛЕНЬ",
-        "text": "Олень має гарні роги",
+        "text": "Олень має роги!",
         "emoji": "🦌",
         "colorBg": "#FFF5E6",
         "colorAccent": "#A0522D",
         "image": "deer",
         "soundEn": "DEER",
         "transcription": "[dɪər]",
-        "letter": null
+        "letter": null,
+        "audio": "sl13"
       },
       {
         "id": "sl14",
@@ -3895,53 +4231,62 @@
         "colorBg": "#F3E5F5",
         "colorAccent": "#6A1B9A",
         "letter": null,
-        "image": "vylka"
+        "image": "vylka",
+        "audio": "sl14",
+        "soundEn": "FORK",
+        "transcription": "[fɔːrk]"
       },
       {
         "id": "sl15",
         "sound": "ХЛІБ",
-        "text": "Хліб теплий з печі",
+        "text": "Хліб — смачний і теплий!",
         "emoji": "🍞",
         "colorBg": "#EFEBE9",
         "colorAccent": "#A1887F",
         "image": "hlib",
         "soundEn": "BREAD",
         "transcription": "[bred]",
-        "letter": null
+        "letter": null,
+        "audio": "sl15"
       },
       {
         "id": "sl16",
         "sound": "ЦИБУЛЯ",
-        "text": "Цибуля — їдять у суп!",
+        "text": "Цибулю їдять з борщем!",
         "emoji": "🧅",
         "colorBg": "#F3E5F5",
         "colorAccent": "#6A1B9A",
         "letter": null,
-        "image": "tsybulya"
+        "image": "tsybulya",
+        "audio": "sl16",
+        "soundEn": "ONION",
+        "transcription": "[ˈʌnjən]"
       },
       {
         "id": "sl17",
         "sound": "ВЕЛОСИПЕД",
-        "text": "Велосипед — крути педалі!",
+        "text": "Велосипед їде швидко!",
         "emoji": "🚲",
         "colorBg": "#E8F5E9",
         "colorAccent": "#43A047",
         "image": "velosiped",
         "soundEn": "BICYCLE",
         "transcription": "[ˈbaɪsɪkl]",
-        "letter": null
+        "letter": null,
+        "audio": "sl17"
       },
       {
         "id": "sl18",
         "sound": "МЕТЕЛИК",
-        "text": "Метелик літає з квітки на квітку",
+        "text": "Метелик літає!",
         "emoji": "🦋",
         "colorBg": "#F5E6FF",
         "colorAccent": "#9B59B6",
         "image": "butterfly",
         "soundEn": "BUTTERFLY",
         "transcription": "[ˈbʌtərflaɪ]",
-        "letter": null
+        "letter": null,
+        "audio": "sl18"
       }
     ],
     "cover": "sound_l"
@@ -3961,7 +4306,10 @@
         "colorBg": "#E0F2F1",
         "colorAccent": "#00695C",
         "letter": null,
-        "image": "shapka"
+        "image": "shapka",
+        "audio": "shapka",
+        "soundEn": "HAT",
+        "transcription": "[hæt]"
       },
       {
         "id": "ss02",
@@ -3971,7 +4319,10 @@
         "colorBg": "#E0F2F1",
         "colorAccent": "#00695C",
         "letter": null,
-        "image": "sharf"
+        "image": "sharf",
+        "audio": "sharf",
+        "soundEn": "SCARF",
+        "transcription": "[skɑːrf]"
       },
       {
         "id": "ss03",
@@ -3981,7 +4332,10 @@
         "colorBg": "#E0F2F1",
         "colorAccent": "#00695C",
         "letter": null,
-        "image": null
+        "image": "en_chocolate",
+        "audio": "shokolad",
+        "soundEn": "CHOCOLATE",
+        "transcription": "[ˈtʃɒklət]"
       },
       {
         "id": "ss04",
@@ -3991,7 +4345,10 @@
         "colorBg": "#E0F2F1",
         "colorAccent": "#00695C",
         "letter": null,
-        "image": "shuba"
+        "image": "shuba",
+        "audio": "shuba",
+        "soundEn": "FUR COAT",
+        "transcription": "[fɜːr koʊt]"
       },
       {
         "id": "ss05",
@@ -4001,7 +4358,10 @@
         "colorBg": "#E0F2F1",
         "colorAccent": "#00695C",
         "letter": null,
-        "image": "shkola"
+        "image": "shkola",
+        "audio": "shkola",
+        "soundEn": "SCHOOL",
+        "transcription": "[skuːl]"
       },
       {
         "id": "ss06",
@@ -4011,7 +4371,10 @@
         "colorBg": "#E0F2F1",
         "colorAccent": "#00695C",
         "letter": null,
-        "image": "myshka"
+        "image": "myshka",
+        "audio": "myshka",
+        "soundEn": "MOUSE",
+        "transcription": "[maʊs]"
       },
       {
         "id": "ss07",
@@ -4021,31 +4384,36 @@
         "colorBg": "#E0F2F1",
         "colorAccent": "#00695C",
         "letter": null,
-        "image": null
+        "image": "cat",
+        "audio": "kishka",
+        "soundEn": "CAT",
+        "transcription": "[kæt]"
       },
       {
         "id": "ss08",
-        "sound": "АВТОМОБІЛЬ",
-        "text": "Автомобіль їде: бі-бі!",
+        "sound": "МАШИНА",
+        "text": "Машина їде по дорозі!",
         "emoji": "🚗",
         "colorBg": "#FFE6E6",
         "colorAccent": "#E74C3C",
         "image": "avtomobil",
         "soundEn": "CAR",
         "transcription": "[kɑːr]",
-        "letter": null
+        "letter": null,
+        "audio": "mashyna"
       },
       {
         "id": "ss09",
         "sound": "ГРУША",
-        "text": "Груша жовта і м'яка",
+        "text": "Груша — солодка і зелена!",
         "emoji": "🍐",
         "colorBg": "#F1F8E9",
         "colorAccent": "#7CB342",
         "image": "grusha",
         "soundEn": "PEAR",
         "transcription": "[peər]",
-        "letter": null
+        "letter": null,
+        "audio": "grusha_sh"
       },
       {
         "id": "ss10",
@@ -4055,7 +4423,10 @@
         "colorBg": "#E0F2F1",
         "colorAccent": "#00695C",
         "letter": null,
-        "image": "romashka"
+        "image": "romashka",
+        "audio": "romashka_sh",
+        "soundEn": "DAISY",
+        "transcription": "[ˈdeɪzi]"
       },
       {
         "id": "ss11",
@@ -4065,7 +4436,10 @@
         "colorBg": "#E0F2F1",
         "colorAccent": "#00695C",
         "letter": null,
-        "image": "podushka"
+        "image": "podushka",
+        "audio": "podushka",
+        "soundEn": "PILLOW",
+        "transcription": "[ˈpɪloʊ]"
       },
       {
         "id": "ss12",
@@ -4075,7 +4449,10 @@
         "colorBg": "#E0F2F1",
         "colorAccent": "#00695C",
         "letter": null,
-        "image": null
+        "image": "ears",
+        "audio": "vushko",
+        "soundEn": "EAR",
+        "transcription": "[ɪər]"
       },
       {
         "id": "ss13",
@@ -4085,7 +4462,10 @@
         "colorBg": "#E0F2F1",
         "colorAccent": "#00695C",
         "letter": null,
-        "image": "mishok"
+        "image": "mishok",
+        "audio": "mishok",
+        "soundEn": "BAG",
+        "transcription": "[bæɡ]"
       },
       {
         "id": "ss14",
@@ -4095,7 +4475,10 @@
         "colorBg": "#E0F2F1",
         "colorAccent": "#00695C",
         "letter": null,
-        "image": "shyshka"
+        "image": "shyshka",
+        "audio": "shyshka",
+        "soundEn": "CONE",
+        "transcription": "[koʊn]"
       },
       {
         "id": "ss15",
@@ -4105,19 +4488,23 @@
         "colorBg": "#E0F2F1",
         "colorAccent": "#00695C",
         "letter": null,
-        "image": "horoshyna"
+        "image": "horoshyna",
+        "audio": "horoshyna",
+        "soundEn": "PEA",
+        "transcription": "[piː]"
       },
       {
         "id": "ss16",
-        "sound": "ВИШНЯ",
-        "text": "Вишеньки червоні-червоні",
+        "sound": "ЧЕРЕШНЯ",
+        "text": "Черешня — червона і солодка!",
         "emoji": "🍒",
         "colorBg": "#FFE6E6",
         "colorAccent": "#C62828",
         "image": "vishnia",
         "soundEn": "CHERRY",
         "transcription": "[ˈtʃeri]",
-        "letter": null
+        "letter": null,
+        "audio": "chereshnia"
       }
     ],
     "cover": "sound_sh"
@@ -4137,43 +4524,49 @@
         "colorBg": "#E3F2FD",
         "colorAccent": "#1565C0",
         "image": "sun_yellow",
-        "letter": null
+        "letter": null,
+        "audio": "sc01",
+        "soundEn": "SUN",
+        "transcription": "[sʌn]"
       },
       {
         "id": "sc02",
         "sound": "СЛОН",
-        "text": "Слоник великий і добрий",
+        "text": "Слон великий і добрий!",
         "emoji": "🐘",
         "colorBg": "#F0F0F5",
         "colorAccent": "#95A5A6",
         "image": "slon",
         "soundEn": "ELEPHANT",
         "transcription": "[ˈelɪfənt]",
-        "letter": null
+        "letter": null,
+        "audio": "sc02"
       },
       {
         "id": "sc03",
-        "sound": "СОБАЧКА",
-        "text": "Собачка гавкає: гав-гав!",
+        "sound": "СОБАКА",
+        "text": "Собака — вірний друг!",
         "emoji": "🐕",
         "colorBg": "#FFF0E6",
         "colorAccent": "#E67E22",
         "image": "dog",
         "soundEn": "DOG",
         "transcription": "[dɒɡ]",
-        "letter": null
+        "letter": null,
+        "audio": "sc03"
       },
       {
         "id": "sc04",
         "sound": "СОВА",
-        "text": "Совонька мудра: пугу-пугу!",
+        "text": "Сова бачить уночі!",
         "emoji": "🦉",
         "colorBg": "#F5F0E6",
         "colorAccent": "#8B7355",
         "image": "owl",
         "soundEn": "OWL",
         "transcription": "[aʊl]",
-        "letter": null
+        "letter": null,
+        "audio": "sc04"
       },
       {
         "id": "sc05",
@@ -4183,7 +4576,10 @@
         "colorBg": "#E3F2FD",
         "colorAccent": "#1565C0",
         "letter": null,
-        "image": null
+        "image": "sumka",
+        "audio": "sc05",
+        "soundEn": "BAG",
+        "transcription": "[bæɡ]"
       },
       {
         "id": "sc06",
@@ -4193,7 +4589,10 @@
         "colorBg": "#E3F2FD",
         "colorAccent": "#1565C0",
         "image": "snow_white",
-        "letter": null
+        "letter": null,
+        "audio": "sc06",
+        "soundEn": "SNOW",
+        "transcription": "[snoʊ]"
       },
       {
         "id": "sc07",
@@ -4203,7 +4602,10 @@
         "colorBg": "#E3F2FD",
         "colorAccent": "#1565C0",
         "image": "en_salt",
-        "letter": null
+        "letter": null,
+        "audio": "sc07",
+        "soundEn": "SALT",
+        "transcription": "[sɔːlt]"
       },
       {
         "id": "sc08",
@@ -4213,7 +4615,10 @@
         "colorBg": "#E3F2FD",
         "colorAccent": "#1565C0",
         "letter": null,
-        "image": "stil"
+        "image": "stil",
+        "audio": "sc08",
+        "soundEn": "TABLE",
+        "transcription": "[ˈteɪbəl]"
       },
       {
         "id": "sc09",
@@ -4223,7 +4628,10 @@
         "colorBg": "#E3F2FD",
         "colorAccent": "#1565C0",
         "letter": null,
-        "image": null
+        "image": "hart_k",
+        "audio": "sc09",
+        "soundEn": "HEART",
+        "transcription": "[hɑːrt]"
       },
       {
         "id": "sc10",
@@ -4233,19 +4641,23 @@
         "colorBg": "#E3F2FD",
         "colorAccent": "#1565C0",
         "letter": null,
-        "image": null
+        "image": "nose",
+        "audio": "sc10",
+        "soundEn": "NOSE",
+        "transcription": "[noʊz]"
       },
       {
         "id": "sc11",
         "sound": "АВТОБУС",
-        "text": "Автобус везе пасажирів",
+        "text": "Автобус везе пасажирів!",
         "emoji": "🚌",
         "colorBg": "#FFF3E0",
         "colorAccent": "#FF9800",
         "image": "avtobus",
         "soundEn": "BUS",
         "transcription": "[bʌs]",
-        "letter": null
+        "letter": null,
+        "audio": "sc11"
       },
       {
         "id": "sc12",
@@ -4255,19 +4667,23 @@
         "colorBg": "#E3F2FD",
         "colorAccent": "#1565C0",
         "letter": null,
-        "image": "lis"
+        "image": "lis",
+        "audio": "sc12",
+        "soundEn": "FOREST",
+        "transcription": "[ˈfɒrɪst]"
       },
       {
         "id": "sc13",
         "sound": "АПЕЛЬСИН",
-        "text": "Апельсин соковитий!",
+        "text": "Апельсин — кислий і смачний!",
         "emoji": "🍊",
         "colorBg": "#FFF3E0",
         "colorAccent": "#FF9800",
         "image": "apelsin",
         "soundEn": "ORANGE",
         "transcription": "[ˈɒrɪndʒ]",
-        "letter": null
+        "letter": null,
+        "audio": "sc13"
       },
       {
         "id": "sc14",
@@ -4277,29 +4693,36 @@
         "colorBg": "#E3F2FD",
         "colorAccent": "#1565C0",
         "letter": null,
-        "image": "ananas"
+        "image": "ananas",
+        "audio": "sc14",
+        "soundEn": "PINEAPPLE",
+        "transcription": "[ˈpaɪnæpəl]"
       },
       {
         "id": "sc15",
         "sound": "ЛИСИЦЯ",
-        "text": "Лисичка руда і спритна",
+        "text": "Лисиця — хитра і руда!",
         "emoji": "🦊",
         "colorBg": "#FFF5E6",
         "colorAccent": "#FF8C42",
         "image": "lisichka",
         "soundEn": "FOX",
         "transcription": "[fɒks]",
-        "letter": null
+        "letter": null,
+        "audio": "sc15"
       },
       {
         "id": "sc16",
-        "sound": "НО-НО-НО",
-        "text": "Світить місяць у вікно",
+        "sound": "МІСЯЦЬ",
+        "text": "Місяць світить уночі!",
         "emoji": "🌙",
         "colorBg": "#E8EAF6",
         "colorAccent": "#D63031",
         "image": "moon",
-        "letter": null
+        "letter": null,
+        "audio": "sc16",
+        "soundEn": "MOON",
+        "transcription": "[muːn]"
       }
     ],
     "cover": "sound_s"
@@ -4319,7 +4742,10 @@
         "colorBg": "#E8F5E9",
         "colorAccent": "#2E7D32",
         "image": "en_zebra",
-        "letter": null
+        "letter": null,
+        "audio": "sz01",
+        "soundEn": "ZEBRA",
+        "transcription": "[ˈzebrə]"
       },
       {
         "id": "sz02",
@@ -4329,19 +4755,23 @@
         "colorBg": "#E8F5E9",
         "colorAccent": "#2E7D32",
         "letter": null,
-        "image": null
+        "image": "bunny",
+        "audio": "sz02",
+        "soundEn": "BUNNY",
+        "transcription": "[ˈbʌni]"
       },
       {
         "id": "sz03",
         "sound": "ЗІРКА",
-        "text": "Зірочка яскрава — сяє!",
+        "text": "Зірка світить у небі!",
         "emoji": "🌟",
         "colorBg": "#FFF8E1",
         "colorAccent": "#FBC02D",
         "image": "star",
         "soundEn": "STAR",
         "transcription": "[stɑːr]",
-        "letter": null
+        "letter": null,
+        "audio": "sz03"
       },
       {
         "id": "sz04",
@@ -4351,7 +4781,10 @@
         "colorBg": "#E8F5E9",
         "colorAccent": "#2E7D32",
         "letter": null,
-        "image": "zamok"
+        "image": "zamok",
+        "audio": "sz04",
+        "soundEn": "CASTLE",
+        "transcription": "[ˈkæsəl]"
       },
       {
         "id": "sz05",
@@ -4361,19 +4794,23 @@
         "colorBg": "#E8F5E9",
         "colorAccent": "#2E7D32",
         "letter": null,
-        "image": null
+        "image": "snow_white",
+        "audio": "sz05",
+        "soundEn": "WINTER",
+        "transcription": "[ˈwɪntər]"
       },
       {
         "id": "sz06",
-        "sound": "ДОВГИЙ",
-        "text": "Довга змійка повзе: ш-ш-ш!",
+        "sound": "ЗМІЯ",
+        "text": "Змія повзе тихенько!",
         "emoji": "🐍",
         "colorBg": "#E8F5E9",
         "colorAccent": "#66BB6A",
         "image": "long",
         "soundEn": "LONG",
         "transcription": "[lɒŋ]",
-        "letter": null
+        "letter": null,
+        "audio": "sz06"
       },
       {
         "id": "sz07",
@@ -4383,19 +4820,23 @@
         "colorBg": "#E8F5E9",
         "colorAccent": "#2E7D32",
         "letter": null,
-        "image": null
+        "image": "en_rain",
+        "audio": "sz07",
+        "soundEn": "UMBRELLA",
+        "transcription": "[ʌmˈbrelə]"
       },
       {
         "id": "sz08",
-        "sound": "ЗУБКИ",
-        "text": "Зубки чистимо щіткою",
+        "sound": "ЗУБИ",
+        "text": "Зуби треба чистити!",
         "emoji": "🪥",
         "colorBg": "#F0FFFF",
         "colorAccent": "#48C9B0",
         "image": "brush_teeth",
         "soundEn": "TEETH",
         "transcription": "[tiːθ]",
-        "letter": null
+        "letter": null,
+        "audio": "sz08"
       },
       {
         "id": "sz09",
@@ -4405,7 +4846,10 @@
         "colorBg": "#E8F5E9",
         "colorAccent": "#2E7D32",
         "letter": null,
-        "image": "zelen"
+        "image": "zelen",
+        "audio": "sz09",
+        "soundEn": "GREENS",
+        "transcription": "[ɡriːnz]"
       },
       {
         "id": "sz10",
@@ -4415,7 +4859,10 @@
         "colorBg": "#E8F5E9",
         "colorAccent": "#2E7D32",
         "letter": null,
-        "image": "zernyatko"
+        "image": "zernyatko",
+        "audio": "sz10",
+        "soundEn": "SEED",
+        "transcription": "[siːd]"
       },
       {
         "id": "sz11",
@@ -4425,7 +4872,10 @@
         "colorBg": "#E8F5E9",
         "colorAccent": "#2E7D32",
         "letter": null,
-        "image": null
+        "image": "syl_ga",
+        "audio": "sz11",
+        "soundEn": "GOAT",
+        "transcription": "[ɡoʊt]"
       },
       {
         "id": "sz12",
@@ -4435,7 +4885,10 @@
         "colorBg": "#E8F5E9",
         "colorAccent": "#2E7D32",
         "letter": null,
-        "image": "kazka"
+        "image": "kazka",
+        "audio": "sz12",
+        "soundEn": "STORY",
+        "transcription": "[ˈstɔːri]"
       },
       {
         "id": "sz13",
@@ -4445,7 +4898,10 @@
         "colorBg": "#E8F5E9",
         "colorAccent": "#2E7D32",
         "letter": null,
-        "image": "bereza"
+        "image": "bereza",
+        "audio": "sz13",
+        "soundEn": "BIRCH",
+        "transcription": "[bɜːrtʃ]"
       },
       {
         "id": "sz14",
@@ -4455,7 +4911,10 @@
         "colorBg": "#E8F5E9",
         "colorAccent": "#2E7D32",
         "letter": null,
-        "image": "vaza"
+        "image": "vaza",
+        "audio": "sz14",
+        "soundEn": "VASE",
+        "transcription": "[veɪs]"
       },
       {
         "id": "sz15",
@@ -4465,7 +4924,10 @@
         "colorBg": "#E8F5E9",
         "colorAccent": "#2E7D32",
         "image": "en_freeze",
-        "letter": null
+        "letter": null,
+        "audio": "sz15",
+        "soundEn": "FROST",
+        "transcription": "[frɒst]"
       },
       {
         "id": "sz16",
@@ -4475,7 +4937,10 @@
         "colorBg": "#E8F5E9",
         "colorAccent": "#2E7D32",
         "letter": null,
-        "image": null
+        "image": "poizd",
+        "audio": "sz16",
+        "soundEn": "RAILWAY",
+        "transcription": "[ˈreɪlweɪ]"
       }
     ],
     "cover": "sound_z"
@@ -4495,31 +4960,36 @@
         "colorBg": "#FFF8E1",
         "colorAccent": "#F57F17",
         "image": "en_giraffe",
-        "letter": null
+        "letter": null,
+        "audio": "szh01",
+        "soundEn": "GIRAFFE",
+        "transcription": "[dʒəˈræf]"
       },
       {
         "id": "szh02",
-        "sound": "ЖАБКА",
-        "text": "Жабка стрибає: ква-ква!",
+        "sound": "ЖАБА",
+        "text": "Жаба скаче по болоту!",
         "emoji": "🐸",
         "colorBg": "#E6FFE6",
         "colorAccent": "#4CAF50",
         "image": "frog",
         "soundEn": "FROG",
         "transcription": "[frɒɡ]",
-        "letter": null
+        "letter": null,
+        "audio": "szh02"
       },
       {
         "id": "szh03",
-        "sound": "БДЖІЛКА",
-        "text": "Бджілка збирає мед: дзз-дзз!",
+        "sound": "ЖУК",
+        "text": "Жук літає і дзижчить!",
         "emoji": "🐝",
         "colorBg": "#FFFFF0",
         "colorAccent": "#F5B041",
-        "image": "bee",
+        "image": "khrushch",
         "soundEn": "BEE",
         "transcription": "[biː]",
-        "letter": null
+        "letter": null,
+        "audio": "szh03"
       },
       {
         "id": "szh04",
@@ -4529,7 +4999,10 @@
         "colorBg": "#FFF8E1",
         "colorAccent": "#F57F17",
         "letter": null,
-        "image": null
+        "image": "jellybutton",
+        "audio": "szh04",
+        "soundEn": "BELLY",
+        "transcription": "[ˈbeli]"
       },
       {
         "id": "szh05",
@@ -4539,31 +5012,36 @@
         "colorBg": "#FFF8E1",
         "colorAccent": "#F57F17",
         "letter": null,
-        "image": "zholud"
+        "image": "zholud",
+        "audio": "szh05",
+        "soundEn": "ACORN",
+        "transcription": "[ˈeɪkɔːrn]"
       },
       {
         "id": "szh06",
         "sound": "ЖОВТИЙ",
-        "text": "Жовте сонечко сяє!",
+        "text": "Жовтий — колір сонця!",
         "emoji": "☀️",
         "colorBg": "#FFF8E1",
         "colorAccent": "#FDD835",
         "image": "yellow",
         "soundEn": "YELLOW",
         "transcription": "[ˈjeloʊ]",
-        "letter": null
+        "letter": null,
+        "audio": "szh06"
       },
       {
         "id": "szh07",
-        "sound": "ЇЖАЧОК",
-        "text": "Їжачок несе яблучко",
+        "sound": "ЇЖАК",
+        "text": "Їжак колючий!",
         "emoji": "🦔",
         "colorBg": "#FFF5F0",
         "colorAccent": "#C4A882",
         "image": "hedgehog",
         "soundEn": "HEDGEHOG",
         "transcription": "[ˈhedʒhɒɡ]",
-        "letter": null
+        "letter": null,
+        "audio": "szh07"
       },
       {
         "id": "szh08",
@@ -4573,19 +5051,23 @@
         "colorBg": "#FFF8E1",
         "colorAccent": "#F57F17",
         "letter": null,
-        "image": "lyzhi"
+        "image": "lyzhi",
+        "audio": "szh08",
+        "soundEn": "SKIS",
+        "transcription": "[skiːz]"
       },
       {
         "id": "szh09",
-        "sound": "БДЖІЛКА",
-        "text": "Бджілка збирає мед: дзз-дзз!",
+        "sound": "БДЖОЛА",
+        "text": "Бджола збирає мед!",
         "emoji": "🐝",
         "colorBg": "#FFFFF0",
         "colorAccent": "#F5B041",
         "image": "bee",
         "soundEn": "BEE",
         "transcription": "[biː]",
-        "letter": null
+        "letter": null,
+        "audio": "szh09"
       },
       {
         "id": "szh10",
@@ -4595,7 +5077,10 @@
         "colorBg": "#FFF8E1",
         "colorAccent": "#F57F17",
         "letter": null,
-        "image": "nozhytsi"
+        "image": "nozhytsi",
+        "audio": "szh10",
+        "soundEn": "SCISSORS",
+        "transcription": "[ˈsɪzərz]"
       },
       {
         "id": "szh11",
@@ -4605,7 +5090,10 @@
         "colorBg": "#FFF8E1",
         "colorAccent": "#F57F17",
         "letter": null,
-        "image": "vuzhyk"
+        "image": "vuzhyk",
+        "audio": "szh11",
+        "soundEn": "SNAKE",
+        "transcription": "[sneɪk]"
       },
       {
         "id": "szh12",
@@ -4615,7 +5103,10 @@
         "colorBg": "#FFF8E1",
         "colorAccent": "#F57F17",
         "letter": null,
-        "image": null
+        "image": "en_full",
+        "audio": "szh12",
+        "soundEn": "FOOD",
+        "transcription": "[fuːd]"
       },
       {
         "id": "szh13",
@@ -4625,7 +5116,10 @@
         "colorBg": "#FFF8E1",
         "colorAccent": "#F57F17",
         "letter": null,
-        "image": "kryzhyna"
+        "image": "kryzhyna",
+        "audio": "szh13",
+        "soundEn": "ICE",
+        "transcription": "[aɪs]"
       }
     ],
     "cover": "sound_zh"
@@ -4640,14 +5134,15 @@
       {
         "id": "sch01",
         "sound": "ЧЕРЕПАХА",
-        "text": "Черепашка носить хатку",
+        "text": "Черепаха повзе повільно!",
         "emoji": "🐢",
         "colorBg": "#E6FFE6",
         "colorAccent": "#6BCB77",
         "image": "cherepaha",
         "soundEn": "TURTLE",
         "transcription": "[ˈtɜːrtl]",
-        "letter": null
+        "letter": null,
+        "audio": "sch01"
       },
       {
         "id": "sch02",
@@ -4657,19 +5152,23 @@
         "colorBg": "#ECEFF1",
         "colorAccent": "#37474F",
         "letter": null,
-        "image": "chashka"
+        "image": "chashka",
+        "audio": "sch02",
+        "soundEn": "CUP",
+        "transcription": "[kʌp]"
       },
       {
         "id": "sch03",
-        "sound": "ВИШНЯ",
-        "text": "Вишеньки червоні-червоні",
+        "sound": "ЧЕРЕШНЯ",
+        "text": "Черешня солодка і червона!",
         "emoji": "🍒",
         "colorBg": "#FFE6E6",
         "colorAccent": "#C62828",
         "image": "vishnia",
         "soundEn": "CHERRY",
         "transcription": "[ˈtʃeri]",
-        "letter": null
+        "letter": null,
+        "audio": "sch03"
       },
       {
         "id": "sch04",
@@ -4679,7 +5178,10 @@
         "colorBg": "#ECEFF1",
         "colorAccent": "#37474F",
         "letter": null,
-        "image": "choboty"
+        "image": "choboty",
+        "audio": "sch04",
+        "soundEn": "BOOTS",
+        "transcription": "[buːts]"
       },
       {
         "id": "sch05",
@@ -4689,19 +5191,23 @@
         "colorBg": "#ECEFF1",
         "colorAccent": "#37474F",
         "letter": null,
-        "image": "chasnyk"
+        "image": "chasnyk",
+        "audio": "sch05",
+        "soundEn": "GARLIC",
+        "transcription": "[ˈɡɑːrlɪk]"
       },
       {
         "id": "sch06",
         "sound": "ЧОРНИЙ",
-        "text": "Чорний котик — мур-мур!",
+        "text": "Чорний — темний колір!",
         "emoji": "🐈‍⬛",
         "colorBg": "#E8EAF6",
         "colorAccent": "#37474F",
         "image": "black",
         "soundEn": "BLACK",
         "transcription": "[blæk]",
-        "letter": null
+        "letter": null,
+        "audio": "sch06"
       },
       {
         "id": "sch07",
@@ -4711,19 +5217,23 @@
         "colorBg": "#ECEFF1",
         "colorAccent": "#37474F",
         "letter": null,
-        "image": "chaynyk"
+        "image": "chaynyk",
+        "audio": "sch07",
+        "soundEn": "KETTLE",
+        "transcription": "[ˈketəl]"
       },
       {
         "id": "sch08",
-        "sound": "КАЧЕЧКА",
-        "text": "Качечка крякає: кря-кря!",
+        "sound": "КАЧКА",
+        "text": "Качка плаває у воді!",
         "emoji": "🦆",
         "colorBg": "#E6FFFF",
         "colorAccent": "#45B7D1",
         "image": "duck",
         "soundEn": "DUCK",
         "transcription": "[dʌk]",
-        "letter": null
+        "letter": null,
+        "audio": "sch08"
       },
       {
         "id": "sch09",
@@ -4733,31 +5243,36 @@
         "colorBg": "#ECEFF1",
         "colorAccent": "#37474F",
         "letter": null,
-        "image": "klyuch"
+        "image": "klyuch",
+        "audio": "sch09",
+        "soundEn": "KEY",
+        "transcription": "[kiː]"
       },
       {
         "id": "sch10",
         "sound": "М'ЯЧ",
-        "text": "М'яч стрибає: бум-бум!",
+        "text": "М'яч кидають і ловлять!",
         "emoji": "⚽",
         "colorBg": "#E6FFE6",
         "colorAccent": "#6BCB77",
-        "image": "ball",
+        "image": "en_catch",
         "soundEn": "BALL",
         "transcription": "[bɔːl]",
-        "letter": null
+        "letter": null,
+        "audio": "sch10"
       },
       {
         "id": "sch11",
         "sound": "ОЧІ",
-        "text": "Очі бачать все навколо!",
+        "text": "Очі бачать увесь світ!",
         "emoji": "👀",
         "colorBg": "#E3F2FD",
         "colorAccent": "#1976D2",
         "image": "eyes",
         "soundEn": "EYES",
         "transcription": "[aɪz]",
-        "letter": null
+        "letter": null,
+        "audio": "sch11"
       },
       {
         "id": "sch12",
@@ -4767,19 +5282,23 @@
         "colorBg": "#ECEFF1",
         "colorAccent": "#37474F",
         "letter": null,
-        "image": "ruchka"
+        "image": "ruchka",
+        "audio": "sch12",
+        "soundEn": "PEN",
+        "transcription": "[pen]"
       },
       {
         "id": "sch13",
         "sound": "ПЕЧИВО",
-        "text": "Печиво солоденьке",
+        "text": "Печиво смачне і солодке!",
         "emoji": "🍪",
         "colorBg": "#FFF3E0",
         "colorAccent": "#FF8F00",
         "image": "pechivo",
         "soundEn": "COOKIE",
         "transcription": "[ˈkʊki]",
-        "letter": null
+        "letter": null,
+        "audio": "sch13"
       },
       {
         "id": "sch14",
@@ -4789,7 +5308,10 @@
         "colorBg": "#ECEFF1",
         "colorAccent": "#37474F",
         "image": "en_river",
-        "letter": null
+        "letter": null,
+        "audio": "sch14",
+        "soundEn": "RIVER",
+        "transcription": "[ˈrɪvər]"
       },
       {
         "id": "sch15",
@@ -4799,7 +5321,10 @@
         "colorBg": "#ECEFF1",
         "colorAccent": "#37474F",
         "letter": null,
-        "image": "chaplya"
+        "image": "chaplya",
+        "audio": "sch15",
+        "soundEn": "HERON",
+        "transcription": "[ˈhɛrən]"
       }
     ],
     "cover": "sound_ch"
@@ -4819,7 +5344,10 @@
         "colorBg": "#E0F2F1",
         "colorAccent": "#004D40",
         "letter": null,
-        "image": "shchuka"
+        "image": "shchuka",
+        "audio": "sshch01",
+        "soundEn": "PIKE",
+        "transcription": "[paɪk]"
       },
       {
         "id": "sshch02",
@@ -4829,7 +5357,10 @@
         "colorBg": "#E0F2F1",
         "colorAccent": "#004D40",
         "letter": null,
-        "image": null
+        "image": "brush_teeth",
+        "audio": "sshch02",
+        "soundEn": "BRUSH",
+        "transcription": "[brʌʃ]"
       },
       {
         "id": "sshch03",
@@ -4839,7 +5370,10 @@
         "colorBg": "#E0F2F1",
         "colorAccent": "#004D40",
         "letter": null,
-        "image": null
+        "image": "cheeks",
+        "audio": "sshch03",
+        "soundEn": "CHEEKS",
+        "transcription": "[tʃiːks]"
       },
       {
         "id": "sshch04",
@@ -4849,7 +5383,10 @@
         "colorBg": "#E0F2F1",
         "colorAccent": "#004D40",
         "letter": null,
-        "image": null
+        "image": "en_young",
+        "audio": "sshch04",
+        "soundEn": "PUPPY",
+        "transcription": "[ˈpʌpi]"
       },
       {
         "id": "sshch05",
@@ -4859,7 +5396,10 @@
         "colorBg": "#E0F2F1",
         "colorAccent": "#004D40",
         "letter": null,
-        "image": null
+        "image": "happy",
+        "audio": "sshch05",
+        "soundEn": "HAPPINESS",
+        "transcription": "[ˈhæpinəs]"
       },
       {
         "id": "sshch06",
@@ -4869,7 +5409,10 @@
         "colorBg": "#E0F2F1",
         "colorAccent": "#004D40",
         "letter": null,
-        "image": "yashchirka"
+        "image": "yashchirka",
+        "audio": "sshch06",
+        "soundEn": "LIZARD",
+        "transcription": "[ˈlɪzərd]"
       },
       {
         "id": "sshch07",
@@ -4879,7 +5422,10 @@
         "colorBg": "#E0F2F1",
         "colorAccent": "#004D40",
         "letter": null,
-        "image": "yashchyk"
+        "image": "yashchyk",
+        "audio": "sshch07",
+        "soundEn": "BOX",
+        "transcription": "[bɒks]"
       },
       {
         "id": "sshch08",
@@ -4889,7 +5435,10 @@
         "colorBg": "#E0F2F1",
         "colorAccent": "#004D40",
         "letter": null,
-        "image": "borshch"
+        "image": "borshch",
+        "audio": "sshch08",
+        "soundEn": "BORSCHT",
+        "transcription": "[bɔːrʃ]"
       },
       {
         "id": "sshch09",
@@ -4899,7 +5448,10 @@
         "colorBg": "#E0F2F1",
         "colorAccent": "#004D40",
         "letter": null,
-        "image": null
+        "image": "en_wet",
+        "audio": "sshch09",
+        "soundEn": "RAINCOAT",
+        "transcription": "[ˈreɪnkoʊt]"
       },
       {
         "id": "sshch10",
@@ -4909,7 +5461,10 @@
         "colorBg": "#E0F2F1",
         "colorAccent": "#004D40",
         "letter": null,
-        "image": null
+        "image": "fire",
+        "audio": "sshch10",
+        "soundEn": "CAMPFIRE",
+        "transcription": "[ˈkæmpfaɪər]"
       },
       {
         "id": "sshch11",
@@ -4919,7 +5474,10 @@
         "colorBg": "#E0F2F1",
         "colorAccent": "#004D40",
         "letter": null,
-        "image": "khrushch"
+        "image": "khrushch",
+        "audio": "sshch11",
+        "soundEn": "BEETLE",
+        "transcription": "[ˈbiːtəl]"
       }
     ],
     "cover": "sound_shch"
@@ -4939,7 +5497,10 @@
         "colorBg": "#FCE4EC",
         "colorAccent": "#AD1457",
         "letter": null,
-        "image": "tsybulya"
+        "image": "tsybulya",
+        "audio": "sts01",
+        "soundEn": "ONION",
+        "transcription": "[ˈʌnjən]"
       },
       {
         "id": "sts02",
@@ -4949,7 +5510,10 @@
         "colorBg": "#FCE4EC",
         "colorAccent": "#AD1457",
         "letter": null,
-        "image": null
+        "image": "cukerka",
+        "audio": "sts02",
+        "soundEn": "CANDY",
+        "transcription": "[ˈkændi]"
       },
       {
         "id": "sts03",
@@ -4959,7 +5523,10 @@
         "colorBg": "#FCE4EC",
         "colorAccent": "#AD1457",
         "letter": null,
-        "image": "tsyrk"
+        "image": "tsyrk",
+        "audio": "sts03",
+        "soundEn": "CIRCUS",
+        "transcription": "[ˈsɜːrkəs]"
       },
       {
         "id": "sts04",
@@ -4969,7 +5536,10 @@
         "colorBg": "#FCE4EC",
         "colorAccent": "#AD1457",
         "letter": null,
-        "image": null
+        "image": "en_rose",
+        "audio": "sts04",
+        "soundEn": "BLOSSOM",
+        "transcription": "[ˈblɒsəm]"
       },
       {
         "id": "sts05",
@@ -4979,19 +5549,23 @@
         "colorBg": "#FCE4EC",
         "colorAccent": "#AD1457",
         "letter": null,
-        "image": null
+        "image": "dovira",
+        "audio": "sts05",
+        "soundEn": "PUPPY",
+        "transcription": "[ˈpʌpi]"
       },
       {
         "id": "sts06",
-        "sound": "ЯЄЧКО",
-        "text": "Яєчко — курочка знесла!",
+        "sound": "ЯЙЦЕ",
+        "text": "Яйце кругле і біле!",
         "emoji": "🥚",
         "colorBg": "#FFF8E1",
         "colorAccent": "#D4A373",
         "image": "yaice",
         "soundEn": "EGG",
         "transcription": "[eɡ]",
-        "letter": null
+        "letter": null,
+        "audio": "sts06"
       },
       {
         "id": "sts07",
@@ -5001,19 +5575,23 @@
         "colorBg": "#FCE4EC",
         "colorAccent": "#AD1457",
         "letter": null,
-        "image": null
+        "image": "en_ring",
+        "audio": "sts07",
+        "soundEn": "RING",
+        "transcription": "[rɪŋ]"
       },
       {
         "id": "sts08",
         "sound": "СЕРЦЕ",
-        "text": "Серце — це любов",
+        "text": "Серце б'ється: тук-тук!",
         "emoji": "❤️",
         "colorBg": "#FFE8EC",
         "colorAccent": "#E74C3C",
         "image": "hart_k",
         "soundEn": "HEART",
         "transcription": "[hɑːrt]",
-        "letter": null
+        "letter": null,
+        "audio": "sts08"
       },
       {
         "id": "sts09",
@@ -5023,7 +5601,10 @@
         "colorBg": "#FCE4EC",
         "colorAccent": "#AD1457",
         "letter": null,
-        "image": "palets"
+        "image": "palets",
+        "audio": "sts09",
+        "soundEn": "FINGER",
+        "transcription": "[ˈfɪŋɡər]"
       },
       {
         "id": "sts10",
@@ -5033,7 +5614,10 @@
         "colorBg": "#FCE4EC",
         "colorAccent": "#AD1457",
         "letter": null,
-        "image": "vivtsya"
+        "image": "vivtsya",
+        "audio": "sts10",
+        "soundEn": "SHEEP",
+        "transcription": "[ʃiːp]"
       },
       {
         "id": "sts11",
@@ -5043,7 +5627,10 @@
         "colorBg": "#FCE4EC",
         "colorAccent": "#AD1457",
         "letter": null,
-        "image": "tsyfra"
+        "image": "tsyfra",
+        "audio": "sts11",
+        "soundEn": "NUMBER",
+        "transcription": "[ˈnʌmbər]"
       },
       {
         "id": "sts12",
@@ -5053,7 +5640,10 @@
         "colorBg": "#FCE4EC",
         "colorAccent": "#AD1457",
         "letter": null,
-        "image": "ptytsya"
+        "image": "ptytsya",
+        "audio": "sts12",
+        "soundEn": "BIRD",
+        "transcription": "[bɜːrd]"
       }
     ],
     "cover": "sound_ts"
@@ -5068,209 +5658,278 @@
       {
         "id": "adj01",
         "sound": "ЧЕРВОНИЙ",
-        "text": "Червоний — як яблучко!",
+        "text": "",
         "emoji": "🔴",
         "colorBg": "#FFEBEE",
         "colorAccent": "#C62828",
-        "image": "red"
+        "image": "red",
+        "audio": "adj01",
+        "soundEn": "RED",
+        "transcription": "[red]"
       },
       {
         "id": "adj02",
         "sound": "СИНІЙ",
-        "text": "Синій — як небо!",
+        "text": "",
         "emoji": "🔵",
         "colorBg": "#E3F2FD",
         "colorAccent": "#1565C0",
-        "image": "blue"
+        "image": "blue",
+        "audio": "adj02",
+        "soundEn": "BLUE",
+        "transcription": "[bluː]"
       },
       {
         "id": "adj03",
         "sound": "ЖОВТИЙ",
-        "text": "Жовтий — як сонечко!",
+        "text": "",
         "emoji": "🟡",
         "colorBg": "#FFFDE7",
         "colorAccent": "#F57F17",
-        "image": "yellow"
+        "image": "yellow",
+        "audio": "adj03",
+        "soundEn": "YELLOW",
+        "transcription": "[ˈjeloʊ]"
       },
       {
         "id": "adj04",
         "sound": "ЗЕЛЕНИЙ",
-        "text": "Зелений — як листочок!",
+        "text": "",
         "emoji": "🟢",
         "colorBg": "#E8F5E9",
         "colorAccent": "#2E7D32",
-        "image": "green"
+        "image": "green",
+        "audio": "adj04",
+        "soundEn": "GREEN",
+        "transcription": "[ɡriːn]"
       },
       {
         "id": "adj05",
         "sound": "ПОМАРАНЧЕВИЙ",
-        "text": "Помаранчевий — як морквинка!",
+        "text": "",
         "emoji": "🟠",
         "colorBg": "#FFF3E0",
         "colorAccent": "#E65100",
-        "image": "orange"
+        "image": "orange",
+        "audio": "adj05",
+        "soundEn": "ORANGE",
+        "transcription": "[ˈɒrɪndʒ]"
       },
       {
         "id": "adj06",
         "sound": "ФІОЛЕТОВИЙ",
-        "text": "Фіолетовий — як бузок!",
+        "text": "",
         "emoji": "🟣",
         "colorBg": "#F3E5F5",
         "colorAccent": "#6A1B9A",
-        "image": "purple"
+        "image": "purple",
+        "audio": "adj06",
+        "soundEn": "PURPLE",
+        "transcription": "[ˈpɜːrpəl]"
       },
       {
         "id": "adj07",
         "sound": "РОЖЕВИЙ",
-        "text": "Рожевий — як квіточка!",
+        "text": "",
         "emoji": "🌸",
         "colorBg": "#FCE4EC",
         "colorAccent": "#AD1457",
-        "image": "pink"
+        "image": "pink",
+        "audio": "adj07",
+        "soundEn": "PINK",
+        "transcription": "[pɪŋk]"
       },
       {
         "id": "adj08",
         "sound": "КОРИЧНЕВИЙ",
-        "text": "Коричневий — як шоколад!",
+        "text": "",
         "emoji": "🍫",
         "colorBg": "#EFEBE9",
         "colorAccent": "#4E342E",
-        "image": "brown"
+        "image": "brown",
+        "audio": "adj08",
+        "soundEn": "BROWN",
+        "transcription": "[braʊn]"
       },
       {
         "id": "adj09",
         "sound": "КРУГЛИЙ",
-        "text": "Круглий — як м'ячик!",
+        "text": "",
         "emoji": "⭕",
         "colorBg": "#E3F2FD",
         "colorAccent": "#1565C0",
-        "image": "circle"
+        "image": "circle",
+        "audio": "adj09",
+        "soundEn": "ROUND",
+        "transcription": "[raʊnd]"
       },
       {
         "id": "adj10",
         "sound": "КВАДРАТНИЙ",
-        "text": "Квадратний — як кубик!",
+        "text": "",
         "emoji": "🟦",
         "colorBg": "#E8EAF6",
         "colorAccent": "#3949AB",
-        "image": "square"
+        "image": "square",
+        "audio": "adj10",
+        "soundEn": "SQUARE",
+        "transcription": "[skwer]"
       },
       {
         "id": "adj11",
         "sound": "ТРИКУТНИЙ",
-        "text": "Трикутний — як гірка!",
+        "text": "",
         "emoji": "🔺",
         "colorBg": "#FFF3E0",
         "colorAccent": "#E65100",
-        "image": "triangle"
+        "image": "triangle",
+        "audio": "adj11",
+        "soundEn": "TRIANGLE",
+        "transcription": "[ˈtraɪæŋɡəl]"
       },
       {
         "id": "adj12",
         "sound": "ПУХНАСТИЙ",
-        "text": "Пухнастий — м'яко торкатись!",
+        "text": "",
         "emoji": "🐱",
         "colorBg": "#FCE4EC",
         "colorAccent": "#E91E63",
-        "image": "fluffy"
+        "image": "fluffy",
+        "audio": "adj12",
+        "soundEn": "FLUFFY",
+        "transcription": "[ˈflʌfi]"
       },
       {
         "id": "adj13",
         "sound": "КОЛЮЧИЙ",
-        "text": "Колючий — обережно!",
+        "text": "",
         "emoji": "🦔",
         "colorBg": "#E8F5E9",
         "colorAccent": "#388E3C",
-        "image": "en_prickly"
+        "image": "en_prickly",
+        "audio": "adj13",
+        "soundEn": "SPIKY",
+        "transcription": "[ˈspaɪki]"
       },
       {
         "id": "adj14",
         "sound": "ГЛАДКИЙ",
-        "text": "Гладкий — як скло!",
+        "text": "",
         "emoji": "💎",
         "colorBg": "#E3F2FD",
         "colorAccent": "#0277BD",
-        "image": "en_smooth"
+        "image": "en_smooth",
+        "audio": "adj14",
+        "soundEn": "SMOOTH",
+        "transcription": "[smuːð]"
       },
       {
         "id": "adj15",
         "sound": "СЛИЗЬКИЙ",
-        "text": "Слизький — можна впасти!",
+        "text": "",
         "emoji": "🐟",
         "colorBg": "#E0F2F1",
         "colorAccent": "#00695C",
-        "image": "en_slimy"
+        "image": "en_slimy",
+        "audio": "adj15",
+        "soundEn": "SLIPPERY",
+        "transcription": "[ˈslɪpəri]"
       },
       {
         "id": "adj16",
         "sound": "СОЛОДКИЙ",
-        "text": "Солодкий — як цукерка!",
+        "text": "",
         "emoji": "🍬",
         "colorBg": "#FCE4EC",
         "colorAccent": "#E91E63",
-        "image": "en_sweet"
+        "image": "en_sweet",
+        "audio": "adj16",
+        "soundEn": "SWEET",
+        "transcription": "[swiːt]"
       },
       {
         "id": "adj17",
         "sound": "КИСЛИЙ",
-        "text": "Кислий — як лимончик!",
+        "text": "",
         "emoji": "🍋",
         "colorBg": "#FFFDE7",
         "colorAccent": "#F9A825",
-        "image": "en_sour"
+        "image": "en_sour",
+        "audio": "adj17",
+        "soundEn": "SOUR",
+        "transcription": "[saʊr]"
       },
       {
         "id": "adj18",
         "sound": "ГІРКИЙ",
-        "text": "Гіркий — фу, несмачно!",
+        "text": "",
         "emoji": "🍫",
         "colorBg": "#EFEBE9",
         "colorAccent": "#4E342E",
-        "image": "en_bitter"
+        "image": "en_bitter",
+        "audio": "adj18",
+        "soundEn": "BITTER",
+        "transcription": "[ˈbɪtər]"
       },
       {
         "id": "adj19",
         "sound": "СОЛОНИЙ",
-        "text": "Солоний — як морська вода!",
+        "text": "",
         "emoji": "🧂",
         "colorBg": "#E3F2FD",
         "colorAccent": "#1565C0",
-        "image": "en_salty"
+        "image": "en_salty",
+        "audio": "adj19",
+        "soundEn": "SALTY",
+        "transcription": "[ˈsɔːlti]"
       },
       {
         "id": "adj20",
         "sound": "ТОВСТИЙ",
-        "text": "Товстий — широкий!",
+        "text": "",
         "emoji": "🐘",
         "colorBg": "#FFF3E0",
         "colorAccent": "#E65100",
-        "image": "en_thick"
+        "image": "en_thick",
+        "audio": "adj20",
+        "soundEn": "THICK",
+        "transcription": "[θɪk]"
       },
       {
         "id": "adj21",
         "sound": "ТОНКИЙ",
-        "text": "Тонкий — вузький!",
+        "text": "",
         "emoji": "✏️",
         "colorBg": "#F3E5F5",
         "colorAccent": "#7B1FA2",
-        "image": "en_thin"
+        "image": "en_thin",
+        "audio": "adj21",
+        "soundEn": "THIN",
+        "transcription": "[θɪn]"
       },
       {
         "id": "adj22",
         "sound": "ДОВГИЙ",
-        "text": "Довгий — від початку до кінця!",
+        "text": "",
         "emoji": "📏",
         "colorBg": "#E3F2FD",
         "colorAccent": "#1565C0",
-        "image": "long"
+        "image": "long",
+        "audio": "adj22",
+        "soundEn": "LONG",
+        "transcription": "[lɒŋ]"
       },
       {
         "id": "adj23",
         "sound": "КОРОТКИЙ",
-        "text": "Короткий — трохи!",
+        "text": "",
         "emoji": "✂️",
         "colorBg": "#FCE4EC",
         "colorAccent": "#C62828",
-        "image": "en_short"
+        "image": "en_short",
+        "audio": "adj23",
+        "soundEn": "SHORT",
+        "transcription": "[ʃɔːrt]"
       }
     ]
   }

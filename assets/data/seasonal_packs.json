@@ -48,7 +48,8 @@
         "text": "Зірка світить на ялинці",
         "emoji": "⭐",
         "colorBg": "#FFFDE7",
-        "colorAccent": "#F9A825"
+        "colorAccent": "#F9A825",
+        "audio": "star"
       },
       {
         "id": "sx06",
@@ -64,7 +65,8 @@
         "text": "Олень везе сани по небу",
         "emoji": "🦌",
         "colorBg": "#FFF8E1",
-        "colorAccent": "#E65100"
+        "colorAccent": "#E65100",
+        "audio": "olen"
       },
       {
         "id": "sx08",
@@ -169,7 +171,8 @@
         "text": "Холодне смачне морозиво",
         "emoji": "🍦",
         "colorBg": "#FCE4EC",
-        "colorAccent": "#EC407A"
+        "colorAccent": "#EC407A",
+        "audio": "morozivo"
       },
       {
         "id": "ss04",
@@ -178,7 +181,8 @@
         "emoji": "🍉",
         "colorBg": "#E8F5E9",
         "colorAccent": "#388E3C",
-        "image": "kavun"
+        "image": "kavun",
+        "audio": "kavun"
       },
       {
         "id": "ss05",
@@ -219,7 +223,8 @@
         "text": "Черепаха повзе по камінню",
         "emoji": "🐢",
         "colorBg": "#E8F5E9",
-        "colorAccent": "#388E3C"
+        "colorAccent": "#388E3C",
+        "audio": "cherepaha"
       },
       {
         "id": "ss10",
@@ -228,7 +233,8 @@
         "emoji": "⚽",
         "colorBg": "#ECEFF1",
         "colorAccent": "#546E7A",
-        "image": "myach"
+        "image": "myach",
+        "audio": "miach"
       },
       {
         "id": "ss11",
@@ -252,7 +258,8 @@
         "text": "Стигла червона полуниця",
         "emoji": "🍓",
         "colorBg": "#FCE4EC",
-        "colorAccent": "#C62828"
+        "colorAccent": "#C62828",
+        "audio": "polunicia"
       },
       {
         "id": "ss14",
@@ -269,7 +276,8 @@
         "emoji": "🐬",
         "colorBg": "#E1F5FE",
         "colorAccent": "#0277BD",
-        "image": "delfin"
+        "image": "delfin",
+        "audio": "delfin"
       }
     ],
     "titleEn": "Summer"
@@ -290,7 +298,8 @@
         "text": "Помаранчевий гарбуз восени",
         "emoji": "🎃",
         "colorBg": "#FFF3E0",
-        "colorAccent": "#E65100"
+        "colorAccent": "#E65100",
+        "audio": "garbuz"
       },
       {
         "id": "sa02",
@@ -307,7 +316,8 @@
         "text": "Стигле яблуко в саду",
         "emoji": "🍎",
         "colorBg": "#FFEBEE",
-        "colorAccent": "#C62828"
+        "colorAccent": "#C62828",
+        "audio": "yabluko"
       },
       {
         "id": "sa04",

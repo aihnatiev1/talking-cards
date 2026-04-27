@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/language_provider.dart';
-import '../services/tts_service.dart';
 import '../utils/confetti_overlay_mixin.dart';
 import '../utils/constants.dart';
 import '../utils/game_state_mixin.dart';
@@ -105,13 +104,10 @@ class _PluralGameScreenState extends ConsumerState<PluralGameScreen>
 
   _WordPair get _current => _deck[_index];
 
-  void _speakSingular() {
-    TtsService.instance.speak(_current.singular, locale: 'uk-UA');
-  }
-
-  void _speakPlural() {
-    TtsService.instance.speak(_current.plural, locale: 'uk-UA');
-  }
+  // TTS removed per user feedback — plural game has no recorded audio, so
+  // these calls now stay silent. Hidden from games tab anyway.
+  void _speakSingular() {}
+  void _speakPlural() {}
 
   void _onTap() {
     HapticFeedback.lightImpact();

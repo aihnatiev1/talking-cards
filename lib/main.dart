@@ -4,9 +4,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'firebase_options.dart';
+import 'providers/language_provider.dart';
 import 'providers/profile_provider.dart';
+import 'providers/streak_provider.dart';
 import 'providers/theme_provider.dart';
 import 'services/analytics_service.dart';
+import 'services/notification_service.dart';
 import 'services/profile_service.dart';
 import 'utils/constants.dart';
 import 'screens/splash_screen.dart';
@@ -18,6 +21,16 @@ void main() async {
   // Load active profile BEFORE providers are created so all SharedPreferences
   // reads use the correct namespace from the very first build.
   final profiles = await ProfileService.init();
+
+  // Seed Firebase user properties for cohort slicing on D1/D7/D30 dashboards.
+  if (profiles.isNotEmpty) {
+    final active = profiles.firstWhere(
+      (p) => p.id == ProfileService.activeId,
+      orElse: () => profiles.first,
+    );
+    AnalyticsService.instance.setLanguageProperty(active.language);
+    AnalyticsService.instance.setAgeLevelProperty(active.level);
+  }
 
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
@@ -35,11 +48,39 @@ void main() async {
   ));
 }
 
-class TalkingCardsApp extends ConsumerWidget {
+class TalkingCardsApp extends ConsumerStatefulWidget {
   const TalkingCardsApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TalkingCardsApp> createState() => _TalkingCardsAppState();
+}
+
+class _TalkingCardsAppState extends ConsumerState<TalkingCardsApp>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    // Refresh engagement reminders only on resume (never in build).
+    final lang = ref.read(languageProvider);
+    final streak = ref.read(streakProvider).currentStreak;
+    NotificationService.instance
+        .refreshEngagement(lang: lang, currentStreak: streak);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp(

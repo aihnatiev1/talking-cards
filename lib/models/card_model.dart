@@ -13,6 +13,9 @@ class CardModel {
   final String? audioKey;
   final String? soundEn;
   final String? transcription;
+  /// When set, the card is rendered as a stylized letter (sound-practice
+  /// packs) instead of a webp illustration — the letter itself IS the visual.
+  final String? letter;
 
   const CardModel({
     required this.id,
@@ -25,6 +28,7 @@ class CardModel {
     this.audioKey,
     this.soundEn,
     this.transcription,
+    this.letter,
   });
 
   static String? _nonEmpty(String? s) => (s == null || s.isEmpty) ? null : s;
@@ -42,6 +46,7 @@ class CardModel {
       audioKey: _nonEmpty(json['audio'] as String?) ?? image,
       soundEn: json['soundEn'] as String?,
       transcription: json['transcription'] as String?,
+      letter: _nonEmpty(json['letter'] as String?),
     );
   }
 }

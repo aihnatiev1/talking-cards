@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/profile_model.dart';
+import '../services/analytics_service.dart';
 import '../services/profile_service.dart';
 import 'bonus_cards_provider.dart';
 import 'daily_quest_provider.dart';
@@ -51,6 +52,11 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     await ProfileService.setActive(id);
     state = state.copyWith(activeId: id);
     _invalidateDataProviders();
+    final p = state.active;
+    if (p != null) {
+      AnalyticsService.instance.setLanguageProperty(p.language);
+      AnalyticsService.instance.setAgeLevelProperty(p.level);
+    }
   }
 
   /// Add a new profile (max 3).
@@ -73,12 +79,18 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
   Future<void> setLanguage(String profileId, String language) async {
     final updated = await ProfileService.setLanguage(profileId, language);
     state = state.copyWith(profiles: updated);
+    if (profileId == state.activeId) {
+      AnalyticsService.instance.setLanguageProperty(language);
+    }
   }
 
   /// Change the age/difficulty level (1-4) for a profile.
   Future<void> setLevel(String profileId, int level) async {
     final updated = await ProfileService.setLevel(profileId, level);
     state = state.copyWith(profiles: updated);
+    if (profileId == state.activeId) {
+      AnalyticsService.instance.setAgeLevelProperty(level);
+    }
   }
 
   /// Delete a profile. Switches to first remaining if active was deleted.

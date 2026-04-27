@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
+import '../providers/profile_provider.dart';
 import '../services/notification_service.dart';
 import '../services/paywall_flow.dart';
 import '../services/whatsnew_service.dart';
@@ -50,14 +51,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       // Existing user — show "What's New" instead of welcome
       if (mounted) {
         await Future.delayed(const Duration(milliseconds: 800));
-        if (mounted) WhatsNewService.instance.showIfNeeded(context);
+        if (mounted) {
+          final isEn = ref.read(languageProvider) == 'en';
+          WhatsNewService.instance.showIfNeeded(context, isEn: isEn);
+        }
       }
       return;
     }
     await prefs.setBool('welcome_shown', true);
     if (!mounted) return;
 
-    final s = AppS(ref.read(languageProvider) == 'en');
+    final isEn = ref.read(languageProvider) == 'en';
+    final s = AppS(isEn);
+    // Personalise the greeting with the name the parent entered in onboarding.
+    // Fall back to a neutral "Hello!" if the default profile name ("Малюк"/
+    // "Kid") wasn't customised.
+    final name = ref.read(profileProvider).active?.name.trim() ?? '';
+    final isDefaultName = name.isEmpty || name == 'Малюк' || name == 'Kid';
+    final greeting = isDefaultName
+        ? s('Привіт!', 'Hello!')
+        : s('Привіт, $name!', 'Hello, $name!');
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
@@ -70,7 +83,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               const Text('👋', style: TextStyle(fontSize: 56)),
               const SizedBox(height: 12),
               Text(
-                s('Привіт!', 'Hello!'),
+                greeting,
                 style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),

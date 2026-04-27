@@ -80,9 +80,11 @@ class _CardOfDayHeroState extends State<CardOfDayHero>
                 children: [
                   // Illustration pane — fixed width so intrinsic sizing is
                   // bounded on both axes and the image never balloons to its
-                  // natural resolution.
+                  // natural resolution. Shrinks slightly on small screens
+                  // (<360dp) so the right-side title pane keeps room.
                   SizedBox(
-                    width: 92,
+                    width:
+                        MediaQuery.of(context).size.width < 360 ? 76 : 92,
                     height: 108,
                     child: Container(
                       color: accent.withValues(alpha: 0.12),
@@ -96,8 +98,11 @@ class _CardOfDayHeroState extends State<CardOfDayHero>
                                 fit: BoxFit.contain,
                               ),
                             )
-                          : Text(widget.card.emoji,
-                              style: const TextStyle(fontSize: 48)),
+                          : FittedBox(
+                              fit: BoxFit.contain,
+                              child: Text(widget.card.emoji,
+                                  style: const TextStyle(fontSize: 48)),
+                            ),
                     ),
                   ),
                   Expanded(

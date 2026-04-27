@@ -484,14 +484,14 @@ class _ColoringPainter extends CustomPainter {
     required this.brushRadius,
   });
 
-  // Desaturate to luma and keep darks dark so outlines stay visible on every
-  // card. Formula per channel: out = 0.3*R + 0.59*G + 0.11*B  (human-eye
-  // weights), with a small +30 lift so mid-tones still feel faded. Pure
-  // black stays at ~30 (clear contour); pure white lands near 255.
+  // Desaturate to luma and soften darks so the contour reads as a friendly
+  // outline rather than harsh ink. Formula per channel:
+  // out = 0.3*R + 0.59*G + 0.11*B + 55 (human-eye weights + lift).
+  // Pure black lands at ~55 (medium gray contour); pure white near 255.
   static const ColorFilter _desatFilter = ColorFilter.matrix([
-    0.30, 0.59, 0.11, 0, 30,
-    0.30, 0.59, 0.11, 0, 30,
-    0.30, 0.59, 0.11, 0, 30,
+    0.30, 0.59, 0.11, 0, 55,
+    0.30, 0.59, 0.11, 0, 55,
+    0.30, 0.59, 0.11, 0, 55,
     0,    0,    0,    1, 0,
   ]);
 

@@ -7,12 +7,16 @@ import '../providers/game_stats_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../providers/profile_provider.dart';
+import '../providers/srs_provider.dart';
 import '../providers/streak_provider.dart';
 import '../providers/weak_words_provider.dart';
 import '../screens/profile_selector_screen.dart';
 import '../utils/constants.dart';
+import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../widgets/activity_chart.dart';
+import '../widgets/bloom_mascot.dart';
+import '../widgets/word_wall_share.dart';
 
 class ParentDashboardScreen extends ConsumerWidget {
   const ParentDashboardScreen({super.key});
@@ -24,7 +28,7 @@ class ParentDashboardScreen extends ConsumerWidget {
     final s = AppS(isEn);
 
     return DefaultTabController(
-      length: 5,
+      length: 6,
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
@@ -59,13 +63,21 @@ class ParentDashboardScreen extends ConsumerWidget {
           ),
           centerTitle: false,
           bottom: TabBar(
-            isScrollable: false,
-            labelStyle:
-                const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-            unselectedLabelStyle: const TextStyle(fontSize: 13),
+            isScrollable:
+                MediaQuery.of(context).size.width < kLargeScreen,
+            tabAlignment:
+                MediaQuery.of(context).size.width >= kLargeScreen
+                    ? TabAlignment.fill
+                    : TabAlignment.start,
+            labelStyle: TextStyle(
+                fontSize: responsiveFont(context, 13),
+                fontWeight: FontWeight.w600),
+            unselectedLabelStyle:
+                TextStyle(fontSize: responsiveFont(context, 13)),
             tabs: [
               Tab(text: s('Огляд', 'Overview')),
               Tab(text: s('Тиждень', 'Week')),
+              Tab(text: s('Слова', 'Words')),
               Tab(text: s('Паки', 'Packs')),
               Tab(text: s('Ігри', 'Games')),
               Tab(text: s('Помилки', 'Mistakes')),
@@ -76,6 +88,7 @@ class ParentDashboardScreen extends ConsumerWidget {
           children: [
             _OverviewTab(),
             _WeeklyTab(),
+            _WordsTab(),
             _PacksTab(),
             _GamesTab(),
             _WeakWordsTab(),
@@ -209,12 +222,12 @@ class _StatCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 24)),
+          Text(emoji, style: TextStyle(fontSize: responsiveFont(context, 24))),
           const SizedBox(height: 8),
           Text(
             value,
             style: TextStyle(
-              fontSize: 18,
+              fontSize: responsiveFont(context, 18),
               fontWeight: FontWeight.w800,
               color: color,
             ),
@@ -223,7 +236,7 @@ class _StatCard extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: responsiveFont(context, 12),
               color: color.withValues(alpha: 0.7),
             ),
           ),
@@ -292,7 +305,291 @@ class _WeeklyTab extends ConsumerWidget {
 }
 
 // ─────────────────────────────────────────────
-//  Tab 3 — Pack progress
+//  Tab 3 — Word Wall (learned words)
+// ─────────────────────────────────────────────
+
+class _WordsTab extends ConsumerWidget {
+  const _WordsTab();
+
+  static const _learnedThreshold = 2; // SM-2 repetitions for "learned"
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final srs = ref.watch(srsProvider);
+    final packsAsync = ref.watch(packsProvider);
+    final profile = ref.watch(profileProvider);
+    final isEn = ref.watch(languageProvider) == 'en';
+    final s = AppS(isEn);
+    final childName = profile.active?.name ?? s('Малюк', 'Kiddo');
+
+    final learnedIds = srs.cards.values
+        .where((c) => c.repetitions >= _learnedThreshold)
+        .map((c) => c.cardId)
+        .toSet();
+
+    if (learnedIds.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const BloomMascot(size: 88),
+              const SizedBox(height: 16),
+              Text(
+                s(
+                  'Поки немає вивчених слів.\nГрайте у вікторину — і вони з\'являться тут!',
+                  'No learned words yet.\nPlay the quiz and they\'ll show up here!',
+                ),
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 15, height: 1.5),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return packsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) => Center(child: Text(s('Помилка', 'Error'))),
+      data: (packs) {
+        // Group learned cards by pack, preserve original card order in pack
+        final groups = <(String packId, String packTitle, String packIcon, List<CardModel> cards)>[];
+        final allLearnedCards = <CardModel>[];
+        for (final pack in packs) {
+          final cards = pack.cards
+              .where((c) => learnedIds.contains(c.id))
+              .toList();
+          if (cards.isEmpty) continue;
+          groups.add((pack.id, pack.title, pack.icon, cards));
+          allLearnedCards.addAll(cards);
+        }
+
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            _WordWallHeader(
+              childName: childName,
+              learnedCount: allLearnedCards.length,
+              isEn: isEn,
+              onShare: () => shareWordWall(
+                context: context,
+                childName: childName,
+                learnedCards: allLearnedCards,
+                isEn: isEn,
+              ),
+            ),
+            const SizedBox(height: 20),
+            for (final group in groups) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Row(
+                  children: [
+                    Text(group.$3, style: const TextStyle(fontSize: 18)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        group.$2,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '${group.$4.length}',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[500],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 6),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate:
+                    const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 4,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                  childAspectRatio: 0.85,
+                ),
+                itemCount: group.$4.length,
+                itemBuilder: (_, i) =>
+                    _LearnedTile(card: group.$4[i]),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _WordWallHeader extends StatelessWidget {
+  final String childName;
+  final int learnedCount;
+  final bool isEn;
+  final VoidCallback onShare;
+
+  const _WordWallHeader({
+    required this.childName,
+    required this.learnedCount,
+    required this.isEn,
+    required this.onShare,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [kAccent, kTeal],
+        ),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isEn
+                      ? "$childName's Word Wall"
+                      : 'Стіна слів — $childName',
+                  style: TextStyle(
+                    fontSize: responsiveFont(context, 14),
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '$learnedCount',
+                      style: TextStyle(
+                        fontSize: responsiveFont(context, 36),
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        height: 1,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Text(
+                        isEn
+                            ? (learnedCount == 1 ? 'word' : 'words')
+                            : 'слів',
+                        style: TextStyle(
+                          fontSize: responsiveFont(context, 13),
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          ElevatedButton.icon(
+            onPressed: onShare,
+            icon: const Icon(Icons.ios_share, size: 18),
+            label: Text(isEn ? 'Share' : 'Поділитись'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: kAccent,
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 16, vertical: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+              textStyle:
+                  const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+              elevation: 0,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LearnedTile extends StatelessWidget {
+  final CardModel card;
+
+  const _LearnedTile({required this.card});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: card.colorBg,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: card.colorAccent.withValues(alpha: 0.2),
+              width: 1,
+            ),
+          ),
+          child: AspectRatio(
+            aspectRatio: 1,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(11),
+              child: card.image != null
+                  ? Image.asset(
+                      'assets/images/webp/${card.image}.webp',
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Center(
+                        child: Text(
+                          card.emoji,
+                          style: const TextStyle(fontSize: 26),
+                        ),
+                      ),
+                    )
+                  : Center(
+                      child: Text(
+                        card.emoji,
+                        style: const TextStyle(fontSize: 26),
+                      ),
+                    ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          card.sound,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: responsiveFont(context, 11),
+            fontWeight: FontWeight.w700,
+            color: card.colorAccent,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+//  Tab 4 — Pack progress
 // ─────────────────────────────────────────────
 
 class _PacksTab extends ConsumerWidget {
@@ -508,13 +805,14 @@ class _GameStatRow extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Text(stat.emoji, style: const TextStyle(fontSize: 24)),
+            Text(stat.emoji,
+                style: TextStyle(fontSize: responsiveFont(context, 24))),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 isEn ? stat.labelEn : stat.labelUk,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: responsiveFont(context, 14),
                   fontWeight: FontWeight.w600,
                   color: hasPlays ? null : Colors.grey[500],
                 ),
@@ -526,8 +824,8 @@ class _GameStatRow extends StatelessWidget {
                 children: [
                   Text(
                     '${stat.plays} ${_playsLabel(stat.plays, isEn)}',
-                    style: const TextStyle(
-                      fontSize: 13,
+                    style: TextStyle(
+                      fontSize: responsiveFont(context, 13),
                       fontWeight: FontWeight.w700,
                       color: kAccent,
                     ),
@@ -536,7 +834,7 @@ class _GameStatRow extends StatelessWidget {
                     Text(
                       '${s('рекорд', 'best')}: ${stat.bestScore} ⭐',
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: responsiveFont(context, 11),
                         color: Colors.grey[500],
                       ),
                     ),
@@ -545,7 +843,9 @@ class _GameStatRow extends StatelessWidget {
             ] else
               Text(
                 s('не грали', 'not played'),
-                style: TextStyle(fontSize: 12, color: Colors.grey[400]),
+                style: TextStyle(
+                    fontSize: responsiveFont(context, 12),
+                    color: Colors.grey[400]),
               ),
           ],
         ),
@@ -640,12 +940,15 @@ class _WeakWordsTab extends ConsumerWidget {
                 style: const TextStyle(
                     fontSize: 15, fontWeight: FontWeight.w600),
               ),
-              subtitle: Text(
-                card.text,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-              ),
+              subtitle: card.text.isEmpty
+                  ? null
+                  : Text(
+                      card.text,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style:
+                          TextStyle(fontSize: 12, color: Colors.grey[500]),
+                    ),
               trailing: Container(
                 padding: const EdgeInsets.symmetric(
                     horizontal: 10, vertical: 4),

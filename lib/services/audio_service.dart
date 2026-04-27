@@ -1,8 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:audio_session/audio_session.dart';
-
-import 'tts_service.dart';
 
 /// Maps card image key (kirilic) to latin wav filename
 const _audioMap = {
@@ -272,6 +273,81 @@ const _audioMap = {
   'en_bridge': 'en_bridge', 'en_bread_bl': 'en_bread_bl', 'en_clock': 'en_clock',
   'en_cloud_bl': 'en_cloud_bl', 'en_flower_bl': 'en_flower_bl',
   'en_frog_bl': 'en_frog_bl',
+  // UA — Phrases (ph01..ph25) and Actions (act01..act25) — identity mapping
+  'ph01': 'ph01', 'ph02': 'ph02', 'ph03': 'ph03', 'ph04': 'ph04', 'ph05': 'ph05',
+  'ph06': 'ph06', 'ph07': 'ph07', 'ph08': 'ph08', 'ph09': 'ph09', 'ph10': 'ph10',
+  'ph11': 'ph11', 'ph12': 'ph12', 'ph13': 'ph13', 'ph14': 'ph14', 'ph15': 'ph15',
+  'ph16': 'ph16', 'ph17': 'ph17', 'ph18': 'ph18', 'ph19': 'ph19', 'ph20': 'ph20',
+  'ph21': 'ph21', 'ph22': 'ph22', 'ph23': 'ph23', 'ph24': 'ph24', 'ph25': 'ph25',
+  'act01': 'act01', 'act02': 'act02', 'act03': 'act03', 'act04': 'act04',
+  'act05': 'act05', 'act06': 'act06', 'act07': 'act07', 'act08': 'act08',
+  'act09': 'act09', 'act10': 'act10', 'act11': 'act11', 'act12': 'act12',
+  'act13': 'act13', 'act14': 'act14', 'act15': 'act15', 'act16': 'act16',
+  'act17': 'act17', 'act18': 'act18', 'act19': 'act19', 'act20': 'act20',
+  'act21': 'act21', 'act22': 'act22', 'act23': 'act23', 'act24': 'act24',
+  'act25': 'act25',
+  // UA — Opposites (opp01a..opp15b)
+  'opp01a': 'opp01a', 'opp01b': 'opp01b', 'opp02a': 'opp02a', 'opp02b': 'opp02b',
+  'opp03a': 'opp03a', 'opp03b': 'opp03b', 'opp04a': 'opp04a', 'opp04b': 'opp04b',
+  'opp05a': 'opp05a', 'opp05b': 'opp05b', 'opp06a': 'opp06a', 'opp06b': 'opp06b',
+  'opp07a': 'opp07a', 'opp07b': 'opp07b', 'opp08a': 'opp08a', 'opp08b': 'opp08b',
+  'opp09a': 'opp09a', 'opp09b': 'opp09b', 'opp10a': 'opp10a', 'opp10b': 'opp10b',
+  'opp11a': 'opp11a', 'opp11b': 'opp11b', 'opp12a': 'opp12a', 'opp12b': 'opp12b',
+  'opp13a': 'opp13a', 'opp13b': 'opp13b', 'opp14a': 'opp14a', 'opp14b': 'opp14b',
+  'opp15a': 'opp15a', 'opp15b': 'opp15b',
+  // UA — Sound R (sr01..sr18)
+  'sr01': 'sr01', 'sr02': 'sr02', 'sr03': 'sr03', 'sr04': 'sr04', 'sr05': 'sr05',
+  'sr06': 'sr06', 'sr07': 'sr07', 'sr08': 'sr08', 'sr09': 'sr09', 'sr10': 'sr10',
+  'sr11': 'sr11', 'sr12': 'sr12', 'sr13': 'sr13', 'sr14': 'sr14', 'sr15': 'sr15',
+  'sr16': 'sr16', 'sr17': 'sr17', 'sr18': 'sr18',
+  // UA — Sound L (sl01..sl18)
+  'sl01': 'sl01', 'sl02': 'sl02', 'sl03': 'sl03', 'sl04': 'sl04', 'sl05': 'sl05',
+  'sl06': 'sl06', 'sl07': 'sl07', 'sl08': 'sl08', 'sl09': 'sl09', 'sl10': 'sl10',
+  'sl11': 'sl11', 'sl12': 'sl12', 'sl13': 'sl13', 'sl14': 'sl14', 'sl15': 'sl15',
+  'sl16': 'sl16', 'sl17': 'sl17', 'sl18': 'sl18',
+  // UA — Sound Sh: per-card files renamed to content-based slugs so the
+  // JSON `audio` field matches the recorded word and shifts can't recur.
+  'shapka': 'shapka', 'sharf': 'sharf', 'shokolad': 'shokolad',
+  'shuba': 'shuba', 'shkola': 'shkola', 'myshka': 'myshka', 'kishka': 'kishka',
+  'mashyna': 'mashyna', 'grusha_sh': 'grusha_sh', 'romashka_sh': 'romashka_sh',
+  'podushka': 'podushka', 'vushko': 'vushko', 'mishok': 'mishok',
+  'shyshka': 'shyshka', 'horoshyna': 'horoshyna', 'chereshnia': 'chereshnia',
+  // UA — Sound S (sc01..sc16)
+  'sc01': 'sc01', 'sc02': 'sc02', 'sc03': 'sc03', 'sc04': 'sc04', 'sc05': 'sc05',
+  'sc06': 'sc06', 'sc07': 'sc07', 'sc08': 'sc08', 'sc09': 'sc09', 'sc10': 'sc10',
+  'sc11': 'sc11', 'sc12': 'sc12', 'sc13': 'sc13', 'sc14': 'sc14', 'sc15': 'sc15',
+  'sc16': 'sc16',
+  // UA — Sound Z (sz01..sz16)
+  'sz01': 'sz01', 'sz02': 'sz02', 'sz03': 'sz03', 'sz04': 'sz04', 'sz05': 'sz05',
+  'sz06': 'sz06', 'sz07': 'sz07', 'sz08': 'sz08', 'sz09': 'sz09', 'sz10': 'sz10',
+  'sz11': 'sz11', 'sz12': 'sz12', 'sz13': 'sz13', 'sz14': 'sz14', 'sz15': 'sz15',
+  'sz16': 'sz16',
+  // UA — Sound Zh (szh01..szh13)
+  'szh01': 'szh01', 'szh02': 'szh02', 'szh03': 'szh03', 'szh04': 'szh04',
+  'szh05': 'szh05', 'szh06': 'szh06', 'szh07': 'szh07', 'szh08': 'szh08',
+  'szh09': 'szh09', 'szh10': 'szh10', 'szh11': 'szh11', 'szh12': 'szh12',
+  'szh13': 'szh13',
+  // UA — Sound Ch (sch01..sch15)
+  'sch01': 'sch01', 'sch02': 'sch02', 'sch03': 'sch03', 'sch04': 'sch04',
+  'sch05': 'sch05', 'sch06': 'sch06', 'sch07': 'sch07', 'sch08': 'sch08',
+  'sch09': 'sch09', 'sch10': 'sch10', 'sch11': 'sch11', 'sch12': 'sch12',
+  'sch13': 'sch13', 'sch14': 'sch14', 'sch15': 'sch15',
+  // UA — Sound Shch (sshch01..sshch11)
+  'sshch01': 'sshch01', 'sshch02': 'sshch02', 'sshch03': 'sshch03',
+  'sshch04': 'sshch04', 'sshch05': 'sshch05', 'sshch06': 'sshch06',
+  'sshch07': 'sshch07', 'sshch08': 'sshch08', 'sshch09': 'sshch09',
+  'sshch10': 'sshch10', 'sshch11': 'sshch11',
+  // UA — Sound Ts (sts01..sts12)
+  'sts01': 'sts01', 'sts02': 'sts02', 'sts03': 'sts03', 'sts04': 'sts04',
+  'sts05': 'sts05', 'sts06': 'sts06', 'sts07': 'sts07', 'sts08': 'sts08',
+  'sts09': 'sts09', 'sts10': 'sts10', 'sts11': 'sts11', 'sts12': 'sts12',
+  // UA — Adjectives (adj01..adj23)
+  'adj01': 'adj01', 'adj02': 'adj02', 'adj03': 'adj03', 'adj04': 'adj04',
+  'adj05': 'adj05', 'adj06': 'adj06', 'adj07': 'adj07', 'adj08': 'adj08',
+  'adj09': 'adj09', 'adj10': 'adj10', 'adj11': 'adj11', 'adj12': 'adj12',
+  'adj13': 'adj13', 'adj14': 'adj14', 'adj15': 'adj15', 'adj16': 'adj16',
+  'adj17': 'adj17', 'adj18': 'adj18', 'adj19': 'adj19', 'adj20': 'adj20',
+  'adj21': 'adj21', 'adj22': 'adj22', 'adj23': 'adj23',
 };
 
 class AudioService {
@@ -280,6 +356,11 @@ class AudioService {
 
   final _soloud = SoLoud.instance;
   final Map<String, AudioSource> _sources = {};
+  /// Pre-computed millisecond offset for the end of the WORD portion of each
+  /// recording (everything after this is the example sentence). Loaded at
+  /// init from `assets/data/audio_word_lengths.json`. Files not in this map
+  /// are assumed to be already word-only (no trailing phrase to clip).
+  final Map<String, int> _wordEndMs = {};
 
   final ValueNotifier<bool> isSpeaking = ValueNotifier(false);
   final ValueNotifier<bool> autoSpeak = ValueNotifier(false);
@@ -302,17 +383,41 @@ class AudioService {
     // 2. Initialize SoLoud engine (FFI — no method channels, lowest latency)
     await _soloud.init();
 
-    // 3. Load all sounds into RAM
+    // 2b. Load pre-computed word-end offsets so playWordOnly cuts at the
+    // real silence between WORD and PHRASE instead of a guessed timeout.
+    try {
+      final raw = await rootBundle.loadString('assets/data/audio_word_lengths.json');
+      final m = json.decode(raw) as Map<String, dynamic>;
+      m.forEach((k, v) => _wordEndMs[k] = (v as num).toInt());
+    } catch (e) {
+      if (kDebugMode) debugPrint('AudioService: word-length manifest missing: $e');
+    }
+
+    // 3. Load all sounds into RAM. Index each source by BOTH the Cyrillic
+    // map key (legacy) and the Latin filename — JSON cards may reference
+    // either form via their `audio` field.
     for (final entry in _audioMap.entries) {
       try {
         final source = await _soloud.loadAsset('assets/audio_mp3/${entry.value}.mp3');
         _sources[entry.key] = source;
+        _sources[entry.value] = source;
       } catch (e) {
         if (kDebugMode) debugPrint('AudioService: failed to load ${entry.key}: $e');
       }
     }
 
     if (kDebugMode) debugPrint('AudioService: ${_sources.length} sounds loaded into RAM');
+
+    // Warm up the SoLoud pipeline so the first real play doesn't clip the
+    // word's attack on Android (cold-start latency can eat ~100-200ms).
+    // We play any sound at zero volume, then stop immediately.
+    if (_sources.isNotEmpty) {
+      try {
+        final first = _sources.values.first;
+        final h = await _soloud.play(first, volume: 0);
+        _soloud.stop(h);
+      } catch (_) {}
+    }
   }
 
   Future<void> speakCard(String? audioKey, String sound, String fullText) async {
@@ -377,10 +482,9 @@ class AudioService {
     String fallbackWord, {
     String locale = 'uk-UA',
   }) async {
-    if (audioKey == null || !_sources.containsKey(audioKey)) {
-      await TtsService.instance.speak(fallbackWord, locale: locale);
-      return;
-    }
+    // No TTS fallback: if there's no recorded audio for this card, stay
+    // silent (user opted out of TTS entirely).
+    if (audioKey == null || !_sources.containsKey(audioKey)) return;
 
     final source = _sources[audioKey]!;
     final gen = ++_speakGeneration;
@@ -392,6 +496,23 @@ class AudioService {
       if (handle == null) {
         if (_speakGeneration == gen) isSpeaking.value = false;
         return;
+      }
+      // Recordings have shape: WORD · silence · phrase. The exact word-end
+      // ms was detected at preprocessing time (see tools that build
+      // assets/data/audio_word_lengths.json). For files that lack a trailing
+      // phrase the manifest has no entry → play to the natural end.
+      // Manifest is keyed by Latin filename; if audioKey is a Cyrillic alias
+      // (e.g. 'киця'), translate via _audioMap first.
+      final mappedFile = _audioMap[audioKey] ?? audioKey;
+      final cutoffMs = _wordEndMs[mappedFile] ?? _wordEndMs[audioKey];
+      if (cutoffMs != null) {
+        Future.delayed(Duration(milliseconds: cutoffMs), () {
+          if (_speakGeneration == gen && _currentHandle == handle) {
+            _soloud.stop(handle);
+            _currentHandle = null;
+            isSpeaking.value = false;
+          }
+        });
       }
       while (_currentHandle == handle &&
           _soloud.getIsValidVoiceHandle(handle)) {

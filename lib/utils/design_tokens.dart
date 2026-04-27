@@ -122,3 +122,17 @@ class DT {
     height: 1.2,
   );
 }
+
+/// Scale factor for responsive sizing — clamped to keep typography sane on
+/// extreme small/large devices. Reference: 375dp (iPhone X width).
+double screenScale(BuildContext context) =>
+    (MediaQuery.of(context).size.width / 375).clamp(0.85, 1.3);
+
+/// Convenience: scaled font size.
+double responsiveFont(BuildContext context, double base) =>
+    base * screenScale(context);
+
+/// Breakpoints in logical pixels.
+const double kSmallScreen = 360;
+const double kMediumScreen = 500;
+const double kLargeScreen = 768;

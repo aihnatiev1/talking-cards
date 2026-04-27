@@ -10,6 +10,7 @@ import '../providers/bonus_cards_provider.dart';
 import '../providers/daily_quest_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
+import '../services/audio_service.dart';
 
 import '../utils/constants.dart';
 import '../utils/l10n.dart';
@@ -309,25 +310,51 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
   ) {
     switch (task) {
       case QuestTask.listenCardOfDay:
-        widget.onCardOfDayTap();
-        ref
-            .read(dailyQuestProvider.notifier)
-            .completeTask(QuestTask.listenCardOfDay);
+        // Play the Card of the Day audio here and let the dailyQuestProvider
+        // mark the task done only once the audio actually starts — tapping the
+        // stop with an empty callback (`() {}`) used to insta-complete it.
+        final card = widget.cardOfDay;
+        if (card != null) {
+          AudioService.instance.speakCard(
+              card.audioKey, card.sound, card.text);
+          ref
+              .read(dailyQuestProvider.notifier)
+              .completeTask(QuestTask.listenCardOfDay);
+        }
       case QuestTask.viewCards3:
       case QuestTask.viewCards5:
-      case QuestTask.reviewOldCard:
+        // viewCards* is auto-completed by dailyQuestProvider once the child
+        // has swiped through N cards — don't pre-complete here.
         final openPacks =
             packs.where((p) => !p.isLocked && !p.id.startsWith('_')).toList();
         if (openPacks.isNotEmpty) {
           final pack = openPacks[Random().nextInt(openPacks.length)];
-          ref
-              .read(dailyQuestProvider.notifier)
-              .completeTask(QuestTask.reviewOldCard);
           Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => CardsScreen(pack: pack)),
           );
         }
+      case QuestTask.reviewOldCard:
+        // Opening any pack counts as "repeat after me" — completeTask fires
+        // inside CardsScreen via packs_tab._onPackTap path. Here we do the
+        // same so the task is credited once the pack is actually opened.
+        final openPacks =
+            packs.where((p) => !p.isLocked && !p.id.startsWith('_')).toList();
+        if (openPacks.isNotEmpty) {
+          final pack = openPacks[Random().nextInt(openPacks.length)];
+          Navigator.of(context)
+              .push(
+                MaterialPageRoute(builder: (_) => CardsScreen(pack: pack)),
+              )
+              .then((_) {
+            // Credit the task after the user returns from the pack, ensuring
+            // they at least navigated into it.
+            ref
+                .read(dailyQuestProvider.notifier)
+                .completeTask(QuestTask.reviewOldCard);
+          });
+        }
       case QuestTask.playQuiz:
+        // GuessScreen calls completeTask(playQuiz) on its own Results screen.
         final allCards = packs.expand((p) => p.cards).toList();
         final lang = ref.read(languageProvider);
         final playable = lang == 'en'
@@ -858,8 +885,9 @@ class _TreasureWaypointState extends ConsumerState<_TreasureWaypoint>
           : null,
       child: SizedBox(
         width: 84,
-        height: 110,
+        height: 118,
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               width: 72,

@@ -443,18 +443,19 @@ class _CardRevealScreenState extends State<CardRevealScreen>
               color: card.colorAccent,
             ),
           ),
-          const SizedBox(height: 3),
-
-          // Description
-          Text(
-            card.text,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-              height: 1.3,
+          if (card.text.isNotEmpty) ...[
+            const SizedBox(height: 3),
+            // Description
+            Text(
+              card.text,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+                height: 1.3,
+              ),
             ),
-          ),
+          ],
           const SizedBox(height: 16),
 
           // Progress bar instead of plain counter

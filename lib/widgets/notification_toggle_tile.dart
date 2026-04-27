@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/language_provider.dart';
 import '../services/notification_service.dart';
 import '../utils/l10n.dart';
-import 'parental_gate.dart';
 
 /// Row in the About sheet that toggles local notifications after a parental gate.
 class NotificationToggleTile extends ConsumerStatefulWidget {
@@ -32,10 +31,10 @@ class _NotificationToggleTileState
   }
 
   Future<void> _toggle() async {
-    final passed = await ParentalGate.show(context);
-    if (!passed || !mounted) return;
+    if (!mounted) return;
     final newValue = !_enabled;
-    await NotificationService.instance.setEnabled(newValue);
+    final lang = ref.read(languageProvider);
+    await NotificationService.instance.setEnabled(newValue, lang: lang);
     if (mounted) setState(() => _enabled = newValue);
   }
 

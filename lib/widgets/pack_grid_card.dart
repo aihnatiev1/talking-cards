@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
@@ -26,8 +27,10 @@ class PackGridCard extends ConsumerStatefulWidget {
 }
 
 class _PackGridCardState extends ConsumerState<PackGridCard>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _shimmer;
+  late final AnimationController _wobble;
+  late final Animation<double> _wobbleRotation;
   bool _pressed = false;
 
   @override
@@ -38,15 +41,39 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
       duration: const Duration(milliseconds: 1400),
     );
     if (widget.isSeasonal) _shimmer.repeat(reverse: true);
+    _wobble = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _wobbleRotation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: -0.06), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: -0.06, end: 0.06), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: 0.06, end: -0.04), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: -0.04, end: 0.03), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: 0.03, end: 0.0), weight: 1),
+    ]).animate(_wobble);
   }
 
   @override
   void dispose() {
     _shimmer.dispose();
+    _wobble.dispose();
     super.dispose();
   }
 
+  void _triggerWobble() {
+    HapticFeedback.mediumImpact();
+    _wobble
+      ..reset()
+      ..forward();
+  }
+
   CardModel? _thumb() {
+    // Virtual packs (favorites / review / seasonal aliases prefixed with _)
+    // own a semantic emoji (❤️ / 🔄) — never replace it with a random card
+    // image, otherwise the "Favorites" tile picks whatever the first liked
+    // card happens to be.
+    if (widget.pack.id.startsWith('_')) return null;
     // Prefer the first card with a real webp illustration — a readable preview
     // for a non-reader. Falls back to the pack emoji when nothing fits.
     for (final c in widget.pack.cards) {
@@ -68,6 +95,7 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
       onTapUp: (_) => setState(() => _pressed = false),
       onTapCancel: () => setState(() => _pressed = false),
       onTap: widget.onTap,
+      onLongPress: _triggerWobble,
       child: AnimatedScale(
         scale: _pressed ? DT.pressScale : 1.0,
         duration: DT.pressMs,
@@ -87,28 +115,36 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Illustration area
+                // Illustration area — takes most of the tile so the webp
+                // actually reads at a glance. No inner padding: let the image
+                // hug the corners of the tinted pane.
                 Expanded(
-                  flex: 3,
+                  flex: 5,
                   child: Container(
                     color: accent.withValues(alpha: 0.10),
                     child: Stack(
                       children: [
                         Positioned.fill(
-                          child: thumb?.image != null
-                              ? Padding(
-                                  padding: const EdgeInsets.all(6),
-                                  child: Image.asset(
-                                    'assets/images/webp/${thumb!.image}.webp',
-                                    fit: BoxFit.contain,
-                                  ),
+                          child: pack.cover != null
+                              ? Image.asset(
+                                  'assets/images/webp/${pack.cover}.webp',
+                                  fit: BoxFit.contain,
                                 )
-                              : Center(
-                                  child: Text(
-                                    pack.icon,
-                                    style: const TextStyle(fontSize: 44),
-                                  ),
-                                ),
+                              : thumb?.image != null
+                                  ? Image.asset(
+                                      'assets/images/webp/${thumb!.image}.webp',
+                                      fit: BoxFit.contain,
+                                    )
+                                  : Center(
+                                      child: FittedBox(
+                                        fit: BoxFit.contain,
+                                        child: Text(
+                                          pack.icon,
+                                          style:
+                                              const TextStyle(fontSize: 52),
+                                        ),
+                                      ),
+                                    ),
                         ),
                         // Status badge (top-right)
                         if (widget.isCompleted ||
@@ -128,48 +164,41 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
                     ),
                   ),
                 ),
-                // Title strip — adaptive text so it fits narrow 3-col tiles
-                Expanded(
-                  flex: 2,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(6, 4, 6, 6),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            pack.title,
-                            textAlign: TextAlign.center,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
-                              color: accent,
-                              height: 1.1,
-                            ),
+                // Title strip — compact, anchored at bottom so the image
+                // dominates the tile.
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(6, 4, 6, 6),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        pack.title,
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: accent,
+                          height: 1.1,
+                        ),
+                      ),
+                      if (hasProgress) ...[
+                        const SizedBox(height: 4),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(2),
+                          child: LinearProgressIndicator(
+                            value:
+                                total > 0 ? widget.progress / total : 0,
+                            minHeight: 3,
+                            backgroundColor: accent.withValues(alpha: 0.15),
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(accent),
                           ),
                         ),
-                        if (hasProgress) ...[
-                          const SizedBox(height: 4),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(2),
-                            child: LinearProgressIndicator(
-                              value: total > 0
-                                  ? widget.progress / total
-                                  : 0,
-                              minHeight: 3,
-                              backgroundColor:
-                                  accent.withValues(alpha: 0.15),
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(accent),
-                            ),
-                          ),
-                        ],
                       ],
-                    ),
+                    ],
                   ),
                 ),
               ],
@@ -179,8 +208,19 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
       ),
     );
 
+    // Long-press wobble: spring-style rotation around tile center.
+    Widget wrapped = AnimatedBuilder(
+      animation: _wobbleRotation,
+      builder: (_, child) => Transform.rotate(
+        angle: _wobbleRotation.value,
+        alignment: Alignment.center,
+        child: child,
+      ),
+      child: tile,
+    );
+
     // Seasonal shimmer — ambient glow around the tile
-    if (!widget.isSeasonal) return tile;
+    if (!widget.isSeasonal) return wrapped;
     return AnimatedBuilder(
       animation: _shimmer,
       builder: (_, child) => Container(
@@ -196,7 +236,7 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
         ),
         child: child,
       ),
-      child: tile,
+      child: wrapped,
     );
   }
 }
@@ -219,8 +259,12 @@ class _StatusBadge extends StatelessWidget {
     Widget child;
     Color bg;
     if (completed) {
-      child = const Text('⭐', style: TextStyle(fontSize: 14));
-      bg = DT.sunBurst;
+      child = const Icon(
+        Icons.check_rounded,
+        size: 18,
+        color: Colors.white,
+      );
+      bg = const Color(0xFF22C55E); // clean kid-friendly green
     } else if (locked) {
       child = Icon(Icons.lock_rounded, size: 15, color: accent);
       bg = DT.surfaceWhite;
@@ -229,10 +273,13 @@ class _StatusBadge extends StatelessWidget {
       bg = DT.sunBurst;
     }
     return Container(
-      padding: const EdgeInsets.all(6),
+      padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
         color: bg,
         shape: BoxShape.circle,
+        border: completed
+            ? Border.all(color: Colors.white, width: 2)
+            : null,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.15),

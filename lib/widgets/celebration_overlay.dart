@@ -5,9 +5,14 @@ import '../utils/constants.dart';
 import '../utils/l10n.dart';
 
 /// Full-screen celebration overlay with falling stars and confetti.
+///
+/// When [packCover] is set, renders the pack's webp illustration (the same
+/// asset shown on the home grid). Falls back to [packIcon] text otherwise —
+/// useful for emoji packs that don't have a dedicated cover image.
 class CelebrationOverlay extends StatefulWidget {
   final String packTitle;
   final String packIcon;
+  final String? packCover;
   final Color color;
   final VoidCallback onDone;
   final VoidCallback? onReplay;
@@ -18,6 +23,7 @@ class CelebrationOverlay extends StatefulWidget {
     super.key,
     required this.packTitle,
     required this.packIcon,
+    this.packCover,
     required this.color,
     required this.onDone,
     this.onReplay,
@@ -109,7 +115,22 @@ class _CelebrationOverlayState extends State<CelebrationOverlay>
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(widget.packIcon, style: const TextStyle(fontSize: 64)),
+                      if (widget.packCover != null)
+                        SizedBox(
+                          height: 96,
+                          width: 96,
+                          child: Image.asset(
+                            'assets/images/webp/${widget.packCover}.webp',
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, __, ___) => Text(
+                              widget.packIcon,
+                              style: const TextStyle(fontSize: 64),
+                            ),
+                          ),
+                        )
+                      else
+                        Text(widget.packIcon,
+                            style: const TextStyle(fontSize: 64)),
                       const SizedBox(height: 12),
                       const Text('⭐', style: TextStyle(fontSize: 48)),
                       const SizedBox(height: 12),

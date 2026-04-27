@@ -90,11 +90,7 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      AudioService.instance.speakCard(
-        question.audioKey,
-        question.sound,
-        question.text,
-      );
+      AudioService.instance.playWordOnly(question.audioKey, question.sound);
     });
   }
 
@@ -168,13 +164,11 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
             children: [
               const SizedBox(height: 8),
 
-              // Question card — large, tappable for audio
+              // Question card — large, tappable for audio (word only — kids
+              // get confused if the full example sentence plays each tap)
               GestureDetector(
-                onTap: () => AudioService.instance.speakCard(
-                  question.audioKey,
-                  question.sound,
-                  question.text,
-                ),
+                onTap: () => AudioService.instance
+                    .playWordOnly(question.audioKey, question.sound),
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
                   child: _QuestionCard(key: ValueKey(question.id), card: question, s: s),
@@ -341,7 +335,7 @@ class _QuestionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      height: 180,
+      padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
         color: card.colorBg,
         borderRadius: BorderRadius.circular(24),
@@ -357,44 +351,42 @@ class _QuestionCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           if (card.image != null)
             SizedBox(
-              height: 100,
+              height: 110,
               child: Image.asset(
                 'assets/images/webp/${card.image}.webp',
                 fit: BoxFit.contain,
               ),
             )
           else
-            Text(card.emoji, style: const TextStyle(fontSize: 72)),
-          const SizedBox(width: 16),
-          Column(
+            Text(card.emoji, style: const TextStyle(fontSize: 80)),
+          const SizedBox(height: 8),
+          Text(
+            card.sound,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.bold,
+              color: card.colorAccent,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Icon(Icons.volume_up_rounded,
+                  color: Colors.grey[400], size: 14),
+              const SizedBox(width: 4),
               Text(
-                card.sound,
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: card.colorAccent,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Icon(Icons.volume_up_rounded,
-                      color: Colors.grey[400], size: 14),
-                  const SizedBox(width: 4),
-                  Text(
-                    s('торкнись', 'tap to hear'),
-                    style:
-                        TextStyle(fontSize: 11, color: Colors.grey[400]),
-                  ),
-                ],
+                s('торкнись', 'tap to hear'),
+                style: TextStyle(fontSize: 11, color: Colors.grey[400]),
               ),
             ],
           ),
@@ -450,23 +442,26 @@ class _OptionTile extends StatelessWidget {
             ),
           ],
         ),
-        // Horizontal layout: image/emoji on left, word on right
+        // Vertical layout: image centered on top, word below — matches the
+        // question card above so the whole screen reads as a column of
+        // big centered illustrations.
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (card.image != null)
                 SizedBox(
-                  width: 56,
-                  height: 56,
+                  width: 80,
+                  height: 80,
                   child: Image.asset(
                     'assets/images/webp/${card.image}.webp',
                     fit: BoxFit.contain,
                   ),
                 )
               else
-                Text(card.emoji, style: const TextStyle(fontSize: 44)),
-              const SizedBox(width: 16),
+                Text(card.emoji, style: const TextStyle(fontSize: 56)),
+              const SizedBox(width: 14),
               Text(
                 card.sound,
                 style: TextStyle(

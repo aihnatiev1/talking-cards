@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/language_provider.dart';
-import '../services/tts_service.dart';
 import '../utils/confetti_overlay_mixin.dart';
 import '../utils/constants.dart';
 import '../utils/game_state_mixin.dart';
@@ -150,9 +149,9 @@ class _RhymeGameScreenState extends ConsumerState<RhymeGameScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) => _speakWord(question.word));
   }
 
-  void _speakWord(String word) {
-    TtsService.instance.speak(word, locale: 'uk-UA');
-  }
+  // TTS removed per user feedback — rhyme game has no recorded audio; stays
+  // silent. Game is hidden from games tab anyway.
+  void _speakWord(String word) {}
 
   void _onTap(_RhymeWord word) {
     if (_answered) return;

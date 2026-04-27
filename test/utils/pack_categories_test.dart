@@ -63,7 +63,7 @@ void main() {
   });
 
   group('category constants', () {
-    test('every Ukrainian pack id is in allCategoriesUk except "Все"', () {
+    test('allCategoriesUk covers all pack ids', () {
       final usedCategories = packCategoriesUk.values.toSet();
       for (final cat in usedCategories) {
         expect(allCategoriesUk.contains(cat), isTrue,
@@ -71,7 +71,7 @@ void main() {
       }
     });
 
-    test('every English pack id is in allCategoriesEn except "All"', () {
+    test('allCategoriesEn covers all pack ids', () {
       final usedCategories = packCategoriesEn.values.toSet();
       for (final cat in usedCategories) {
         expect(allCategoriesEn.contains(cat), isTrue,
@@ -79,12 +79,17 @@ void main() {
       }
     });
 
-    test('first element of allCategoriesUk is "Все"', () {
-      expect(allCategoriesUk.first, 'Все');
+    test('first element of allCategoriesUk is "Мовлення"', () {
+      expect(allCategoriesUk.first, 'Мовлення');
     });
 
-    test('first element of allCategoriesEn is "All"', () {
-      expect(allCategoriesEn.first, 'All');
+    test('first element of allCategoriesEn is "Speaking"', () {
+      expect(allCategoriesEn.first, 'Speaking');
+    });
+
+    test('both category lists have exactly 3 entries (no "All"/"Все")', () {
+      expect(allCategoriesUk.length, 3);
+      expect(allCategoriesEn.length, 3);
     });
   });
 }

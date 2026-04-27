@@ -10,6 +10,7 @@ import '../services/analytics_service.dart';
 import '../services/purchase_service.dart';
 import '../services/remote_config_service.dart';
 import '../utils/constants.dart';
+import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 
 class PaywallScreen extends ConsumerStatefulWidget {
@@ -45,22 +46,20 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     final products = PurchaseService.instance.products;
     final labelYearly = s('Річна', 'Yearly');
     final labelMonthly = s('Місячна', 'Monthly');
-    final labelLifetime = s('Назавжди', 'Lifetime');
     final badgeBest = s('Найвигідніше', 'Best value');
-    final badgeOneTime = s('Без підписки', 'No subscription');
     final perYear = s('/рік', '/year');
     final perMonth = s('/місяць', '/month');
 
+    // Use the live store price everywhere when products are loaded — Apple
+    // and Google return it already formatted in the user's region currency
+    // (грн for UA, $ for US, € for EU, etc.). The hardcoded fallback below
+    // is only for offline / first-launch while the store query is pending.
     if (products.isEmpty) {
       return [
-        _Plan(labelYearly, s('449 грн', '\$11.99'), perYear, badgeBest,
+        _Plan(labelYearly, s('449 грн', '\$14.99'), perYear, badgeBest,
             productId: 'yearly_premium'),
-        _Plan(labelMonthly, s('79 грн', '\$2.99'), perMonth, null,
+        _Plan(labelMonthly, s('79 грн', '\$1.99'), perMonth, null,
             productId: 'monthly_premium'),
-        _Plan(labelLifetime, s('699 грн', '\$19.99'), '', badgeOneTime,
-            badgeColor: const Color(0xFFF9A825),
-            productId: 'lifetime_premium',
-            isLifetime: true),
       ];
     }
 
@@ -72,11 +71,6 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         case 'monthly_premium':
           return _Plan(labelMonthly, p.price, perMonth, null,
               productId: p.id);
-        case 'lifetime_premium':
-          return _Plan(labelLifetime, p.price, '', badgeOneTime,
-              badgeColor: const Color(0xFFF9A825),
-              productId: p.id,
-              isLifetime: true);
         default:
           return _Plan(p.title, p.price, '', null, productId: p.id);
       }
@@ -93,6 +87,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           await PurchaseService.instance.purchaseByProductId(plan.productId);
       if (!mounted) return;
       if (!success) {
+        // `buyNonConsumable` returns false when the user dismisses the
+        // system purchase sheet or the store rejects the request
+        // pre-flight. Treat both as a cancel from the funnel's POV.
+        AnalyticsService.instance.logPurchaseCancel(plan.productId);
         setState(() => _loading = false);
         return;
       }
@@ -102,10 +100,19 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
       if (PurchaseService.instance.isPro.value) {
         AnalyticsService.instance.logPurchaseSuccess(plan.productId);
+        await AnalyticsService.instance.setProProperty(true);
         ref.read(isProProvider.notifier).state = true;
+        if (!mounted) return;
         Navigator.of(context).pop(true);
+      } else {
+        // Timed out waiting for the purchase stream to deliver — surface
+        // as error so we can distinguish from user cancels in analytics.
+        AnalyticsService.instance
+            .logPurchaseError(plan.productId, 'pro_not_granted');
       }
-    } catch (_) {
+    } catch (e) {
+      AnalyticsService.instance
+          .logPurchaseError(plan.productId, e.toString());
       if (!mounted) return;
       setState(() => _loading = false);
     }
@@ -178,7 +185,14 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   child: IgnorePointer(
                     ignoring: !_canCloseEarly,
                     child: IconButton(
-                      onPressed: () => Navigator.of(context).pop(false),
+                      onPressed: () {
+                        AnalyticsService.instance.logPaywallDismiss(
+                          widget.isOnboarding
+                              ? 'paywall_onboarding'
+                              : 'paywall_screen',
+                        );
+                        Navigator.of(context).pop(false);
+                      },
                       icon: Icon(Icons.close,
                           color: Colors.grey[400], size: 28),
                     ),
@@ -199,8 +213,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                         'Unlock full potential',
                       ),
                       textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 22,
+                        fontSize: responsiveFont(context, 22),
                         fontWeight: FontWeight.bold,
                         color: Theme.of(context).textTheme.headlineSmall?.color,
                       ),
@@ -260,31 +276,31 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                                   strokeWidth: 2.5,
                                 ),
                               )
-                            : Text(
-                                s(
-                                  RemoteConfigService.instance.paywallCta,
-                                  'Start 3-day free trial',
-                                ),
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.2,
+                            : FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  s(
+                                    RemoteConfigService.instance.paywallCta,
+                                    'Start 3-day free trial',
+                                  ),
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.2,
+                                  ),
                                 ),
                               ),
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      plans[_selectedPlan].isLifetime
-                          ? s('Одноразова покупка — доступ назавжди',
-                              'One-time purchase — lifetime access')
-                          : s(
-                              '3 дні безкоштовно, потім ${plans[_selectedPlan].price}${plans[_selectedPlan].period} • Скасувати будь-коли',
-                              '3 days free, then ${plans[_selectedPlan].price}${plans[_selectedPlan].period} • Cancel anytime',
-                            ),
+                      s(
+                        '3 дні безкоштовно, потім ${plans[_selectedPlan].price}${plans[_selectedPlan].period} • Скасувати будь-коли',
+                        '3 days free, then ${plans[_selectedPlan].price}${plans[_selectedPlan].period} • Cancel anytime',
+                      ),
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                          fontSize: 13,
+                          fontSize: responsiveFont(context, 13),
                           color: Colors.grey[600],
                           fontWeight: FontWeight.w500),
                     ),
@@ -293,20 +309,27 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                       onPressed: _loading ? null : _restore,
                       child: Text(
                         s('Відновити покупки', 'Restore purchases'),
-                        style: TextStyle(color: Colors.grey[700], fontSize: 15, fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                            color: Colors.grey[700],
+                            fontSize: responsiveFont(context, 15),
+                            fontWeight: FontWeight.w500),
                       ),
                     ),
                     if (widget.isOnboarding)
                       TextButton(
                         onPressed: _loading
                             ? null
-                            : () => Navigator.of(context).pop(false),
+                            : () {
+                                AnalyticsService.instance.logPaywallDismiss(
+                                    'paywall_onboarding_skip');
+                                Navigator.of(context).pop(false);
+                              },
                         child: Text(
                           s('Продовжити з безкоштовними розділами',
                               'Continue with free packs'),
                           style: TextStyle(
                               color: Colors.grey[500],
-                              fontSize: 13,
+                              fontSize: responsiveFont(context, 13),
                               fontWeight: FontWeight.w500),
                         ),
                       ),
@@ -353,7 +376,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       child: Text(
         title,
         style: TextStyle(
-          fontSize: 13,
+          fontSize: responsiveFont(context, 13),
           color: Colors.grey[500],
           decoration: TextDecoration.underline,
         ),
@@ -364,11 +387,15 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   Widget _planTile(int index, List<_Plan> plans) {
     final plan = plans[index];
     final selected = _selectedPlan == index;
-    final tileColor =
-        plan.isLifetime ? const Color(0xFFF9A825) : kAccent;
+    const tileColor = kAccent;
 
     return GestureDetector(
-      onTap: () => setState(() => _selectedPlan = index),
+      onTap: () {
+        if (_selectedPlan != index) {
+          AnalyticsService.instance.logPaywallProductSelect(plan.productId);
+        }
+        setState(() => _selectedPlan = index);
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -417,31 +444,40 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
             const SizedBox(width: 14),
             // Label + badge
             Expanded(
+              flex: 2,
               child: Row(
                 children: [
-                  Text(
-                    plan.label,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: selected ? tileColor : null,
+                  Flexible(
+                    child: Text(
+                      plan.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: selected ? tileColor : null,
+                      ),
                     ),
                   ),
                   if (plan.badge != null) ...[
                     const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: plan.badgeColor,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        plan.badge!,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
+                    Flexible(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: plan.badgeColor,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          plan.badge!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
@@ -449,12 +485,15 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                 ],
               ),
             ),
+            const SizedBox(width: 8),
             // Price
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
                   plan.price,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
@@ -464,14 +503,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                 if (plan.period.isNotEmpty)
                   Text(
                     plan.period,
-                    style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey[500]),
-                  )
-                else if (plan.isLifetime)
-                  Text(
-                    AppS(ref.read(languageProvider) == 'en')(
-                        'одноразово', 'one-time'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                         fontSize: 11,
                         color: Colors.grey[500]),
@@ -508,10 +541,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           if (isOnb) ...[
             Text(
               s('ВІТАЄМО!', 'WELCOME!'),
-              style: const TextStyle(
-                fontSize: 14,
+              style: TextStyle(
+                fontSize: responsiveFont(context, 14),
                 fontWeight: FontWeight.w700,
-                color: Color(0xFFF9A825),
+                color: const Color(0xFFF9A825),
                 letterSpacing: 1.2,
               ),
             ),
@@ -520,8 +553,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           Text(
             s('3 ДНІ БЕЗКОШТОВНО', '3 DAYS FREE'),
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 24,
+            style: TextStyle(
+              fontSize: responsiveFont(context, 24),
               fontWeight: FontWeight.w900,
               color: kAccent,
               letterSpacing: 0.5,
@@ -536,7 +569,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                     'No commitment — cancel anytime'),
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 13,
+              fontSize: responsiveFont(context, 13),
               color: Colors.grey[700],
               fontWeight: FontWeight.w500,
             ),
@@ -574,7 +607,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         Text(
           s('4.9 із 5 — App Store', '4.9 out of 5 — App Store'),
           style: TextStyle(
-            fontSize: 13,
+            fontSize: responsiveFont(context, 13),
             color: Colors.grey[600],
             fontWeight: FontWeight.w500,
           ),
@@ -631,10 +664,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           Text(
             quote,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 14,
+            style: TextStyle(
+              fontSize: responsiveFont(context, 14),
               fontStyle: FontStyle.italic,
-              color: Color(0xFF4A3F1A),
+              color: const Color(0xFF4A3F1A),
               height: 1.35,
             ),
           ),
@@ -642,7 +675,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           Text(
             '— $author, App Store',
             style: TextStyle(
-              fontSize: 12,
+              fontSize: responsiveFont(context, 12),
               color: Colors.grey[600],
               fontWeight: FontWeight.w500,
             ),
@@ -668,9 +701,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Color(0xFF3A3A3A),
+            style: TextStyle(
+              fontSize: responsiveFont(context, 16),
+              color: const Color(0xFF3A3A3A),
               height: 1.3,
               fontWeight: FontWeight.w500,
             ),
@@ -686,17 +719,14 @@ class _Plan {
   final String price;
   final String period; // empty for one-time purchase
   final String? badge;
-  final Color badgeColor;
+  final Color badgeColor = const Color(0xFFFF6B6B);
   final String productId;
-  final bool isLifetime;
 
   const _Plan(
     this.label,
     this.price,
     this.period,
     this.badge, {
-    this.badgeColor = const Color(0xFFFF6B6B),
     required this.productId,
-    this.isLifetime = false,
   });
 }

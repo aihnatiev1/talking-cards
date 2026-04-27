@@ -11,6 +11,11 @@ class PackModel {
   final bool isLocked;
   final bool isFree; // originally free in JSON (not unlocked by purchase)
   final List<CardModel> cards;
+  /// Optional dedicated cover image (webp asset name, no extension) used as
+  /// the pack's thumbnail on the main grid. Falls back to the first card's
+  /// illustration when null. Lets sound-packs display a drawn letter as cover
+  /// while keeping real illustrations on the cards inside.
+  final String? cover;
 
   static const int freePreviewCount = 5;
 
@@ -22,6 +27,7 @@ class PackModel {
     required this.isLocked,
     required this.isFree,
     required this.cards,
+    this.cover,
   });
 
   factory PackModel.fromJson(Map<String, dynamic> json) {
@@ -36,6 +42,9 @@ class PackModel {
       cards: (json['cards'] as List<dynamic>)
           .map((c) => CardModel.fromJson(c as Map<String, dynamic>))
           .toList(),
+      cover: (json['cover'] as String?)?.trim().isEmpty ?? true
+          ? null
+          : json['cover'] as String?,
     );
   }
 
@@ -48,6 +57,7 @@ class PackModel {
       isLocked: isLocked ?? this.isLocked,
       isFree: isFree, // preserve original status
       cards: cards,
+      cover: cover,
     );
   }
 }
