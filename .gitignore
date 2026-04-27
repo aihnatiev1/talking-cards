@@ -27,7 +27,10 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
-pubspec.lock
+# pubspec.lock is intentionally committed for this app project so CI
+# (Xcode Cloud, Play Console) resolves the exact plugin versions Podfile.lock
+# was generated against. Without it, `flutter pub get` on CI can float to a
+# newer firebase_analytics whose iOS pods no longer match the lock.
 
 # Symbolication related
 app.*.symbols
