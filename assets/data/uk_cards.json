@@ -3821,7 +3821,7 @@
     "title": "Звук Р",
     "icon": "Р",
     "color": "#E53935",
-    "isLocked": true,
+    "isLocked": false,
     "cards": [
       {
         "id": "sr01",

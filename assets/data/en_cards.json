@@ -1339,7 +1339,7 @@
     "title": "Colors & Shapes",
     "icon": "🎨",
     "color": "#E84393",
-    "isLocked": false,
+    "isLocked": true,
     "cards": [
       {
         "id": "en_c01",
@@ -1957,7 +1957,7 @@
     "title": "Actions",
     "icon": "🏃",
     "color": "#FF8C42",
-    "isLocked": true,
+    "isLocked": false,
     "cards": [
       {
         "id": "en_ac01",
@@ -2923,7 +2923,7 @@
     "title": "Sound R",
     "icon": "R",
     "color": "#E53935",
-    "isLocked": true,
+    "isLocked": false,
     "cards": [
       {
         "id": "en_sr01",

@@ -27,12 +27,10 @@ final packsProvider = FutureProvider<List<PackModel>>((ref) async {
       .map((e) => PackModel.fromJson(e as Map<String, dynamic>))
       .toList();
 
-  // TEST MODE: unlock all packs regardless of Pro status.
-  // TODO: revert — remove this unconditional unlock and restore the
-  //       `if (!isPro) return packs;` gate before shipping.
-  // ignore: dead_code
-  if (false && !isPro) return packs;
-
+  // Free users see only the packs the JSON marks isLocked=false (currently
+  // Розмовлялки + Тваринки = 54 cards). Pro users get the locks lifted on
+  // every pack.
+  if (!isPro) return packs;
   return packs
       .map((p) => p.isLocked ? p.copyWith(isLocked: false) : p)
       .toList();
