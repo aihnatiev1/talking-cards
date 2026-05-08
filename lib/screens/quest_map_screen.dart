@@ -141,7 +141,7 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
     // If reward is claimed and we have the card — show full reveal screen
     if (quest.rewardClaimed && rewardCard != null && rewardPack != null) {
       final bonus = ref.read(bonusCardsProvider)[rewardPack.id] ?? 0;
-      final newTotal = PackModel.freePreviewCount + bonus;
+      final newTotal = rewardPack.effectiveFreePreviewCount + bonus;
       return CardRevealScreen(
         card: rewardCard,
         pack: rewardPack,
@@ -412,9 +412,9 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
 
   Future<void> _unlockAndReveal(PackModel pack) async {
     final bonus = ref.read(bonusCardsProvider)[pack.id] ?? 0;
-    final newTotal = PackModel.freePreviewCount + bonus + 1;
+    final newTotal = pack.effectiveFreePreviewCount + bonus + 1;
     final cardIndex =
-        (PackModel.freePreviewCount + bonus).clamp(0, pack.cards.length - 1);
+        (pack.effectiveFreePreviewCount + bonus).clamp(0, pack.cards.length - 1);
     final card = pack.cards[cardIndex];
 
     await ref.read(bonusCardsProvider.notifier).unlockOne(pack.id);
@@ -1244,7 +1244,7 @@ class _PackPickerSheetState extends ConsumerState<_PackPickerSheet>
               final pack = widget.lockedPacks[i];
               final bonus = widget.bonusCards[pack.id] ?? 0;
               final available =
-                  pack.cards.length - PackModel.freePreviewCount - bonus;
+                  pack.cards.length - pack.effectiveFreePreviewCount - bonus;
               final allUnlocked = available <= 0;
               final isSelected = _selectedIndex == i;
 
@@ -1313,7 +1313,7 @@ class _PackPickerSheetState extends ConsumerState<_PackPickerSheet>
                           Text(
                             allUnlocked
                                 ? '✅'
-                                : '${PackModel.freePreviewCount + bonus}/${pack.cards.length}',
+                                : '${pack.effectiveFreePreviewCount + bonus}/${pack.cards.length}',
                             style: TextStyle(
                                 fontSize: 10, color: Colors.grey[400]),
                           ),

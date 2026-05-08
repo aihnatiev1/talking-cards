@@ -24,6 +24,11 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<!-- Required by Apple's static analyzer (90683) because audio_session
+	     pulls AVAudioSession APIs whose category bit covers microphone use.
+	     The app does not record audio — string is intentionally explicit. -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>FirstWords Cards plays audio cards and never records from the microphone.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>

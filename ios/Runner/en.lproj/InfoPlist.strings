@@ -1,2 +1,3 @@
 CFBundleDisplayName = "FirstWords Cards";
 CFBundleName = "FirstWords Cards";
+NSMicrophoneUsageDescription = "FirstWords Cards plays audio cards and never records from the microphone.";

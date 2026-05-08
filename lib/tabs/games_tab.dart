@@ -12,6 +12,7 @@ import '../screens/memory_match_screen.dart';
 import '../screens/odd_one_out_screen.dart';
 import '../screens/opposite_game_screen.dart';
 import '../screens/repeat_game_screen.dart';
+import '../services/paywall_flow.dart';
 import '../utils/design_tokens.dart';
 
 /// Smooth fade+scale transition for games.
@@ -244,13 +245,10 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                   (isEn ? p.cards.any((c) => c.image != null) : true))
               .toList();
           final oppPackId = isEn ? 'en_opposites' : 'opposites';
-          final hasOpposites = packs
-                  .where((p) => p.id == oppPackId)
-                  .firstOrNull
-                  ?.cards
-                  .length ??
-              0;
           final oppPack = packs.where((p) => p.id == oppPackId).firstOrNull;
+          final oppLocked = oppPack?.isLocked ?? false;
+          final oppPlayable =
+              oppPack != null && !oppPack.isLocked && oppPack.cards.length >= 4;
           final advancedGames = <_BigGame>[
             _BigGame(
               title: isEn ? 'Odd one out' : 'Знайди зайве',
@@ -264,7 +262,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                   : null,
               lockedHint: isEn
                   ? 'Open at least 2 packs to play'
-                  : 'Відкрий хоча б 2 паки щоб грати',
+                  : 'Відкрій хоча б 2 паки щоб грати',
             ),
             _BigGame(
               title: isEn ? 'Opposites' : 'Протилежності',
@@ -273,10 +271,17 @@ class _GamesTabState extends ConsumerState<GamesTab> {
               bg: DT.pinkTint,
               thumb: oppPack != null ? _pickThumb(oppPack.cards) : null,
               badge: '↔️',
-              onTap: hasOpposites >= 4 ? () => _openOppositeGame(packs) : null,
+              onTap: oppPlayable ? () => _openOppositeGame(packs) : null,
               lockedHint: isEn
-                  ? 'Opposites pack is empty'
-                  : 'Пак «Протилежності» порожній',
+                  ? (oppLocked
+                      ? 'Subscribe to unlock Opposites'
+                      : 'Opposites pack is empty')
+                  : (oppLocked
+                      ? 'Розблокуй пак «Протилежності»'
+                      : 'Пак «Протилежності» порожній'),
+              onLockedTap: oppLocked
+                  ? () => runPaywallFlow(context, ref)
+                  : null,
             ),
           ];
 
@@ -327,6 +332,11 @@ class _BigGame {
   final String badge; // emoji shown as small floating sticker
   final VoidCallback? onTap;
   final String lockedHint;
+  /// When the tile is in disabled state (`onTap == null`) and this callback
+  /// is set, tapping invokes it instead of the default snackbar — used to
+  /// route the user straight to the paywall when the lock is subscription-
+  /// gated rather than skill-gated ("open more packs").
+  final VoidCallback? onLockedTap;
 
   _BigGame({
     required this.title,
@@ -337,6 +347,7 @@ class _BigGame {
     required this.badge,
     required this.onTap,
     required this.lockedHint,
+    this.onLockedTap,
   });
 }
 
@@ -414,6 +425,10 @@ class _BigGameTileState extends State<_BigGameTile> {
       onTapCancel: () => setState(() => _pressed = false),
       onTap: () {
         if (disabled) {
+          if (g.onLockedTap != null) {
+            g.onLockedTap!();
+            return;
+          }
           ScaffoldMessenger.of(context).clearSnackBars();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

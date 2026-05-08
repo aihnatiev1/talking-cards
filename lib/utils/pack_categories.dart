@@ -10,6 +10,7 @@ const packCategoriesUk = <String, String>{
   'actions': 'Мовлення',
   'opposites': 'Мовлення',
   'adjectives': 'Мовлення',
+  'poems': 'Мовлення',
   'sound_r': 'Звуки',
   'sound_l': 'Звуки',
   'sound_sh': 'Звуки',

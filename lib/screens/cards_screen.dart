@@ -66,7 +66,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     final allCards = widget.pack.cards;
     final bonus = ref.read(bonusCardsProvider)[widget.pack.id] ?? 0;
     final visibleCards = widget.pack.isLocked
-        ? allCards.take(PackModel.freePreviewCount + bonus).toList()
+        ? allCards.take(widget.pack.effectiveFreePreviewCount + bonus).toList()
         : allCards.toList();
     // Opposites pack: keep pair order (A→B, A→B...) — do not shuffle
     if (!widget.pack.id.contains('opposites')) {
@@ -262,46 +262,30 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   }
 
   /// Waits for the last-card audio to fully finish, then adds a 2-second
-  /// breather before revealing the celebration. The swipe triggers the voice
-  /// via a 500ms debounce, so we poll `isSpeaking` for up to 1.5s to give it
-  /// a chance to start — otherwise the modal can pop before the file even
-  /// begins.
+  /// breather before revealing the celebration.
+  ///
+  /// Loop-based watch: the child can either let auto-speak fire (500ms
+  /// debounce) OR manually tap to play. We watch `isSpeaking` continuously
+  /// until: (a) it's been quiet past the 6s grace window AND no audio is
+  /// currently playing, OR (b) the absolute 120s safety cap is hit. This
+  /// way a poem started at second 5 still plays to its end before the modal
+  /// pops, and a child who never taps still gets the modal after 6+2s.
   Future<void> _showCelebrationAfterSound() async {
     final audio = AudioService.instance;
+    final start = DateTime.now();
+    final graceEnd = start.add(const Duration(seconds: 6));
+    final hardCap = start.add(const Duration(seconds: 120));
 
-    // Wait up to 1.5s for the speak-debounce timer to fire and audio to start.
-    final startDeadline =
-        DateTime.now().add(const Duration(milliseconds: 1500));
-    while (!audio.isSpeaking.value &&
-        DateTime.now().isBefore(startDeadline)) {
+    while (mounted && DateTime.now().isBefore(hardCap)) {
+      final speaking = audio.isSpeaking.value;
+      if (!speaking && DateTime.now().isAfter(graceEnd)) break;
       await Future.delayed(const Duration(milliseconds: 100));
-      if (!mounted) return;
     }
+    if (!mounted) return;
 
-    if (audio.isSpeaking.value) {
-      // Audio is (or just became) playing — wait for it to end
-      final completer = Completer<void>();
-      void listener() {
-        if (!audio.isSpeaking.value) {
-          audio.isSpeaking.removeListener(listener);
-          if (!completer.isCompleted) completer.complete();
-        }
-      }
-      audio.isSpeaking.addListener(listener);
-      // Safety timeout so we don't wait forever
-      await Future.any([
-        completer.future,
-        Future.delayed(const Duration(seconds: 10)),
-      ]);
-      // 2-second breather after the audio fully finishes — lets the child
-      // register the last card and prevents the celebration modal from
-      // cutting off the tail of the voiceover.
-      await Future.delayed(const Duration(seconds: 2));
-    } else {
-      // No audio started within 1.5s — card has no recording. Wait 3s so
-      // the user still sees the final illustration before the modal pops.
-      await Future.delayed(const Duration(seconds: 3));
-    }
+    // 2-second breather after audio finishes (or grace expires) so the
+    // tail of the voiceover doesn't bleed into the celebration modal.
+    await Future.delayed(const Duration(seconds: 2));
 
     if (!mounted) return;
     if (widget.pack.isLocked) {
@@ -431,9 +415,9 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     final s = AppS(ref.read(languageProvider) == 'en');
     final allCards = widget.pack.cards;
     final bonus = ref.read(bonusCardsProvider)[widget.pack.id] ?? 0;
-    final remaining = allCards.length - PackModel.freePreviewCount - bonus;
+    final remaining = allCards.length - widget.pack.effectiveFreePreviewCount - bonus;
     final previewEmojis = allCards
-        .skip(PackModel.freePreviewCount + bonus)
+        .skip(widget.pack.effectiveFreePreviewCount + bonus)
         .take(6)
         .map((c) => c.emoji)
         .join(' ');
@@ -567,7 +551,8 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
         ),
         centerTitle: true,
         actions: [
-          if (_cards.where((c) => c.audioKey != null).length >= 6)
+          if (widget.pack.id != 'poems' &&
+              _cards.where((c) => c.audioKey != null).length >= 6)
             IconButton(
               icon: const Text('🧠', style: TextStyle(fontSize: 20)),
               tooltip: 'Грати Memory',

@@ -13,6 +13,11 @@ final isProProvider = StateProvider<bool>(
   (ref) => PurchaseService.instance.isPro.value,
 );
 
+/// TEMP testing override — when true, all packs are unlocked regardless of
+/// subscription state. Flip back to `false` before any release build to
+/// restore the paywall sampler.
+const _kForceUnlockAllPacks = false;
+
 final packsProvider = FutureProvider<List<PackModel>>((ref) async {
   final isPro = ref.watch(isProProvider);
   final lang = ref.watch(languageProvider);
@@ -30,7 +35,7 @@ final packsProvider = FutureProvider<List<PackModel>>((ref) async {
   // Free users see only the packs the JSON marks isLocked=false (currently
   // Розмовлялки + Тваринки = 54 cards). Pro users get the locks lifted on
   // every pack.
-  if (!isPro) return packs;
+  if (!isPro && !_kForceUnlockAllPacks) return packs;
   return packs
       .map((p) => p.isLocked ? p.copyWith(isLocked: false) : p)
       .toList();

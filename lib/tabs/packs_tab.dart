@@ -503,7 +503,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
               builder: (_) => CardRevealScreen(
                 card: card,
                 pack: p,
-                newTotal: PackModel.freePreviewCount,
+                newTotal: p.effectiveFreePreviewCount,
                 skipAnimation: true,
                 onShare: (_) {},
                 onGoToPack: () {

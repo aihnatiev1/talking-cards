@@ -16,8 +16,15 @@ class PackModel {
   /// illustration when null. Lets sound-packs display a drawn letter as cover
   /// while keeping real illustrations on the cards inside.
   final String? cover;
+  /// Per-pack override for free preview count. Falls back to the global
+  /// [freePreviewCount] when null. Set in JSON via "freePreviewCount": N.
+  final int? freePreviewCountOverride;
 
   static const int freePreviewCount = 5;
+
+  /// Effective free preview count for this pack (override or global default).
+  int get effectiveFreePreviewCount =>
+      freePreviewCountOverride ?? freePreviewCount;
 
   const PackModel({
     required this.id,
@@ -28,6 +35,7 @@ class PackModel {
     required this.isFree,
     required this.cards,
     this.cover,
+    this.freePreviewCountOverride,
   });
 
   factory PackModel.fromJson(Map<String, dynamic> json) {
@@ -45,6 +53,7 @@ class PackModel {
       cover: (json['cover'] as String?)?.trim().isEmpty ?? true
           ? null
           : json['cover'] as String?,
+      freePreviewCountOverride: json['freePreviewCount'] as int?,
     );
   }
 
@@ -58,6 +67,7 @@ class PackModel {
       isFree: isFree, // preserve original status
       cards: cards,
       cover: cover,
+      freePreviewCountOverride: freePreviewCountOverride,
     );
   }
 }

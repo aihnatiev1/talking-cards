@@ -5932,5 +5932,295 @@
         "transcription": "[ʃɔːrt]"
       }
     ]
+  },
+  {
+    "id": "poems",
+    "title": "Віршики",
+    "icon": "🎵",
+    "color": "#9B59B6",
+    "isLocked": true,
+    "cards": [
+      {
+        "id": "poem07",
+        "sound": "ЖИРАФА Й ЗЕБРА",
+        "text": "Вірш про жирафу й зебру",
+        "emoji": "🦒",
+        "colorBg": "#FFFDE7",
+        "colorAccent": "#FBC02D",
+        "image": "poem_giraffe_zebra",
+        "audio": "poem_giraffe_zebra"
+      },
+      {
+        "id": "poem10",
+        "sound": "КАЧКА Й КАЧЕНЯТА",
+        "text": "Вірш про качку й каченят",
+        "emoji": "🦆",
+        "colorBg": "#E0F7FA",
+        "colorAccent": "#00838F",
+        "image": "poem_duck2",
+        "audio": "poem_duck2"
+      },
+      {
+        "id": "poem17",
+        "sound": "ЛИСИЧКА Й БІЛОЧКА",
+        "text": "Вірш про лисичку й білочку",
+        "emoji": "🦊",
+        "colorBg": "#FFEBEE",
+        "colorAccent": "#E64A19",
+        "image": "poem_fox",
+        "audio": "poem_fox"
+      },
+      {
+        "id": "poem01",
+        "sound": "МУРАХА Й ВЕДМІДЬ",
+        "text": "Вірш про мураху й ведмедя",
+        "emoji": "🐻",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#6D4C41",
+        "image": "poem_vedmid",
+        "audio": "poem_vedmid"
+      },
+      {
+        "id": "poem02",
+        "sound": "ВОВК І ЗАЄЦЬ",
+        "text": "Вірш про вовка й зайця",
+        "emoji": "🐺",
+        "colorBg": "#ECEFF1",
+        "colorAccent": "#455A64",
+        "image": "poem_vovk",
+        "audio": "poem_vovk"
+      },
+      {
+        "id": "poem03",
+        "sound": "ВІВЦЯ Й КОРОВА",
+        "text": "Вірш про вівцю й корову",
+        "emoji": "🐄",
+        "colorBg": "#F0FFF0",
+        "colorAccent": "#58D68D",
+        "image": "poem_vivtsia_korova",
+        "audio": "poem_vivtsia_korova"
+      },
+      {
+        "id": "poem04",
+        "sound": "ГУСАК І КУРКА",
+        "text": "Зустрілися гусак і курка",
+        "emoji": "🐔",
+        "colorBg": "#FFFFF0",
+        "colorAccent": "#F4D03F",
+        "image": "poem_husak_kurka",
+        "audio": "poem_husak_kurka"
+      },
+      {
+        "id": "poem05",
+        "sound": "ГУСАК І ГУСКА",
+        "text": "Вірш про гусака й гуску",
+        "emoji": "🦢",
+        "colorBg": "#FFFDE7",
+        "colorAccent": "#F9A825",
+        "image": "poem_husak",
+        "audio": "poem_husak"
+      },
+      {
+        "id": "poem06",
+        "sound": "ДИТЯТКО Й ПОРОСЯТКО",
+        "text": "Вірш про дитятко й поросятко",
+        "emoji": "🐷",
+        "colorBg": "#FFE6F0",
+        "colorAccent": "#FF85A1",
+        "image": "poem_dytia_porosia",
+        "audio": "poem_dytia_porosia"
+      },
+      {
+        "id": "poem08",
+        "sound": "ІНДИК",
+        "text": "Вірш про індика",
+        "emoji": "🦃",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "image": "turkey",
+        "audio": "poem_turkey"
+      },
+      {
+        "id": "poem09",
+        "sound": "КАЧКА Й КОЗА",
+        "text": "Вірш про качку й козу",
+        "emoji": "🦆",
+        "colorBg": "#E1F5FE",
+        "colorAccent": "#0288D1",
+        "image": "poem_duck",
+        "audio": "poem_duck"
+      },
+      {
+        "id": "poem11",
+        "sound": "КОЗЕНЯТКО",
+        "text": "Вірш про козенятко",
+        "emoji": "🐐",
+        "colorBg": "#F5F5F5",
+        "colorAccent": "#757575",
+        "image": "goat",
+        "audio": "poem_goat_kid"
+      },
+      {
+        "id": "poem12",
+        "sound": "КОНИК",
+        "text": "Вірш про коника",
+        "emoji": "🐴",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#8D6E63",
+        "image": "horse",
+        "audio": "poem_horse"
+      },
+      {
+        "id": "poem13",
+        "sound": "КОРІВКА",
+        "text": "Вірш про корівку",
+        "emoji": "🐄",
+        "colorBg": "#F1F8E9",
+        "colorAccent": "#7CB342",
+        "image": "cow",
+        "audio": "poem_little_cow"
+      },
+      {
+        "id": "poem14",
+        "sound": "КРОЛИК І ЦУЦЕНЯ",
+        "text": "Вірш про кролика й цуценя",
+        "emoji": "🐰",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#8E24AA",
+        "image": "poem_rabbit",
+        "audio": "poem_rabbit"
+      },
+      {
+        "id": "poem15",
+        "sound": "КРОЛИК І КАПУСТА",
+        "text": "Вірш про кролика й капусту",
+        "emoji": "🐇",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#C2185B",
+        "image": "poem_rabbit2",
+        "audio": "poem_rabbit2"
+      },
+      {
+        "id": "poem16",
+        "sound": "КУРОЧКА Й КУРЧАТКА",
+        "text": "Вірш про курочку й курчаток",
+        "emoji": "🐔",
+        "colorBg": "#FFFFF0",
+        "colorAccent": "#FBC02D",
+        "image": "poem_hen",
+        "audio": "poem_hen"
+      },
+      {
+        "id": "poem18",
+        "sound": "МУРКА",
+        "text": "Вірш про кицю Мурку",
+        "emoji": "🐱",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#FF6F00",
+        "image": "cat",
+        "audio": "poem_kitty"
+      },
+      {
+        "id": "poem19",
+        "sound": "КРОКОДИЛ",
+        "text": "Вірш про крокодила",
+        "emoji": "🐊",
+        "colorBg": "#ECEFF1",
+        "colorAccent": "#607D8B",
+        "image": "poem_rhino",
+        "audio": "poem_rhino"
+      },
+      {
+        "id": "poem20",
+        "sound": "ДВІ ОВЕЧКИ",
+        "text": "Вірш про двох овечок",
+        "emoji": "🐑",
+        "colorBg": "#FAFAFA",
+        "colorAccent": "#616161",
+        "image": "poem_sheep",
+        "audio": "poem_sheep"
+      },
+      {
+        "id": "poem21",
+        "sound": "ОРЕЛ",
+        "text": "Вірш про орла",
+        "emoji": "🦅",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#5D4037",
+        "image": "eagle",
+        "audio": "poem_eagle"
+      },
+      {
+        "id": "poem22",
+        "sound": "ПАПУГА Й КІТ",
+        "text": "Вірш про папугу й кота",
+        "emoji": "🦜",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32",
+        "image": "poem_parrot",
+        "audio": "poem_parrot"
+      },
+      {
+        "id": "poem23",
+        "sound": "ПЕСИК ГАВ",
+        "text": "Вірш про песика",
+        "emoji": "🐶",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#BF360C",
+        "image": "dog",
+        "audio": "poem_puppy"
+      },
+      {
+        "id": "poem24",
+        "sound": "РИБКИ Й КАНАРЕЙКА",
+        "text": "Вірш про рибок і канарейку",
+        "emoji": "🐟",
+        "colorBg": "#E1F5FE",
+        "colorAccent": "#0277BD",
+        "image": "poem_fish",
+        "audio": "poem_fish"
+      },
+      {
+        "id": "poem25",
+        "sound": "СВИНКА Й КОНИК",
+        "text": "Вірш про свинку й коника",
+        "emoji": "🐷",
+        "colorBg": "#FFE6F0",
+        "colorAccent": "#EC407A",
+        "image": "poem_pig",
+        "audio": "poem_pig"
+      },
+      {
+        "id": "poem26",
+        "sound": "СОВА І ОЛЕНЬ",
+        "text": "Вірш про сову і оленя",
+        "emoji": "🦉",
+        "colorBg": "#EDE7F6",
+        "colorAccent": "#5E35B1",
+        "image": "poem_owl",
+        "audio": "poem_owl"
+      },
+      {
+        "id": "poem27",
+        "sound": "ТИГР",
+        "text": "Вірш про тигра",
+        "emoji": "🐯",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "image": "poem_tiger",
+        "audio": "poem_tiger"
+      },
+      {
+        "id": "poem28",
+        "sound": "ЧЕРЕПАШКА Й ХОМ'ЯЧОК",
+        "text": "Вірш про черепашку й хом'ячка",
+        "emoji": "🐢",
+        "colorBg": "#E0F2F1",
+        "colorAccent": "#00695C",
+        "image": "poem_turtle",
+        "audio": "poem_turtle"
+      }
+    ],
+    "freePreviewCount": 3
   }
 ]
