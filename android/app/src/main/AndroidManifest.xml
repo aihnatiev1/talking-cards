@@ -40,6 +40,18 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- Strip Glance widget trampoline activities pulled in transitively
+             by home_widget. We only ship an iOS Card-of-Day widget; on Android
+             these activities have crashed for users with stale intents from
+             prior installs (Crashlytics: "List adapter activity trampoline
+             invoked without specifying target intent"). -->
+        <activity
+            android:name="androidx.glance.appwidget.action.InvisibleActionTrampolineActivity"
+            tools:node="remove" />
+        <activity
+            android:name="androidx.glance.appwidget.action.ActionTrampolineActivity"
+            tools:node="remove" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
