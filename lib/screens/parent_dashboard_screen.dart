@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
+import '../providers/app_review_provider.dart';
 import '../providers/daily_stats_provider.dart';
 import '../providers/game_stats_provider.dart';
 import '../providers/language_provider.dart';
@@ -174,6 +175,11 @@ class _OverviewTab extends ConsumerWidget {
                   ))
               .toList(),
         ),
+        const SizedBox(height: 32),
+        _RateAppTile(
+          label: s('Оцінити додаток', 'Rate the app'),
+          onTap: () => ref.read(appReviewControllerProvider).requestReview(),
+        ),
       ],
     );
   }
@@ -241,6 +247,48 @@ class _StatCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Explicit, parent-initiated "Rate the app" action. It is never triggered
+/// automatically — a tap opens the OS-native, in-app review sheet (which is
+/// rate-limited by the OS and never leaves the app), so it stays child-safe
+/// even though the Parent area is not behind a parental gate.
+class _RateAppTile extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const _RateAppTile({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: kAccent.withValues(alpha: 0.06),
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          child: Row(
+            children: [
+              const Text('⭐', style: TextStyle(fontSize: 22)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, color: Colors.grey[400]),
+            ],
+          ),
+        ),
       ),
     );
   }
