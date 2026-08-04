@@ -13,11 +13,23 @@ set -euo pipefail
 
 echo "▶ Xcode Cloud post-clone — repo: $CI_PRIMARY_REPOSITORY_PATH"
 
-# 1. Fetch Flutter SDK if not already cached. --depth 1 keeps it small.
+# 1. Fetch a PINNED Flutter SDK. Do NOT clone floating `stable`: CI stable
+#    drifts ahead of the version the app is built/released with locally, and a
+#    newer toolchain regenerates the iOS plugin registrant / pods differently,
+#    which surfaced as "Module 'audio_session' not found" on Xcode Cloud while
+#    local builds were clean. Keep this in lockstep with the local Flutter
+#    version (`flutter --version`) on every SDK upgrade.
+FLUTTER_VERSION="3.41.5"
 if [ ! -d "$HOME/flutter" ]; then
-  git clone https://github.com/flutter/flutter.git --depth 1 -b stable "$HOME/flutter"
+  git clone https://github.com/flutter/flutter.git --depth 1 -b "$FLUTTER_VERSION" "$HOME/flutter"
 fi
 export PATH="$HOME/flutter/bin:$PATH"
+
+# Reconcile a cached SDK from a prior build if its version differs from the pin.
+if ! flutter --version | grep -q "Flutter $FLUTTER_VERSION "; then
+  git -C "$HOME/flutter" fetch --depth 1 origin "refs/tags/$FLUTTER_VERSION" \
+    && git -C "$HOME/flutter" checkout FETCH_HEAD
+fi
 
 # 2. Force first-run init so dart-sdk + pub cache exist before pub get.
 flutter --version
