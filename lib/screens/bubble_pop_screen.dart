@@ -50,17 +50,12 @@ const _kMinVelY = 50.0; // px/sec — large bubble, slow
 const _kMaxVelY = 130.0; // px/sec — small bubble, fast
 const _kPopMs = 900;
 
-// Excluded packs (apply to both modes): phrase packs and virtual / seasonal.
-const _kExcludedPackIds = {
-  'rozmovlyalky',
-  'phrases',
-  'en_phrases',
-};
-
+// Excluded packs (apply to both modes): phrase/verse/babble packs (shared
+// PackModel.nonWordPackIds) plus virtual / seasonal.
 bool _isExcludedPack(PackModel p) {
   if (p.id.startsWith('_')) return true;
   if (p.id.startsWith('seasonal_')) return true;
-  if (_kExcludedPackIds.contains(p.id)) return true;
+  if (PackModel.nonWordPackIds.contains(p.id)) return true;
   return false;
 }
 

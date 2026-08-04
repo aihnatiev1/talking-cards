@@ -66,7 +66,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
   }
 
   static const _oddOneOutExclude = {
-    'adjectives', 'actions', 'opposites', 'phrases', 'rozmovlyalky',
+    'adjectives', 'actions', 'opposites', 'phrases', 'rozmovlyalky', 'poems',
     'sound_r', 'sound_l', 'sound_sh', 'sound_s', 'sound_z',
     'sound_zh', 'sound_ch', 'sound_shch', 'sound_ts',
     'en_actions', 'en_opposites',
@@ -88,13 +88,13 @@ class _GamesTabState extends ConsumerState<GamesTab> {
   }
 
   void _openRepeatGame(List<PackModel> packs) {
-    // Repeat After Me asks the child to say a real word. Rozmovlyalky
-    // ("розмовлялки") are babble-sound combos (ай / ба / ва) — not words, so
-    // exclude them. Also require a webp illustration so the child has
+    // Repeat After Me asks the child to say a real word, so exclude phrase /
+    // verse / babble packs (rozmovlyalky = ай/ба/ва, poems, phrases — not
+    // single words). Also require a webp illustration so the child has
     // something to anchor the word to visually.
-    const excluded = {'rozmovlyalky'};
     final cards = packs
-        .where((p) => !p.id.startsWith('_') && !excluded.contains(p.id))
+        .where((p) =>
+            !p.id.startsWith('_') && !PackModel.nonWordPackIds.contains(p.id))
         .expand((p) => p.cards)
         .where((c) => c.image != null)
         .toList();
@@ -162,7 +162,12 @@ class _GamesTabState extends ConsumerState<GamesTab> {
           ),
         ),
         data: (packs) {
-          final allCards = packs.expand((p) => p.cards).toList();
+          // Word-based games (Guess, Memory, thumbnails) must not pull cards
+          // from phrase/verse/babble packs, or a poem plays instead of a word.
+          final allCards = packs
+              .where((p) => !PackModel.nonWordPackIds.contains(p.id))
+              .expand((p) => p.cards)
+              .toList();
           final playableCount = isEn
               ? allCards.where((c) => c.image != null).length
               : allCards.where((c) => c.audioKey != null).length;
