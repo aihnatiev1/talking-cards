@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/card_model.dart';
+import '../models/pack_model.dart';
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../services/analytics_service.dart';
@@ -144,7 +145,8 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
   void _pickCardAndLoad() {
     final packs = ref.read(packsProvider).valueOrNull ?? [];
     final pool = packs
-        .where((p) => !p.id.startsWith('_'))
+        .where((p) =>
+            !p.id.startsWith('_') && !PackModel.nonWordPackIds.contains(p.id))
         .expand((p) => p.cards)
         .where((c) => c.image != null)
         .toList();

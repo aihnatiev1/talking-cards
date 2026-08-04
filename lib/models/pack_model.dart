@@ -22,6 +22,17 @@ class PackModel {
 
   static const int freePreviewCount = 5;
 
+  /// Packs whose audio is a full phrase/verse or non-word babble rather than a
+  /// single spoken word. Excluded from word-based games (Guess, Memory, Repeat,
+  /// Bubble Pop, Odd-one-out) and the Coloring picker — otherwise a game meant
+  /// to teach one word ends up narrating a minute-long poem or a babble sound.
+  static const Set<String> nonWordPackIds = {
+    'poems', // Віршики — full verses
+    'rozmovlyalky', // Розмовлялки — babble sounds (ай/ба/ва), not real words
+    'phrases', // Фрази — full sentences
+    'en_phrases', // Phrases (EN)
+  };
+
   /// Effective free preview count for this pack (override or global default).
   int get effectiveFreePreviewCount =>
       freePreviewCountOverride ?? freePreviewCount;
