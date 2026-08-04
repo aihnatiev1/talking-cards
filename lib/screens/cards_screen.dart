@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:ui';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:in_app_review/in_app_review.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/card_model.dart';
@@ -20,7 +19,6 @@ import '../providers/language_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../services/engage_service.dart';
-import '../utils/constants.dart';
 import '../utils/l10n.dart';
 import '../services/paywall_flow.dart';
 import '../widgets/celebration_overlay.dart';
@@ -333,78 +331,14 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                   builder: (_) => CardsScreen(pack: widget.pack)),
             );
           },
-          onDone: () async {
+          onDone: () {
             dismissOverlay();
-            await _maybeShowRatePrompt();
+            // NOTE: a review prompt used to auto-fire here, inside the child
+            // flow, which let a child tap "rate". Rating is now an explicit,
+            // parent-initiated action only — see the "Rate the app" tile in
+            // ParentDashboardScreen / AppReviewController.requestReview().
             if (mounted && navigator.canPop()) navigator.pop();
           },
-        ),
-      ),
-    );
-  }
-
-  Future<void> _maybeShowRatePrompt() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (prefs.getBool('rate_shown') == true) return;
-    final completed = ref.read(completedPacksProvider);
-    if (completed.isEmpty) return;
-    await prefs.setBool('rate_shown', true);
-    if (!mounted) return;
-
-    await showDialog(
-      context: context,
-      builder: (ctx) => Dialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        child: Padding(
-          padding: const EdgeInsets.all(28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('🌟', style: TextStyle(fontSize: 48)),
-              const SizedBox(height: 12),
-              const Text(
-                'Подобається додаток?',
-                style:
-                    TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Оцініть нас в магазині — це дуже допомагає!',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 15, color: Colors.grey[600]),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    Navigator.of(ctx).pop();
-                    final review = InAppReview.instance;
-                    if (await review.isAvailable()) {
-                      review.requestReview();
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kAccent,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                  ),
-                  child: const Text('Оцінити ⭐',
-                      style: TextStyle(
-                          fontSize: 17, fontWeight: FontWeight.bold)),
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: Text('Не зараз',
-                    style: TextStyle(color: Colors.grey[500])),
-              ),
-            ],
-          ),
         ),
       ),
     );
