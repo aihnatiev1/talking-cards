@@ -1,7 +1,5 @@
-What's new in 1.3.0:
-
 - Games and coloring now say just the word — no extra phrases or verses
 - Rate the app right from the Parent area
 - Performance and stability improvements
 
-Thank you for using Talking Cards!
+Thank you for playing!
