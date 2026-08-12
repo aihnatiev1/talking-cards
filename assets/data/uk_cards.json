@@ -1,6 +1,7 @@
 [
   {
     "id": "rozmovlyalky",
+    "category": "speech",
     "title": "Розмовлялки",
     "icon": "🗣️",
     "color": "#FF6B6B",
@@ -260,6 +261,7 @@
   },
   {
     "id": "animals",
+    "category": "world",
     "title": "Тваринки",
     "icon": "🐾",
     "color": "#4ECDC4",
@@ -617,6 +619,7 @@
   },
   {
     "id": "home",
+    "category": "world",
     "title": "Вдома",
     "icon": "🏠",
     "color": "#FFD93D",
@@ -986,6 +989,7 @@
   },
   {
     "id": "emotions",
+    "category": "world",
     "title": "Емоції та почуття",
     "icon": "😊",
     "color": "#FF6B9D",
@@ -1355,6 +1359,7 @@
   },
   {
     "id": "transport",
+    "category": "world",
     "title": "Транспорт",
     "icon": "🚗",
     "color": "#0984E3",
@@ -1724,6 +1729,7 @@
   },
   {
     "id": "food",
+    "category": "world",
     "title": "Їжа та фрукти",
     "icon": "🍎",
     "color": "#00B894",
@@ -2093,6 +2099,7 @@
   },
   {
     "id": "colors",
+    "category": "world",
     "title": "Кольори та форми",
     "icon": "🎨",
     "color": "#E17055",
@@ -2462,6 +2469,7 @@
   },
   {
     "id": "body",
+    "category": "world",
     "title": "Частини тіла",
     "icon": "🧒",
     "color": "#6C5CE7",
@@ -2831,6 +2839,7 @@
   },
   {
     "id": "phrases",
+    "category": "speech",
     "title": "Фрази",
     "icon": "💬",
     "color": "#6C5CE7",
@@ -3140,6 +3149,7 @@
   },
   {
     "id": "actions",
+    "category": "speech",
     "title": "Дії",
     "icon": "🏃",
     "color": "#FF8C42",
@@ -3449,6 +3459,7 @@
   },
   {
     "id": "opposites",
+    "category": "speech",
     "title": "Протилежності",
     "icon": "↔️",
     "color": "#8E44AD",
@@ -3818,6 +3829,7 @@
   },
   {
     "id": "sound_r",
+    "category": "sounds",
     "title": "Звук Р",
     "icon": "Р",
     "color": "#E53935",
@@ -4049,6 +4061,7 @@
   },
   {
     "id": "sound_l",
+    "category": "sounds",
     "title": "Звук Л",
     "icon": "Л",
     "color": "#7B1FA2",
@@ -4293,6 +4306,7 @@
   },
   {
     "id": "sound_sh",
+    "category": "sounds",
     "title": "Звук Ш",
     "icon": "Ш",
     "color": "#00838F",
@@ -4511,6 +4525,7 @@
   },
   {
     "id": "sound_s",
+    "category": "sounds",
     "title": "Звук С",
     "icon": "С",
     "color": "#1565C0",
@@ -4729,6 +4744,7 @@
   },
   {
     "id": "sound_z",
+    "category": "sounds",
     "title": "Звук З",
     "icon": "З",
     "color": "#2E7D32",
@@ -4947,6 +4963,7 @@
   },
   {
     "id": "sound_zh",
+    "category": "sounds",
     "title": "Звук Ж",
     "icon": "Ж",
     "color": "#F57F17",
@@ -5126,6 +5143,7 @@
   },
   {
     "id": "sound_ch",
+    "category": "sounds",
     "title": "Звук Ч",
     "icon": "Ч",
     "color": "#546E7A",
@@ -5331,6 +5349,7 @@
   },
   {
     "id": "sound_shch",
+    "category": "sounds",
     "title": "Звук Щ",
     "icon": "Щ",
     "color": "#004D40",
@@ -5484,6 +5503,7 @@
   },
   {
     "id": "sound_ts",
+    "category": "sounds",
     "title": "Звук Ц",
     "icon": "Ц",
     "color": "#AD1457",
@@ -5650,6 +5670,7 @@
   },
   {
     "id": "adjectives",
+    "category": "speech",
     "title": "Прикметники",
     "icon": "🎨",
     "color": "#E65100",
@@ -5935,6 +5956,7 @@
   },
   {
     "id": "poems",
+    "category": "speech",
     "title": "Віршики",
     "icon": "🎵",
     "color": "#9B59B6",

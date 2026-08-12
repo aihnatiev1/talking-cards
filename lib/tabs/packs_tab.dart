@@ -653,8 +653,12 @@ class _PacksTabState extends ConsumerState<PacksTab> {
               ? (packProgress[continuePack.id] ?? 0)
               : 0;
           final s = AppS(langMode);
-          final packCategories = isEnMode ? packCategoriesEn : packCategoriesUk;
-          final allCategories = isEnMode ? allCategoriesEn : allCategoriesUk;
+          // Categories present in the loaded content, in canonical order —
+          // a category with no packs simply doesn't get a chip.
+          final allCategories = [
+            for (final id in kPackCategoryIds)
+              if (packs.any((p) => p.category == id)) id,
+          ];
 
           if (_selectedCategory.isEmpty ||
               !allCategories.contains(_selectedCategory)) {
@@ -705,7 +709,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
 
           // Filter by category
           final filteredPacks = packs
-              .where((p) => packCategories[p.id] == _selectedCategory)
+              .where((p) => p.category == _selectedCategory)
               .toList();
 
           // Build grid items
@@ -720,7 +724,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
           }
 
           // Inject seasonal packs as highlighted first items — only in "World" tab
-          if (_selectedCategory == 'Світ' || _selectedCategory == 'World') {
+          if (_selectedCategory == 'world') {
             final seasonalPacks =
                 ref.watch(activeSeasonalPacksProvider).valueOrNull ?? [];
             for (int i = seasonalPacks.length - 1; i >= 0; i--) {
@@ -866,13 +870,16 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                       if (i > 0) const SizedBox(width: 8),
                       Expanded(
                         child: _CategoryChip(
-                          label: allCategories[i],
+                          categoryId: allCategories[i],
+                          label: packCategoryLabel(allCategories[i], s),
                           selected: allCategories[i] == _selectedCategory,
                           onSelected: () {
                             final newCat = allCategories[i];
                             if (newCat != _selectedCategory) {
-                              AnalyticsService.instance
-                                  .logCategorySwitch(newCat);
+                              // Keep the historical analytics value — the
+                              // localized label, not the category id.
+                              AnalyticsService.instance.logCategorySwitch(
+                                  packCategoryLabel(newCat, s));
                             }
                             setState(() {
                               _selectedCategory = newCat;
@@ -1046,29 +1053,22 @@ class _GridItem {
   _GridItem.pack(this.pack, {this.isSeasonal = false});
 }
 
-const _categoryIcons = <String, String>{
-  'Мовлення': '💬',
-  'Звуки': '🔤',
-  'Світ': '🌍',
-  'Speaking': '💬',
-  'Sounds': '🔤',
-  'World': '🌍',
-};
-
 class _CategoryChip extends StatelessWidget {
   const _CategoryChip({
+    required this.categoryId,
     required this.label,
     required this.selected,
     required this.onSelected,
   });
 
+  final String categoryId;
   final String label;
   final bool selected;
   final VoidCallback onSelected;
 
   @override
   Widget build(BuildContext context) {
-    final icon = _categoryIcons[label];
+    final icon = kPackCategoryIcons[categoryId];
     final display = icon != null ? '$icon $label' : label;
     return FilterChip(
       label: Center(

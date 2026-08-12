@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/audio_service.dart';
 import '../services/engage_service.dart';
 import '../services/remote_config_service.dart';
+import '../services/locale_registry.dart';
 import '../services/widget_service.dart';
 import '../utils/constants.dart';
 import '../utils/l10n.dart';
@@ -32,7 +33,7 @@ class _SplashScreenState extends State<SplashScreen>
   bool _imageReady = false;
   bool _showOnboarding = false;
   String? _deepLink;
-  bool _isEnLang = false;
+  String _lang = 'uk';
 
   @override
   void initState() {
@@ -88,6 +89,7 @@ class _SplashScreenState extends State<SplashScreen>
       guard('purchase', () => PurchaseService.instance.init()),
       guard('audio', () => AudioService.instance.precache()),
       guard('notifications', () => NotificationService.instance.init()),
+      guard('localeRegistry', () => LocaleRegistry.instance.load()),
     ]);
 
     // Schedule day-3 soft paywall reminder for non-pro users; cancel for pro.
@@ -115,8 +117,8 @@ class _SplashScreenState extends State<SplashScreen>
         final j = json.decode(s) as Map<String, dynamic>;
         if (j['id'] == activeId) {
           activeLang = (j['lang'] as String?) ?? 'uk';
-          if (activeLang == 'en' && mounted) {
-            setState(() => _isEnLang = true);
+          if (activeLang != 'uk' && mounted) {
+            setState(() => _lang = activeLang);
           }
           break;
         }
@@ -206,7 +208,9 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  _isEnLang ? 'FirstWords Cards' : 'Картки-розмовлялки',
+                  // Registry appTitle; hard uk/en fallbacks keep the exact
+                  // legacy titles even before the manifest loads.
+                  LocaleRegistry.instance.appTitle(_lang),
                   style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,

@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import '../services/locale_registry.dart';
+
 class ProfileModel {
   final String id;
   final String name;
@@ -20,7 +22,9 @@ class ProfileModel {
     this.level = 2,
   });
 
-  String get flagEmoji => language == 'en' ? '🇬🇧' : '🇺🇦';
+  /// Flag for the profile's learning language, from the locale registry
+  /// (hard 🇺🇦/🇬🇧 fallbacks keep this sync-safe before the manifest loads).
+  String get flagEmoji => LocaleRegistry.instance.flag(language);
 
   ProfileModel copyWith({String? name, String? avatarEmoji, String? language, int? level}) =>
       ProfileModel(

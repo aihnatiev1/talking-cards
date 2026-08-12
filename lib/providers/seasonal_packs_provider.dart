@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
 import '../services/audio_service.dart';
+import '../services/locale_registry.dart';
 import '../utils/color_utils.dart';
 import 'language_provider.dart';
 
@@ -102,9 +103,10 @@ final _allSeasonalPacksProvider =
 
 final activeSeasonalPacksProvider =
     FutureProvider<List<SeasonalPackModel>>((ref) async {
-  // Seasonal packs are UA cultural content — hide in EN mode
+  // Seasonal packs are UA cultural content — locale-gated via the registry
+  // (uk: on, en: off, matching the old `lang == 'en'` check).
   final lang = ref.watch(languageProvider);
-  if (lang == 'en') return [];
+  if (!LocaleRegistry.instance.capabilities(lang).seasonalPacks) return [];
   final all = await ref.watch(_allSeasonalPacksProvider.future);
   final now = DateTime.now();
   return all.where((p) => p.isActiveOn(now)).toList();

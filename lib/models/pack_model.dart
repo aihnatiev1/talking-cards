@@ -11,6 +11,10 @@ class PackModel {
   final bool isLocked;
   final bool isFree; // originally free in JSON (not unlocked by purchase)
   final List<CardModel> cards;
+  /// Category id for the home-grid filter chips: 'speech' | 'sounds' |
+  /// 'world'. Empty for virtual packs (favorites/review/seasonal), which
+  /// are injected outside the category filter.
+  final String category;
   /// Optional dedicated cover image (webp asset name, no extension) used as
   /// the pack's thumbnail on the main grid. Falls back to the first card's
   /// illustration when null. Lets sound-packs display a drawn letter as cover
@@ -45,6 +49,7 @@ class PackModel {
     required this.isLocked,
     required this.isFree,
     required this.cards,
+    this.category = '',
     this.cover,
     this.freePreviewCountOverride,
   });
@@ -61,6 +66,7 @@ class PackModel {
       cards: (json['cards'] as List<dynamic>)
           .map((c) => CardModel.fromJson(c as Map<String, dynamic>))
           .toList(),
+      category: json['category'] as String? ?? '',
       cover: (json['cover'] as String?)?.trim().isEmpty ?? true
           ? null
           : json['cover'] as String?,
@@ -77,6 +83,7 @@ class PackModel {
       isLocked: isLocked ?? this.isLocked,
       isFree: isFree, // preserve original status
       cards: cards,
+      category: category,
       cover: cover,
       freePreviewCountOverride: freePreviewCountOverride,
     );

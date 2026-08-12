@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talking_cards/models/card_model.dart';
 import 'package:talking_cards/models/pack_model.dart';
+import 'package:talking_cards/utils/l10n.dart';
 import 'package:talking_cards/utils/pack_categories.dart';
 
 CardModel _card(String id) => CardModel(
@@ -63,33 +64,28 @@ void main() {
   });
 
   group('category constants', () {
-    test('allCategoriesUk covers all pack ids', () {
-      final usedCategories = packCategoriesUk.values.toSet();
-      for (final cat in usedCategories) {
-        expect(allCategoriesUk.contains(cat), isTrue,
-            reason: '"$cat" missing from allCategoriesUk');
+    test('canonical order is speech, sounds, world (no "All"/"Все")', () {
+      expect(kPackCategoryIds, ['speech', 'sounds', 'world']);
+    });
+
+    test('every category id has an icon', () {
+      for (final id in kPackCategoryIds) {
+        expect(kPackCategoryIcons[id], isNotNull,
+            reason: '"$id" missing from kPackCategoryIcons');
       }
     });
 
-    test('allCategoriesEn covers all pack ids', () {
-      final usedCategories = packCategoriesEn.values.toSet();
-      for (final cat in usedCategories) {
-        expect(allCategoriesEn.contains(cat), isTrue,
-            reason: '"$cat" missing from allCategoriesEn');
-      }
+    test('labels match the legacy uk/en chip strings exactly', () {
+      const uk = AppS('uk');
+      const en = AppS('en');
+      expect(kPackCategoryIds.map((id) => packCategoryLabel(id, uk)),
+          ['Мовлення', 'Звуки', 'Світ']);
+      expect(kPackCategoryIds.map((id) => packCategoryLabel(id, en)),
+          ['Speaking', 'Sounds', 'World']);
     });
 
-    test('first element of allCategoriesUk is "Мовлення"', () {
-      expect(allCategoriesUk.first, 'Мовлення');
-    });
-
-    test('first element of allCategoriesEn is "Speaking"', () {
-      expect(allCategoriesEn.first, 'Speaking');
-    });
-
-    test('both category lists have exactly 3 entries (no "All"/"Все")', () {
-      expect(allCategoriesUk.length, 3);
-      expect(allCategoriesEn.length, 3);
+    test('unknown category id falls back to the id itself', () {
+      expect(packCategoryLabel('mystery', const AppS('uk')), 'mystery');
     });
   });
 }

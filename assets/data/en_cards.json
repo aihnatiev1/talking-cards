@@ -1,6 +1,7 @@
 [
   {
     "id": "en_animals",
+    "category": "world",
     "title": "Animals",
     "icon": "🦁",
     "color": "#E17055",
@@ -329,6 +330,7 @@
   },
   {
     "id": "en_home",
+    "category": "world",
     "title": "Home & Family",
     "icon": "🏡",
     "color": "#6C5CE7",
@@ -639,6 +641,7 @@
   },
   {
     "id": "en_emotions",
+    "category": "world",
     "title": "Feelings",
     "icon": "😊",
     "color": "#FDCB6E",
@@ -768,6 +771,7 @@
   },
   {
     "id": "en_transport",
+    "category": "world",
     "title": "Transport",
     "icon": "🚗",
     "color": "#0984E3",
@@ -1027,6 +1031,7 @@
   },
   {
     "id": "en_food",
+    "category": "world",
     "title": "Food & Fruits",
     "icon": "🍎",
     "color": "#00B894",
@@ -1336,6 +1341,7 @@
   },
   {
     "id": "en_colors",
+    "category": "world",
     "title": "Colors & Shapes",
     "icon": "🎨",
     "color": "#E84393",
@@ -1645,6 +1651,7 @@
   },
   {
     "id": "en_body",
+    "category": "world",
     "title": "Body Parts",
     "icon": "🤸",
     "color": "#00CEC9",
@@ -1954,6 +1961,7 @@
   },
   {
     "id": "en_actions",
+    "category": "speech",
     "title": "Actions",
     "icon": "🏃",
     "color": "#FF8C42",
@@ -2213,6 +2221,7 @@
   },
   {
     "id": "en_opposites",
+    "category": "speech",
     "title": "Opposites",
     "icon": "↔️",
     "color": "#7B1FA2",
@@ -2522,6 +2531,7 @@
   },
   {
     "id": "en_phrases",
+    "category": "speech",
     "title": "Phrases",
     "icon": "💬",
     "color": "#FF8C00",
@@ -2781,6 +2791,7 @@
   },
   {
     "id": "en_adjectives",
+    "category": "speech",
     "title": "Adjectives",
     "icon": "🎨",
     "color": "#E65100",
@@ -2920,6 +2931,7 @@
   },
   {
     "id": "en_sound_r",
+    "category": "sounds",
     "title": "Sound R",
     "icon": "R",
     "color": "#E53935",
@@ -3106,6 +3118,7 @@
   },
   {
     "id": "en_sound_l",
+    "category": "sounds",
     "title": "Sound L",
     "icon": "L",
     "color": "#1976D2",
@@ -3298,6 +3311,7 @@
   },
   {
     "id": "en_sound_s",
+    "category": "sounds",
     "title": "Sound S",
     "icon": "S",
     "color": "#4CAF50",
@@ -3487,6 +3501,7 @@
   },
   {
     "id": "en_sound_z",
+    "category": "sounds",
     "title": "Sound Z",
     "icon": "Z",
     "color": "#00ACC1",
@@ -3642,6 +3657,7 @@
   },
   {
     "id": "en_sound_sh",
+    "category": "sounds",
     "title": "Sound SH",
     "icon": "SH",
     "color": "#E91E63",
@@ -3820,6 +3836,7 @@
   },
   {
     "id": "en_sound_zh",
+    "category": "sounds",
     "title": "Sound ZH",
     "icon": "ZH",
     "color": "#7B1FA2",
@@ -3896,6 +3913,7 @@
   },
   {
     "id": "en_sound_ch",
+    "category": "sounds",
     "title": "Sound CH",
     "icon": "CH",
     "color": "#FF8F00",
@@ -4074,6 +4092,7 @@
   },
   {
     "id": "en_sound_th",
+    "category": "sounds",
     "title": "Sound TH",
     "icon": "TH",
     "color": "#009688",
@@ -4263,6 +4282,7 @@
   },
   {
     "id": "en_sound_w",
+    "category": "sounds",
     "title": "Sound W",
     "icon": "W",
     "color": "#2196F3",
@@ -4431,6 +4451,7 @@
   },
   {
     "id": "en_sound_bl",
+    "category": "sounds",
     "title": "Consonant Blends",
     "icon": "BL",
     "color": "#5E35B1",

@@ -13,6 +13,7 @@ import '../screens/odd_one_out_screen.dart';
 import '../screens/opposite_game_screen.dart';
 import '../screens/repeat_game_screen.dart';
 import '../services/audio_service.dart';
+import '../services/locale_registry.dart';
 import '../services/paywall_flow.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
@@ -40,20 +41,15 @@ class GamesTab extends ConsumerStatefulWidget {
 
 class _GamesTabState extends ConsumerState<GamesTab> {
   void _openQuiz(List<CardModel> allCards) {
-    final lang = ref.read(languageProvider);
     // Playable = real recorded audio AND a webp illustration — the game
     // renders images (never emoji) and plays recordings (never TTS).
-    final List<CardModel> cards;
-    if (lang == 'en') {
-      cards = allCards
-          .where((c) =>
-              c.image != null && AudioService.instance.hasSound(c.audioKey))
-          .toList();
-    } else {
-      cards = allCards
-          .where((c) => c.audioKey != null && c.image != null)
-          .toList();
-    }
+    // Locale-independent: hasSound covers _audioMap plus keys registered
+    // from the loaded cards JSON (equivalence pinned in
+    // test/providers/packs_loader_test.dart).
+    final cards = allCards
+        .where((c) =>
+            c.image != null && AudioService.instance.hasSound(c.audioKey))
+        .toList();
     if (cards.length < 4) return;
     Navigator.of(context).push(_gameRoute(GuessScreen(cards: cards)));
   }
@@ -80,14 +76,13 @@ class _GamesTabState extends ConsumerState<GamesTab> {
   };
 
   void _openOddOneOut(List<PackModel> packs) {
-    final lang = ref.read(languageProvider);
     final playablePacks = packs
         .where((p) =>
             !p.id.startsWith('_') &&
             !p.isLocked &&
             !_oddOneOutExclude.contains(p.id) &&
             p.cards.length >= 4 &&
-            (lang == 'en' ? p.cards.any((c) => c.image != null) : true))
+            p.cards.any((c) => c.image != null))
         .toList();
     if (playablePacks.length < 2) return;
     Navigator.of(context).push(
@@ -177,15 +172,10 @@ class _GamesTabState extends ConsumerState<GamesTab> {
               .where((p) => !PackModel.nonWordPackIds.contains(p.id))
               .expand((p) => p.cards)
               .toList();
-          final playableCount = isEn
-              ? allCards
-                  .where((c) =>
-                      c.image != null &&
-                      AudioService.instance.hasSound(c.audioKey))
-                  .length
-              : allCards
-                  .where((c) => c.audioKey != null && c.image != null)
-                  .length;
+          final playableCount = allCards
+              .where((c) =>
+                  c.image != null && AudioService.instance.hasSound(c.audioKey))
+              .length;
 
           final toddlerGames = <_BigGame>[
             _BigGame(
@@ -258,7 +248,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                   !p.isLocked &&
                   !_oddOneOutExclude.contains(p.id) &&
                   p.cards.length >= 4 &&
-                  (isEn ? p.cards.any((c) => c.image != null) : true))
+                  p.cards.any((c) => c.image != null))
               .toList();
           final oppPackId = isEn ? 'en_opposites' : 'opposites';
           final oppPack = packs.where((p) => p.id == oppPackId).firstOrNull;
@@ -309,14 +299,18 @@ class _GamesTabState extends ConsumerState<GamesTab> {
               const SizedBox(height: 10),
               _GameGrid(games: toddlerGames),
               const SizedBox(height: 22),
-              _SectionHeader(
-                title: s('Для батьків', 'For grown-ups'),
-                subtitle: s('мовленнєва терапія', 'speech therapy'),
-                emoji: '👨‍👧',
-              ),
-              const SizedBox(height: 10),
-              _GameGrid(games: parentGames),
-              const SizedBox(height: 22),
+              // Articulation is locale-gated via the registry (true for both
+              // uk and en today; a future locale may ship without it).
+              if (LocaleRegistry.instance.capabilities(lang).articulation) ...[
+                _SectionHeader(
+                  title: s('Для батьків', 'For grown-ups'),
+                  subtitle: s('мовленнєва терапія', 'speech therapy'),
+                  emoji: '👨‍👧',
+                ),
+                const SizedBox(height: 10),
+                _GameGrid(games: parentGames),
+                const SizedBox(height: 22),
+              ],
               _SectionHeader(
                 title: s('Для старших', 'For older kids'),
                 subtitle: s('3+', 'ages 3+'),

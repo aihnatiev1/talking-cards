@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "code": "uk",
+    "flag": "🇺🇦",
+    "nativeName": "Українська",
+    "appTitle": "Картки-розмовлялки",
+    "onboardingSublabel": "234 картки",
+    "capabilities": {
+      "syllableGame": true,
+      "articulation": true,
+      "seasonalPacks": true
+    }
+  },
+  {
+    "code": "en",
+    "flag": "🇬🇧",
+    "nativeName": "English",
+    "appTitle": "FirstWords Cards",
+    "onboardingSublabel": "209 cards",
+    "capabilities": {
+      "syllableGame": false,
+      "articulation": true,
+      "seasonalPacks": false
+    }
+  }
+]

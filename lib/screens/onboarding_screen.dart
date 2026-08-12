@@ -10,6 +10,7 @@ import '../models/pack_model.dart';
 import '../providers/profile_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
+import '../services/locale_registry.dart';
 import '../services/paywall_flow.dart';
 import '../utils/confetti_overlay_mixin.dart';
 import '../utils/constants.dart';
@@ -256,25 +257,38 @@ class _LanguagePage extends StatelessWidget {
             style: TextStyle(fontSize: 14, color: Colors.grey[500]),
           ),
           const SizedBox(height: 40),
-          Row(
-            children: [
-              Expanded(child: _LangCard(
-                flag: '🇺🇦',
-                label: 'Українська',
-                sublabel: '234 картки',
-                selected: selected == 'uk',
-                onTap: () => onSelect('uk'),
-              )),
-              const SizedBox(width: 16),
-              Expanded(child: _LangCard(
-                flag: '🇬🇧',
-                label: 'English',
-                sublabel: '209 cards',
-                selected: selected == 'en',
-                onTap: () => onSelect('en'),
-              )),
-            ],
-          ),
+          // Language cards come from the locale registry — two today
+          // (side-by-side row, exactly the legacy layout), a wrapping grid
+          // once a third locale ships.
+          Builder(builder: (context) {
+            final locales = LocaleRegistry.instance.locales;
+            Widget card(LocaleInfo l) => _LangCard(
+                  flag: l.flag,
+                  label: l.nativeName,
+                  sublabel: l.onboardingSublabel,
+                  selected: selected == l.code,
+                  onTap: () => onSelect(l.code),
+                );
+            if (locales.length <= 2) {
+              return Row(
+                children: [
+                  for (var i = 0; i < locales.length; i++) ...[
+                    if (i > 0) const SizedBox(width: 16),
+                    Expanded(child: card(locales[i])),
+                  ],
+                ],
+              );
+            }
+            return GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 1.4,
+              children: [for (final l in locales) card(l)],
+            );
+          }),
         ],
       ),
     );
