@@ -385,6 +385,15 @@ class AudioService {
 
   final _soloud = SoLoud.instance;
   final Map<String, AudioSource> _sources = {};
+  final Map<String, Future<AudioSource?>> _pendingLoads = {};
+
+  /// Every key a card's `audio` field may legally reference — either the
+  /// Cyrillic map key or the Latin filename. Built once at init so
+  /// [hasSound] stays a cheap sync lookup under lazy loading.
+  static final Set<String> _knownKeys = {
+    ..._audioMap.keys,
+    ..._audioMap.values,
+  };
   /// Pre-computed millisecond offset for the end of the WORD portion of each
   /// recording (everything after this is the example sentence). Loaded at
   /// init from `assets/data/audio_word_lengths.json`. Files not in this map
@@ -422,36 +431,56 @@ class AudioService {
       if (kDebugMode) debugPrint('AudioService: word-length manifest missing: $e');
     }
 
-    // 3. Load all sounds into RAM. Index each source by BOTH the Cyrillic
-    // map key (legacy) and the Latin filename — JSON cards may reference
-    // either form via their `audio` field.
-    for (final entry in _audioMap.entries) {
-      try {
-        final source = await _soloud.loadAsset('assets/audio_mp3/${entry.value}.mp3');
-        _sources[entry.key] = source;
-        _sources[entry.value] = source;
-      } catch (e) {
-        if (kDebugMode) debugPrint('AudioService: failed to load ${entry.key}: $e');
-      }
-    }
-
-    if (kDebugMode) debugPrint('AudioService: ${_sources.length} sounds loaded into RAM');
+    // 3. Sounds are loaded lazily on first play (see _getSource) in
+    // LoadMode.disk — decoding all 900+ MP3s into RAM up front cost
+    // hundreds of MB and held the splash screen hostage on old tablets.
 
     // Warm up the SoLoud pipeline so the first real play doesn't clip the
     // word's attack on Android (cold-start latency can eat ~100-200ms).
-    // We play any sound at zero volume, then stop immediately.
-    if (_sources.isNotEmpty) {
-      try {
-        final first = _sources.values.first;
-        final h = await _soloud.play(first, volume: 0);
+    // We play one tiny sound at zero volume, then stop immediately.
+    try {
+      final warm = await _getSource(_audioMap.keys.first);
+      if (warm != null) {
+        final h = await _soloud.play(warm, volume: 0);
         _soloud.stop(h);
-      } catch (_) {}
-    }
+      }
+    } catch (_) {}
+  }
+
+  /// Lazily loads (and caches) the source for [audioKey]. Indexes it under
+  /// BOTH the Cyrillic map key (legacy) and the Latin filename — JSON cards
+  /// may reference either form via their `audio` field. Concurrent requests
+  /// for the same key share one load.
+  Future<AudioSource?> _getSource(String audioKey) {
+    final cached = _sources[audioKey];
+    if (cached != null) return Future.value(cached);
+    if (!_knownKeys.contains(audioKey)) return Future.value(null);
+
+    final file = _audioMap[audioKey] ?? audioKey;
+    return _pendingLoads.putIfAbsent(file, () async {
+      try {
+        final source = await _soloud.loadAsset(
+          'assets/audio_mp3/$file.mp3',
+          mode: LoadMode.disk,
+        );
+        _sources[file] = source;
+        // Also cache under every Cyrillic alias pointing at this file.
+        for (final entry in _audioMap.entries) {
+          if (entry.value == file) _sources[entry.key] = source;
+        }
+        return source;
+      } catch (e) {
+        if (kDebugMode) debugPrint('AudioService: failed to load $file: $e');
+        return null;
+      } finally {
+        _pendingLoads.remove(file);
+      }
+    });
   }
 
   Future<void> speakCard(String? audioKey, String sound, String fullText) async {
     if (audioKey == null) return;
-    final source = _sources[audioKey];
+    final source = await _getSource(audioKey);
     if (source == null) {
       if (kDebugMode) debugPrint('AudioService: no source for "$audioKey"');
       return;
@@ -484,7 +513,7 @@ class AudioService {
   /// Used by quiz mode.
   Future<void> playSound(String? audioKey) async {
     if (audioKey == null) return;
-    final source = _sources[audioKey];
+    final source = await _getSource(audioKey);
     if (source == null) {
       if (kDebugMode) debugPrint('AudioService: no source for "$audioKey"');
       return;
@@ -513,9 +542,10 @@ class AudioService {
   }) async {
     // No TTS fallback: if there's no recorded audio for this card, stay
     // silent (user opted out of TTS entirely).
-    if (audioKey == null || !_sources.containsKey(audioKey)) return;
+    if (audioKey == null) return;
+    final source = await _getSource(audioKey);
+    if (source == null) return;
 
-    final source = _sources[audioKey]!;
     final gen = ++_speakGeneration;
     try {
       stop();
@@ -554,8 +584,8 @@ class AudioService {
     }
   }
 
-  /// Whether a sound source exists for the given key.
-  bool hasSound(String? key) => key != null && _sources.containsKey(key);
+  /// Whether audio exists for the given key (loaded lazily on first play).
+  bool hasSound(String? key) => key != null && _knownKeys.contains(key);
 
   SoundHandle? _currentHandle;
 

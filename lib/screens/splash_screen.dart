@@ -60,7 +60,9 @@ class _SplashScreenState extends State<SplashScreen>
         if (!mounted) return;
         setState(() => _imageReady = true);
         _ctrl.forward();
-        Future.delayed(const Duration(milliseconds: 1200), () {
+        // Just long enough for the 600ms logo entrance to land — the old
+        // 1200ms hold was pure added cold-start latency.
+        Future.delayed(const Duration(milliseconds: 700), () {
           _animDone = true;
           _navigateIfReady();
         });

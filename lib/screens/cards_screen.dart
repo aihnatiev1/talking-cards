@@ -103,13 +103,22 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     super.didChangeDependencies();
     if (!_imagesPrecached) {
       _imagesPrecached = true;
-      for (final card in widget.pack.cards) {
-        if (card.image != null) {
-          precacheImage(
-            AssetImage('assets/images/webp/${card.image}.webp'),
-            context,
-          );
-        }
+      _precacheAround(_currentIndex);
+    }
+  }
+
+  /// Precaching the whole pack at once pumped ~100MB of full-res decodes
+  /// through the image cache on open; the swiper only ever needs the
+  /// immediate neighbours.
+  void _precacheAround(int index) {
+    for (var i = index - 1; i <= index + 2; i++) {
+      if (i < 0 || i >= _cards.length) continue;
+      final image = _cards[i].image;
+      if (image != null) {
+        precacheImage(
+          AssetImage('assets/images/webp/$image.webp'),
+          context,
+        );
       }
     }
   }
@@ -214,6 +223,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     // Only recorded audio — TTS was removed per user feedback ("after my
     // voiceover TTS speaks again"). If a card has no recording, stay silent.
     if (AudioService.instance.hasSound(card.audioKey)) {
+      AnalyticsService.instance.logCardListen(card.id);
       AudioService.instance.speakCard(card.audioKey, card.sound, card.text);
     }
   }
@@ -594,6 +604,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                       _currentIndex = index;
                       _isFlipped = false;
                     });
+                    _precacheAround(index);
                     // Track only forward progress
                     if (index > prev) {
                       AnalyticsService.instance.logCardView(
