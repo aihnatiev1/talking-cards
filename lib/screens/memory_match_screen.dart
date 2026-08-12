@@ -9,10 +9,12 @@ import '../models/pack_model.dart';
 import '../providers/daily_quest_provider.dart';
 import '../providers/game_stats_provider.dart';
 import '../providers/language_provider.dart';
+import '../providers/profile_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../utils/confetti_overlay_mixin.dart';
 import '../utils/l10n.dart';
+import '../widgets/game_celebration_overlay.dart';
 
 // ─────────────────────────────────────────────
 //  Data
@@ -40,10 +42,15 @@ class MemoryMatchScreen extends ConsumerStatefulWidget {
   final PackModel pack;
   final List<CardModel> cards;
 
+  /// Pairs on the board. Toddler entry (games tab) passes 3 (2×3 grid);
+  /// the screen escalates to 4 by itself after 2 wins in one session.
+  final int pairCount;
+
   const MemoryMatchScreen({
     super.key,
     required this.pack,
     required this.cards,
+    this.pairCount = 6,
   });
 
   @override
@@ -52,21 +59,31 @@ class MemoryMatchScreen extends ConsumerStatefulWidget {
 
 class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen>
     with ConfettiOverlayMixin {
-  static const _pairCount = 6; // 3×4 grid — bigger tiles
-
   late List<_Tile> _tiles;
   int? _firstIndex; // index of first flipped tile awaiting a pair
   bool _isLocked = false; // true while showing a mismatch before flipping back
-  int _attempts = 0;
   int _matched = 0;
-  bool _done = false;
-  DateTime? _startTime;
+  int _wins = 0; // completions this session — drives pair escalation
+
+  /// Pairs on the current board — stable for the whole round.
+  late int _activePairs;
+
+  /// Escalate small (toddler) boards to 4 pairs after 2 wins in one session.
+  int get _nextPairCount =>
+      (_wins >= 2 && widget.pairCount < 4) ? 4 : widget.pairCount;
 
   @override
   void initState() {
     super.initState();
     AnalyticsService.instance.logGameStart('memory_match');
     _initGame();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      AudioService.instance.playInstruction(
+        'memory',
+        isEn: ref.read(languageProvider) == 'en',
+      );
+    });
   }
 
   @override
@@ -78,13 +95,14 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen>
   // ── Setup ───────────────────────────────────
 
   void _initGame() {
+    _activePairs = _nextPairCount;
     final playable = widget.cards
         .where((c) => c.audioKey != null)
         .toList();
     // Prefer cards with audio; fall back to all cards if not enough
-    final pool = playable.length >= _pairCount ? playable : widget.cards;
+    final pool = playable.length >= _activePairs ? playable : widget.cards;
     final picks = (List<CardModel>.from(pool)..shuffle(Random()))
-        .take(_pairCount)
+        .take(_activePairs)
         .toList();
 
     final tiles = <_Tile>[];
@@ -98,10 +116,7 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen>
       _tiles = tiles;
       _firstIndex = null;
       _isLocked = false;
-      _attempts = 0;
       _matched = 0;
-      _done = false;
-      _startTime = DateTime.now();
     });
   }
 
@@ -125,7 +140,6 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen>
     // Second tile tapped — evaluate the pair
     final first = _firstIndex!;
     _firstIndex = null;
-    _attempts++;
 
     if (_tiles[first].pairId == tile.pairId) {
       _onMatch(first, index);
@@ -136,6 +150,7 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen>
 
   void _onMatch(int a, int b) {
     HapticFeedback.mediumImpact();
+    AudioService.instance.playSfx('ding');
     setState(() {
       _tiles[a].isMatched = true;
       _tiles[b].isMatched = true;
@@ -143,7 +158,9 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen>
     });
     // Mini-celebration for every successful pair (not just the final match)
     // — toddlers need immediate reinforcement to learn the loop.
-    if (_matched < _pairCount) {
+    if (_matched < _activePairs) {
+      AudioService.instance
+          .playPraise(isEn: ref.read(languageProvider) == 'en');
       final size = MediaQuery.of(context).size;
       showConfetti(
         origin: Offset(size.width / 2, size.height / 2.2),
@@ -156,13 +173,22 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen>
         origin: Offset(size.width / 2, size.height / 2),
         linger: const Duration(milliseconds: 2000),
       );
+      _wins++;
       Future.delayed(const Duration(milliseconds: 1200), () {
-        if (mounted) setState(() => _done = true);
+        if (!mounted) return;
         AnalyticsService.instance.logGameComplete('memory_match', _matched);
         ref
             .read(dailyQuestProvider.notifier)
             .completeTask(QuestTask.playQuiz);
         ref.read(gameStatsProvider.notifier).record('memory', _matched);
+        // Any completion is a full win — no attempts, no stars, no time.
+        showGameCelebration(
+          context,
+          isEn: ref.read(languageProvider) == 'en',
+          childName: ref.read(profileProvider).active?.name ?? '',
+          onAgain: _initGame,
+          onDone: () => Navigator.of(context).pop(),
+        );
       });
     }
   }
@@ -180,31 +206,10 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen>
     });
   }
 
-  // ── Helpers ─────────────────────────────────
-
-  int get _stars {
-    if (_attempts <= _pairCount) return 3;
-    if (_attempts <= (_pairCount * 1.5).ceil()) return 2;
-    return 1;
-  }
-
-  Duration get _elapsed =>
-      _startTime == null ? Duration.zero : DateTime.now().difference(_startTime!);
-
   // ── Build ────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    if (_done) {
-      return _ResultScreen(
-        pack: widget.pack,
-        stars: _stars,
-        attempts: _attempts,
-        elapsed: _elapsed,
-        onPlayAgain: _initGame,
-      );
-    }
-
     final s = AppS(ref.read(languageProvider) == 'en');
     final color = widget.pack.color;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -227,26 +232,17 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen>
                           size: 22),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
+                    // No pack subtitle — cards may come from several packs,
+                    // so naming one pack here would simply be wrong.
                     Expanded(
-                      child: Column(
-                        children: [
-                          Text(
-                            s('Знайди пару', 'Find the pair'),
-                            style: TextStyle(
-                              color: isDark ? Colors.white : Colors.black87,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 16,
-                            ),
-                          ),
-                          Text(
-                            widget.pack.title,
-                            style: TextStyle(
-                              color: color,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        s('Знайди пару', 'Find the pair'),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black87,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                        ),
                       ),
                     ),
                     // Matched pairs badge
@@ -265,7 +261,7 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen>
                         ],
                       ),
                       child: Text(
-                        '$_matched/$_pairCount',
+                        '$_matched/$_activePairs',
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -283,7 +279,7 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen>
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(_pairCount, (i) {
+                  children: List.generate(_activePairs, (i) {
                     final done = i < _matched;
                     return AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
@@ -306,12 +302,13 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen>
                   padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
                   child: GridView.builder(
                     physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      // 3 pairs → 2×3 grid with big toddler tiles; bigger
+                      // boards keep the classic 3-column layout.
+                      crossAxisCount: _activePairs <= 3 ? 2 : 3,
                       mainAxisSpacing: 12,
                       crossAxisSpacing: 12,
-                      childAspectRatio: 0.82,
+                      childAspectRatio: _activePairs <= 3 ? 0.9 : 0.82,
                     ),
                     itemCount: _tiles.length,
                     itemBuilder: (context, i) => _TileWidget(
@@ -324,27 +321,6 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen>
                 ),
               ),
 
-              // ── Attempts counter ───────────────
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.touch_app_rounded,
-                        size: 14,
-                        color: isDark ? Colors.white70 : color.withValues(alpha: 0.5)),
-                    const SizedBox(width: 5),
-                    Text(
-                      s('Спроб: $_attempts', 'Tries: $_attempts'),
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: isDark ? Colors.white : color.withValues(alpha: 0.6),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
         ),
@@ -577,7 +553,8 @@ class _FrontFace extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Real image if available, emoji as fallback
+          // Real webp illustration — pools are sanitized upstream, the null
+          // branch is only a defensive plain placeholder (never emoji).
           if (tile.card.image != null)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -588,7 +565,14 @@ class _FrontFace extends StatelessWidget {
               ),
             )
           else
-            Text(tile.card.emoji, style: const TextStyle(fontSize: 32)),
+            Container(
+              width: 58,
+              height: 58,
+              decoration: BoxDecoration(
+                color: tile.card.colorAccent.withValues(alpha: 0.25),
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
           const SizedBox(height: 4),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 3),
@@ -613,172 +597,3 @@ class _FrontFace extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────
-//  Result screen
-// ─────────────────────────────────────────────
-
-class _ResultScreen extends ConsumerWidget {
-  final PackModel pack;
-  final int stars;
-  final int attempts;
-  final Duration elapsed;
-  final VoidCallback onPlayAgain;
-
-  const _ResultScreen({
-    required this.pack,
-    required this.stars,
-    required this.attempts,
-    required this.elapsed,
-    required this.onPlayAgain,
-  });
-
-  String _timeLabel(bool isEn) {
-    final sec = elapsed.inSeconds;
-    final min = elapsed.inMinutes;
-    if (min > 0) return isEn ? '${min}m ${sec % 60}s' : '$min хв ${sec % 60} с';
-    return isEn ? '${sec}s' : '$sec с';
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isEn = ref.read(languageProvider) == 'en';
-    final s = AppS(isEn);
-    return Scaffold(
-      backgroundColor: pack.color.withValues(alpha: 0.05),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text('🎉', style: TextStyle(fontSize: 64)),
-              const SizedBox(height: 16),
-              Text(
-                stars == 3
-                    ? s('Чудово!', 'Excellent!')
-                    : stars == 2
-                        ? s('Молодець!', 'Well done!')
-                        : s('Гарна спроба!', 'Good try!'),
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                  color: pack.color,
-                ),
-              ),
-              const SizedBox(height: 24),
-              // Stars
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(3, (i) {
-                  final filled = i < stars;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    child: Icon(
-                      filled ? Icons.star_rounded : Icons.star_border_rounded,
-                      size: 48,
-                      color: filled
-                          ? const Color(0xFFFFD700)
-                          : Colors.grey[300],
-                    ),
-                  );
-                }),
-              ),
-              const SizedBox(height: 32),
-              // Stats
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _StatChip(
-                      icon: Icons.touch_app_rounded,
-                      label: s('Спроб', 'Attempts'),
-                      value: '$attempts',
-                      color: pack.color),
-                  const SizedBox(width: 16),
-                  _StatChip(
-                      icon: Icons.timer_rounded,
-                      label: s('Час', 'Time'),
-                      value: _timeLabel(isEn),
-                      color: pack.color),
-                ],
-              ),
-              const SizedBox(height: 40),
-              // Buttons
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: onPlayAgain,
-                  icon: const Icon(Icons.refresh_rounded),
-                  label: Text(s('Грати знову', 'Play again'),
-                      style: const TextStyle(
-                          fontSize: 17, fontWeight: FontWeight.bold)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: pack.color,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(
-                  s('Назад', 'Back'),
-                  style: TextStyle(
-                      color: pack.color.withValues(alpha: 0.7),
-                      fontSize: 15),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _StatChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color color;
-
-  const _StatChip({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 22),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: color),
-          ),
-          Text(
-            label,
-            style: TextStyle(
-                fontSize: 11,
-                color: color.withValues(alpha: 0.7)),
-          ),
-        ],
-      ),
-    );
-  }
-}

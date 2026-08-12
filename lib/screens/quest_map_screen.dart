@@ -357,15 +357,19 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
         // GuessScreen calls completeTask(playQuiz) on its own Results screen.
         final allCards = packs.expand((p) => p.cards).toList();
         final lang = ref.read(languageProvider);
+        // Same sanitation as games_tab: real recorded audio + webp image.
         final playable = lang == 'en'
-            ? allCards.where((c) => c.image != null).toList()
-            : allCards.where((c) => c.audioKey != null).toList();
-        final ttsLocale = lang == 'en' ? 'en-US' : null;
+            ? allCards
+                .where((c) =>
+                    c.image != null &&
+                    AudioService.instance.hasSound(c.audioKey))
+                .toList()
+            : allCards
+                .where((c) => c.audioKey != null && c.image != null)
+                .toList();
         if (playable.length >= 4) {
           Navigator.of(context).push(
-            MaterialPageRoute(
-                builder: (_) =>
-                    GuessScreen(cards: playable, ttsLocale: ttsLocale)),
+            MaterialPageRoute(builder: (_) => GuessScreen(cards: playable)),
           );
         }
       case QuestTask.reviewSRSCards:

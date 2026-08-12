@@ -7,12 +7,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
 import '../providers/language_provider.dart';
+import '../providers/profile_provider.dart';
 import '../services/audio_service.dart';
 import '../utils/confetti_overlay_mixin.dart';
-import '../utils/constants.dart';
 import '../utils/game_state_mixin.dart';
 import '../utils/l10n.dart';
 import '../utils/shake_animation_mixin.dart';
+import '../widgets/game_celebration_overlay.dart';
 
 /// Game: show one card, pick its opposite from 3 options.
 ///
@@ -36,6 +37,10 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
   @override
   String get gameId => 'opposite_game';
 
+  // 5 rounds ≈ 30-60s — a 2-year-old's full attention span.
+  @override
+  int get maxRounds => 5;
+
   bool _answered = false;
   String? _tappedId;
 
@@ -47,6 +52,13 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
     initShake();
     startGame();
     _buildRound();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      AudioService.instance.playInstruction(
+        'opposites',
+        isEn: ref.read(languageProvider) == 'en',
+      );
+    });
   }
 
   @override
@@ -57,7 +69,10 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
   }
 
   void _buildRound() {
-    if (!nextRound()) return;
+    if (!nextRound()) {
+      _showCelebration();
+      return;
+    }
 
     final cards = widget.pack.cards;
     // Pairs: index 0↔1, 2↔3 … pick a random pair
@@ -89,9 +104,27 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
       _tappedId = null;
     });
 
+    // Small gap so the entry instruction (first round) or the previous
+    // round's feedback can finish before the new question word plays.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      AudioService.instance.playWordOnly(question.audioKey, question.sound);
+      Future.delayed(const Duration(milliseconds: 400), () {
+        if (!mounted) return;
+        AudioService.instance.playWordOnly(question.audioKey, question.sound);
+      });
     });
+  }
+
+  void _showCelebration() {
+    showGameCelebration(
+      context,
+      isEn: ref.read(languageProvider) == 'en',
+      childName: ref.read(profileProvider).active?.name ?? '',
+      onAgain: () {
+        resetGame();
+        _buildRound();
+      },
+      onDone: () => Navigator.of(context).pop(),
+    );
   }
 
   void _onTap(CardModel card) {
@@ -105,6 +138,9 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
 
     if (isCorrect) {
       HapticFeedback.lightImpact();
+      AudioService.instance.playSfx('ding');
+      AudioService.instance
+          .playPraise(isEn: ref.read(languageProvider) == 'en');
       scorePoint();
       showConfetti();
       // Play the opposite word so child hears both words of the pair
@@ -127,8 +163,6 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
   Widget build(BuildContext context) {
     final s = AppS(ref.read(languageProvider) == 'en');
 
-    if (finished) return _buildFinishScreen(s);
-
     final question = _round.question;
     final correct = _round.correct;
 
@@ -141,21 +175,6 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Center(
-              child: Text(
-                '⭐ $score  $roundsPlayed/$maxRounds',
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: kAccent,
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
       body: SafeArea(
         child: Padding(
@@ -226,83 +245,6 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
     );
   }
 
-  Widget _buildFinishScreen(AppS s) {
-    final pct = score / maxRounds;
-    final stars = pct >= 0.8 ? 3 : pct >= 0.5 ? 2 : 1;
-
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F0FF),
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  stars == 3
-                      ? s('Чудово! 🎉', 'Excellent! 🎉')
-                      : stars == 2
-                          ? s('Молодець! 👍', 'Well done! 👍')
-                          : s('Спробуй ще! 💪', 'Keep trying! 💪'),
-                  style: const TextStyle(
-                      fontSize: 32, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(
-                    3,
-                    (i) => Text(
-                      i < stars ? '⭐' : '☆',
-                      style: const TextStyle(fontSize: 48),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  s('$score з $maxRounds протилежностей',
-                      '$score of $maxRounds opposites'),
-                  style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-                ),
-                const SizedBox(height: 48),
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: kAccent,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18)),
-                    ),
-                    child: Text(
-                      s('Готово', 'Done'),
-                      style: const TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextButton(
-                  onPressed: () {
-                    resetGame();
-                    _buildRound();
-                  },
-                  child: Text(
-                    s('Грати ще раз 🔄', 'Play again 🔄'),
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 // ─────────────────────────────────────────────
@@ -355,6 +297,8 @@ class _QuestionCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          // Real webp only — plain placeholder if an unsanitized card ever
+          // slips through (never emoji in gameplay).
           if (card.image != null)
             SizedBox(
               height: 110,
@@ -364,7 +308,14 @@ class _QuestionCard extends StatelessWidget {
               ),
             )
           else
-            Text(card.emoji, style: const TextStyle(fontSize: 80)),
+            Container(
+              width: 110,
+              height: 110,
+              decoration: BoxDecoration(
+                color: card.colorAccent.withValues(alpha: 0.25),
+                borderRadius: BorderRadius.circular(18),
+              ),
+            ),
           const SizedBox(height: 8),
           Text(
             card.sound,
@@ -460,7 +411,14 @@ class _OptionTile extends StatelessWidget {
                   ),
                 )
               else
-                Text(card.emoji, style: const TextStyle(fontSize: 56)),
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: card.colorAccent.withValues(alpha: 0.25),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
               const SizedBox(width: 14),
               Text(
                 card.sound,

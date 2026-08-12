@@ -73,6 +73,13 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
   void initState() {
     super.initState();
     AnalyticsService.instance.logGameStart('coloring');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      AudioService.instance.playInstruction(
+        'coloring',
+        isEn: ref.read(languageProvider) == 'en',
+      );
+    });
     _loadCompletedCount();
     // packsProvider is async + language-aware (en_cards.json vs uk_cards.json).
     // Listen so we pick on first load AND reset if language changes out from
@@ -108,10 +115,6 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
   /// Returns true if the user has exhausted the free allowance and is not Pro.
   /// Callers should skip card-loading and let the build show the paywall banner.
   bool _isGated() {
-    // TEST MODE: never gate the coloring screen.
-    // TODO: revert — restore the real check below before shipping.
-    return false;
-    // ignore: dead_code
     final isPro = ref.read(isProProvider);
     return !isPro && _completedCount >= _freeAllowance;
   }

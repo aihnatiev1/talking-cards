@@ -7,12 +7,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
 import '../providers/language_provider.dart';
+import '../providers/profile_provider.dart';
 import '../services/audio_service.dart';
 import '../utils/confetti_overlay_mixin.dart';
-import '../utils/constants.dart';
 import '../utils/game_state_mixin.dart';
 import '../utils/l10n.dart';
 import '../utils/shake_animation_mixin.dart';
+import '../widgets/game_celebration_overlay.dart';
 
 class OddOneOutScreen extends ConsumerStatefulWidget {
   final List<PackModel> packs;
@@ -32,6 +33,10 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
   @override
   String get gameId => 'odd_one_out';
 
+  // 5 rounds ≈ 30-60s — a 2-year-old's full attention span.
+  @override
+  int get maxRounds => 5;
+
   bool _answered = false;
   String? _tappedId;
   late List<_Slot> _slots;
@@ -42,6 +47,13 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
     initShake();
     startGame();
     _buildRound();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      AudioService.instance.playInstruction(
+        'odd_one_out',
+        isEn: ref.read(languageProvider) == 'en',
+      );
+    });
   }
 
   @override
@@ -85,6 +97,9 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
 
     if (slot.isOdd) {
       HapticFeedback.lightImpact();
+      AudioService.instance.playSfx('ding');
+      AudioService.instance
+          .playPraise(isEn: ref.read(languageProvider) == 'en');
       setState(() {
         _answered = true;
         scorePoint();
@@ -94,6 +109,7 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
         Future.delayed(const Duration(milliseconds: 900), () {
           if (!mounted) return;
           completeGame();
+          _showCelebration();
         });
       } else {
         Future.delayed(const Duration(milliseconds: 900), () {
@@ -101,19 +117,33 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
         });
       }
     } else {
+      // Gentle redirection — soft shake only, no harsh error feedback.
       HapticFeedback.mediumImpact();
       shake(id: slot.card.id);
     }
+  }
+
+  void _showCelebration() {
+    showGameCelebration(
+      context,
+      isEn: ref.read(languageProvider) == 'en',
+      childName: ref.read(profileProvider).active?.name ?? '',
+      onAgain: () {
+        resetGame();
+        _buildRound();
+      },
+      onDone: () => Navigator.of(context).pop(),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final s = AppS(ref.read(languageProvider) == 'en');
 
-    if (finished) return _buildFinishScreen(s);
-
     // Determine majority pack for the hint header
     final majorityPack = _slots.firstWhere((sl) => !sl.isOdd).pack;
+    final majorityCards =
+        _slots.where((sl) => !sl.isOdd).map((sl) => sl.card).toList();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF0EEFF),
@@ -124,21 +154,6 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Center(
-              child: Text(
-                '⭐ $score/$maxRounds',
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: kAccent,
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
       body: SafeArea(
         child: Padding(
@@ -147,7 +162,7 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
             children: [
               const SizedBox(height: 8),
 
-              // Hint — big pack icon + short question
+              // Hint — small thumbnails of the actual majority cards + "?"
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
                 child: Column(
@@ -156,15 +171,13 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(majorityPack.icon,
-                            style: const TextStyle(fontSize: 40)),
-                        Text(majorityPack.icon,
-                            style: const TextStyle(fontSize: 40)),
-                        Text(majorityPack.icon,
-                            style: const TextStyle(fontSize: 40)),
-                        const SizedBox(width: 12),
+                        for (final c in majorityCards) ...[
+                          _HintThumb(card: c),
+                          const SizedBox(width: 6),
+                        ],
+                        const SizedBox(width: 6),
                         const Text('❓',
-                            style: TextStyle(fontSize: 40)),
+                            style: TextStyle(fontSize: 36)),
                       ],
                     ),
                     const SizedBox(height: 6),
@@ -221,82 +234,6 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
     );
   }
 
-  Widget _buildFinishScreen(AppS s) {
-    final pct = score / maxRounds;
-    final stars = pct >= 0.8 ? 3 : pct >= 0.5 ? 2 : 1;
-
-    return Scaffold(
-      backgroundColor: const Color(0xFFF0EEFF),
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  stars == 3
-                      ? s('Чудово! 🎉', 'Excellent! 🎉')
-                      : stars == 2
-                          ? s('Молодець! 👍', 'Well done! 👍')
-                          : s('Спробуй ще! 💪', 'Keep trying! 💪'),
-                  style: const TextStyle(
-                      fontSize: 32, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(
-                    3,
-                    (i) => Text(
-                      i < stars ? '⭐' : '☆',
-                      style: const TextStyle(fontSize: 48),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  s('$score з $maxRounds раундів', '$score of $maxRounds rounds'),
-                  style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-                ),
-                const SizedBox(height: 48),
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: kAccent,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18)),
-                    ),
-                    child: Text(
-                      s('Готово', 'Done'),
-                      style: const TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextButton(
-                  onPressed: () {
-                    resetGame();
-                    _buildRound();
-                  },
-                  child: Text(
-                    s('Грати ще раз 🔄', 'Play again 🔄'),
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 // ─────────────────────────────────────────────
@@ -308,6 +245,43 @@ class _Slot {
   final PackModel pack;
   final bool isOdd;
   _Slot({required this.card, required this.pack, required this.isOdd});
+}
+
+// ─────────────────────────────────────────────
+//  Hint thumbnail — small webp of a majority card
+// ─────────────────────────────────────────────
+
+class _HintThumb extends StatelessWidget {
+  final CardModel card;
+  const _HintThumb({required this.card});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 44,
+      height: 44,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: card.colorAccent.withValues(alpha: 0.3),
+          width: 1.5,
+        ),
+      ),
+      child: card.image != null
+          ? Image.asset(
+              'assets/images/webp/${card.image}.webp',
+              fit: BoxFit.contain,
+            )
+          : DecoratedBox(
+              decoration: BoxDecoration(
+                color: card.colorBg,
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+    );
+  }
 }
 
 // ─────────────────────────────────────────────
@@ -358,6 +332,8 @@ class _CardChip extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                // Real webp only — plain placeholder if an unsanitized card
+                // ever slips through (never emoji in gameplay).
                 if (card.image != null)
                   SizedBox(
                     height: 70,
@@ -367,8 +343,14 @@ class _CardChip extends StatelessWidget {
                     ),
                   )
                 else
-                  Text(card.emoji,
-                      style: const TextStyle(fontSize: 52)),
+                  Container(
+                    width: 70,
+                    height: 70,
+                    decoration: BoxDecoration(
+                      color: card.colorAccent.withValues(alpha: 0.25),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
                 const SizedBox(height: 8),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),

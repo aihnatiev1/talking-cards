@@ -123,6 +123,8 @@ class _QuizOptionState extends State<QuizOption>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Expanded(
+                  // Pools are sanitized upstream (image required), so the
+                  // null branch is a defensive placeholder — never emoji.
                   child: widget.card.image != null
                       ? Padding(
                           padding: const EdgeInsets.all(4),
@@ -131,13 +133,11 @@ class _QuizOptionState extends State<QuizOption>
                             fit: BoxFit.contain,
                           ),
                         )
-                      : FittedBox(
-                          child: Padding(
-                            padding: const EdgeInsets.all(8),
-                            child: Text(
-                              widget.card.emoji,
-                              style: const TextStyle(fontSize: 56),
-                            ),
+                      : Container(
+                          margin: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: cardColor.withValues(alpha: 0.4),
+                            borderRadius: BorderRadius.circular(16),
                           ),
                         ),
                 ),

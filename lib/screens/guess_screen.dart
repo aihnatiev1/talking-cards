@@ -8,6 +8,7 @@ import '../models/card_model.dart';
 import '../providers/daily_quest_provider.dart';
 import '../providers/game_stats_provider.dart';
 import '../providers/language_provider.dart';
+import '../providers/profile_provider.dart';
 import '../providers/quiz_provider.dart';
 import '../providers/srs_provider.dart';
 import '../providers/weak_words_provider.dart';
@@ -16,14 +17,13 @@ import '../services/audio_service.dart';
 import '../utils/constants.dart';
 import '../utils/l10n.dart';
 import '../widgets/confetti_burst.dart';
+import '../widgets/game_celebration_overlay.dart';
 import '../widgets/quiz_option.dart';
 
 class GuessScreen extends ConsumerStatefulWidget {
   final List<CardModel> cards;
-  /// When non-null, TTS is used instead of recorded audio (EN mode).
-  final String? ttsLocale;
 
-  const GuessScreen({super.key, required this.cards, this.ttsLocale});
+  const GuessScreen({super.key, required this.cards});
 
   @override
   ConsumerState<GuessScreen> createState() => _GuessScreenState();
@@ -34,6 +34,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
   String? _answeredCardId;
   bool _waitingNext = false;
   bool _resultsLogged = false;
+  bool _celebrationShown = false;
   OverlayEntry? _confettiEntry;
 
   late final AutoDisposeStateNotifierProvider<QuizNotifier, QuizState?> _provider;
@@ -45,12 +46,11 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
   @override
   void initState() {
     super.initState();
-    // Playable = recorded audio OR TTS-capable (ttsLocale + image). A card
-    // with both recorded audio and an image qualifies either way.
-    final soundCards = widget.cards.where((c) {
-      if (AudioService.instance.hasSound(c.audioKey)) return true;
-      return widget.ttsLocale != null && c.image != null;
-    }).toList();
+    // Playable = real recorded audio only — TTS was removed from the app,
+    // so a card without a recording can never be the target of a round.
+    final soundCards = widget.cards
+        .where((c) => AudioService.instance.hasSound(c.audioKey))
+        .toList();
     _provider = StateNotifierProvider.autoDispose<QuizNotifier, QuizState?>((ref) {
       return QuizNotifier(soundCards);
     });
@@ -82,7 +82,12 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
         return;
       }
       ref.read(_provider.notifier).start();
-      Future.delayed(const Duration(milliseconds: 300), () {
+      // Entry voice line first, then a short gap before the first word.
+      AudioService.instance.playInstruction(
+        'guess',
+        isEn: ref.read(languageProvider) == 'en',
+      );
+      Future.delayed(const Duration(milliseconds: 400), () {
         if (mounted) _playCurrentSound();
       });
     });
@@ -130,6 +135,9 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
 
     if (isCorrect) {
       HapticFeedback.mediumImpact();
+      AudioService.instance.playSfx('ding');
+      AudioService.instance
+          .playPraise(isEn: ref.read(languageProvider) == 'en');
       _showConfetti();
       _waitingNext = true;
       Timer(const Duration(milliseconds: 800), () {
@@ -144,10 +152,13 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
         });
       });
     } else {
-      HapticFeedback.heavyImpact();
+      // Gentle redirection — soft haptic, then replay the target word so the
+      // child hears what to look for again instead of silence.
+      HapticFeedback.lightImpact();
       Timer(const Duration(milliseconds: 600), () {
         if (!mounted) return;
         setState(() => _answeredCardId = null);
+        _playCurrentSound();
       });
     }
   }
@@ -158,9 +169,33 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
       _answeredCardId = null;
       _waitingNext = false;
       _resultsLogged = false;
+      _celebrationShown = false;
     });
     Future.delayed(const Duration(milliseconds: 300), () {
       if (mounted) _playCurrentSound();
+    });
+  }
+
+  /// Fires completion side effects once and shows the shared celebration
+  /// overlay (no scores / stars — every finished session is a full win).
+  void _onFinished(QuizState state) {
+    if (_celebrationShown) return;
+    _celebrationShown = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (!_resultsLogged) {
+        _resultsLogged = true;
+        AnalyticsService.instance.logQuizComplete(state.score, state.totalRounds);
+        ref.read(gameStatsProvider.notifier).record('quiz', state.score);
+        ref.read(dailyQuestProvider.notifier).completeTask(QuestTask.playQuiz);
+      }
+      showGameCelebration(
+        context,
+        isEn: ref.read(languageProvider) == 'en',
+        childName: ref.read(profileProvider).active?.name ?? '',
+        onAgain: _restart,
+        onDone: () => Navigator.of(context).pop(),
+      );
     });
   }
 
@@ -222,178 +257,21 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
           ],
         ),
         centerTitle: true,
-        actions: [
-          if (state != null && !state.finished)
-            Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: Center(
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFD93D).withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.star_rounded,
-                          color: kStreakOrange, size: 16),
-                      const SizedBox(width: 3),
-                      Text(
-                        '${state.score}/${state.totalRounds}',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: kStreakOrange,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-        ],
       ),
-      body: state == null
-          ? const Center(child: CircularProgressIndicator())
-          : state.finished
-              ? _buildResults(state)
-              : _buildQuiz(state),
+      body: _buildBody(state),
     );
   }
 
-  Widget _buildResults(QuizState state) {
-    final score = state.score;
-    final total = state.totalRounds;
-    if (!_resultsLogged) {
-      _resultsLogged = true;
-      AnalyticsService.instance.logQuizComplete(score, total);
-      ref.read(gameStatsProvider.notifier).record('quiz', score);
-      // Defer state mutation to post-frame — calling it inside build()
-      // causes Riverpod to silently drop the update on some frames.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          ref
-              .read(dailyQuestProvider.notifier)
-              .completeTask(QuestTask.playQuiz);
-        }
-      });
+  Widget _buildBody(QuizState? state) {
+    if (state == null) {
+      return const Center(child: CircularProgressIndicator());
     }
-    final ratio = total > 0 ? score / total : 0.0;
-    final s = AppS(ref.read(languageProvider) == 'en');
-
-    String emoji;
-    String message;
-    if (ratio >= 0.9) {
-      emoji = '🏆';
-      message = s('Чудово!', 'Excellent!');
-    } else if (ratio >= 0.7) {
-      emoji = '🌟';
-      message = s('Молодець!', 'Well done!');
-    } else if (ratio >= 0.5) {
-      emoji = '👍';
-      message = s('Непогано!', 'Not bad!');
-    } else {
-      emoji = '💪';
-      message = s('Спробуй ще!', 'Try again!');
+    if (state.finished) {
+      // Celebration overlay is a dialog route — keep the body empty under it.
+      _onFinished(state);
+      return const SizedBox.shrink();
     }
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 80)),
-            const SizedBox(height: 20),
-            // Score as stars row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(total, (i) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 2),
-                  child: Text(
-                    i < score ? '⭐' : '☆',
-                    style: TextStyle(
-                      fontSize: total > 7 ? 22 : 28,
-                    ),
-                  ),
-                );
-              }),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '$score/$total',
-              style: const TextStyle(
-                fontSize: 44,
-                fontWeight: FontWeight.bold,
-                color: _accent,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 36),
-            GestureDetector(
-              onTap: _restart,
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 18),
-                decoration: BoxDecoration(
-                  color: _accent,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _accent.withValues(alpha: 0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text('🔄', style: TextStyle(fontSize: 24)),
-                    const SizedBox(width: 10),
-                    Text(
-                      s('Грати ще раз', 'Play again'),
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-            GestureDetector(
-              onTap: () => Navigator.of(context).pop(),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                child: Text(
-                  s('🏠 На головну', '🏠 Home'),
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey[500],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    return _buildQuiz(state);
   }
 
   Widget _buildQuiz(QuizState state) {

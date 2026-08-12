@@ -8,12 +8,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/card_model.dart';
 import '../providers/daily_quest_provider.dart';
 import '../providers/language_provider.dart';
+import '../providers/profile_provider.dart';
 import '../services/audio_service.dart';
 import '../utils/confetti_overlay_mixin.dart';
 import '../utils/constants.dart';
 import '../utils/game_state_mixin.dart';
 import '../utils/l10n.dart';
 import '../utils/shake_animation_mixin.dart';
+import '../widgets/game_celebration_overlay.dart';
 
 class RepeatGameScreen extends ConsumerStatefulWidget {
   final List<CardModel> cards;
@@ -43,9 +45,10 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
   late List<CardModel> _deck;
   int _index = 0;
   bool _answered = false; // buttons locked during transition
-  // Cards the child pressed "not quite" on — we'll offer a practice round
-  // with just these at the end.
+  // Cards the child pressed "not quite" on — replayed once as an automatic
+  // practice round before the celebration.
   final List<CardModel> _missed = [];
+  bool _practiceRound = false;
 
   // Card slide-out when advancing to next
   late AnimationController _exitCtrl;
@@ -76,7 +79,17 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
     initShake();
 
     startGame();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _speakCurrent());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      // Entry voice line first, then a short gap before the first word.
+      AudioService.instance.playInstruction(
+        'repeat',
+        isEn: ref.read(languageProvider) == 'en',
+      );
+      Future.delayed(const Duration(milliseconds: 400), () {
+        if (mounted) _speakCurrent();
+      });
+    });
   }
 
   @override
@@ -112,10 +125,11 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
     setState(() => _answered = true);
 
     HapticFeedback.mediumImpact();
+    // Remember the tricky word — after the main deck we run one gentle
+    // practice pass with just these before celebrating. No punishment UI.
     _missed.add(_current);
 
-    // Quick shake so the tap feels acknowledged, then move on — we'll come
-    // back to this card in the optional practice round at the end.
+    // Quick shake so the tap feels acknowledged, then move on.
     await shakeController.forward();
     shakeController.reset();
     if (!mounted) return;
@@ -123,13 +137,27 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
     await _advance();
   }
 
-  void _startMissedRound() {
-    final missed = List<CardModel>.from(_missed);
+  void _restart() {
     resetGame();
     setState(() {
-      _deck = missed..shuffle(Random());
+      _deck = List<CardModel>.from(widget.cards)..shuffle(Random());
       _index = 0;
       _answered = false;
+      _practiceRound = false;
+      _missed.clear();
+    });
+    _speakCurrent();
+  }
+
+  /// One automatic re-run of only the words the child struggled with —
+  /// the speech-therapy core of this game.
+  void _startMissedRound() {
+    final missed = List<CardModel>.from(_missed)..shuffle(Random());
+    setState(() {
+      _deck = missed;
+      _index = 0;
+      _answered = false;
+      _practiceRound = true;
       _missed.clear();
     });
     _speakCurrent();
@@ -143,10 +171,21 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
     final isLast = _index >= _deck.length - 1;
 
     if (isLast) {
+      if (_missed.isNotEmpty && !_practiceRound) {
+        _startMissedRound();
+        return;
+      }
       completeGame();
       setState(() {
         _answered = false;
       });
+      showGameCelebration(
+        context,
+        isEn: ref.read(languageProvider) == 'en',
+        childName: ref.read(profileProvider).active?.name ?? '',
+        onAgain: _restart,
+        onDone: () => Navigator.of(context).pop(),
+      );
     } else {
       setState(() {
         _index++;
@@ -160,8 +199,6 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
   Widget build(BuildContext context) {
     final s = AppS(ref.read(languageProvider) == 'en');
 
-    if (finished) return _buildFinishScreen(s);
-
     final card = _current;
 
     return Scaffold(
@@ -173,21 +210,6 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Center(
-              child: Text(
-                '⭐ $score',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: kAccent,
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
       body: SafeArea(
         child: Padding(
@@ -235,6 +257,8 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
+                          // Real webp only — plain placeholder if an
+                          // unsanitized card ever slips through (never emoji).
                           if (card.image != null)
                             Expanded(
                               child: Padding(
@@ -247,8 +271,16 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
                               ),
                             )
                           else
-                            Text(card.emoji,
-                                style: const TextStyle(fontSize: 140)),
+                            Expanded(
+                              child: Container(
+                                margin: const EdgeInsets.all(24),
+                                decoration: BoxDecoration(
+                                  color: card.colorAccent
+                                      .withValues(alpha: 0.25),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                            ),
 
                           const SizedBox(height: 16),
 
@@ -362,110 +394,4 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
     );
   }
 
-  Widget _buildFinishScreen(AppS s) {
-    final total = _deck.length;
-    final pct = total > 0 ? score / total : 0.0;
-    final stars = pct >= 0.8 ? 3 : pct >= 0.5 ? 2 : 1;
-
-    return Scaffold(
-      backgroundColor: const Color(0xFFEAFFF5),
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  stars == 3
-                      ? s('Чудово! 🎉', 'Excellent! 🎉')
-                      : stars == 2
-                          ? s('Молодець! 👍', 'Well done! 👍')
-                          : s('Спробуй ще! 💪', 'Keep trying! 💪'),
-                  style: const TextStyle(
-                      fontSize: 32, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(
-                    3,
-                    (i) => Text(
-                      i < stars ? '⭐' : '☆',
-                      style: const TextStyle(fontSize: 48),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  s('$score з $total слів', '$score of $total words'),
-                  style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-                ),
-                const SizedBox(height: 48),
-                if (_missed.isNotEmpty) ...[
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton.icon(
-                      onPressed: _startMissedRound,
-                      icon: const Icon(Icons.refresh_rounded),
-                      label: Text(
-                        s('Попрацювати над ${_missed.length}',
-                            'Practice ${_missed.length} again'),
-                        style: const TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFF8C42),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: kAccent,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18)),
-                    ),
-                    child: Text(
-                      s('Готово', 'Done'),
-                      style: const TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextButton(
-                  onPressed: () {
-                    resetGame();
-                    setState(() {
-                      _deck.shuffle(Random());
-                      _index = 0;
-                      _answered = false;
-                      _missed.clear();
-                    });
-                    _speakCurrent();
-                  },
-                  child: Text(
-                    s('Грати ще раз 🔄', 'Play again 🔄'),
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }

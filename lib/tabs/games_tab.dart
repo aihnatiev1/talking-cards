@@ -12,6 +12,7 @@ import '../screens/memory_match_screen.dart';
 import '../screens/odd_one_out_screen.dart';
 import '../screens/opposite_game_screen.dart';
 import '../screens/repeat_game_screen.dart';
+import '../services/audio_service.dart';
 import '../services/paywall_flow.dart';
 import '../utils/design_tokens.dart';
 
@@ -39,18 +40,21 @@ class GamesTab extends ConsumerStatefulWidget {
 class _GamesTabState extends ConsumerState<GamesTab> {
   void _openQuiz(List<CardModel> allCards) {
     final lang = ref.read(languageProvider);
+    // Playable = real recorded audio AND a webp illustration — the game
+    // renders images (never emoji) and plays recordings (never TTS).
     final List<CardModel> cards;
-    final String? ttsLocale;
     if (lang == 'en') {
-      cards = allCards.where((c) => c.image != null).toList();
-      ttsLocale = 'en-US';
+      cards = allCards
+          .where((c) =>
+              c.image != null && AudioService.instance.hasSound(c.audioKey))
+          .toList();
     } else {
-      cards = allCards.where((c) => c.audioKey != null).toList();
-      ttsLocale = null;
+      cards = allCards
+          .where((c) => c.audioKey != null && c.image != null)
+          .toList();
     }
     if (cards.length < 4) return;
-    Navigator.of(context).push(
-        _gameRoute(GuessScreen(cards: cards, ttsLocale: ttsLocale)));
+    Navigator.of(context).push(_gameRoute(GuessScreen(cards: cards)));
   }
 
   void _openMemoryMatch(List<CardModel> allCards) {
@@ -61,8 +65,10 @@ class _GamesTabState extends ConsumerState<GamesTab> {
       (p) => !p.isLocked && !p.id.startsWith('_'),
       orElse: () => packs.first,
     );
-    Navigator.of(context).push(
-        _gameRoute(MemoryMatchScreen(pack: pack, cards: playable)));
+    // Toddler entry: start with 3 pairs (2×3 grid); the screen escalates to
+    // 4 pairs by itself after 2 wins in the same session.
+    Navigator.of(context).push(_gameRoute(
+        MemoryMatchScreen(pack: pack, cards: playable, pairCount: 3)));
   }
 
   static const _oddOneOutExclude = {
@@ -169,8 +175,14 @@ class _GamesTabState extends ConsumerState<GamesTab> {
               .expand((p) => p.cards)
               .toList();
           final playableCount = isEn
-              ? allCards.where((c) => c.image != null).length
-              : allCards.where((c) => c.audioKey != null).length;
+              ? allCards
+                  .where((c) =>
+                      c.image != null &&
+                      AudioService.instance.hasSound(c.audioKey))
+                  .length
+              : allCards
+                  .where((c) => c.audioKey != null && c.image != null)
+                  .length;
 
           final toddlerGames = <_BigGame>[
             _BigGame(

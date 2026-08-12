@@ -26,8 +26,13 @@ import '../widgets/bloom_mascot.dart';
 /// zooms with an elastic curve while the recorded word audio plays.
 ///
 /// Two modes — All unlocked packs vs. Tricky words (mistakes ∪ SRS-due).
+/// The child entry always starts in "all words"; a future hard-words entry
+/// point can pass [mode] explicitly (there is no in-game mode switch — that
+/// was an adult control living in the child's play zone).
 class BubblePopScreen extends ConsumerStatefulWidget {
-  const BubblePopScreen({super.key});
+  final BubbleMode mode;
+
+  const BubblePopScreen({super.key, this.mode = BubbleMode.all});
 
   @override
   ConsumerState<BubblePopScreen> createState() => _BubblePopScreenState();
@@ -164,10 +169,15 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
   @override
   void initState() {
     super.initState();
+    _mode = widget.mode;
     _ticker = createTicker(_onTick);
     // Start once the first frame layout is known.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      AudioService.instance.playInstruction(
+        'bubbles',
+        isEn: ref.read(languageProvider) == 'en',
+      );
       _startRound();
     });
   }
@@ -379,6 +389,8 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     if (_ended) return;
 
     HapticFeedback.mediumImpact();
+    // Instant "pop" SFX layered over the narrator — never cuts the word off.
+    AudioService.instance.playSfx('pop');
     AudioService.instance.playWordOnly(b.card.audioKey, b.card.sound);
 
     setState(() {
@@ -480,21 +492,14 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
                   ),
                 ),
 
-              // Top bar.
+              // Top bar — close button + wordless fill-up progress bar.
               Positioned(
                 left: 0,
                 right: 0,
                 top: _topPadding,
                 child: _TopBar(
-                  isEn: isEn,
-                  mode: _mode,
-                  popped: _popped,
-                  secondsRemaining: _secondsRemaining,
+                  progress: _popped / _kRoundTargetPops,
                   onClose: () => Navigator.of(context).pop(),
-                  onModeChanged: (m) {
-                    if (m == _mode) return;
-                    _startRound(mode: m);
-                  },
                 ),
               ),
 
@@ -525,11 +530,6 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     final fallback = isEn ? 'Kiddo' : 'Малюк';
     final n = p?.name.trim();
     return (n == null || n.isEmpty) ? fallback : n;
-  }
-
-  int get _secondsRemaining {
-    final left = _kRoundDurationSec - (_elapsedMs ~/ 1000);
-    return left.clamp(0, _kRoundDurationSec);
   }
 }
 
@@ -839,159 +839,63 @@ class _CardInside extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────
-//  Top bar: close, mode chips, counter, timer
+//  Top bar: close button + fill-up progress bar
 // ─────────────────────────────────────────────
 
 class _TopBar extends StatelessWidget {
-  final bool isEn;
-  final BubbleMode mode;
-  final int popped;
-  final int secondsRemaining;
+  /// 0..1 fraction of the round target already popped.
+  final double progress;
   final VoidCallback onClose;
-  final ValueChanged<BubbleMode> onModeChanged;
 
   const _TopBar({
-    required this.isEn,
-    required this.mode,
-    required this.popped,
-    required this.secondsRemaining,
+    required this.progress,
     required this.onClose,
-    required this.onModeChanged,
   });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-      child: Column(
+      child: Row(
         children: [
-          Row(
-            children: [
-              // Close X.
-              _TopChip(
-                onTap: onClose,
-                child: const Icon(Icons.close_rounded,
-                    size: 22, color: DT.textPrimary),
-              ),
-              const Spacer(),
-              // Counter.
-              _TopPill(
-                child: Text(
-                  '🫧 $popped/$_kRoundTargetPops',
-                  style: DT.h2.copyWith(fontSize: 16),
+          // Close X — 56dp hit target for reliable toddler/parent taps.
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onClose,
+            child: SizedBox(
+              width: 56,
+              height: 56,
+              child: Center(
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: DT.shadowSoft(kAccent),
+                  ),
+                  child: const Icon(Icons.close_rounded,
+                      size: 24, color: DT.textPrimary),
                 ),
               ),
-              const SizedBox(width: 8),
-              // Timer.
-              _TopPill(
-                child: Text(
-                  '⏱ $secondsRemaining',
-                  style: DT.h2.copyWith(fontSize: 16),
-                ),
-              ),
-            ],
+            ),
           ),
-          const SizedBox(height: 10),
-          // Mode toggle chips, centered.
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _ModeChip(
-                label: isEn ? 'All words' : 'Всі слова',
-                selected: mode == BubbleMode.all,
-                onTap: () => onModeChanged(BubbleMode.all),
+          const SizedBox(width: 12),
+          // Thin wordless progress bar that fills as bubbles pop — no
+          // numbers or timers in the child's play zone.
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(5),
+              child: LinearProgressIndicator(
+                value: progress.clamp(0.0, 1.0),
+                minHeight: 10,
+                backgroundColor: Colors.white.withValues(alpha: 0.7),
+                valueColor: const AlwaysStoppedAnimation<Color>(kAccent),
               ),
-              const SizedBox(width: 8),
-              _ModeChip(
-                label: isEn ? 'Tricky words' : 'Складні слова',
-                selected: mode == BubbleMode.tricky,
-                onTap: () => onModeChanged(BubbleMode.tricky),
-              ),
-            ],
+            ),
           ),
+          const SizedBox(width: 12),
         ],
-      ),
-    );
-  }
-}
-
-class _TopChip extends StatelessWidget {
-  final VoidCallback onTap;
-  final Widget child;
-
-  const _TopChip({required this.onTap, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          boxShadow: DT.shadowSoft(kAccent),
-        ),
-        child: Center(child: child),
-      ),
-    );
-  }
-}
-
-class _TopPill extends StatelessWidget {
-  final Widget child;
-  const _TopPill({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: DT.shadowSoft(kAccent),
-      ),
-      child: child,
-    );
-  }
-}
-
-class _ModeChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _ModeChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        curve: Curves.easeOut,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected ? kAccent : Colors.white,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(
-            color: selected ? kAccent : kAccent.withValues(alpha: 0.35),
-            width: 2,
-          ),
-          boxShadow: selected ? DT.shadowSoft(kAccent) : null,
-        ),
-        child: Text(
-          label,
-          style: DT.tileTitle.copyWith(
-            fontSize: 14,
-            color: selected ? Colors.white : DT.textPrimary,
-          ),
-        ),
       ),
     );
   }

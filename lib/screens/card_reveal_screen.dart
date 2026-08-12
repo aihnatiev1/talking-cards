@@ -2,15 +2,21 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
+import '../providers/language_provider.dart';
+import '../services/audio_service.dart';
+import '../utils/l10n.dart';
 
 /// Full-screen card reveal with celebration effects.
-class CardRevealScreen extends StatefulWidget {
+class CardRevealScreen extends ConsumerStatefulWidget {
   final CardModel card;
   final PackModel pack;
   final int newTotal;
+  /// Kept for call-site compatibility; the Share button was removed from
+  /// this child-facing screen (no parental gate exists in the app).
   final void Function(BuildContext)? onShare;
   final VoidCallback? onGoToPack;
   final bool skipAnimation;
@@ -26,10 +32,10 @@ class CardRevealScreen extends StatefulWidget {
   });
 
   @override
-  State<CardRevealScreen> createState() => _CardRevealScreenState();
+  ConsumerState<CardRevealScreen> createState() => _CardRevealScreenState();
 }
 
-class _CardRevealScreenState extends State<CardRevealScreen>
+class _CardRevealScreenState extends ConsumerState<CardRevealScreen>
     with TickerProviderStateMixin {
   late final AnimationController _envelopeCtrl;
   late final AnimationController _openCtrl;
@@ -119,6 +125,8 @@ class _CardRevealScreenState extends State<CardRevealScreen>
   void _startPhase3() {
     setState(() => _phase3Started = true);
     HapticFeedback.lightImpact();
+    // Voice the revealed word — the reward moment must be heard, not read.
+    AudioService.instance.playWordOnly(widget.card.audioKey, widget.card.sound);
     _settleCtrl.forward();
     _glowCtrl.repeat(reverse: true);
     _confettiCtrl.repeat();
@@ -499,6 +507,7 @@ class _CardRevealScreenState extends State<CardRevealScreen>
 
   Widget _buildButtons() {
     final packColor = widget.pack.color;
+    final s = AppS(ref.read(languageProvider) == 'en');
 
     return AnimatedOpacity(
       opacity: _showButtons ? 1.0 : 0.0,
@@ -517,7 +526,8 @@ class _CardRevealScreenState extends State<CardRevealScreen>
               icon: Text(widget.pack.icon,
                   style: const TextStyle(fontSize: 20)),
               label: Text(
-                'До розділу "${widget.pack.title}"',
+                s('До розділу "${widget.pack.title}"',
+                    'To "${widget.pack.title}"'),
                 style: const TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 15,
@@ -535,42 +545,24 @@ class _CardRevealScreenState extends State<CardRevealScreen>
             ),
           ),
           const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () => widget.onShare?.call(context),
-                  icon: const Icon(Icons.share_rounded, size: 18),
-                  label: const Text('Поділитися',
-                      style: TextStyle(fontWeight: FontWeight.w600)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white.withValues(alpha: 0.15),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                    elevation: 0,
-                  ),
-                ),
+          // No Share button here — this screen is child-facing and the app
+          // has no parental gate to protect an outbound share flow.
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => Navigator.of(context).pop(),
+              icon: const Icon(Icons.home_rounded, size: 18),
+              label: Text(s('На головну', 'Home'),
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white.withValues(alpha: 0.15),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+                elevation: 0,
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.home_rounded, size: 18),
-                  label: const Text('На головну',
-                      style: TextStyle(fontWeight: FontWeight.w600)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white.withValues(alpha: 0.15),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                    elevation: 0,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),
