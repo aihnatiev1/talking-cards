@@ -61,4 +61,15 @@ void main() {
       expect(dayWord(0), 'днів');
     });
   });
+
+  group('wordWord', () {
+    test('1 слово', () => expect(wordWord(1), 'слово'));
+    test('2 слова', () => expect(wordWord(2), 'слова'));
+    test('5 слів', () => expect(wordWord(5), 'слів'));
+    test('11 слів (not "слово")', () => expect(wordWord(11), 'слів'));
+    test('12 слів (not "слова")', () => expect(wordWord(12), 'слів'));
+    test('21 слово', () => expect(wordWord(21), 'слово'));
+    test('47 слів', () => expect(wordWord(47), 'слів'));
+    test('104 слова', () => expect(wordWord(104), 'слова'));
+  });
 }

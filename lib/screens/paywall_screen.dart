@@ -7,12 +7,14 @@ import 'package:url_launcher/url_launcher.dart';
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../providers/profile_provider.dart';
+import '../providers/srs_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/purchase_service.dart';
 import '../services/remote_config_service.dart';
 import '../utils/constants.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
+import '../utils/uk_grammar.dart';
 
 class PaywallScreen extends ConsumerStatefulWidget {
   /// When true, shows the onboarding-specific welcome variant: stronger
@@ -31,11 +33,28 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   int _selectedPlan = 0;
   bool _canCloseEarly = false;
 
+  /// Cards the child has actually learned (same threshold as the Treasure
+  /// Box): the sunk-cost anchor for returning users.
+  static const _learnedThreshold = 2;
+  static const _minLearnedForAnchor = 5;
+
+  int get _learnedCount => ref
+      .read(srsProvider)
+      .cards
+      .values
+      .where((c) => c.repetitions >= _learnedThreshold)
+      .length;
+
   @override
   void initState() {
     super.initState();
+    final name = ref.read(profileProvider).active?.name.trim() ?? '';
+    final variant = _learnedCount >= _minLearnedForAnchor
+        ? 'progress'
+        : (name.isNotEmpty && name != 'Малюк' ? 'personal' : 'generic');
     AnalyticsService.instance.logPaywallView(
       widget.isOnboarding ? 'paywall_onboarding' : 'paywall_screen',
+      variant: variant,
     );
     // Industry standard: give the user 3s to read the offer before exposing X.
     Future.delayed(const Duration(seconds: 3), () {
@@ -88,10 +107,23 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   String _headline(AppS s) {
     final profile = ref.watch(profileProvider).active;
     final name = profile?.name.trim() ?? '';
+    final hasName = name.isNotEmpty && name != 'Малюк';
+
+    // Progress anchor for returning users: what the child already achieved
+    // beats any generic promise. Nominative-only phrasing — no declension.
+    final learned = _learnedCount;
+    if (learned >= _minLearnedForAnchor) {
+      final who = hasName ? name : s('Ваш малюк', 'Your child');
+      return s(
+        '$who вже знає $learned ${wordWord(learned)}!',
+        '$who already knows $learned words!',
+      );
+    }
+
     // 'Малюк' is the unnamed-profile placeholder, not a real name. The
     // colon phrasing keeps the name in nominative case — no Ukrainian
     // declension needed for arbitrary names.
-    if (name.isEmpty || name == 'Малюк') {
+    if (!hasName) {
       return s(RemoteConfigService.instance.paywallTitle,
           'Unlock full potential');
     }

@@ -78,8 +78,8 @@ class AnalyticsService {
 
   // --- Paywall ---
 
-  Future<void> logPaywallView(String source) =>
-      _safeLog('paywall_view', {'source': source});
+  Future<void> logPaywallView(String source, {String variant = 'generic'}) =>
+      _safeLog('paywall_view', {'source': source, 'variant': variant});
 
   Future<void> logPaywallDismiss(String source) =>
       _safeLog('paywall_dismiss', {'source': source});
