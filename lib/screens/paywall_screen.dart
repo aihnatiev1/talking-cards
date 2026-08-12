@@ -579,17 +579,20 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     );
   }
 
+  // Social proof must stay honest: only the verifiable Ukrainian App Store
+  // rating and a real review (translated for EN) — fabricated quotes or
+  // ratings are an App Review rejection risk and kill trust on inspection.
   Widget _testimonial(AppS s) {
-    if (!widget.isOnboarding) {
-      return _testimonialCard(
-        s(
-          '«Дуже подобається додаток, дякую!\nДитина в захваті 😍»',
-          '“Love this app, thank you!\nMy kid is obsessed 😍”',
-        ),
-        s('Оксана', 'Oksana'),
-      );
-    }
-    // Onboarding variant: 3 quotes for stronger social proof
+    final card = _testimonialCard(
+      s(
+        '«Дуже подобається додаток, дякую!\nДитина в захваті 😍»',
+        '“Love this app, thank you!\nMy kid is obsessed 😍”',
+      ),
+      s('Оксана — App Store (Україна)',
+          'Oksana — App Store Ukraine, translated'),
+    );
+    if (!widget.isOnboarding) return card;
+    // Onboarding variant: rating line + quote
     return Column(
       children: [
         Row(
@@ -605,7 +608,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         ),
         const SizedBox(height: 4),
         Text(
-          s('4.9 із 5 — App Store', '4.9 out of 5 — App Store'),
+          s('5.0 із 5 — App Store (Україна)',
+              '5.0 on the Ukrainian App Store'),
           style: TextStyle(
             fontSize: responsiveFont(context, 13),
             color: Colors.grey[600],
@@ -613,24 +617,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        _testimonialCard(
-          s('«Дитина в захваті 😍 Дуже подобається!»',
-              '“My kid is obsessed 😍 Really loves it!”'),
-          s('Оксана', 'Oksana'),
-        ),
-        const SizedBox(height: 8),
-        _testimonialCard(
-          s(
-              '«Я вражений якістю контенту. Раджу всім, у кого є діти!»',
-              '“Impressed by the content quality. Recommend to every parent!”'),
-          s('Дмитро', 'Dmitri'),
-        ),
-        const SizedBox(height: 8),
-        _testimonialCard(
-          s('«Дитині подобається — і це головне»',
-              '“Kid loves it — that\'s what matters”'),
-          s('Анна', 'Anna'),
-        ),
+        card,
       ],
     );
   }
@@ -673,7 +660,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            '— $author, App Store',
+            '— $author',
             style: TextStyle(
               fontSize: responsiveFont(context, 12),
               color: Colors.grey[600],
