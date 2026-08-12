@@ -139,6 +139,8 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
         SingleTickerProviderStateMixin,
         ConfettiOverlayMixin<BubblePopScreen> {
   late final Ticker _ticker;
+  /// Bumped once per ticker frame; only the bubble layer listens.
+  final ValueNotifier<int> _frame = ValueNotifier(0);
   Duration _lastTick = Duration.zero;
 
   final Random _rng = Random();
@@ -186,6 +188,7 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
   void dispose() {
     _ticker.stop();
     _ticker.dispose();
+    _frame.dispose();
     disposeConfetti();
     super.dispose();
   }
@@ -342,7 +345,10 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
       return;
     }
 
-    setState(() {}); // single rebuild per frame
+    // Repaint only the bubble layer (see ListenableBuilder in build) —
+    // a full-screen setState per frame kept the whole tree rebuilding
+    // at 60fps on the old tablets this app targets.
+    _frame.value++;
   }
 
   int _randomSpawnInterval() =>
@@ -462,19 +468,29 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
                 ),
               ),
 
-              // Live bubbles.
-              for (final b in _live)
-                Positioned(
-                  left: b.posX - b.size / 2,
-                  top: b.posY - b.size / 2,
-                  width: b.size,
-                  height: b.size,
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => _onBubbleTap(b),
-                    child: _LiveBubbleVisual(bubble: b),
+              // Live bubbles — isolated in their own subtree that rebuilds
+              // per ticker frame; the rest of the screen stays untouched.
+              Positioned.fill(
+                child: ListenableBuilder(
+                  listenable: _frame,
+                  builder: (_, __) => Stack(
+                    children: [
+                      for (final b in _live)
+                        Positioned(
+                          left: b.posX - b.size / 2,
+                          top: b.posY - b.size / 2,
+                          width: b.size,
+                          height: b.size,
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () => _onBubbleTap(b),
+                            child: _LiveBubbleVisual(bubble: b),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
+              ),
 
               // Popping bubbles (own animation controllers).
               for (final p in _popping)
