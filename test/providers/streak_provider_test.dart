@@ -1,3 +1,6 @@
+// StateNotifier.debugState is the only public state accessor here.
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talking_cards/providers/streak_provider.dart';
@@ -180,7 +183,7 @@ void main() {
         'streak_rewards': <String>[],
       });
 
-      final notifier = StreakNotifier();
+      StreakNotifier(); // constructing it loads prefs and bumps the streak
       await Future.delayed(const Duration(milliseconds: 100));
 
       final prefs = await SharedPreferences.getInstance();

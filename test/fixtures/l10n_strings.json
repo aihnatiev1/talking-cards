@@ -1,0 +1,698 @@
+[
+  {
+    "uk": "/місяць",
+    "en": "/month"
+  },
+  {
+    "uk": "/рік",
+    "en": "/year"
+  },
+  {
+    "uk": "1-2р",
+    "en": "1-2y"
+  },
+  {
+    "uk": "19 розділів для розвитку",
+    "en": "19 learning packs"
+  },
+  {
+    "uk": "2-3р",
+    "en": "2-3y"
+  },
+  {
+    "uk": "3 ДНІ БЕЗКОШТОВНО",
+    "en": "3 DAYS FREE"
+  },
+  {
+    "uk": "3 дні безкоштовно, потім {price}{period} • Скасувати будь-коли",
+    "en": "3 days free, then {price}{period} • Cancel anytime"
+  },
+  {
+    "uk": "3-4р",
+    "en": "3-4y"
+  },
+  {
+    "uk": "4-5р",
+    "en": "4-5y"
+  },
+  {
+    "uk": "400+ яскравих карток зі звуком",
+    "en": "400+ vivid cards with sound"
+  },
+  {
+    "uk": "449 грн",
+    "en": "$14.99"
+  },
+  {
+    "uk": "5.0 із 5 — App Store (Україна)",
+    "en": "5.0 on the Ukrainian App Store"
+  },
+  {
+    "uk": "79 грн",
+    "en": "$1.99"
+  },
+  {
+    "uk": "{done} з {total} зупинок",
+    "en": "{done} of {total} stops"
+  },
+  {
+    "uk": "{length} карток чекають",
+    "en": "{length} cards waiting"
+  },
+  {
+    "uk": "{seenCards} з {totalCards} карток переглянуто",
+    "en": "{seenCards} of {totalCards} cards viewed"
+  },
+  {
+    "uk": "{totalViews} переглядів карток",
+    "en": "{totalViews} card views"
+  },
+  {
+    "uk": "{who} вже знає {learned} {wordWord}!",
+    "en": "{who} already knows {learned} words!"
+  },
+  {
+    "uk": "~{approxMinutes} хв навчання",
+    "en": "~{approxMinutes} min learning"
+  },
+  {
+    "uk": "«Дуже подобається додаток, дякую!\nДитина в захваті 😍»",
+    "en": "“Love this app, thank you!\nMy kid is obsessed 😍”"
+  },
+  {
+    "uk": "Ігри",
+    "en": "Games"
+  },
+  {
+    "uk": "Ім'я дитини",
+    "en": "Child's name"
+  },
+  {
+    "uk": "Аватар",
+    "en": "Avatar"
+  },
+  {
+    "uk": "Активних днів",
+    "en": "Active days"
+  },
+  {
+    "uk": "Активність за тиждень",
+    "en": "Activity this week"
+  },
+  {
+    "uk": "Артикуляційна гімнастика",
+    "en": "Articulation Exercises"
+  },
+  {
+    "uk": "Батьківський режим",
+    "en": "Parent area"
+  },
+  {
+    "uk": "Без зобов'язань — скасуй будь-коли",
+    "en": "No commitment — cancel anytime"
+  },
+  {
+    "uk": "Без підписки",
+    "en": "No subscription"
+  },
+  {
+    "uk": "Бонусні картки",
+    "en": "Bonus cards"
+  },
+  {
+    "uk": "ВІТАЄМО!",
+    "en": "WELCOME!"
+  },
+  {
+    "uk": "Ваш малюк",
+    "en": "Your child"
+  },
+  {
+    "uk": "Версія {version}",
+    "en": "Version {version}"
+  },
+  {
+    "uk": "Весь прогрес \"{name}\" буде видалено. Це незворотно.",
+    "en": "All progress for \"{name}\" will be deleted. This cannot be undone."
+  },
+  {
+    "uk": "Видалити",
+    "en": "Delete"
+  },
+  {
+    "uk": "Видалити профіль?",
+    "en": "Delete profile?"
+  },
+  {
+    "uk": "Всього сесій",
+    "en": "Total sessions"
+  },
+  {
+    "uk": "Всі ігри",
+    "en": "All games"
+  },
+  {
+    "uk": "Відкрий\nскарб!",
+    "en": "Claim\nreward!"
+  },
+  {
+    "uk": "Відкрий хоча б один пак з картками",
+    "en": "Open at least one pack with images first"
+  },
+  {
+    "uk": "Відновити покупки",
+    "en": "Restore purchases"
+  },
+  {
+    "uk": "Вік дитини",
+    "en": "Child's age"
+  },
+  {
+    "uk": "Гарний початок! Продовжуй кожен день 💪",
+    "en": "Nice start! Keep going every day 💪"
+  },
+  {
+    "uk": "Готово",
+    "en": "Done"
+  },
+  {
+    "uk": "Готово! ✅",
+    "en": "Done! ✅"
+  },
+  {
+    "uk": "Грай у вікторину — і слова збиратимуться сюди!",
+    "en": "Play the quiz and your words will collect here!"
+  },
+  {
+    "uk": "Грати знову",
+    "en": "Play again"
+  },
+  {
+    "uk": "Далі ▶",
+    "en": "Next ▶"
+  },
+  {
+    "uk": "Де відкрити нову картку?",
+    "en": "Where to open the new card?"
+  },
+  {
+    "uk": "До розділу \"{title}\"",
+    "en": "To \"{title}\""
+  },
+  {
+    "uk": "Додано в улюблені ❤️",
+    "en": "Added to favorites ❤️"
+  },
+  {
+    "uk": "Додати в улюблені",
+    "en": "Add to favorites"
+  },
+  {
+    "uk": "Додати профіль",
+    "en": "Add profile"
+  },
+  {
+    "uk": "Досягнення",
+    "en": "Achievements"
+  },
+  {
+    "uk": "Закрити",
+    "en": "Close"
+  },
+  {
+    "uk": "Замало складних слів — переходимо до всіх слів",
+    "en": "Not enough tricky words yet — switching to all words"
+  },
+  {
+    "uk": "Зберегти",
+    "en": "Save"
+  },
+  {
+    "uk": "Знайдено! 🎉",
+    "en": "Found! 🎉"
+  },
+  {
+    "uk": "Знайди зайве",
+    "en": "Odd one out"
+  },
+  {
+    "uk": "Знайди пару",
+    "en": "Find the pair"
+  },
+  {
+    "uk": "Знайди протилежність",
+    "en": "Find the opposite"
+  },
+  {
+    "uk": "Значки",
+    "en": "Badges"
+  },
+  {
+    "uk": "Зупинити",
+    "en": "Stop"
+  },
+  {
+    "uk": "Картки",
+    "en": "Cards"
+  },
+  {
+    "uk": "Картки-розмовлялки",
+    "en": "FirstWords Cards"
+  },
+  {
+    "uk": "Картки-розмовлялки",
+    "en": "Talking Cards"
+  },
+  {
+    "uk": "Конфіденційність",
+    "en": "Privacy"
+  },
+  {
+    "uk": "Малюк",
+    "en": "Kiddo"
+  },
+  {
+    "uk": "Малюємо",
+    "en": "Coloring"
+  },
+  {
+    "uk": "Мова карток",
+    "en": "Card language"
+  },
+  {
+    "uk": "Може пізніше",
+    "en": "Maybe later"
+  },
+  {
+    "uk": "Молодець!",
+    "en": "Great job!"
+  },
+  {
+    "uk": "Молодець!",
+    "en": "Well done!"
+  },
+  {
+    "uk": "Молодець! Виконано {_maxReps} разів!",
+    "en": "Well done! Completed {_maxReps} times!"
+  },
+  {
+    "uk": "Молодець, {childName}!",
+    "en": "Great job, {childName}!"
+  },
+  {
+    "uk": "Молодець, {name}!",
+    "en": "Great job, {name}!"
+  },
+  {
+    "uk": "Місячна",
+    "en": "Monthly"
+  },
+  {
+    "uk": "На головну",
+    "en": "Back to home"
+  },
+  {
+    "uk": "На головну",
+    "en": "Home"
+  },
+  {
+    "uk": "Нагороди",
+    "en": "Rewards"
+  },
+  {
+    "uk": "Назавжди",
+    "en": "Lifetime"
+  },
+  {
+    "uk": "Назад",
+    "en": "Back"
+  },
+  {
+    "uk": "Найвигідніше",
+    "en": "Best value"
+  },
+  {
+    "uk": "Наступна",
+    "en": "Next"
+  },
+  {
+    "uk": "Натисни, щоб послухати",
+    "en": "Tap to listen"
+  },
+  {
+    "uk": "Не вийшло ❌",
+    "en": "Not quite ❌"
+  },
+  {
+    "uk": "Неймовірна активність цього тижня! 🏆",
+    "en": "Amazing week of activity! 🏆"
+  },
+  {
+    "uk": "Новий профіль",
+    "en": "New profile"
+  },
+  {
+    "uk": "Нові розділи щомісяця",
+    "en": "New packs every month"
+  },
+  {
+    "uk": "Огляд",
+    "en": "Overview"
+  },
+  {
+    "uk": "Ой, щось не завантажилось",
+    "en": "Oops, something didn't load"
+  },
+  {
+    "uk": "Оксана — App Store (Україна)",
+    "en": "Oksana — App Store Ukraine, translated"
+  },
+  {
+    "uk": "Оцінити додаток",
+    "en": "Rate the app"
+  },
+  {
+    "uk": "Паки",
+    "en": "Packs"
+  },
+  {
+    "uk": "Паки пройдено",
+    "en": "Packs done"
+  },
+  {
+    "uk": "Перевір інтернет і спробуй ще раз",
+    "en": "Check your connection and try again"
+  },
+  {
+    "uk": "Переглянуто",
+    "en": "Seen"
+  },
+  {
+    "uk": "План розвитку: {name}",
+    "en": "{name}'s learning plan"
+  },
+  {
+    "uk": "План розвитку: {name} ({age} р.)",
+    "en": "{name}'s learning plan (age {age})"
+  },
+  {
+    "uk": "Повторення",
+    "en": "Review"
+  },
+  {
+    "uk": "Повтори за мною",
+    "en": "Repeat after me"
+  },
+  {
+    "uk": "Повторити сьогодні",
+    "en": "Review today"
+  },
+  {
+    "uk": "Подарунок для нових родин — скасуй будь-коли",
+    "en": "A gift for new families — cancel anytime"
+  },
+  {
+    "uk": "Поділитись 🎉",
+    "en": "Share 🎉"
+  },
+  {
+    "uk": "Поки немає вивчених слів.\nГрайте у вікторину — і вони з'являться тут!",
+    "en": "No learned words yet.\nPlay the quiz and they'll show up here!"
+  },
+  {
+    "uk": "Поки немає помилок!\nПродовжуйте грати у вікторину.",
+    "en": "No mistakes yet!\nKeep playing the quiz."
+  },
+  {
+    "uk": "Політика конфіденційності",
+    "en": "Privacy Policy"
+  },
+  {
+    "uk": "Помилка",
+    "en": "Error"
+  },
+  {
+    "uk": "Помилка завантаження",
+    "en": "Loading error"
+  },
+  {
+    "uk": "Помилки",
+    "en": "Mistakes"
+  },
+  {
+    "uk": "Почнемо! 🎉",
+    "en": "Let's go! 🎉"
+  },
+  {
+    "uk": "Превʼю {cardsLength} з {allCardsLength} карток",
+    "en": "Preview {cardsLength} of {allCardsLength} cards"
+  },
+  {
+    "uk": "Привіт!",
+    "en": "Hello!"
+  },
+  {
+    "uk": "Привіт, {name}!",
+    "en": "Hello, {name}!"
+  },
+  {
+    "uk": "Про додаток",
+    "en": "About"
+  },
+  {
+    "uk": "Проведи пальцем по картинці — проявляться кольори",
+    "en": "Drag your finger — colors appear"
+  },
+  {
+    "uk": "Прогрес дитини",
+    "en": "Child's Progress"
+  },
+  {
+    "uk": "Продовжити з безкоштовними розділами",
+    "en": "Continue with free packs"
+  },
+  {
+    "uk": "Профілі",
+    "en": "Profiles"
+  },
+  {
+    "uk": "Підписку не знайдено",
+    "en": "No subscription found"
+  },
+  {
+    "uk": "Підтримка",
+    "en": "Support"
+  },
+  {
+    "uk": "Редагувати",
+    "en": "Edit"
+  },
+  {
+    "uk": "Розблокувати",
+    "en": "Unlock"
+  },
+  {
+    "uk": "Розблокувати все",
+    "en": "Unlock all"
+  },
+  {
+    "uk": "Розблокуй усі картинки одразу — і фарбуй щодня.",
+    "en": "Unlock all pictures — and color every day."
+  },
+  {
+    "uk": "Розділів пройдено",
+    "en": "Packs completed"
+  },
+  {
+    "uk": "Розмальовки водою",
+    "en": "Water coloring"
+  },
+  {
+    "uk": "Річна",
+    "en": "Yearly"
+  },
+  {
+    "uk": "Світла тема",
+    "en": "Light theme"
+  },
+  {
+    "uk": "Серія",
+    "en": "Streak"
+  },
+  {
+    "uk": "Скажи: «{sound}»",
+    "en": "Say: «{sound}»"
+  },
+  {
+    "uk": "Сказав! ✅",
+    "en": "Said it! ✅"
+  },
+  {
+    "uk": "Скарб 🔒",
+    "en": "Reward 🔒"
+  },
+  {
+    "uk": "Скарбничка",
+    "en": "Treasure box"
+  },
+  {
+    "uk": "Скарбничка порожня",
+    "en": "Treasure box is empty"
+  },
+  {
+    "uk": "Скасувати",
+    "en": "Cancel"
+  },
+  {
+    "uk": "Слова",
+    "en": "Words"
+  },
+  {
+    "uk": "Слухати ще раз",
+    "en": "Listen again"
+  },
+  {
+    "uk": "Сповіщення увімкнено",
+    "en": "Notifications on"
+  },
+  {
+    "uk": "Сподобалось? {title}",
+    "en": "Enjoying {title}?"
+  },
+  {
+    "uk": "Спробувати ще раз",
+    "en": "Try again"
+  },
+  {
+    "uk": "Сьогоднішній скарб",
+    "en": "Today's reward"
+  },
+  {
+    "uk": "Темна тема",
+    "en": "Dark theme"
+  },
+  {
+    "uk": "Ти лопнув {popped} бульок!",
+    "en": "You popped {popped} bubbles!"
+  },
+  {
+    "uk": "Тиждень",
+    "en": "Week"
+  },
+  {
+    "uk": "Тримай... ⏳",
+    "en": "Hold... ⏳"
+  },
+  {
+    "uk": "Тут зібрані картки зі звуками для малят.\n\n👆 Натисни на картку — почуєш звук\n👈 Свайпни — наступна картка\n🔊 Звук вмикається автоматично",
+    "en": "Flash cards with words for little ones.\n\n👆 Tap a card — hear the word\n👈 Swipe — next card\n🔊 Sound plays automatically"
+  },
+  {
+    "uk": "Увімкнути сповіщення",
+    "en": "Enable notifications"
+  },
+  {
+    "uk": "Улюблена гра",
+    "en": "Favorite game"
+  },
+  {
+    "uk": "Улюблені",
+    "en": "Favorites"
+  },
+  {
+    "uk": "Умови використання",
+    "en": "Terms of Use"
+  },
+  {
+    "uk": "Чудовий прогрес! 🌟",
+    "en": "Great progress! 🌟"
+  },
+  {
+    "uk": "Ще 20+ малюнків чекають!",
+    "en": "20+ more drawings waiting!"
+  },
+  {
+    "uk": "Ще {remaining} карток чекають!",
+    "en": "{remaining} more cards waiting!"
+  },
+  {
+    "uk": "Ще не грали в жодну гру.\nЗапустіть будь-яку гру з головного екрану!",
+    "en": "No games played yet.\nTry any game from the home screen!"
+  },
+  {
+    "uk": "Ще не достатньо карток для гри",
+    "en": "Not enough cards to play"
+  },
+  {
+    "uk": "Ще немає активності цього тижня.",
+    "en": "No activity this week yet."
+  },
+  {
+    "uk": "Ще раз",
+    "en": "Again"
+  },
+  {
+    "uk": "Ще раз",
+    "en": "Play again"
+  },
+  {
+    "uk": "Ще раз 🔄",
+    "en": "Again 🔄"
+  },
+  {
+    "uk": "Що протилежне?",
+    "en": "What is the opposite?"
+  },
+  {
+    "uk": "Щоденні вправи для язика і губ",
+    "en": "Daily exercises for tongue and lips"
+  },
+  {
+    "uk": "Яка картка зайва?",
+    "en": "Which is odd?"
+  },
+  {
+    "uk": "Яскраві картки зі звуками для найменших. Слухай — вивчай — повторюй!",
+    "en": "Flash cards with sounds for little ones. Listen — learn — repeat!"
+  },
+  {
+    "uk": "не грали",
+    "en": "not played"
+  },
+  {
+    "uk": "одноразово",
+    "en": "one-time"
+  },
+  {
+    "uk": "поспіль",
+    "en": "streak"
+  },
+  {
+    "uk": "рекорд",
+    "en": "best"
+  },
+  {
+    "uk": "торкнись",
+    "en": "tap to hear"
+  },
+  {
+    "uk": "🎉 Усі паки вже відкрито — молодець!",
+    "en": "🎉 All packs already unlocked — great job!"
+  },
+  {
+    "uk": "👨‍👧 Батьки читають вголос — дитина повторює рухи",
+    "en": "👨‍👧 Parents read aloud — child mirrors the moves"
+  },
+  {
+    "uk": "🔄 Повторення",
+    "en": "🔄 Review"
+  },
+  {
+    "uk": "🗣️ Картки-розмовлялки",
+    "en": "🗣️ FirstWords Cards"
+  },
+  {
+    "uk": "🗺️ Пригода дня",
+    "en": "🗺️ Adventure"
+  }
+]

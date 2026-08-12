@@ -1,3 +1,6 @@
+// StateNotifier.debugState is the only public state accessor here.
+// ignore_for_file: deprecated_member_use
+
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -49,14 +52,14 @@ void main() {
 
     test('does not start with fewer than 4 cards with images', () {
       final noImageCards = [
-        CardModel(id: 'a', sound: 's', text: 't', emoji: '🔵',
-            colorBg: const Color(0xFFFFFFFF), colorAccent: const Color(0xFF000000)),
-        CardModel(id: 'b', sound: 's', text: 't', emoji: '🔵',
-            colorBg: const Color(0xFFFFFFFF), colorAccent: const Color(0xFF000000)),
-        CardModel(id: 'c', sound: 's', text: 't', emoji: '🔵',
-            colorBg: const Color(0xFFFFFFFF), colorAccent: const Color(0xFF000000)),
-        CardModel(id: 'd', sound: 's', text: 't', emoji: '🔵',
-            colorBg: const Color(0xFFFFFFFF), colorAccent: const Color(0xFF000000)),
+        const CardModel(id: 'a', sound: 's', text: 't', emoji: '🔵',
+            colorBg: Color(0xFFFFFFFF), colorAccent: Color(0xFF000000)),
+        const CardModel(id: 'b', sound: 's', text: 't', emoji: '🔵',
+            colorBg: Color(0xFFFFFFFF), colorAccent: Color(0xFF000000)),
+        const CardModel(id: 'c', sound: 's', text: 't', emoji: '🔵',
+            colorBg: Color(0xFFFFFFFF), colorAccent: Color(0xFF000000)),
+        const CardModel(id: 'd', sound: 's', text: 't', emoji: '🔵',
+            colorBg: Color(0xFFFFFFFF), colorAccent: Color(0xFF000000)),
       ];
       // All cards have image: null (no image field set), so not playable
       final n = QuizNotifier(noImageCards);

@@ -1,3 +1,6 @@
+// StateNotifier.debugState is the only public state accessor here.
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';

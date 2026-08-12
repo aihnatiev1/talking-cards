@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:talking_cards/models/pack_model.dart';
 
 void main() {
-  final _sampleCardJson = {
+  final sampleCardJson = {
     'id': 'c1',
     'sound': 'МЯУ',
     'text': 'Кішка',
@@ -21,7 +21,7 @@ void main() {
         'title': 'Тваринки',
         'icon': '🐾',
         'color': '#4CAF50',
-        'cards': [_sampleCardJson],
+        'cards': [sampleCardJson],
       };
 
       final pack = PackModel.fromJson(json);
@@ -43,7 +43,7 @@ void main() {
         'icon': '⭐',
         'color': '#FF9800',
         'isLocked': true,
-        'cards': [_sampleCardJson],
+        'cards': [sampleCardJson],
       };
 
       final pack = PackModel.fromJson(json);
@@ -76,7 +76,7 @@ void main() {
         'icon': '⭐',
         'color': '#FF9800',
         'isLocked': true,
-        'cards': [_sampleCardJson],
+        'cards': [sampleCardJson],
       };
 
       final pack = PackModel.fromJson(json);

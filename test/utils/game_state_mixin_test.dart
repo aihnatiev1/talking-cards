@@ -5,13 +5,11 @@ import 'package:talking_cards/providers/daily_quest_provider.dart';
 import 'package:talking_cards/utils/game_state_mixin.dart';
 
 class _Host extends ConsumerStatefulWidget {
-  final String id;
-  final int max;
+  final String id = 'test_game';
+  final int max = 3;
   final QuestTask? task;
   final bool stats;
   const _Host({
-    this.id = 'test_game',
-    this.max = 3,
     this.task = QuestTask.playQuiz,
     this.stats = true,
   });

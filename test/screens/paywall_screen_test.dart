@@ -8,9 +8,9 @@ import 'package:talking_cards/screens/paywall_screen.dart';
 /// defaults, so RC-driven strings assert the default copy.
 void main() {
   Widget createPaywallApp() {
-    return ProviderScope(
+    return const ProviderScope(
       child: MaterialApp(
-        home: const PaywallScreen(),
+        home: PaywallScreen(),
       ),
     );
   }
