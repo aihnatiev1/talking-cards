@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,6 +31,7 @@ class PackGridCard extends ConsumerStatefulWidget {
 class _PackGridCardState extends ConsumerState<PackGridCard>
     with TickerProviderStateMixin {
   late final AnimationController _shimmer;
+  Timer? _shimmerTimer;
   late final AnimationController _wobble;
   late final Animation<double> _wobbleRotation;
   bool _pressed = false;
@@ -40,7 +43,12 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
       vsync: this,
       duration: const Duration(milliseconds: 1400),
     );
-    if (widget.isSeasonal) _shimmer.repeat(reverse: true);
+    // Shimmer in periodic bursts, not forever — see StreakChip for why.
+    if (widget.isSeasonal) {
+      _runShimmerBurst();
+      _shimmerTimer = Timer.periodic(
+          const Duration(seconds: 30), (_) => _runShimmerBurst());
+    }
     _wobble = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
@@ -54,8 +62,16 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
     ]).animate(_wobble);
   }
 
+  Future<void> _runShimmerBurst() async {
+    for (var i = 0; i < 2 && mounted; i++) {
+      await _shimmer.forward();
+      await _shimmer.reverse();
+    }
+  }
+
   @override
   void dispose() {
+    _shimmerTimer?.cancel();
     _shimmer.dispose();
     _wobble.dispose();
     super.dispose();

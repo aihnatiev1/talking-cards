@@ -6,6 +6,7 @@ import 'package:flutter/rendering.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../services/analytics_service.dart';
 import '../utils/constants.dart';
 import '../utils/uk_grammar.dart';
 
@@ -26,6 +27,7 @@ Future<void> shareProgress({
   required Set<String> badges,
   bool isEn = false,
 }) async {
+  AnalyticsService.instance.logShareProgress();
   // Get position for iPad popover
   Rect? sharePositionOrigin;
   try {

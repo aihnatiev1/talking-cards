@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/analytics_service.dart';
 import '../services/profile_service.dart';
 
 final favoritesProvider =
@@ -24,11 +25,13 @@ class FavoritesNotifier extends StateNotifier<Set<String>> {
 
   Future<void> toggle(String cardId) async {
     final updated = {...state};
-    if (updated.contains(cardId)) {
-      updated.remove(cardId);
-    } else {
+    final added = !updated.contains(cardId);
+    if (added) {
       updated.add(cardId);
+    } else {
+      updated.remove(cardId);
     }
+    AnalyticsService.instance.logFavoriteToggle(cardId, added);
     state = updated;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(_prefixedKey, state.toList());

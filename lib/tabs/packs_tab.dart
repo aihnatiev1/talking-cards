@@ -567,6 +567,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
         final isEnNow = ref.read(languageProvider) == 'en';
         final childName =
             ref.read(profileProvider).active?.name ?? '';
+        AnalyticsService.instance.logStreakMilestone(pending.days);
         await showStreakMilestone(
           context,
           milestone: pending,

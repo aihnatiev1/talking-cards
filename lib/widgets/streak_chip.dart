@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -25,6 +27,7 @@ class StreakChip extends StatefulWidget {
 class _StreakChipState extends State<StreakChip>
     with SingleTickerProviderStateMixin {
   late final AnimationController _pulse;
+  Timer? _burstTimer;
 
   @override
   void initState() {
@@ -32,11 +35,25 @@ class _StreakChipState extends State<StreakChip>
     _pulse = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1400),
-    )..repeat(reverse: true);
+    );
+    // Pulse in short bursts instead of forever — a permanent repeat() kept
+    // the home tab repainting at 60fps for the whole session (battery/thermal
+    // cost on the old tablets kids get handed).
+    _runBurst();
+    _burstTimer =
+        Timer.periodic(const Duration(seconds: 30), (_) => _runBurst());
+  }
+
+  Future<void> _runBurst() async {
+    for (var i = 0; i < 2 && mounted; i++) {
+      await _pulse.forward();
+      await _pulse.reverse();
+    }
   }
 
   @override
   void dispose() {
+    _burstTimer?.cancel();
     _pulse.dispose();
     super.dispose();
   }
