@@ -530,6 +530,7 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
                 top: _topPadding,
                 child: _TopBar(
                   progress: _popped / _kRoundTargetPops,
+                  s: s,
                   onClose: () => Navigator.of(context).pop(),
                 ),
               ),
@@ -882,10 +883,12 @@ class _CardInside extends StatelessWidget {
 class _TopBar extends StatelessWidget {
   /// 0..1 fraction of the round target already popped.
   final double progress;
+  final AppS s;
   final VoidCallback onClose;
 
   const _TopBar({
     required this.progress,
+    required this.s,
     required this.onClose,
   });
 
@@ -893,45 +896,97 @@ class _TopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Close X — 56dp hit target for reliable toddler/parent taps.
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: onClose,
-            child: SizedBox(
-              width: 56,
-              height: 56,
-              child: Center(
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: DT.shadowSoft(kAccent),
+          Row(
+            children: [
+              // Close X — 56dp hit target for reliable toddler/parent taps.
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: onClose,
+                child: SizedBox(
+                  width: 56,
+                  height: 56,
+                  child: Center(
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: DT.shadowSoft(kAccent),
+                      ),
+                      child: const Icon(Icons.close_rounded,
+                          size: 24, color: DT.textPrimary),
+                    ),
                   ),
-                  child: const Icon(Icons.close_rounded,
-                      size: 24, color: DT.textPrimary),
                 ),
               ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          // Thin wordless progress bar that fills as bubbles pop — no
-          // numbers or timers in the child's play zone.
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(5),
-              child: LinearProgressIndicator(
-                value: progress.clamp(0.0, 1.0),
-                minHeight: 10,
-                backgroundColor: Colors.white.withValues(alpha: 0.7),
-                valueColor: const AlwaysStoppedAnimation<Color>(kAccent),
+              // Game identity: the child gets the voice line, the parent
+              // gets this — the screen must never be an anonymous void.
+              Expanded(
+                child: Text(
+                  s('🫧 Лопай бульбашки!', '🫧 Pop the bubbles!'),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: DT.textPrimary,
+                  ),
+                ),
               ),
-            ),
+              // Balance the X so the title stays optically centered.
+              const SizedBox(width: 56),
+            ],
           ),
-          const SizedBox(width: 12),
+          const SizedBox(height: 6),
+          // Wordless fill-up meter: a bubble runs along the track as the
+          // round progresses. Tinted track so 0% never reads as "broken
+          // empty bar" on the pale sky background.
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: LayoutBuilder(builder: (context, c) {
+              final w = c.maxWidth;
+              final v = progress.clamp(0.0, 1.0);
+              return SizedBox(
+                height: 24,
+                child: Stack(
+                  alignment: Alignment.centerLeft,
+                  children: [
+                    Container(
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: kAccent.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOut,
+                      height: 12,
+                      width: w * v,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(colors: [
+                          kAccent.withValues(alpha: 0.85),
+                          kTeal,
+                        ]),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOut,
+                      left: ((w - 24) * v).clamp(0.0, w - 24),
+                      child: const Text('🫧', style: TextStyle(fontSize: 22)),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ),
         ],
       ),
     );
