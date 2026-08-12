@@ -16,11 +16,16 @@ class AnalyticsService {
     }
   }
 
+  /// Active learning language, stamped onto EVERY event as `lang` so any
+  /// funnel/report can be sliced per language without touching call sites.
+  /// Kept in sync by [setLanguageProperty].
+  String _lang = 'uk';
+
   Future<void> _safeLog(String name, [Map<String, Object>? params]) async {
     final a = _analytics;
     if (a == null) return;
     try {
-      await a.logEvent(name: name, parameters: params);
+      await a.logEvent(name: name, parameters: {'lang': _lang, ...?params});
     } catch (e) {
       if (kDebugMode) debugPrint('AnalyticsService: log "$name" error: $e');
     }
@@ -163,8 +168,10 @@ class AnalyticsService {
 
   // --- User properties (for cohort slicing) ---
 
-  Future<void> setLanguageProperty(String lang) =>
-      _safeSetUserProperty('app_language', lang);
+  Future<void> setLanguageProperty(String lang) {
+    _lang = lang;
+    return _safeSetUserProperty('app_language', lang);
+  }
 
   Future<void> setAgeLevelProperty(int level) =>
       _safeSetUserProperty('age_level', level.toString());
