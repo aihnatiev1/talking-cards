@@ -52,8 +52,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (mounted) {
         await Future.delayed(const Duration(milliseconds: 800));
         if (mounted) {
-          final isEn = ref.read(languageProvider) == 'en';
-          WhatsNewService.instance.showIfNeeded(context, isEn: isEn);
+          final lang = ref.read(languageProvider);
+          WhatsNewService.instance.showIfNeeded(context, lang: lang);
         }
       }
       return;
@@ -61,8 +61,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     await prefs.setBool('welcome_shown', true);
     if (!mounted) return;
 
-    final isEn = ref.read(languageProvider) == 'en';
-    final s = AppS(isEn);
+    final s = AppS(ref.read(languageProvider));
     // Personalise the greeting with the name the parent entered in onboarding.
     // Fall back to a neutral "Hello!" if the default profile name ("Малюк"/
     // "Kid") wasn't customised.
@@ -131,8 +130,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isEn = ref.watch(languageProvider) == 'en';
-    final s = AppS(isEn);
+    final s = AppS(ref.watch(languageProvider));
 
     return Scaffold(
       body: IndexedStack(

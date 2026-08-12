@@ -28,7 +28,8 @@ class _ProfileSelectorSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(profileProvider);
-    final s = AppS(ref.watch(languageProvider) == 'en');
+    final lang = ref.watch(languageProvider);
+    final s = AppS(lang);
 
     return Container(
       decoration: BoxDecoration(
@@ -71,9 +72,9 @@ class _ProfileSelectorSheet extends ConsumerWidget {
                   ref.read(profileProvider.notifier).switchProfile(profile.id);
                   Navigator.of(context).pop();
                 },
-                onEdit: () => _showEditDialog(context, ref, profile, s.isEn),
+                onEdit: () => _showEditDialog(context, ref, profile, lang),
                 onDelete: state.profiles.length > 1
-                    ? () => _confirmDelete(context, ref, profile, s.isEn)
+                    ? () => _confirmDelete(context, ref, profile, lang)
                     : null,
               )),
           if (state.profiles.length < 3) ...[
@@ -81,7 +82,7 @@ class _ProfileSelectorSheet extends ConsumerWidget {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: () => _showCreateDialog(context, ref, s.isEn),
+                onPressed: () => _showCreateDialog(context, ref, lang),
                 icon: const Icon(Icons.add_rounded),
                 label: Text(s('Додати профіль', 'Add profile')),
                 style: OutlinedButton.styleFrom(
@@ -99,11 +100,11 @@ class _ProfileSelectorSheet extends ConsumerWidget {
     );
   }
 
-  Future<void> _showCreateDialog(BuildContext context, WidgetRef ref, bool isEn) async {
-    final loc = AppS(isEn);
+  Future<void> _showCreateDialog(BuildContext context, WidgetRef ref, String lang) async {
+    final loc = AppS(lang);
     final result = await showDialog<(String, String, String, int)?>(
       context: context,
-      builder: (_) => _ProfileEditDialog(title: loc('Новий профіль', 'New profile'), isEn: isEn),
+      builder: (_) => _ProfileEditDialog(title: loc('Новий профіль', 'New profile'), lang: lang),
     );
     if (result != null) {
       await ref
@@ -113,8 +114,8 @@ class _ProfileSelectorSheet extends ConsumerWidget {
   }
 
   Future<void> _showEditDialog(
-      BuildContext context, WidgetRef ref, ProfileModel profile, bool isEn) async {
-    final loc = AppS(isEn);
+      BuildContext context, WidgetRef ref, ProfileModel profile, String lang) async {
+    final loc = AppS(lang);
     final result = await showDialog<(String, String, String, int)?>(
       context: context,
       builder: (_) => _ProfileEditDialog(
@@ -123,7 +124,7 @@ class _ProfileSelectorSheet extends ConsumerWidget {
         initialAvatar: profile.avatarEmoji,
         initialLanguage: profile.language,
         initialLevel: profile.level,
-        isEn: isEn,
+        lang: lang,
       ),
     );
     if (result != null) {
@@ -144,8 +145,8 @@ class _ProfileSelectorSheet extends ConsumerWidget {
   }
 
   Future<void> _confirmDelete(
-      BuildContext context, WidgetRef ref, ProfileModel profile, bool isEn) async {
-    final s = AppS(isEn);
+      BuildContext context, WidgetRef ref, ProfileModel profile, String lang) async {
+    final s = AppS(lang);
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -274,7 +275,7 @@ class _ProfileEditDialog extends StatefulWidget {
   final String? initialAvatar;
   final String? initialLanguage;
   final int? initialLevel;
-  final bool isEn;
+  final String lang;
 
   const _ProfileEditDialog({
     required this.title,
@@ -282,7 +283,7 @@ class _ProfileEditDialog extends StatefulWidget {
     this.initialAvatar,
     this.initialLanguage,
     this.initialLevel,
-    this.isEn = false,
+    this.lang = 'uk',
   });
 
   @override
@@ -312,7 +313,7 @@ class _ProfileEditDialogState extends State<_ProfileEditDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final s = AppS(widget.isEn);
+    final s = AppS(widget.lang);
     return AlertDialog(
       title: Text(widget.title),
       content: SingleChildScrollView(

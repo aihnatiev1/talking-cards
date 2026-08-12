@@ -17,7 +17,7 @@ class CelebrationOverlay extends StatefulWidget {
   final VoidCallback onDone;
   final VoidCallback? onReplay;
   final VoidCallback? onShare;
-  final bool isEn;
+  final String lang;
 
   const CelebrationOverlay({
     super.key,
@@ -28,7 +28,7 @@ class CelebrationOverlay extends StatefulWidget {
     required this.onDone,
     this.onReplay,
     this.onShare,
-    this.isEn = false,
+    this.lang = 'uk',
   });
 
   @override
@@ -74,7 +74,7 @@ class _CelebrationOverlayState extends State<CelebrationOverlay>
 
   @override
   Widget build(BuildContext context) {
-    final s = AppS(widget.isEn);
+    final s = AppS(widget.lang);
     return GestureDetector(
       onTap: widget.onDone,
       child: Material(
@@ -144,7 +144,7 @@ class _CelebrationOverlayState extends State<CelebrationOverlay>
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        widget.isEn
+                        widget.lang == 'en'
                             ? '${widget.packTitle} complete!'
                             : '${widget.packTitle} пройдено!',
                         textAlign: TextAlign.center,

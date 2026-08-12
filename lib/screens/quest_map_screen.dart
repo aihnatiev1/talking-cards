@@ -116,8 +116,9 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
     final packs = packsAsync.valueOrNull ?? [];
     final done = quest.doneCount;
     final total = quest.totalCount;
-    final isEn = ref.read(languageProvider) == 'en';
-    final s = AppS(isEn);
+    final lang = ref.read(languageProvider);
+    final isEn = lang == 'en';
+    final s = AppS(lang);
     final stops = _buildStops(isEn);
 
     // Restore unlocked card/pack from persisted IDs
@@ -258,7 +259,7 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
   }
 
   Widget _buildProgress(int done, int total) {
-    final s = AppS(ref.read(languageProvider) == 'en');
+    final s = AppS(ref.read(languageProvider));
     final progress = total > 0 ? done / total : 0.0;
     return Column(
       children: [
@@ -387,7 +388,7 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppS(ref.read(languageProvider) == 'en')(
+            content: Text(AppS(ref.read(languageProvider))(
                 '🎉 Усі паки вже відкрито — молодець!',
                 '🎉 All packs already unlocked — great job!')),
             backgroundColor: const Color(0xFFFFB347),
@@ -710,7 +711,7 @@ class _StopWaypointState extends ConsumerState<_StopWaypoint>
             const SizedBox(height: 4),
             Text(
               widget.isDone
-                  ? AppS(ref.read(languageProvider) == 'en')('Готово! ✅', 'Done! ✅')
+                  ? AppS(ref.read(languageProvider))('Готово! ✅', 'Done! ✅')
                   : widget.info.label,
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -938,7 +939,7 @@ class _TreasureWaypointState extends ConsumerState<_TreasureWaypoint>
             const SizedBox(height: 4),
             Text(
               () {
-                final ts = AppS(ref.read(languageProvider) == 'en');
+                final ts = AppS(ref.read(languageProvider));
                 return claimed
                     ? ts('Знайдено! 🎉', 'Found! 🎉')
                     : canClaim
@@ -1141,7 +1142,7 @@ class _LevitatingCardState extends ConsumerState<_LevitatingCard>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    AppS(ref.read(languageProvider) == 'en')(
+                    AppS(ref.read(languageProvider))(
                         'Сьогоднішній скарб', "Today's reward"),
                     style: TextStyle(
                       fontSize: 11,
@@ -1235,7 +1236,7 @@ class _PackPickerSheetState extends ConsumerState<_PackPickerSheet>
           ),
           const SizedBox(height: 4),
           Text(
-            AppS(ref.read(languageProvider) == 'en')(
+            AppS(ref.read(languageProvider))(
                 'Де відкрити нову картку?', 'Where to open the new card?'),
             style: TextStyle(fontSize: 14, color: Colors.grey[500]),
           ),

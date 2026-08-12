@@ -115,7 +115,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
   void _showAbout(BuildContext _) async {
     final info = await PackageInfo.fromPlatform();
     if (!mounted) return;
-    final s = AppS(ref.read(languageProvider) == 'en');
+    final s = AppS(ref.read(languageProvider));
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
@@ -263,7 +263,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
     AnalyticsService.instance.logCardOfDayTap(card.id);
     AudioService.instance.speakCard(card.audioKey, card.sound, card.text);
     final isFav = ref.read(favoritesProvider).contains(card.id);
-    final ps = AppS(ref.read(languageProvider) == 'en');
+    final ps = AppS(ref.read(languageProvider));
 
     showModalBottomSheet(
       context: context,
@@ -561,7 +561,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
     final screenWidth = MediaQuery.of(context).size.width;
     final scale = (screenWidth / 375).clamp(0.85, 1.3);
 
-    final sErr = AppS(ref.read(languageProvider) == 'en');
+    final sErr = AppS(ref.read(languageProvider));
 
     // Streak milestone celebration: trigger once when a new milestone unlocks.
     final pending =
@@ -634,7 +634,8 @@ class _PacksTabState extends ConsumerState<PacksTab> {
         ),
         data: (packs) {
           final allCards = packs.expand((p) => p.cards).toList();
-          final isEnMode = ref.read(languageProvider) == 'en';
+          final langMode = ref.read(languageProvider);
+          final isEnMode = langMode == 'en';
           final lastPackId = ref.watch(lastOpenedPackProvider);
           PackModel? continuePack;
           if (lastPackId != null) {
@@ -648,7 +649,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
           final continueProgress = continuePack != null
               ? (packProgress[continuePack.id] ?? 0)
               : 0;
-          final s = AppS(isEnMode);
+          final s = AppS(langMode);
           final packCategories = isEnMode ? packCategoriesEn : packCategoriesUk;
           final allCategories = isEnMode ? allCategoriesEn : allCategoriesUk;
 

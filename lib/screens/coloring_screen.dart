@@ -291,8 +291,7 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isEn = ref.watch(languageProvider) == 'en';
-    final s = AppS(isEn);
+    final s = AppS(ref.watch(languageProvider));
     final card = _card;
 
     return Scaffold(
@@ -650,7 +649,7 @@ class _PaywallGate extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final s = AppS(ref.watch(languageProvider) == 'en');
+    final s = AppS(ref.watch(languageProvider));
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),

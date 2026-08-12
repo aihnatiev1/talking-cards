@@ -41,7 +41,7 @@ class _NotificationToggleTileState
   @override
   Widget build(BuildContext context) {
     if (!_loaded) return const SizedBox.shrink();
-    final s = AppS(ref.watch(languageProvider) == 'en');
+    final s = AppS(ref.watch(languageProvider));
     return TextButton.icon(
       onPressed: _toggle,
       icon: Icon(

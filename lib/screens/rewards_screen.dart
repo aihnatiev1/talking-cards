@@ -15,7 +15,9 @@ class RewardsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final streak = ref.watch(streakProvider);
-    final s = AppS(ref.read(languageProvider) == 'en');
+    final lang = ref.read(languageProvider);
+    final isEn = lang == 'en';
+    final s = AppS(lang);
 
     return Scaffold(
       appBar: AppBar(
@@ -50,7 +52,7 @@ class RewardsScreen extends ConsumerWidget {
                   const Text('🔥', style: TextStyle(fontSize: 48)),
                   const SizedBox(height: 8),
                   Text(
-                    s.isEn
+                    isEn
                         ? '${streak.currentStreak} days'
                         : '${streak.currentStreak} ${dayWord(streak.currentStreak)}',
                     style: const TextStyle(

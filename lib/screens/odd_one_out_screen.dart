@@ -126,7 +126,7 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
   void _showCelebration() {
     showGameCelebration(
       context,
-      isEn: ref.read(languageProvider) == 'en',
+      lang: ref.read(languageProvider),
       childName: ref.read(profileProvider).active?.name ?? '',
       onAgain: () {
         resetGame();
@@ -138,7 +138,7 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
 
   @override
   Widget build(BuildContext context) {
-    final s = AppS(ref.read(languageProvider) == 'en');
+    final s = AppS(ref.read(languageProvider));
 
     // Determine majority pack for the hint header
     final majorityPack = _slots.firstWhere((sl) => !sl.isOdd).pack;

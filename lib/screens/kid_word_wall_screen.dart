@@ -37,8 +37,9 @@ class _KidWordWallScreenState extends ConsumerState<KidWordWallScreen> {
     final srs = ref.watch(srsProvider);
     final packsAsync = ref.watch(packsProvider);
     final profile = ref.watch(profileProvider);
-    final isEn = ref.watch(languageProvider) == 'en';
-    final s = AppS(isEn);
+    final lang = ref.watch(languageProvider);
+    final isEn = lang == 'en';
+    final s = AppS(lang);
     final childName = profile.active?.name ?? '';
 
     return Scaffold(

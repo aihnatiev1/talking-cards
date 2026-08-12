@@ -25,7 +25,9 @@ class StatsScreen extends ConsumerWidget {
     ref.watch(dailyStatsProvider);
     final dailyNotifier = ref.read(dailyStatsProvider.notifier);
 
-    final s = AppS(ref.read(languageProvider) == 'en');
+    final lang = ref.read(languageProvider);
+    final isEn = lang == 'en';
+    final s = AppS(lang);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -146,7 +148,7 @@ class StatsScreen extends ConsumerWidget {
                                   ),
                                 ),
                                 Text(
-                                  s.isEn ? 'days' : dayWord(streak.currentStreak),
+                                  isEn ? 'days' : dayWord(streak.currentStreak),
                                   style: const TextStyle(
                                     fontSize: 12,
                                     color: Colors.white70,
@@ -207,7 +209,7 @@ class StatsScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                ActivityChart(data: dailyNotifier.last7Days(), isEn: s.isEn),
+                ActivityChart(data: dailyNotifier.last7Days(), isEn: isEn),
                 const SizedBox(height: 24),
                 ...packs.map((pack) {
                   final packProgress = progress[pack.id] ?? 0;

@@ -23,7 +23,7 @@ class SrsReviewBanner extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final srs = ref.watch(srsProvider);
     if (srs.dueCount == 0) return const SizedBox.shrink();
-    final s = AppS(ref.watch(languageProvider) == 'en');
+    final s = AppS(ref.watch(languageProvider));
 
     final dueCards = allCards
         .where((c) => srs.dueIds.contains(c.id) && c.audioKey != null)

@@ -179,8 +179,9 @@ class ArticulationScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isEn = ref.watch(languageProvider) == 'en';
-    final s = AppS(isEn);
+    final lang = ref.watch(languageProvider);
+    final isEn = lang == 'en';
+    final s = AppS(lang);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5EEFF),
@@ -222,7 +223,7 @@ class ArticulationScreen extends ConsumerWidget {
                     MaterialPageRoute(
                       builder: (_) => _ExercisePlayerScreen(
                         exercise: ex,
-                        isEn: isEn,
+                        lang: lang,
                       ),
                     ),
                   ),
@@ -306,11 +307,11 @@ class _ExerciseCard extends StatelessWidget {
 
 class _ExercisePlayerScreen extends StatefulWidget {
   final _Exercise exercise;
-  final bool isEn;
+  final String lang;
 
   const _ExercisePlayerScreen({
     required this.exercise,
-    required this.isEn,
+    required this.lang,
   });
 
   @override
@@ -335,7 +336,7 @@ class _ExercisePlayerScreenState extends State<_ExercisePlayerScreen>
   OverlayEntry? _confettiEntry;
 
   List<String> get steps =>
-      widget.isEn ? widget.exercise.stepsEn : widget.exercise.steps;
+      widget.lang == 'en' ? widget.exercise.stepsEn : widget.exercise.steps;
 
   @override
   void initState() {
@@ -423,8 +424,9 @@ class _ExercisePlayerScreenState extends State<_ExercisePlayerScreen>
 
   @override
   Widget build(BuildContext context) {
-    final s = AppS(widget.isEn);
-    final name = widget.isEn ? widget.exercise.nameEn : widget.exercise.name;
+    final s = AppS(widget.lang);
+    final name =
+        widget.lang == 'en' ? widget.exercise.nameEn : widget.exercise.name;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5EEFF),

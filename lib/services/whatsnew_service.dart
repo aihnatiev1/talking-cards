@@ -22,7 +22,7 @@ class WhatsNewService {
 
   /// Show the "What's New" bottom sheet once per release.
   /// Returns immediately if already seen.
-  Future<void> showIfNeeded(BuildContext context, {bool isEn = false}) async {
+  Future<void> showIfNeeded(BuildContext context, {String lang = 'uk'}) async {
     if (!await shouldShow()) return;
     await markSeen();
     if (!context.mounted) return;
@@ -30,7 +30,7 @@ class WhatsNewService {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _WhatsNewSheet(isEn: isEn),
+      builder: (_) => _WhatsNewSheet(lang: lang),
     );
   }
 }
@@ -40,11 +40,12 @@ class WhatsNewService {
 // ─────────────────────────────────────────────
 
 class _WhatsNewSheet extends StatelessWidget {
-  final bool isEn;
-  const _WhatsNewSheet({required this.isEn});
+  final String lang;
+  const _WhatsNewSheet({required this.lang});
 
   @override
   Widget build(BuildContext context) {
+    final isEn = lang == 'en';
     final features = isEn ? _featuresEn : _features;
     return Container(
       decoration: BoxDecoration(

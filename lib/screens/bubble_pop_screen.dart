@@ -202,7 +202,7 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     // Tricky mode fallback when not enough material yet.
     if (newMode == BubbleMode.tricky && pool.length < 5) {
       final fallback = _buildPool(BubbleMode.all);
-      _showSnack(AppS(ref.read(languageProvider) == 'en')(
+      _showSnack(AppS(ref.read(languageProvider))(
         'Замало складних слів — переходимо до всіх слів',
         'Not enough tricky words yet — switching to all words',
       ));
@@ -439,8 +439,7 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isEn = ref.watch(languageProvider) == 'en';
-    final s = AppS(isEn);
+    final s = AppS(ref.watch(languageProvider));
 
     return Scaffold(
       backgroundColor: const Color(0xFFEAF6FF), // sky-water

@@ -72,7 +72,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
       // enough, close the screen instead of hanging on the loader.
       final playable = soundCards.where((c) => c.image != null).length;
       if (playable < 4) {
-        final s = AppS(ref.read(languageProvider) == 'en');
+        final s = AppS(ref.read(languageProvider));
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(s('Ще не достатньо карток для гри',
               'Not enough cards to play')),
@@ -191,7 +191,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
       }
       showGameCelebration(
         context,
-        isEn: ref.read(languageProvider) == 'en',
+        lang: ref.read(languageProvider),
         childName: ref.read(profileProvider).active?.name ?? '',
         onAgain: _restart,
         onDone: () => Navigator.of(context).pop(),

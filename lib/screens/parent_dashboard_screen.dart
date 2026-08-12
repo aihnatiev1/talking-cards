@@ -25,8 +25,7 @@ class ParentDashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(profileProvider);
-    final isEn = ref.watch(languageProvider) == 'en';
-    final s = AppS(isEn);
+    final s = AppS(ref.watch(languageProvider));
 
     return DefaultTabController(
       length: 6,
@@ -113,8 +112,9 @@ class _OverviewTab extends ConsumerWidget {
     final packProgress = ref.watch(packProgressProvider);
     final completedPacks = ref.watch(completedPacksProvider);
     final dailyStats = ref.watch(dailyStatsProvider);
-    final isEn = ref.watch(languageProvider) == 'en';
-    final s = AppS(isEn);
+    final lang = ref.watch(languageProvider);
+    final isEn = lang == 'en';
+    final s = AppS(lang);
 
     final wordsSeenTotal = packProgress.values.fold(0, (a, b) => a + b);
     final activeDays = dailyStats.values
@@ -307,8 +307,9 @@ class _WeeklyTab extends ConsumerWidget {
     final chartData = ref.read(dailyStatsProvider.notifier).last7Days();
     final totalWeek =
         chartData.fold(0, (sum, e) => sum + e.value);
-    final isEn = ref.watch(languageProvider) == 'en';
-    final s = AppS(isEn);
+    final lang = ref.watch(languageProvider);
+    final isEn = lang == 'en';
+    final s = AppS(lang);
 
     final weeklyMsg = totalWeek == 0
         ? s('Ще немає активності цього тижня.',
@@ -366,8 +367,9 @@ class _WordsTab extends ConsumerWidget {
     final srs = ref.watch(srsProvider);
     final packsAsync = ref.watch(packsProvider);
     final profile = ref.watch(profileProvider);
-    final isEn = ref.watch(languageProvider) == 'en';
-    final s = AppS(isEn);
+    final lang = ref.watch(languageProvider);
+    final isEn = lang == 'en';
+    final s = AppS(lang);
     final childName = profile.active?.name ?? s('Малюк', 'Kiddo');
 
     final learnedIds = srs.cards.values
@@ -648,8 +650,9 @@ class _PacksTab extends ConsumerWidget {
     final packsAsync = ref.watch(packsProvider);
     final packProgress = ref.watch(packProgressProvider);
     final completedPacks = ref.watch(completedPacksProvider);
-    final isEn = ref.watch(languageProvider) == 'en';
-    final s = AppS(isEn);
+    final lang = ref.watch(languageProvider);
+    final isEn = lang == 'en';
+    final s = AppS(lang);
 
     return packsAsync.when(
       data: (packs) {
@@ -749,8 +752,9 @@ class _GamesTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(gameStatsProvider);
-    final isEn = ref.watch(languageProvider) == 'en';
-    final s = AppS(isEn);
+    final lang = ref.watch(languageProvider);
+    final isEn = lang == 'en';
+    final s = AppS(lang);
 
     return statsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -819,7 +823,7 @@ class _GamesTab extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 12),
-            ...stats.map((g) => _GameStatRow(stat: g, isEn: isEn)),
+            ...stats.map((g) => _GameStatRow(stat: g, lang: lang)),
           ],
         );
       },
@@ -829,13 +833,14 @@ class _GamesTab extends ConsumerWidget {
 
 class _GameStatRow extends StatelessWidget {
   final GameStat stat;
-  final bool isEn;
-  const _GameStatRow({required this.stat, required this.isEn});
+  final String lang;
+  const _GameStatRow({required this.stat, required this.lang});
 
   @override
   Widget build(BuildContext context) {
     final hasPlays = stat.plays > 0;
-    final s = AppS(isEn);
+    final isEn = lang == 'en';
+    final s = AppS(lang);
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Container(
@@ -920,8 +925,7 @@ class _WeakWordsTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final mistakes = ref.watch(weakWordsProvider);
     final packsAsync = ref.watch(packsProvider);
-    final isEn = ref.watch(languageProvider) == 'en';
-    final s = AppS(isEn);
+    final s = AppS(ref.watch(languageProvider));
 
     if (mistakes.isEmpty) {
       return Center(

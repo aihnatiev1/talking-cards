@@ -184,7 +184,7 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen>
         // Any completion is a full win — no attempts, no stars, no time.
         showGameCelebration(
           context,
-          isEn: ref.read(languageProvider) == 'en',
+          lang: ref.read(languageProvider),
           childName: ref.read(profileProvider).active?.name ?? '',
           onAgain: _initGame,
           onDone: () => Navigator.of(context).pop(),
@@ -210,7 +210,7 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen>
 
   @override
   Widget build(BuildContext context) {
-    final s = AppS(ref.read(languageProvider) == 'en');
+    final s = AppS(ref.read(languageProvider));
     final color = widget.pack.color;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 

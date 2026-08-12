@@ -181,7 +181,7 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
       });
       showGameCelebration(
         context,
-        isEn: ref.read(languageProvider) == 'en',
+        lang: ref.read(languageProvider),
         childName: ref.read(profileProvider).active?.name ?? '',
         onAgain: _restart,
         onDone: () => Navigator.of(context).pop(),
@@ -197,7 +197,7 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
 
   @override
   Widget build(BuildContext context) {
-    final s = AppS(ref.read(languageProvider) == 'en');
+    final s = AppS(ref.read(languageProvider));
 
     final card = _current;
 

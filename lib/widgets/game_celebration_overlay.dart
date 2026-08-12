@@ -19,14 +19,14 @@ import 'confetti_burst.dart';
 /// "play again" button used; [onDone] typically pops the game screen.
 Future<void> showGameCelebration(
   BuildContext context, {
-  required bool isEn,
+  required String lang,
   String childName = '',
   required VoidCallback onAgain,
   required VoidCallback onDone,
   String? subtitle,
 }) {
   AudioService.instance.playSfx('tada');
-  AudioService.instance.playPraise(isEn: isEn, always: true);
+  AudioService.instance.playPraise(isEn: lang == 'en', always: true);
   return showGeneralDialog<void>(
     context: context,
     barrierDismissible: false,
@@ -34,7 +34,7 @@ Future<void> showGameCelebration(
     barrierColor: const Color(0xCC000000),
     transitionDuration: const Duration(milliseconds: 260),
     pageBuilder: (ctx, _, __) => _GameCelebrationOverlay(
-      isEn: isEn,
+      lang: lang,
       childName: childName,
       subtitle: subtitle,
       // Pop the dialog itself first, then hand control back to the game.
@@ -60,14 +60,14 @@ Future<void> showGameCelebration(
 }
 
 class _GameCelebrationOverlay extends StatelessWidget {
-  final bool isEn;
+  final String lang;
   final String childName;
   final String? subtitle;
   final VoidCallback onAgain;
   final VoidCallback onDone;
 
   const _GameCelebrationOverlay({
-    required this.isEn,
+    required this.lang,
     required this.childName,
     required this.subtitle,
     required this.onAgain,
@@ -76,7 +76,7 @@ class _GameCelebrationOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final s = AppS(isEn);
+    final s = AppS(lang);
     final size = MediaQuery.of(context).size;
     final name = childName.trim();
     final headline = name.isEmpty

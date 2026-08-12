@@ -117,7 +117,7 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
   void _showCelebration() {
     showGameCelebration(
       context,
-      isEn: ref.read(languageProvider) == 'en',
+      lang: ref.read(languageProvider),
       childName: ref.read(profileProvider).active?.name ?? '',
       onAgain: () {
         resetGame();
@@ -161,7 +161,7 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
 
   @override
   Widget build(BuildContext context) {
-    final s = AppS(ref.read(languageProvider) == 'en');
+    final s = AppS(ref.read(languageProvider));
 
     final question = _round.question;
     final correct = _round.correct;

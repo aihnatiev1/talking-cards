@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../utils/l10n.dart';
 import 'profile_provider.dart';
 
 /// Returns the active profile's learning language ('uk' or 'en').
@@ -11,3 +12,6 @@ final languageProvider = Provider<String>((ref) {
   final profile = ref.watch(profileProvider);
   return profile.active?.language ?? 'uk';
 });
+
+/// Locale-aware string helper bound to the active learning language.
+final appSProvider = Provider<AppS>((ref) => AppS(ref.watch(languageProvider)));

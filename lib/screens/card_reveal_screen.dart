@@ -507,7 +507,7 @@ class _CardRevealScreenState extends ConsumerState<CardRevealScreen>
 
   Widget _buildButtons() {
     final packColor = widget.pack.color;
-    final s = AppS(ref.read(languageProvider) == 'en');
+    final s = AppS(ref.read(languageProvider));
 
     return AnimatedOpacity(
       opacity: _showButtons ? 1.0 : 0.0,

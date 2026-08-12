@@ -137,7 +137,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   }
 
   Future<void> _purchase() async {
-    final s = AppS(ref.read(languageProvider) == 'en');
+    final s = AppS(ref.read(languageProvider));
     final plan = _buildPlans(s)[_selectedPlan];
     AnalyticsService.instance.logPurchaseStart(plan.productId);
     setState(() => _loading = true);
@@ -205,7 +205,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       ref.read(isProProvider.notifier).state = true;
       Navigator.of(context).pop(true);
     } else {
-      final s = AppS(ref.read(languageProvider) == 'en');
+      final s = AppS(ref.read(languageProvider));
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
             content: Text(s('Підписку не знайдено', 'No subscription found'))),
@@ -215,8 +215,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isEn = ref.watch(languageProvider) == 'en';
-    final s = AppS(isEn);
+    final lang = ref.watch(languageProvider);
+    final isEn = lang == 'en';
+    final s = AppS(lang);
     final plans = _buildPlans(s);
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,

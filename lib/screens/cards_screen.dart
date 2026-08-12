@@ -328,7 +328,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
       if (navigator.canPop()) navigator.pop();
     }
 
-    final isEn = ref.read(languageProvider) == 'en';
+    final lang = ref.read(languageProvider);
     navigator.push(
       PageRouteBuilder(
         opaque: false,
@@ -337,7 +337,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
           packIcon: widget.pack.icon,
           packCover: widget.pack.cover,
           color: widget.pack.color,
-          isEn: isEn,
+          lang: lang,
           onShare: _shareProgress,
           onReplay: () {
             dismissOverlay();
@@ -362,7 +362,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
 
   void _showUnlockDialog() {
     AudioService.instance.stop();
-    final s = AppS(ref.read(languageProvider) == 'en');
+    final s = AppS(ref.read(languageProvider));
     final allCards = widget.pack.cards;
     final bonus = ref.read(bonusCardsProvider)[widget.pack.id] ?? 0;
     final remaining = allCards.length - widget.pack.effectiveFreePreviewCount - bonus;
@@ -455,7 +455,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     final cards = _cards;
     final allCards = widget.pack.cards;
     final progress = (_currentIndex + 1) / cards.length;
-    final s = AppS(ref.read(languageProvider) == 'en');
+    final s = AppS(ref.read(languageProvider));
 
     return Scaffold(
       appBar: AppBar(
@@ -486,7 +486,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                   ),
                   if (widget.pack.id == '_review')
                     Text(
-                      AppS(ref.read(languageProvider) == 'en')(
+                      AppS(ref.read(languageProvider))(
                           '🔄 Повторення', '🔄 Review'),
                       style: TextStyle(
                         fontSize: 11,
