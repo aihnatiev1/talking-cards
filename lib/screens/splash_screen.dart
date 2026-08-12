@@ -9,6 +9,7 @@ import '../services/engage_service.dart';
 import '../services/remote_config_service.dart';
 import '../services/widget_service.dart';
 import '../utils/constants.dart';
+import '../utils/l10n.dart';
 import '../services/notification_service.dart';
 import '../services/purchase_service.dart';
 import 'home_screen.dart';
@@ -106,17 +107,23 @@ class _SplashScreenState extends State<SplashScreen>
     // Read the active profile's learning language so the splash title
     // matches before MaterialApp picks it up.
     final prefs = await SharedPreferences.getInstance();
+    var activeLang = 'uk';
     try {
       final activeId = prefs.getString('active_profile_id') ?? 'default';
       final raw = prefs.getStringList('app_profiles') ?? const [];
       for (final s in raw) {
         final j = json.decode(s) as Map<String, dynamic>;
-        if (j['id'] == activeId && j['lang'] == 'en') {
-          if (mounted) setState(() => _isEnLang = true);
+        if (j['id'] == activeId) {
+          activeLang = (j['lang'] as String?) ?? 'uk';
+          if (activeLang == 'en' && mounted) {
+            setState(() => _isEnLang = true);
+          }
           break;
         }
       }
     } catch (_) {}
+    // UI translation table for locales beyond uk/en — silent no-op today.
+    await guard('l10n', () => AppS.preload(activeLang));
     final onboardingDone = prefs.getBool('onboarding_done') ?? false;
     if (!onboardingDone) {
       // Existing user upgrading from <1.1.0: they have real pack progress

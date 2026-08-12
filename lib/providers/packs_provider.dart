@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/pack_model.dart';
+import '../services/audio_service.dart';
 import '../services/profile_service.dart';
 import '../services/purchase_service.dart';
 import 'language_provider.dart';
@@ -22,15 +23,21 @@ final packsProvider = FutureProvider<List<PackModel>>((ref) async {
   final isPro = ref.watch(isProProvider);
   final lang = ref.watch(languageProvider);
 
-  final assetPath = lang == 'en'
-      ? 'assets/data/en_cards.json'
-      : 'assets/data/uk_cards.json';
+  final assetPath = 'assets/data/${lang}_cards.json';
 
   final jsonString = await rootBundle.loadString(assetPath);
   final List<dynamic> jsonList = json.decode(jsonString) as List<dynamic>;
   final packs = jsonList
       .map((e) => PackModel.fromJson(e as Map<String, dynamic>))
       .toList();
+
+  // Make every referenced audio key playable — filenames map by identity,
+  // so new locales need no _audioMap entries.
+  AudioService.instance.registerKeys([
+    for (final p in packs)
+      for (final c in p.cards)
+        if (c.audioKey != null) c.audioKey!,
+  ]);
 
   // Free users see only the packs the JSON marks isLocked=false (currently
   // Розмовлялки + Тваринки = 54 cards). Pro users get the locks lifted on

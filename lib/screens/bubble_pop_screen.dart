@@ -178,7 +178,7 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
       if (!mounted) return;
       AudioService.instance.playInstruction(
         'bubbles',
-        isEn: ref.read(languageProvider) == 'en',
+        lang: ref.read(languageProvider),
       );
       _startRound();
     });

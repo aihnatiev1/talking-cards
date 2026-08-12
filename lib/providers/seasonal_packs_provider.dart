@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
+import '../services/audio_service.dart';
 import '../utils/color_utils.dart';
 import 'language_provider.dart';
 
@@ -83,10 +84,16 @@ final _allSeasonalPacksProvider =
   final jsonString =
       await rootBundle.loadString('assets/data/seasonal_packs.json');
   final list = json.decode(jsonString) as List<dynamic>;
-  return list
+  final packs = list
       .map((e) =>
           SeasonalPackModel.fromJson(e as Map<String, dynamic>))
       .toList();
+  AudioService.instance.registerKeys([
+    for (final p in packs)
+      for (final c in p.cards)
+        if (c.audioKey != null) c.audioKey!,
+  ]);
+  return packs;
 });
 
 // ─────────────────────────────────────────────

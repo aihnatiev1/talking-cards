@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/profile_model.dart';
 import '../services/analytics_service.dart';
 import '../services/profile_service.dart';
+import '../utils/l10n.dart';
 import 'bonus_cards_provider.dart';
 import 'daily_quest_provider.dart';
 import 'daily_stats_provider.dart';
@@ -78,6 +79,9 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
   /// [packsProvider] auto-reloads via [languageProvider] dependency.
   Future<void> setLanguage(String profileId, String language) async {
     final updated = await ProfileService.setLanguage(profileId, language);
+    // Have the UI translation table ready BEFORE widgets rebuild with the
+    // new locale (no-op for uk/en, which resolve from code literals).
+    await AppS.preload(language);
     state = state.copyWith(profiles: updated);
     if (profileId == state.activeId) {
       AnalyticsService.instance.setLanguageProperty(language);

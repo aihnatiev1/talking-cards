@@ -56,7 +56,7 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
       if (!mounted) return;
       AudioService.instance.playInstruction(
         'opposites',
-        isEn: ref.read(languageProvider) == 'en',
+        lang: ref.read(languageProvider),
       );
     });
   }
@@ -140,7 +140,7 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
       HapticFeedback.lightImpact();
       AudioService.instance.playSfx('ding');
       AudioService.instance
-          .playPraise(isEn: ref.read(languageProvider) == 'en');
+          .playPraise(lang: ref.read(languageProvider));
       scorePoint();
       showConfetti();
       // Play the opposite word so child hears both words of the pair

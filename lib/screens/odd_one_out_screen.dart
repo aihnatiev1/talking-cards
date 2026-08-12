@@ -51,7 +51,7 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
       if (!mounted) return;
       AudioService.instance.playInstruction(
         'odd_one_out',
-        isEn: ref.read(languageProvider) == 'en',
+        lang: ref.read(languageProvider),
       );
     });
   }
@@ -99,7 +99,7 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
       HapticFeedback.lightImpact();
       AudioService.instance.playSfx('ding');
       AudioService.instance
-          .playPraise(isEn: ref.read(languageProvider) == 'en');
+          .playPraise(lang: ref.read(languageProvider));
       setState(() {
         _answered = true;
         scorePoint();

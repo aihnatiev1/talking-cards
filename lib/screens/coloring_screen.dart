@@ -77,7 +77,7 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
       if (!mounted) return;
       AudioService.instance.playInstruction(
         'coloring',
-        isEn: ref.read(languageProvider) == 'en',
+        lang: ref.read(languageProvider),
       );
     });
     _loadCompletedCount();

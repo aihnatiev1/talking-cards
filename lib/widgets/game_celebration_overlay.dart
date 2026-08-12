@@ -26,7 +26,7 @@ Future<void> showGameCelebration(
   String? subtitle,
 }) {
   AudioService.instance.playSfx('tada');
-  AudioService.instance.playPraise(isEn: lang == 'en', always: true);
+  AudioService.instance.playPraise(lang: lang, always: true);
   return showGeneralDialog<void>(
     context: context,
     barrierDismissible: false,

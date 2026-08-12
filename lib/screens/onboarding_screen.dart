@@ -660,9 +660,7 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
       // profile language isn't persisted until onboarding finishes, so we can
       // not rely on packsProvider here (it would hand back UK cards for an
       // EN-selecting user).
-      final assetPath = _isEn
-          ? 'assets/data/en_cards.json'
-          : 'assets/data/uk_cards.json';
+      final assetPath = 'assets/data/${widget.lang}_cards.json';
       final raw = await rootBundle.loadString(assetPath);
       final List<dynamic> jsonList = json.decode(raw) as List<dynamic>;
       final packs = jsonList

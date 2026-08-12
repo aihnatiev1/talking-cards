@@ -84,7 +84,7 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
       // Entry voice line first, then a short gap before the first word.
       AudioService.instance.playInstruction(
         'repeat',
-        isEn: ref.read(languageProvider) == 'en',
+        lang: ref.read(languageProvider),
       );
       Future.delayed(const Duration(milliseconds: 400), () {
         if (mounted) _speakCurrent();

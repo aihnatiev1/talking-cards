@@ -395,6 +395,16 @@ class AudioService {
     ..._audioMap.keys,
     ..._audioMap.values,
   };
+
+  /// Keys registered at runtime from loaded content manifests (cards JSON of
+  /// the active locale, seasonal packs). Filenames map by identity — a key
+  /// registered here plays `assets/audio_mp3/<key>.mp3`. This lets a new
+  /// locale ship cards without touching the hardcoded [_audioMap].
+  final Set<String> _registered = {};
+
+  /// Registers every non-null audio key of freshly-loaded content so
+  /// [hasSound]/[_getSource] accept them alongside the static map.
+  void registerKeys(Iterable<String> keys) => _registered.addAll(keys);
   /// Pre-computed millisecond offset for the end of the WORD portion of each
   /// recording (everything after this is the example sentence). Loaded at
   /// init from `assets/data/audio_word_lengths.json`. Files not in this map
@@ -455,7 +465,9 @@ class AudioService {
   Future<AudioSource?> _getSource(String audioKey) {
     final cached = _sources[audioKey];
     if (cached != null) return Future.value(cached);
-    if (!_knownKeys.contains(audioKey)) return Future.value(null);
+    if (!_knownKeys.contains(audioKey) && !_registered.contains(audioKey)) {
+      return Future.value(null);
+    }
 
     final file = _audioMap[audioKey] ?? audioKey;
     return _pendingLoads.putIfAbsent(file, () async {
@@ -586,7 +598,8 @@ class AudioService {
   }
 
   /// Whether audio exists for the given key (loaded lazily on first play).
-  bool hasSound(String? key) => key != null && _knownKeys.contains(key);
+  bool hasSound(String? key) =>
+      key != null && (_knownKeys.contains(key) || _registered.contains(key));
 
   // --- Reward & guidance layer -------------------------------------------
   // SFX in assets/audio_sfx/ are tiny synthesized v1 placeholders — swap
@@ -627,12 +640,12 @@ class AudioService {
 
   /// Random recorded praise clip ("Молодець!" / "Great job!"). Rate-limited
   /// to every other call so it stays special; pass [always] for game-final
-  /// celebrations. Expects assets/audio_mp3/praise_{uk|en}_1..5.mp3.
-  Future<void> playPraise({required bool isEn, bool always = false}) async {
+  /// celebrations. Expects assets/audio_mp3/praise_{lang}_1..5.mp3.
+  Future<void> playPraise({required String lang, bool always = false}) async {
     _praiseCounter++;
     if (!always && _praiseCounter.isOdd) return;
     final src = await _getFx(
-        'assets/audio_mp3/praise_${isEn ? 'en' : 'uk'}_${_rng.nextInt(5) + 1}.mp3');
+        'assets/audio_mp3/praise_${lang}_${_rng.nextInt(5) + 1}.mp3');
     if (src == null) return;
     try {
       await _soloud.play(src);
@@ -640,10 +653,9 @@ class AudioService {
   }
 
   /// Per-game voice instruction played on entry ("Лопай бульбашки!").
-  /// Expects assets/audio_mp3/instr_{uk|en}_{gameId}.mp3.
-  Future<void> playInstruction(String gameId, {required bool isEn}) async {
-    final src = await _getFx(
-        'assets/audio_mp3/instr_${isEn ? 'en' : 'uk'}_$gameId.mp3');
+  /// Expects assets/audio_mp3/instr_{lang}_{gameId}.mp3.
+  Future<void> playInstruction(String gameId, {required String lang}) async {
+    final src = await _getFx('assets/audio_mp3/instr_${lang}_$gameId.mp3');
     if (src == null) return;
     try {
       stop();

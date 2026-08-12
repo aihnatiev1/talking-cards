@@ -81,7 +81,7 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen>
       if (!mounted) return;
       AudioService.instance.playInstruction(
         'memory',
-        isEn: ref.read(languageProvider) == 'en',
+        lang: ref.read(languageProvider),
       );
     });
   }
@@ -160,7 +160,7 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen>
     // — toddlers need immediate reinforcement to learn the loop.
     if (_matched < _activePairs) {
       AudioService.instance
-          .playPraise(isEn: ref.read(languageProvider) == 'en');
+          .playPraise(lang: ref.read(languageProvider));
       final size = MediaQuery.of(context).size;
       showConfetti(
         origin: Offset(size.width / 2, size.height / 2.2),

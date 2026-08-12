@@ -85,7 +85,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
       // Entry voice line first, then a short gap before the first word.
       AudioService.instance.playInstruction(
         'guess',
-        isEn: ref.read(languageProvider) == 'en',
+        lang: ref.read(languageProvider),
       );
       Future.delayed(const Duration(milliseconds: 400), () {
         if (mounted) _playCurrentSound();
@@ -137,7 +137,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
       HapticFeedback.mediumImpact();
       AudioService.instance.playSfx('ding');
       AudioService.instance
-          .playPraise(isEn: ref.read(languageProvider) == 'en');
+          .playPraise(lang: ref.read(languageProvider));
       _showConfetti();
       _waitingNext = true;
       Timer(const Duration(milliseconds: 800), () {
