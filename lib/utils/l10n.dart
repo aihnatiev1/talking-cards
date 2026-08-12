@@ -31,15 +31,22 @@ class AppS {
   @visibleForTesting
   static Map<String, Map<String, dynamic>> get tablesForTesting => _tables;
 
+  /// Locales whose table asset is known to be missing — memoised so repeated
+  /// preloads (e.g. on every language switch) don't retry the bundle load.
+  static final Set<String> _missingTables = {};
+
   /// Loads `assets/l10n/ui_<locale>.json` into the static table cache.
   /// Silently no-ops when the asset is missing (uk/en never need one).
   static Future<void> preload(String locale) async {
-    if (_tables.containsKey(locale)) return;
+    if (_tables.containsKey(locale) || _missingTables.contains(locale)) {
+      return;
+    }
     try {
       final raw = await rootBundle.loadString('assets/l10n/ui_$locale.json');
       _tables[locale] = json.decode(raw) as Map<String, dynamic>;
     } catch (_) {
       // Asset missing or malformed — English fallback will be used.
+      _missingTables.add(locale);
     }
   }
 
@@ -58,9 +65,9 @@ class AppS {
   ///
   /// For uk/en the passed literals ARE the templates. For other locales the
   /// template is resolved from the table (under `key ?? en`); if the table
-  /// value is a Map it is treated as plural forms and the CLDR category for
-  /// `args['n'] ?? args['count']` picks the form (falling back to 'other',
-  /// then to [en]). Placeholders are then substituted from [args].
+  /// value is a Map it is treated as plural forms and the CLDR category of
+  /// [_pluralNumber] picks the form (falling back to 'other', then to [en]).
+  /// Placeholders are then substituted from [args].
   String p(String uk, String en, Map<String, Object> args, {String? key}) {
     String template;
     if (locale == 'uk') {
@@ -70,9 +77,9 @@ class AppS {
     } else {
       final value = _tables[locale]?[key ?? en];
       if (value is Map) {
-        final raw = args['n'] ?? args['count'];
-        final n = raw is num ? raw : num.tryParse('$raw') ?? 0;
-        final form = value[pluralCategory(locale, n)] ?? value['other'];
+        final form =
+            value[pluralCategory(locale, _pluralNumber(args))] ??
+                value['other'];
         template = form is String ? form : en;
       } else if (value is String) {
         template = value;
@@ -85,5 +92,17 @@ class AppS {
       result = result.replaceAll('{$name}', '$value');
     });
     return result;
+  }
+
+  /// Number driving plural-form selection: when [args] carries exactly one
+  /// numeric value that's unambiguous — use it (real call sites pass
+  /// {'learned': 5}, {'length': 3}, {'currentStreak': 7}...); otherwise
+  /// prefer the conventional 'n' / 'count' keys.
+  static num _pluralNumber(Map<String, Object> args) {
+    final numeric = args.values.whereType<num>().toList();
+    if (numeric.length == 1) return numeric.single;
+    final raw = args['n'] ?? args['count'];
+    if (raw is num) return raw;
+    return num.tryParse('$raw') ?? 0;
   }
 }

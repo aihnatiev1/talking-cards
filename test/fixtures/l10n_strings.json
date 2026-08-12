@@ -72,10 +72,6 @@
     "en": "{done} of {total} stops"
   },
   {
-    "uk": "{greeting} Я — Зайчик. Натисни на картку!",
-    "en": "{greeting} I'm Bloom. Tap the card!"
-  },
-  {
     "uk": "{length} карток чекають",
     "en": "{length} cards waiting"
   },
@@ -664,12 +660,12 @@
     "en": "Hello, {name}!"
   },
   {
-    "uk": "Привіт, {name}!",
-    "en": "Hi, {name}!"
+    "uk": "Привіт, {name}! Я — Зайчик. Натисни на картку!",
+    "en": "Hi, {name}! I'm Bloom. Tap the card!"
   },
   {
-    "uk": "Привіт, друже!",
-    "en": "Hi, friend!"
+    "uk": "Привіт, друже! Я — Зайчик. Натисни на картку!",
+    "en": "Hi, friend! I'm Bloom. Tap the card!"
   },
   {
     "uk": "Пригода дня",

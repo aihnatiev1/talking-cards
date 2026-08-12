@@ -649,7 +649,6 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
   bool _ready = false;
   bool _celebrating = false;
 
-  bool get _isEn => widget.lang == 'en';
 
   @override
   void initState() {
@@ -697,7 +696,7 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
   }
 
   PackModel? _pickStarterPack(List<PackModel> packs) {
-    final preferred = _isEn
+    final preferred = widget.lang == 'en'
         ? const ['en_animals', 'en_home']
         : const ['animals', 'rozmovlyalky'];
 
@@ -814,13 +813,16 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
   }
 
   String _bubbleText() {
+    // Single-level substitution: a child name containing '{' must never be
+    // re-scanned for placeholders by a second s.p() pass.
     final s = AppS(widget.lang);
     final name = widget.childName;
-    final greeting = name.isEmpty
-        ? s('Привіт, друже!', 'Hi, friend!')
-        : s.p('Привіт, {name}!', 'Hi, {name}!', {'name': name});
-    return s.p('{greeting} Я — Зайчик. Натисни на картку!',
-        "{greeting} I'm Bloom. Tap the card!", {'greeting': greeting});
+    if (name.isEmpty) {
+      return s('Привіт, друже! Я — Зайчик. Натисни на картку!',
+          "Hi, friend! I'm Bloom. Tap the card!");
+    }
+    return s.p('Привіт, {name}! Я — Зайчик. Натисни на картку!',
+        "Hi, {name}! I'm Bloom. Tap the card!", {'name': name});
   }
 }
 

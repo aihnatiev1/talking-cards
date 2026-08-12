@@ -83,22 +83,9 @@ class _SplashScreenState extends State<SplashScreen>
       }
     }
 
-    await Future.wait([
-      guard('remoteConfig', () => RemoteConfigService.instance.init()),
-      guard('widget', () => WidgetService.instance.init()),
-      guard('purchase', () => PurchaseService.instance.init()),
-      guard('audio', () => AudioService.instance.precache()),
-      guard('notifications', () => NotificationService.instance.init()),
-      guard('localeRegistry', () => LocaleRegistry.instance.load()),
-    ]);
-
-    await guard('deepLink', () async {
-      _deepLink = await EngageService.instance.getInitialLink();
-    });
-    EngageService.instance.publishFromPrefs();
-
-    // Read the active profile's learning language so the splash title
-    // matches before MaterialApp picks it up.
+    // Read the active profile's learning language FIRST — the splash title
+    // needs it before MaterialApp picks it up, and notification decks must
+    // schedule in the user's language, not the uk default.
     final prefs = await SharedPreferences.getInstance();
     var activeLang = 'uk';
     try {
@@ -115,8 +102,23 @@ class _SplashScreenState extends State<SplashScreen>
         }
       }
     } catch (_) {}
-    // UI translation table for locales beyond uk/en — silent no-op today.
-    await guard('l10n', () => AppS.preload(activeLang));
+
+    await Future.wait([
+      guard('remoteConfig', () => RemoteConfigService.instance.init()),
+      guard('widget', () => WidgetService.instance.init()),
+      guard('purchase', () => PurchaseService.instance.init()),
+      guard('audio', () => AudioService.instance.precache()),
+      guard('notifications',
+          () => NotificationService.instance.init(lang: activeLang)),
+      guard('localeRegistry', () => LocaleRegistry.instance.load()),
+      // UI translation table for locales beyond uk/en — silent no-op today.
+      guard('l10n', () => AppS.preload(activeLang)),
+    ]);
+
+    await guard('deepLink', () async {
+      _deepLink = await EngageService.instance.getInitialLink();
+    });
+    EngageService.instance.publishFromPrefs();
 
     // Schedule day-3 soft paywall reminder for non-pro users; cancel for
     // pro. Runs after the language read so the reminder copy is localized.

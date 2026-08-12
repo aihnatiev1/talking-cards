@@ -5,7 +5,6 @@ import '../models/card_model.dart';
 import '../providers/language_provider.dart';
 import '../providers/srs_provider.dart';
 import '../utils/design_tokens.dart';
-import '../utils/l10n.dart';
 
 /// Banner prompting the user to do today's SRS review.
 /// Returns `SizedBox.shrink()` when there are no due cards.
@@ -23,7 +22,7 @@ class SrsReviewBanner extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final srs = ref.watch(srsProvider);
     if (srs.dueCount == 0) return const SizedBox.shrink();
-    final s = AppS(ref.watch(languageProvider));
+    final s = ref.watch(appSProvider);
 
     final dueCards = allCards
         .where((c) => srs.dueIds.contains(c.id) && c.audioKey != null)

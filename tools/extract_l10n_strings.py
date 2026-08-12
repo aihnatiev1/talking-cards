@@ -47,6 +47,10 @@ FIXTURE = ROOT / "test" / "fixtures" / "l10n_strings.json"
 ASSIGN_RE = re.compile(
     r"(?:final|var|const)\s+(\w+)\s*=\s*(?:const\s+)?AppS\s*\("
 )
+# AppS obtained via Riverpod: final s = ref.watch(appSProvider);
+PROVIDER_RE = re.compile(
+    r"(?:final|var|const)\s+(\w+)\s*=\s*ref\.(?:watch|read)\(appSProvider\)"
+)
 TYPED_RE = re.compile(r"\bAppS\s+(\w+)\b")
 
 SIMPLE_ESCAPES = {
@@ -252,7 +256,11 @@ def find_matching_paren(src: str, i: int):
 
 def extract_from_file(path: Path):
     src = path.read_text(encoding="utf-8")
-    names = set(ASSIGN_RE.findall(src)) | set(TYPED_RE.findall(src))
+    names = (
+        set(ASSIGN_RE.findall(src))
+        | set(PROVIDER_RE.findall(src))
+        | set(TYPED_RE.findall(src))
+    )
     names.discard("AppS")
     pairs = []
 

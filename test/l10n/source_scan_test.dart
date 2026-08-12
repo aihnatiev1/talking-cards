@@ -66,9 +66,12 @@ void main() {
   test('no isEn identifier anywhere in lib/', () {
     // Phases 3–5 replaced every `bool isEn` param/local with `String lang`
     // (behavioral branches use `lang == 'en'` inline). The allowlist is
-    // intentionally EMPTY — a new isEn is always a regression.
+    // intentionally EMPTY — a new isEn is always a regression. The pattern
+    // also catches the private/suffixed variants that used to exist
+    // (_isEn, _isEnLang, isEnMode, isEnNow) without tripping on unrelated
+    // identifiers like isEnabled.
     const allowlist = <String>{};
-    final pattern = RegExp(r'\bisEn\b');
+    final pattern = RegExp(r'\b_?isEn(?:Lang|Mode|Now)?\b');
     final offenders = <String>[];
 
     for (final file in dartFiles()) {

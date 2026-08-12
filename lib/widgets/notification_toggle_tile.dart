@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/language_provider.dart';
 import '../services/notification_service.dart';
-import '../utils/l10n.dart';
 
 /// Row in the About sheet that toggles local notifications after a parental gate.
 class NotificationToggleTile extends ConsumerStatefulWidget {
@@ -41,7 +40,7 @@ class _NotificationToggleTileState
   @override
   Widget build(BuildContext context) {
     if (!_loaded) return const SizedBox.shrink();
-    final s = AppS(ref.watch(languageProvider));
+    final s = ref.watch(appSProvider);
     return TextButton.icon(
       onPressed: _toggle,
       icon: Icon(

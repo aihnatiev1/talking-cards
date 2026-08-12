@@ -65,6 +65,44 @@ void main() {
       );
     });
 
+    test('plural number: a single numeric arg drives the category, whatever '
+        'its name', () {
+      AppS.tablesForTesting['es'] = {
+        '{learned} words': {
+          'one': '{learned} palabra',
+          'other': '{learned} palabras',
+        },
+      };
+      const s = AppS('es');
+      expect(
+        s.p('{learned} слів', '{learned} words',
+            {'who': 'Ana', 'learned': 1}),
+        '1 palabra',
+      );
+      expect(
+        s.p('{learned} слів', '{learned} words',
+            {'who': 'Ana', 'learned': 5}),
+        '5 palabras',
+      );
+      AppS.tablesForTesting.remove('es');
+    });
+
+    test('plural number: with several numeric args, n/count wins', () {
+      AppS.tablesForTesting['es'] = {
+        '{done}/{total} stops': {
+          'one': '{done}/{total} parada',
+          'other': '{done}/{total} paradas',
+        },
+      };
+      const s = AppS('es');
+      expect(
+        s.p('{done}/{total}', '{done}/{total} stops',
+            {'done': 3, 'total': 5, 'n': 1}),
+        '3/5 parada',
+      );
+      AppS.tablesForTesting.remove('es');
+    });
+
     test('table template with plural forms picks the CLDR category', () {
       AppS.tablesForTesting['es'] = {
         '{n} cards': {

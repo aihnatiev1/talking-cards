@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart' show AssetManifest, rootBundle;
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:audio_session/audio_session.dart';
 
@@ -402,9 +402,51 @@ class AudioService {
   /// locale ship cards without touching the hardcoded [_audioMap].
   final Set<String> _registered = {};
 
-  /// Registers every non-null audio key of freshly-loaded content so
-  /// [hasSound]/[_getSource] accept them alongside the static map.
-  void registerKeys(Iterable<String> keys) => _registered.addAll(keys);
+  /// mp3 filenames (no dir, no extension) actually present in the bundle,
+  /// from AssetManifest. Null until [ensureAudioManifestLoaded] completes.
+  Set<String>? _bundledMp3;
+
+  /// Keys registered before the asset manifest was available — re-checked
+  /// against it the moment it loads.
+  final Set<String> _pendingRegistrations = {};
+
+  /// Loads the real asset manifest once so [registerKeys] can enforce the
+  /// "hasSound ⇒ playable file exists" invariant structurally. Idempotent.
+  Future<void> ensureAudioManifestLoaded() async {
+    if (_bundledMp3 != null) return;
+    try {
+      final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
+      _bundledMp3 = {
+        for (final asset in manifest.listAssets())
+          if (asset.startsWith('assets/audio_mp3/') && asset.endsWith('.mp3'))
+            asset.substring('assets/audio_mp3/'.length, asset.length - 4),
+      };
+      registerKeys(_pendingRegistrations.toList());
+      _pendingRegistrations.clear();
+    } catch (e) {
+      // Manifest unavailable (e.g. pure unit tests) — stay strict: only
+      // _audioMap keys are playable until the manifest arrives.
+      if (kDebugMode) debugPrint('AudioService: asset manifest failed: $e');
+    }
+  }
+
+  /// Registers audio keys of freshly-loaded content so [hasSound]/[_getSource]
+  /// accept them alongside the static map — but ONLY keys whose
+  /// `assets/audio_mp3/<key>.mp3` actually exists in the bundle. CardModel
+  /// falls back to the image name when a card has no `audio` field, so
+  /// unguarded registration would mark silent cards as playable and stall
+  /// auto-play waiting for audio that never starts.
+  void registerKeys(Iterable<String> keys) {
+    final bundled = _bundledMp3;
+    for (final key in keys) {
+      if (_knownKeys.contains(key)) continue; // playable via _audioMap
+      if (bundled == null) {
+        _pendingRegistrations.add(key); // re-checked once manifest loads
+      } else if (bundled.contains(key)) {
+        _registered.add(key);
+      }
+    }
+  }
 
   /// Latin mp3 filename (without extension) a key resolves to:
   /// `_audioMap` alias when present, identity otherwise. Exposed so content
@@ -422,6 +464,10 @@ class AudioService {
   int _speakGeneration = 0;
 
   Future<void> precache() async {
+    // 0. Asset manifest first — it gates runtime audio-key registration and
+    // must be available even if the audio engine init below fails.
+    await ensureAudioManifestLoaded();
+
     // 1. Configure iOS audio session — playback ignores silent switch
     final session = await AudioSession.instance;
     await session.configure(const AudioSessionConfiguration(

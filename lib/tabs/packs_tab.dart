@@ -658,8 +658,9 @@ class _PacksTabState extends ConsumerState<PacksTab> {
               if (packs.any((p) => p.category == id)) id,
           ];
 
-          if (_selectedCategory.isEmpty ||
-              !allCategories.contains(_selectedCategory)) {
+          if (allCategories.isNotEmpty &&
+              (_selectedCategory.isEmpty ||
+                  !allCategories.contains(_selectedCategory))) {
             Future.microtask(() =>
                 setState(() => _selectedCategory = allCategories.first));
           }
