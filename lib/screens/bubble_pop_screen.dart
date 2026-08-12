@@ -370,7 +370,23 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
 
     final minX = size / 2 + amplitude;
     final maxX = screen.width - size / 2 - amplitude;
-    final anchor = minX + _rng.nextDouble() * (maxX - minX);
+    // Pick the candidate lane farthest from the bubbles already on screen —
+    // overlapping bubbles read as one blob to a toddler (and hide the cards).
+    var anchor = minX + _rng.nextDouble() * (maxX - minX);
+    var bestClearance = -1.0;
+    for (var attempt = 0; attempt < 8; attempt++) {
+      final candidate = minX + _rng.nextDouble() * (maxX - minX);
+      var clearance = double.infinity;
+      for (final b in _live) {
+        final d = (b.posX - candidate).abs() - (b.size + size) / 2;
+        if (d < clearance) clearance = d;
+      }
+      if (clearance > bestClearance) {
+        bestClearance = clearance;
+        anchor = candidate;
+      }
+      if (bestClearance > 24) break; // comfortably clear — good enough
+    }
     final posY = screen.height + size; // start just below the visible area
 
     _live.add(_LiveBubble(
@@ -586,27 +602,34 @@ class _LiveBubbleVisual extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          // Card image inside — the key WOW element.
+          // Card image inside — the key WOW element. Clipped to the bubble
+          // circle and near edge-to-edge: the illustration IS the content,
+          // the white card mat around it was wasting most of the bubble.
           Center(
             child: Padding(
-              padding: EdgeInsets.all(size * 0.18),
+              padding: EdgeInsets.all(size * 0.06),
               child: bubble.card.image != null
-                  ? Image.asset(
-                      'assets/images/webp/${bubble.card.image}.webp',
-                      fit: BoxFit.contain,
+                  ? ClipOval(
+                      child: Image.asset(
+                        'assets/images/webp/${bubble.card.image}.webp',
+                        fit: BoxFit.cover,
+                        width: size,
+                        height: size,
+                      ),
                     )
                   : const SizedBox.shrink(),
             ),
           ),
-          // Top-left highlight dot.
+          // Soft top-left glass highlight — sits on the bubble RIM, faint
+          // enough to never obscure the illustration underneath.
           const Align(
-            alignment: Alignment(-0.4, -0.4),
+            alignment: Alignment(-0.75, -0.75),
             child: FractionallySizedBox(
-              widthFactor: 0.28,
-              heightFactor: 0.28,
+              widthFactor: 0.2,
+              heightFactor: 0.2,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Color(0x59FFFFFF),
                   shape: BoxShape.circle,
                 ),
               ),
