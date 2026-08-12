@@ -16,7 +16,10 @@ class PurchaseService {
   static const _validatedAtKey = 'pro_validated_at';
   static const _yearlyId = 'yearly_premium';
   static const _monthlyId = 'monthly_premium';
-  static const _productIds = {_yearlyId, _monthlyId};
+  // One-time unlock; queried alongside the subscriptions and simply absent
+  // until the SKU is created in the store consoles.
+  static const _lifetimeId = 'lifetime_premium';
+  static const _productIds = {_yearlyId, _monthlyId, _lifetimeId};
 
   // Silent restore is a local query on both platforms (StoreKit 2
   // currentEntitlements / Play Billing queryPurchases), so an expired
@@ -59,8 +62,8 @@ class PurchaseService {
     final response = await _iap.queryProductDetails(_productIds);
     products = response.productDetails;
 
-    // Sort: yearly → monthly
-    const order = [_yearlyId, _monthlyId];
+    // Sort: yearly → monthly → lifetime
+    const order = [_yearlyId, _monthlyId, _lifetimeId];
     products.sort((a, b) {
       final ai = order.indexOf(a.id);
       final bi = order.indexOf(b.id);

@@ -22,7 +22,6 @@ import '../providers/streak_provider.dart';
 import '../providers/theme_provider.dart';
 import '../screens/card_reveal_screen.dart';
 import '../screens/cards_screen.dart';
-import '../screens/guess_screen.dart';
 import '../screens/kid_word_wall_screen.dart';
 import '../screens/parent_dashboard_screen.dart';
 import '../screens/quest_map_screen.dart';
@@ -44,7 +43,6 @@ import '../widgets/continue_hero.dart';
 import '../widgets/notification_toggle_tile.dart';
 import '../widgets/pack_grid_card.dart';
 import '../widgets/profile_avatar_chip.dart';
-import '../widgets/srs_review_banner.dart';
 import '../widgets/streak_chip.dart';
 import '../widgets/streak_milestone_overlay.dart';
 import '../widgets/today_plan_strip.dart';
@@ -174,6 +172,22 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                 label: Text(s('Підтримка', 'Support')),
               ),
               const NotificationToggleTile(),
+              Consumer(builder: (_, themeRef, __) {
+                final dark =
+                    themeRef.watch(themeModeProvider) == ThemeMode.dark;
+                return TextButton.icon(
+                  onPressed: () =>
+                      themeRef.read(themeModeProvider.notifier).toggle(),
+                  icon: Icon(
+                    dark
+                        ? Icons.light_mode_rounded
+                        : Icons.dark_mode_rounded,
+                    size: 18,
+                  ),
+                  label: Text(
+                      dark ? s('Світла тема', 'Light theme') : s('Темна тема', 'Dark theme')),
+                );
+              }),
               TextButton.icon(
                 onPressed: () {
                   Navigator.of(ctx).pop();
@@ -530,66 +544,12 @@ class _PacksTabState extends ConsumerState<PacksTab> {
     );
   }
 
-  Widget _buildSubtitle(int total, int done, int streak, int totalViewed) {
-    final s = AppS(ref.read(languageProvider) == 'en');
-    if (done == 0 && streak <= 1 && totalViewed == 0) {
-      return Text(
-        s('Почни і побачиш свій прогрес тут!',
-            'Start learning and track your progress here!'),
-        style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-      );
-    }
-    return GestureDetector(
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const StatsScreen()),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (streak > 1) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: kStreakOrange.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                s('🔥 $streak дн.', '🔥 $streak days'),
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: kStreakOrange,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-          ],
-          Text(
-            done > 0
-                ? s('⭐ $done/$total розділів', '⭐ $done/$total packs')
-                : s('🃏 Переглянуто $totalViewed карток',
-                    '🃏 Viewed $totalViewed cards'),
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey[600],
-            ),
-          ),
-          const SizedBox(width: 4),
-          Icon(Icons.chevron_right, size: 18, color: Colors.grey[400]),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final packsAsync = ref.watch(packsProvider);
     final completedPacks = ref.watch(completedPacksProvider);
     final packProgress = ref.watch(packProgressProvider);
     final favorites = ref.watch(favoritesProvider);
-    final themeMode = ref.watch(themeModeProvider);
-    final isDark = themeMode == ThemeMode.dark;
     final streak = ref.watch(streakProvider);
     final quest = ref.watch(dailyQuestProvider);
     final screenWidth = MediaQuery.of(context).size.width;
@@ -782,20 +742,8 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                 padding: EdgeInsets.only(top: 4 * scale, left: 12, right: 12),
                 child: Row(
                   children: [
-                    IconButton(
-                      tooltip: isDark
-                          ? s('Світла тема', 'Light theme')
-                          : s('Темна тема', 'Dark theme'),
-                      icon: Icon(
-                        isDark
-                            ? Icons.light_mode_rounded
-                            : Icons.dark_mode_rounded,
-                        color: Colors.grey[400],
-                        size: 26,
-                      ),
-                      onPressed: () =>
-                          ref.read(themeModeProvider.notifier).toggle(),
-                    ),
+                    // Theme toggle moved to the About sheet — a 2-year-old's
+                    // home screen is no place for app-chrome settings.
                     const Spacer(),
                     if (streak.currentStreak > 0) ...[
                       StreakChip(
@@ -893,19 +841,9 @@ class _PacksTabState extends ConsumerState<PacksTab> {
               // Hidden until at least one word is "learned" (SRS reps >= 2).
               _TreasureBoxBanner(isEn: isEnMode),
 
-              // SRS review banner
-              SrsReviewBanner(
-                allCards: allCards,
-                onTap: (cards) => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => GuessScreen(
-                      cards: cards,
-                      ttsLocale: isEnMode ? 'en-US' : null,
-                    ),
-                  ),
-                ),
-              ),
-
+              // SRS review entry lives in the grid as the "Повторення"
+              // virtual pack — the extra banner here just stacked a third
+              // call-to-action above the fold.
               const SizedBox(height: 8),
 
               // Category filter chips — segmented pill control

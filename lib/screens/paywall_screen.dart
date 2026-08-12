@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
+import '../providers/profile_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/purchase_service.dart';
 import '../services/remote_config_service.dart';
@@ -71,10 +72,33 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         case 'monthly_premium':
           return _Plan(labelMonthly, p.price, perMonth, null,
               productId: p.id);
+        case 'lifetime_premium':
+          return _Plan(s('Назавжди', 'Lifetime'), p.price,
+              s('одноразово', 'one-time'), s('Без підписки', 'No subscription'),
+              productId: p.id);
         default:
           return _Plan(p.title, p.price, '', null, productId: p.id);
       }
     }).toList();
+  }
+
+  /// "План для Софійки (2–3 р.)" beats a generic headline: the onboarding
+  /// already collected the child's name and age — use them at the moment of
+  /// highest intent. Falls back to the remote-config title when unnamed.
+  String _headline(AppS s) {
+    final profile = ref.watch(profileProvider).active;
+    final name = profile?.name.trim() ?? '';
+    if (name.isEmpty) {
+      return s(RemoteConfigService.instance.paywallTitle,
+          'Unlock full potential');
+    }
+    const ages = {1: '1–2', 2: '2–3', 3: '3–4', 4: '4–5'};
+    final age = ages[profile?.level ?? 0];
+    if (age == null) {
+      return s('План розвитку для $name', "$name's learning plan");
+    }
+    return s('План розвитку для $name ($age р.)',
+        "$name's learning plan (age $age)");
   }
 
   Future<void> _purchase() async {
@@ -208,10 +232,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                     _trialBanner(context, s),
                     const SizedBox(height: 18),
                     Text(
-                      s(
-                        RemoteConfigService.instance.paywallTitle,
-                        'Unlock full potential',
-                      ),
+                      _headline(s),
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
