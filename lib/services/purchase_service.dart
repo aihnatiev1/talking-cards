@@ -13,12 +13,22 @@ class PurchaseService {
 
   static const _prefKey = 'is_pro';
   static const _installedKey = 'installed';
+  static const _validatedAtKey = 'pro_validated_at';
   static const _yearlyId = 'yearly_premium';
   static const _monthlyId = 'monthly_premium';
   static const _productIds = {_yearlyId, _monthlyId};
 
+  // Silent restore is a local query on both platforms (StoreKit 2
+  // currentEntitlements / Play Billing queryPurchases), so an expired
+  // subscription simply stops being delivered. Re-check at most daily and
+  // keep a grace window so a transient store hiccup or a long-offline
+  // device never locks a paying family out.
+  static const _revalidateAfter = Duration(hours: 24);
+  static const _graceWindow = Duration(days: 3);
+
   final ValueNotifier<bool> isPro = ValueNotifier(false);
   bool _initialized = false;
+  bool _entitlementSeen = false;
 
   final InAppPurchase _iap = InAppPurchase.instance;
   StreamSubscription<List<PurchaseDetails>>? _sub;
@@ -64,6 +74,37 @@ class PurchaseService {
     await prefs.setBool(_installedKey, true);
     if (isReinstall && !isPro.value) {
       _iap.restorePurchases();
+    } else if (isPro.value) {
+      unawaited(_revalidateEntitlement(prefs));
+    }
+  }
+
+  /// Re-checks that a locally persisted Pro flag is still backed by an
+  /// active subscription. Without this a cancelled trial stays Pro forever.
+  Future<void> _revalidateEntitlement(SharedPreferences prefs) async {
+    final validatedAtMs = prefs.getInt(_validatedAtKey);
+    final now = DateTime.now();
+    if (validatedAtMs == null) {
+      // Existing Pro user updating to the first build with revalidation:
+      // start the clock instead of risking an instant revoke.
+      await prefs.setInt(_validatedAtKey, now.millisecondsSinceEpoch);
+      return;
+    }
+    final validatedAt = DateTime.fromMillisecondsSinceEpoch(validatedAtMs);
+    if (now.difference(validatedAt) < _revalidateAfter) return;
+
+    _entitlementSeen = false;
+    try {
+      await _iap.restorePurchases();
+    } catch (_) {
+      return; // Store unreachable — keep current state until next launch.
+    }
+    // Entitlements arrive via purchaseStream; give them a moment.
+    await Future<void>.delayed(const Duration(seconds: 10));
+    if (_entitlementSeen) return;
+    if (now.difference(validatedAt) > _graceWindow) {
+      isPro.value = false;
+      await _persist();
     }
   }
 
@@ -118,8 +159,12 @@ class PurchaseService {
 
   Future<void> _verifyAndDeliver(PurchaseDetails purchase) async {
     if (_productIds.contains(purchase.productID)) {
+      _entitlementSeen = true;
       isPro.value = true;
       await _persist();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(
+          _validatedAtKey, DateTime.now().millisecondsSinceEpoch);
       // No reason to nag a paying user with the day-3 trial reminder.
       await NotificationService.instance.cancelPaywallReminder();
     }
