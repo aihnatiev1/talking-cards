@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/card_model.dart';
 import '../utils/constants.dart';
+import '../utils/image_cache_size.dart';
 
 class QuizOption extends StatefulWidget {
   final CardModel card;
@@ -131,6 +132,7 @@ class _QuizOptionState extends State<QuizOption>
                           child: Image.asset(
                             'assets/images/webp/${widget.card.image}.webp',
                             fit: BoxFit.contain,
+                            cacheWidth: tileCacheWidth(context),
                           ),
                         )
                       : Container(

@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
 import '../utils/design_tokens.dart';
+import '../utils/image_cache_size.dart';
 
 class PackGridCard extends ConsumerStatefulWidget {
   final PackModel pack;
@@ -145,11 +146,13 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
                               ? Image.asset(
                                   'assets/images/webp/${pack.cover}.webp',
                                   fit: BoxFit.contain,
+                                  cacheWidth: tileCacheWidth(context),
                                 )
                               : thumb?.image != null
                                   ? Image.asset(
                                       'assets/images/webp/${thumb!.image}.webp',
                                       fit: BoxFit.contain,
+                                      cacheWidth: tileCacheWidth(context),
                                     )
                                   : Center(
                                       child: FittedBox(

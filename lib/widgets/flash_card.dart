@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/card_model.dart';
 import '../providers/favorites_provider.dart';
 import '../services/audio_service.dart';
+import '../utils/image_cache_size.dart';
 
 class FlashCard extends ConsumerStatefulWidget {
   final CardModel card;
@@ -235,6 +236,7 @@ class _FlashCardState extends ConsumerState<FlashCard>
                               fit: BoxFit.contain,
                               width: double.infinity,
                               height: double.infinity,
+                              cacheWidth: cardCacheWidth(context),
                             ),
                           )
                         : Center(
@@ -350,6 +352,7 @@ class _FlashCardState extends ConsumerState<FlashCard>
                       fit: BoxFit.contain,
                       width: double.infinity,
                       height: double.infinity,
+                      cacheWidth: cardCacheWidth(context),
                     ),
                   )
                 : Center(

@@ -27,6 +27,7 @@ import '../widgets/share_progress_card.dart';
 import '../widgets/speaker_button.dart';
 import '../widgets/swipe_hint.dart';
 import 'memory_match_screen.dart';
+import '../utils/image_cache_size.dart';
 
 class CardsScreen extends ConsumerStatefulWidget {
   final PackModel pack;
@@ -115,8 +116,13 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
       if (i < 0 || i >= _cards.length) continue;
       final image = _cards[i].image;
       if (image != null) {
+        // ResizeImage params must match FlashCard's cacheWidth so both hit
+        // the same image-cache entry instead of decoding twice.
         precacheImage(
-          AssetImage('assets/images/webp/$image.webp'),
+          ResizeImage(
+            AssetImage('assets/images/webp/$image.webp'),
+            width: cardCacheWidth(context),
+          ),
           context,
         );
       }
