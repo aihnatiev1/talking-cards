@@ -151,9 +151,10 @@ class _ProfileSelectorSheet extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(s('Видалити профіль?', 'Delete profile?')),
-        content: Text(s(
-          'Весь прогрес "${profile.name}" буде видалено. Це незворотно.',
-          'All progress for "${profile.name}" will be deleted. This cannot be undone.',
+        content: Text(s.p(
+          'Весь прогрес "{name}" буде видалено. Це незворотно.',
+          'All progress for "{name}" will be deleted. This cannot be undone.',
+          {'name': profile.name},
         )),
         actions: [
           TextButton(

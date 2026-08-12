@@ -112,9 +112,7 @@ class _OverviewTab extends ConsumerWidget {
     final packProgress = ref.watch(packProgressProvider);
     final completedPacks = ref.watch(completedPacksProvider);
     final dailyStats = ref.watch(dailyStatsProvider);
-    final lang = ref.watch(languageProvider);
-    final isEn = lang == 'en';
-    final s = AppS(lang);
+    final s = AppS(ref.watch(languageProvider));
 
     final wordsSeenTotal = packProgress.values.fold(0, (a, b) => a + b);
     final activeDays = dailyStats.values
@@ -128,17 +126,16 @@ class _OverviewTab extends ConsumerWidget {
           _StatCard(
             emoji: '🔥',
             label: s('Серія', 'Streak'),
-            value: isEn
-                ? '${streak.currentStreak} d.'
-                : '${streak.currentStreak} дн.',
+            value: s.p('{currentStreak} дн.', '{currentStreak} d.',
+                {'currentStreak': streak.currentStreak}),
             color: kStreakOrange,
           ),
           _StatCard(
             emoji: '📚',
             label: s('Переглянуто', 'Seen'),
-            value: isEn
-                ? '$wordsSeenTotal ${wordsSeenTotal == 1 ? 'card' : 'cards'}'
-                : '$wordsSeenTotal карток',
+            value: wordsSeenTotal == 1
+                ? s.p('{n} карток', '{n} card', {'n': wordsSeenTotal})
+                : s.p('{n} карток', '{n} cards', {'n': wordsSeenTotal}),
             color: kAccent,
           ),
         ]),
@@ -328,9 +325,8 @@ class _WeeklyTab extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            isEn
-                ? 'Cards in 7 days: $totalWeek'
-                : 'Карток за 7 днів: $totalWeek',
+            s.p('Карток за 7 днів: {totalWeek}', 'Cards in 7 days: {totalWeek}',
+                {'totalWeek': totalWeek}),
             style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w600,
@@ -497,6 +493,7 @@ class _WordWallHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = AppS(isEn ? 'en' : 'uk');
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -514,9 +511,8 @@ class _WordWallHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isEn
-                      ? "$childName's Word Wall"
-                      : 'Стіна слів — $childName',
+                  s.p('Стіна слів — {childName}', "{childName}'s Word Wall",
+                      {'childName': childName}),
                   style: TextStyle(
                     fontSize: responsiveFont(context, 14),
                     fontWeight: FontWeight.w600,
@@ -540,9 +536,9 @@ class _WordWallHeader extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 4),
                       child: Text(
-                        isEn
-                            ? (learnedCount == 1 ? 'word' : 'words')
-                            : 'слів',
+                        learnedCount == 1
+                            ? s('слів', 'word')
+                            : s('слів', 'words'),
                         style: TextStyle(
                           fontSize: responsiveFont(context, 13),
                           fontWeight: FontWeight.w700,
@@ -558,7 +554,7 @@ class _WordWallHeader extends StatelessWidget {
           ElevatedButton.icon(
             onPressed: onShare,
             icon: const Icon(Icons.ios_share, size: 18),
-            label: Text(isEn ? 'Share' : 'Поділитись'),
+            label: Text(s('Поділитись', 'Share')),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: kAccent,
@@ -650,9 +646,7 @@ class _PacksTab extends ConsumerWidget {
     final packsAsync = ref.watch(packsProvider);
     final packProgress = ref.watch(packProgressProvider);
     final completedPacks = ref.watch(completedPacksProvider);
-    final lang = ref.watch(languageProvider);
-    final isEn = lang == 'en';
-    final s = AppS(lang);
+    final s = AppS(ref.watch(languageProvider));
 
     return packsAsync.when(
       data: (packs) {
@@ -717,9 +711,13 @@ class _PacksTab extends ConsumerWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          isEn
-                              ? '$seen / $total ${total == 1 ? 'card' : 'cards'}'
-                              : '$seen / $total карток',
+                          total == 1
+                              ? s.p('{seen} / {total} карток',
+                                  '{seen} / {total} card',
+                                  {'seen': seen, 'total': total})
+                              : s.p('{seen} / {total} карток',
+                                  '{seen} / {total} cards',
+                                  {'seen': seen, 'total': total}),
                           style: TextStyle(
                             fontSize: 11,
                             color: pack.color.withValues(alpha: 0.7),

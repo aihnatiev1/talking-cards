@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/constants.dart';
+import '../utils/l10n.dart';
 
 class WhatsNewService {
   WhatsNewService._();
@@ -45,8 +46,8 @@ class _WhatsNewSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isEn = lang == 'en';
-    final features = isEn ? _featuresEn : _features;
+    final s = AppS(lang);
+    final features = lang == 'en' ? _featuresEn : _features;
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
@@ -70,14 +71,13 @@ class _WhatsNewSheet extends StatelessWidget {
           const Text('✨', style: TextStyle(fontSize: 48)),
           const SizedBox(height: 8),
           Text(
-            isEn ? "What's new!" : 'Що нового!',
+            s('Що нового!', "What's new!"),
             style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 4),
           Text(
-            isEn
-                ? 'Big update — new game, a bunny friend, and a daily ritual'
-                : 'Велике оновлення — нові ігри, друг-зайчик і щоденний ритуал',
+            s('Велике оновлення — нові ігри, друг-зайчик і щоденний ритуал',
+                'Big update — new game, a bunny friend, and a daily ritual'),
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 13, color: Colors.grey[500]),
           ),
@@ -106,7 +106,7 @@ class _WhatsNewSheet extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16)),
               ),
               child: Text(
-                isEn ? 'Awesome, let\'s go!' : 'Чудово, грати!',
+                s('Чудово, грати!', 'Awesome, let\'s go!'),
                 style: const TextStyle(
                     fontSize: 16, fontWeight: FontWeight.bold),
               ),

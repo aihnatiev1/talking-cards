@@ -16,6 +16,10 @@
     "en": "19 learning packs"
   },
   {
+    "uk": "1–3 роки",
+    "en": "ages 1–3"
+  },
+  {
     "uk": "2-3р",
     "en": "2-3y"
   },
@@ -26,6 +30,10 @@
   {
     "uk": "3 дні безкоштовно, потім {price}{period} • Скасувати будь-коли",
     "en": "3 days free, then {price}{period} • Cancel anytime"
+  },
+  {
+    "uk": "3+",
+    "en": "ages 3+"
   },
   {
     "uk": "3-4р",
@@ -52,16 +60,44 @@
     "en": "$1.99"
   },
   {
+    "uk": "{childName} вже вивчає слова з Картками-розмовлялками! 🗣️\nВивчено: {count}\nСкачай безкоштовно: {_storeUrl}",
+    "en": "{childName} has learned {count} words with FirstWords Cards! 🗣️\nDownload free: {_storeUrl}"
+  },
+  {
+    "uk": "{currentStreak} дн.",
+    "en": "{currentStreak} d."
+  },
+  {
     "uk": "{done} з {total} зупинок",
     "en": "{done} of {total} stops"
+  },
+  {
+    "uk": "{greeting} Я — Зайчик. Натисни на картку!",
+    "en": "{greeting} I'm Bloom. Tap the card!"
   },
   {
     "uk": "{length} карток чекають",
     "en": "{length} cards waiting"
   },
   {
+    "uk": "{n} карток",
+    "en": "{n} card"
+  },
+  {
+    "uk": "{n} карток",
+    "en": "{n} cards"
+  },
+  {
     "uk": "{seenCards} з {totalCards} карток переглянуто",
     "en": "{seenCards} of {totalCards} cards viewed"
+  },
+  {
+    "uk": "{seen} / {total} карток",
+    "en": "{seen} / {total} card"
+  },
+  {
+    "uk": "{seen} / {total} карток",
+    "en": "{seen} / {total} cards"
   },
   {
     "uk": "{totalViews} переглядів карток",
@@ -100,6 +136,10 @@
     "en": "Activity this week"
   },
   {
+    "uk": "Артикуляційна",
+    "en": "Articulation"
+  },
+  {
     "uk": "Артикуляційна гімнастика",
     "en": "Articulation Exercises"
   },
@@ -128,12 +168,32 @@
     "en": "Your child"
   },
   {
+    "uk": "Вгадай\nзвук!",
+    "en": "Guess\nthe word!"
+  },
+  {
+    "uk": "Вгадай звук",
+    "en": "Guess the word"
+  },
+  {
+    "uk": "Велике оновлення — нові ігри, друг-зайчик і щоденний ритуал",
+    "en": "Big update — new game, a bunny friend, and a daily ritual"
+  },
+  {
+    "uk": "Великий↔малий, тепло↔холод",
+    "en": "Big↔small, hot↔cold"
+  },
+  {
     "uk": "Версія {version}",
     "en": "Version {version}"
   },
   {
     "uk": "Весь прогрес \"{name}\" буде видалено. Це незворотно.",
     "en": "All progress for \"{name}\" will be deleted. This cannot be undone."
+  },
+  {
+    "uk": "Виберіть мову карток",
+    "en": "Choose card language"
   },
   {
     "uk": "Видалити",
@@ -144,6 +204,14 @@
     "en": "Delete profile?"
   },
   {
+    "uk": "Виконай 3 щоденні кроки і отримай нову картку 🎁",
+    "en": "Finish 3 daily steps to unlock a new card 🎁"
+  },
+  {
+    "uk": "Все готово! Повертайся завтра!",
+    "en": "All done today! Come back tomorrow"
+  },
+  {
     "uk": "Всього сесій",
     "en": "Total sessions"
   },
@@ -152,12 +220,20 @@
     "en": "All games"
   },
   {
+    "uk": "Відкривай і шукай пари",
+    "en": "Flip cards, match pairs"
+  },
+  {
     "uk": "Відкрий\nскарб!",
     "en": "Claim\nreward!"
   },
   {
     "uk": "Відкрий хоча б один пак з картками",
     "en": "Open at least one pack with images first"
+  },
+  {
+    "uk": "Відкрій хоча б 2 паки щоб грати",
+    "en": "Open at least 2 packs to play"
   },
   {
     "uk": "Відновити покупки",
@@ -176,6 +252,10 @@
     "en": "Done"
   },
   {
+    "uk": "Готово!",
+    "en": "Done! 🎉"
+  },
+  {
     "uk": "Готово! ✅",
     "en": "Done! ✅"
   },
@@ -188,12 +268,40 @@
     "en": "Play again"
   },
   {
+    "uk": "Далі →",
+    "en": "Continue →"
+  },
+  {
+    "uk": "Далі →",
+    "en": "Next →"
+  },
+  {
     "uk": "Далі ▶",
     "en": "Next ▶"
   },
   {
     "uk": "Де відкрити нову картку?",
     "en": "Where to open the new card?"
+  },
+  {
+    "uk": "Деталі ›",
+    "en": "View all ›"
+  },
+  {
+    "uk": "Для батьків",
+    "en": "For grown-ups"
+  },
+  {
+    "uk": "Для батьків",
+    "en": "For parents"
+  },
+  {
+    "uk": "Для малят",
+    "en": "For little ones"
+  },
+  {
+    "uk": "Для старших",
+    "en": "For older kids"
   },
   {
     "uk": "До розділу \"{title}\"",
@@ -232,8 +340,16 @@
     "en": "Found! 🎉"
   },
   {
+    "uk": "Знайди 3\nкартки!",
+    "en": "Find 3\ncards!"
+  },
+  {
     "uk": "Знайди зайве",
     "en": "Odd one out"
+  },
+  {
+    "uk": "Знайди не таке, як інші",
+    "en": "Spot the different one"
   },
   {
     "uk": "Знайди пару",
@@ -244,12 +360,20 @@
     "en": "Find the opposite"
   },
   {
+    "uk": "Знайомство",
+    "en": "Nice to meet you!"
+  },
+  {
     "uk": "Значки",
     "en": "Badges"
   },
   {
     "uk": "Зупинити",
     "en": "Stop"
+  },
+  {
+    "uk": "Картка дня",
+    "en": "Today's Card"
   },
   {
     "uk": "Картки",
@@ -264,8 +388,20 @@
     "en": "Talking Cards"
   },
   {
+    "uk": "Карток за 7 днів: {totalWeek}",
+    "en": "Cards in 7 days: {totalWeek}"
+  },
+  {
     "uk": "Конфіденційність",
     "en": "Privacy"
+  },
+  {
+    "uk": "Лоп-лоп-лоп!",
+    "en": "Pop, pop, pop!"
+  },
+  {
+    "uk": "Лопай бульбашки",
+    "en": "Pop the bubbles"
   },
   {
     "uk": "Малюк",
@@ -284,6 +420,14 @@
     "en": "Maybe later"
   },
   {
+    "uk": "Можна змінити окремо для кожної дитини",
+    "en": "Can be changed per child"
+  },
+  {
+    "uk": "Молодець!",
+    "en": "Awesome job!"
+  },
+  {
     "uk": "Молодець!",
     "en": "Great job!"
   },
@@ -296,12 +440,32 @@
     "en": "Well done! Completed {_maxReps} times!"
   },
   {
+    "uk": "Молодець! 🎉",
+    "en": "You did it! 🎉"
+  },
+  {
+    "uk": "Молодець, {childName}!",
+    "en": "Awesome job, {childName}!"
+  },
+  {
     "uk": "Молодець, {childName}!",
     "en": "Great job, {childName}!"
   },
   {
     "uk": "Молодець, {name}!",
     "en": "Great job, {name}!"
+  },
+  {
+    "uk": "Молодець, {name}! 🎉",
+    "en": "You did it, {name}! 🎉"
+  },
+  {
+    "uk": "Мої слова",
+    "en": "My words"
+  },
+  {
+    "uk": "Мій малюк вивчає слова з Картками-розмовлялками! 🗣️\nСкачай безкоштовно: {_storeUrl}",
+    "en": "My child is learning words with FirstWords Cards! 🗣️\nDownload free: {_storeUrl}"
   },
   {
     "uk": "Місячна",
@@ -332,8 +496,16 @@
     "en": "Best value"
   },
   {
+    "uk": "Наприклад: Оленка",
+    "en": "e.g. Emma"
+  },
+  {
     "uk": "Наступна",
     "en": "Next"
+  },
+  {
+    "uk": "Натисни на картку, щоб почути слово!",
+    "en": "Tap the card to hear the word!"
   },
   {
     "uk": "Натисни, щоб послухати",
@@ -356,8 +528,16 @@
     "en": "New packs every month"
   },
   {
+    "uk": "Оберіть аватар",
+    "en": "Choose an avatar"
+  },
+  {
     "uk": "Огляд",
     "en": "Overview"
+  },
+  {
+    "uk": "Ой, не завантажилось",
+    "en": "Oops, didn't load"
   },
   {
     "uk": "Ой, щось не завантажилось",
@@ -370,6 +550,14 @@
   {
     "uk": "Оцінити додаток",
     "en": "Rate the app"
+  },
+  {
+    "uk": "Пак «Протилежності» порожній",
+    "en": "Opposites pack is empty"
+  },
+  {
+    "uk": "Пак дня",
+    "en": "Today's Pack"
   },
   {
     "uk": "Паки",
@@ -400,6 +588,10 @@
     "en": "Review"
   },
   {
+    "uk": "Повтори\nза мною!",
+    "en": "Repeat\nafter me!"
+  },
+  {
     "uk": "Повтори за мною",
     "en": "Repeat after me"
   },
@@ -410,6 +602,10 @@
   {
     "uk": "Подарунок для нових родин — скасуй будь-коли",
     "en": "A gift for new families — cancel anytime"
+  },
+  {
+    "uk": "Поділитись",
+    "en": "Share"
   },
   {
     "uk": "Поділитись 🎉",
@@ -440,6 +636,10 @@
     "en": "Mistakes"
   },
   {
+    "uk": "Послухай!",
+    "en": "Listen!"
+  },
+  {
     "uk": "Почнемо! 🎉",
     "en": "Let's go! 🎉"
   },
@@ -454,6 +654,18 @@
   {
     "uk": "Привіт, {name}!",
     "en": "Hello, {name}!"
+  },
+  {
+    "uk": "Привіт, {name}!",
+    "en": "Hi, {name}!"
+  },
+  {
+    "uk": "Привіт, друже!",
+    "en": "Hi, friend!"
+  },
+  {
+    "uk": "Пригода дня",
+    "en": "Daily Adventure"
   },
   {
     "uk": "Про додаток",
@@ -472,8 +684,16 @@
     "en": "Continue with free packs"
   },
   {
+    "uk": "Протилежності",
+    "en": "Opposites"
+  },
+  {
     "uk": "Профілі",
     "en": "Profiles"
+  },
+  {
+    "uk": "Підберемо картки відповідно до віку",
+    "en": "We'll pick the right cards for their age"
   },
   {
     "uk": "Підписку не знайдено",
@@ -494,6 +714,10 @@
   {
     "uk": "Розблокувати все",
     "en": "Unlock all"
+  },
+  {
+    "uk": "Розблокуй пак «Протилежності»",
+    "en": "Subscribe to unlock Opposites"
   },
   {
     "uk": "Розблокуй усі картинки одразу — і фарбуй щодня.",
@@ -520,6 +744,10 @@
     "en": "Streak"
   },
   {
+    "uk": "Скажи слово, дорослий натискає",
+    "en": "Say the word, grown-up taps"
+  },
+  {
     "uk": "Скажи: «{sound}»",
     "en": "Say: «{sound}»"
   },
@@ -544,8 +772,28 @@
     "en": "Cancel"
   },
   {
+    "uk": "Скільки років {childName}?",
+    "en": "How old is {childName}?"
+  },
+  {
+    "uk": "Скільки років малюку?",
+    "en": "How old is your little one?"
+  },
+  {
     "uk": "Слова",
     "en": "Words"
+  },
+  {
+    "uk": "Слова {childName}",
+    "en": "{childName}'s words"
+  },
+  {
+    "uk": "Слова, які знає {childName}",
+    "en": "{childName}'s Word Wall"
+  },
+  {
+    "uk": "Слухай і тисни картку",
+    "en": "Listen and tap the card"
   },
   {
     "uk": "Слухати ще раз",
@@ -560,16 +808,32 @@
     "en": "Enjoying {title}?"
   },
   {
+    "uk": "Спочатку відкрий більше карток",
+    "en": "Open more cards in Packs first"
+  },
+  {
     "uk": "Спробувати ще раз",
     "en": "Try again"
+  },
+  {
+    "uk": "Стіна слів — {childName}",
+    "en": "{childName}'s Word Wall"
   },
   {
     "uk": "Сьогоднішній скарб",
     "en": "Today's reward"
   },
   {
+    "uk": "Так тримати!",
+    "en": "Keep going!"
+  },
+  {
     "uk": "Темна тема",
     "en": "Dark theme"
+  },
+  {
+    "uk": "Ти вивчив 3 нових слова!",
+    "en": "You learned 3 new words!"
   },
   {
     "uk": "Ти лопнув {popped} бульок!",
@@ -608,8 +872,16 @@
     "en": "Great progress! 🌟"
   },
   {
+    "uk": "Чудово, грати!",
+    "en": "Awesome, let's go!"
+  },
+  {
     "uk": "Ще 20+ малюнків чекають!",
     "en": "20+ more drawings waiting!"
+  },
+  {
+    "uk": "Ще 5\nкарток!",
+    "en": "5 more\ncards!"
   },
   {
     "uk": "Ще {remaining} карток чекають!",
@@ -640,12 +912,24 @@
     "en": "Again 🔄"
   },
   {
+    "uk": "Що нового!",
+    "en": "What's new!"
+  },
+  {
     "uk": "Що протилежне?",
     "en": "What is the opposite?"
   },
   {
+    "uk": "Щоденна гімнастика язика",
+    "en": "Daily tongue & lip workout"
+  },
+  {
     "uk": "Щоденні вправи для язика і губ",
     "en": "Daily exercises for tongue and lips"
+  },
+  {
+    "uk": "Як звати дитину?",
+    "en": "Child's name"
   },
   {
     "uk": "Яка картка зайва?",
@@ -654,6 +938,18 @@
   {
     "uk": "Яскраві картки зі звуками для найменших. Слухай — вивчай — повторюй!",
     "en": "Flash cards with sounds for little ones. Listen — learn — repeat!"
+  },
+  {
+    "uk": "вивчених слів",
+    "en": "word learned"
+  },
+  {
+    "uk": "вивчених слів",
+    "en": "words learned"
+  },
+  {
+    "uk": "мовленнєва терапія",
+    "en": "speech therapy"
   },
   {
     "uk": "не грали",
@@ -672,20 +968,56 @@
     "en": "best"
   },
   {
+    "uk": "роки",
+    "en": "years"
+  },
+  {
+    "uk": "років",
+    "en": "years"
+  },
+  {
+    "uk": "слів",
+    "en": "word"
+  },
+  {
+    "uk": "слів",
+    "en": "words"
+  },
+  {
     "uk": "торкнись",
     "en": "tap to hear"
+  },
+  {
+    "uk": "▶ Продовжити",
+    "en": "▶ Continue"
   },
   {
     "uk": "🎉 Усі паки вже відкрито — молодець!",
     "en": "🎉 All packs already unlocked — great job!"
   },
   {
+    "uk": "🎮 Ігри",
+    "en": "🎮 Games"
+  },
+  {
     "uk": "👨‍👧 Батьки читають вголос — дитина повторює рухи",
     "en": "👨‍👧 Parents read aloud — child mirrors the moves"
   },
   {
+    "uk": "📅 Сьогодні",
+    "en": "📅 Today's Plan"
+  },
+  {
+    "uk": "📲 Скачай безкоштовно\nApp Store та Google Play",
+    "en": "📲 Download free\nApp Store · Google Play"
+  },
+  {
     "uk": "🔄 Повторення",
     "en": "🔄 Review"
+  },
+  {
+    "uk": "🔊 Картка дня",
+    "en": "🔊 Card of the day"
   },
   {
     "uk": "🗣️ Картки-розмовлялки",
@@ -694,5 +1026,9 @@
   {
     "uk": "🗺️ Пригода дня",
     "en": "🗺️ Adventure"
+  },
+  {
+    "uk": "🗺️ Скарб",
+    "en": "🗺️ Quest"
   }
 ]

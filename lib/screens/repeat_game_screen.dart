@@ -319,7 +319,8 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
 
               // Parent controls
               Text(
-                s('Скажи: «${card.sound}»', 'Say: «${card.sound}»'),
+                s.p('Скажи: «{sound}»', 'Say: «{sound}»',
+                    {'sound': card.sound}),
                 style: const TextStyle(
                     fontSize: 16, fontWeight: FontWeight.w600),
               ),

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../utils/constants.dart';
 import '../utils/design_tokens.dart';
+import '../utils/l10n.dart';
 
 /// One node in the Today's Plan path.
 class TodayPlanStone {
@@ -45,7 +46,8 @@ class TodayPlanStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final allDone = stones.every((s) => s.isDone);
+    final s = AppS(isEn ? 'en' : 'uk');
+    final allDone = stones.every((st) => st.isDone);
     final scale = screenScale(context);
 
     final box = Container(
@@ -75,7 +77,7 @@ class TodayPlanStrip extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    isEn ? '📅 Today\'s Plan' : '📅 Сьогодні',
+                    s('📅 Сьогодні', '📅 Today\'s Plan'),
                     style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
@@ -91,7 +93,7 @@ class TodayPlanStrip extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 4, vertical: 2),
                     child: Text(
-                      isEn ? 'View all ›' : 'Деталі ›',
+                      s('Деталі ›', 'View all ›'),
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -363,9 +365,8 @@ class _CelebrationRow extends StatelessWidget {
           const Text('🎉', style: TextStyle(fontSize: 36, height: 1)),
           const SizedBox(height: 4),
           Text(
-            isEn
-                ? 'All done today! Come back tomorrow'
-                : 'Все готово! Повертайся завтра!',
+            AppS(isEn ? 'en' : 'uk')('Все готово! Повертайся завтра!',
+                'All done today! Come back tomorrow'),
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,

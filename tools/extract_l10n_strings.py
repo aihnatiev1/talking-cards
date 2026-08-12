@@ -265,12 +265,16 @@ def extract_from_file(path: Path):
             if pair is not None:
                 pairs.append(pair)
 
-    # Inline AppS(...)('uk', 'en') calls.
+    # Inline AppS(...)('uk', 'en') and AppS(...).p('uk', 'en', {...}) calls.
     for m in re.finditer(r"\bAppS\s*\(", src):
         close = find_matching_paren(src, m.end() - 1)
         if close is None:
             continue
         j = skip_ws_and_comments(src, close)
+        if j + 1 < len(src) and src[j] == "." and src[j + 1 :].lstrip().startswith("p"):
+            pm = re.match(r"\.\s*p\s*\(", src[j:])
+            if pm:
+                j = j + pm.end() - 1
         if j < len(src) and src[j] == "(":
             pair = parse_pair_at(src, j)
             if pair is not None:

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart' show rootBundle;
 
 import '../l10n/plural_rules.dart';
@@ -25,6 +26,10 @@ class AppS {
   /// Values are either `String` (plain) or `Map` (plural forms keyed by
   /// CLDR category: one/few/many/other).
   static final Map<String, Map<String, dynamic>> _tables = {};
+
+  /// Direct table access for unit tests (avoids bundling test assets).
+  @visibleForTesting
+  static Map<String, Map<String, dynamic>> get tablesForTesting => _tables;
 
   /// Loads `assets/l10n/ui_<locale>.json` into the static table cache.
   /// Silently no-ops when the asset is missing (uk/en never need one).

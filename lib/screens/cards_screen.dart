@@ -386,7 +386,8 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                   style: const TextStyle(fontSize: 56)),
               const SizedBox(height: 16),
               Text(
-                s('Сподобалось? ${widget.pack.title}', 'Enjoying ${widget.pack.title}?'),
+                s.p('Сподобалось? {title}', 'Enjoying {title}?',
+                    {'title': widget.pack.title}),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 22,
@@ -396,7 +397,9 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
               ),
               const SizedBox(height: 10),
               Text(
-                s('Ще $remaining карток чекають!', '$remaining more cards waiting!'),
+                s.p('Ще {remaining} карток чекають!',
+                    '{remaining} more cards waiting!',
+                    {'remaining': remaining}),
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
               ),
@@ -739,8 +742,13 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      s('Превʼю ${cards.length} з ${allCards.length} карток',
-                          'Preview ${cards.length} of ${allCards.length} cards'),
+                      s.p(
+                          'Превʼю {cardsLength} з {allCardsLength} карток',
+                          'Preview {cardsLength} of {allCardsLength} cards',
+                          {
+                            'cardsLength': cards.length,
+                            'allCardsLength': allCards.length,
+                          }),
                       style: TextStyle(
                         color: widget.pack.color,
                         fontSize: 14,

@@ -14,6 +14,7 @@ import '../services/paywall_flow.dart';
 import '../utils/confetti_overlay_mixin.dart';
 import '../utils/constants.dart';
 import '../utils/design_tokens.dart';
+import '../utils/l10n.dart';
 import '../widgets/bloom_mascot.dart';
 import 'home_screen.dart';
 
@@ -204,7 +205,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       elevation: 0,
                     ),
                     child: Text(
-                      _selectedLang == 'en' ? 'Next →' : 'Далі →',
+                      AppS(_selectedLang)('Далі →', 'Next →'),
                       style: const TextStyle(
                           fontSize: 17, fontWeight: FontWeight.w700),
                     ),
@@ -232,6 +233,7 @@ class _LanguagePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = AppS(selected);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 28),
       child: Column(
@@ -240,7 +242,7 @@ class _LanguagePage extends StatelessWidget {
           Text('🗣️', style: TextStyle(fontSize: screenScale(context) * 64)),
           const SizedBox(height: 20),
           Text(
-            selected == 'en' ? 'Choose card language' : 'Виберіть мову карток',
+            s('Виберіть мову карток', 'Choose card language'),
             textAlign: TextAlign.center,
             style: TextStyle(
                 fontSize: responsiveFont(context, 26),
@@ -248,9 +250,8 @@ class _LanguagePage extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            selected == 'en'
-                ? 'Can be changed per child'
-                : 'Можна змінити окремо для кожної дитини',
+            s('Можна змінити окремо для кожної дитини',
+                'Can be changed per child'),
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 14, color: Colors.grey[500]),
           ),
@@ -362,10 +363,9 @@ class _ChildSetupPage extends StatelessWidget {
     required this.lang,
   });
 
-  bool get _isEn => lang == 'en';
-
   @override
   Widget build(BuildContext context) {
+    final s = AppS(lang);
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 28),
       child: Column(
@@ -382,7 +382,7 @@ class _ChildSetupPage extends StatelessWidget {
           const SizedBox(height: 20),
           Center(
             child: Text(
-              _isEn ? 'Nice to meet you!' : 'Знайомство',
+              s('Знайомство', 'Nice to meet you!'),
               style: TextStyle(
                   fontSize: responsiveFont(context, 26),
                   fontWeight: FontWeight.w800),
@@ -395,8 +395,8 @@ class _ChildSetupPage extends StatelessWidget {
             textCapitalization: TextCapitalization.words,
             style: TextStyle(fontSize: responsiveFont(context, 18)),
             decoration: InputDecoration(
-              labelText: _isEn ? "Child's name" : "Як звати дитину?",
-              hintText: _isEn ? "e.g. Emma" : "Наприклад: Оленка",
+              labelText: s('Як звати дитину?', "Child's name"),
+              hintText: s('Наприклад: Оленка', 'e.g. Emma'),
               counterText: '',
               border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14)),
@@ -405,7 +405,7 @@ class _ChildSetupPage extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           Text(
-            _isEn ? 'Choose an avatar' : 'Оберіть аватар',
+            s('Оберіть аватар', 'Choose an avatar'),
             style: const TextStyle(
                 fontWeight: FontWeight.w600, fontSize: 15),
           ),
@@ -471,30 +471,24 @@ class _AgePage extends StatelessWidget {
     required this.onSelect,
   });
 
-  bool get _isEn => lang == 'en';
-
   String get _title {
+    final s = AppS(lang);
     if (childName.isEmpty) {
-      return _isEn ? 'How old is your little one?' : 'Скільки років малюку?';
+      return s('Скільки років малюку?', 'How old is your little one?');
     }
-    return _isEn ? 'How old is $childName?' : 'Скільки років $childName?';
+    return s.p('Скільки років {childName}?', 'How old is {childName}?',
+        {'childName': childName});
   }
 
   @override
   Widget build(BuildContext context) {
-    final options = _isEn
-        ? const [
-            (1, '1–2', 'years'),
-            (2, '2–3', 'years'),
-            (3, '3–4', 'years'),
-            (4, '4–5', 'years'),
-          ]
-        : const [
-            (1, '1–2', 'роки'),
-            (2, '2–3', 'роки'),
-            (3, '3–4', 'роки'),
-            (4, '4–5', 'років'),
-          ];
+    final s = AppS(lang);
+    final options = [
+      (1, '1–2', s('роки', 'years')),
+      (2, '2–3', s('роки', 'years')),
+      (3, '3–4', s('роки', 'years')),
+      (4, '4–5', s('років', 'years')),
+    ];
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 28),
@@ -512,9 +506,8 @@ class _AgePage extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            _isEn
-                ? "We'll pick the right cards for their age"
-                : 'Підберемо картки відповідно до віку',
+            s('Підберемо картки відповідно до віку',
+                "We'll pick the right cards for their age"),
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 14, color: Colors.grey[500]),
           ),
@@ -751,7 +744,7 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
       children: [
         _buildContent(),
         if (_celebrating) _CelebrationOverlay(
-          isEn: _isEn,
+          lang: widget.lang,
           childName: widget.childName,
           onContinue: widget.onComplete,
         ),
@@ -797,9 +790,8 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
           _ProgressDots(total: _cards.length, current: _currentIndex),
           const SizedBox(height: 14),
           Text(
-            _isEn
-                ? 'Tap the card to hear the word!'
-                : 'Натисни на картку, щоб почути слово!',
+            AppS(widget.lang)('Натисни на картку, щоб почути слово!',
+                'Tap the card to hear the word!'),
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 14, color: Colors.grey[600]),
           ),
@@ -810,13 +802,13 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
   }
 
   String _bubbleText() {
+    final s = AppS(widget.lang);
     final name = widget.childName;
-    if (_isEn) {
-      final greeting = name.isEmpty ? 'Hi, friend!' : 'Hi, $name!';
-      return "$greeting I'm Bloom. Tap the card!";
-    }
-    final greeting = name.isEmpty ? 'Привіт, друже!' : 'Привіт, $name!';
-    return '$greeting Я — Зайчик. Натисни на картку!';
+    final greeting = name.isEmpty
+        ? s('Привіт, друже!', 'Hi, friend!')
+        : s.p('Привіт, {name}!', 'Hi, {name}!', {'name': name});
+    return s.p('{greeting} Я — Зайчик. Натисни на картку!',
+        "{greeting} I'm Bloom. Tap the card!", {'greeting': greeting});
   }
 }
 
@@ -977,12 +969,12 @@ class _ProgressDots extends StatelessWidget {
 }
 
 class _CelebrationOverlay extends ConsumerStatefulWidget {
-  final bool isEn;
+  final String lang;
   final String childName;
   final VoidCallback onContinue;
 
   const _CelebrationOverlay({
-    required this.isEn,
+    required this.lang,
     required this.childName,
     required this.onContinue,
   });
@@ -1010,13 +1002,14 @@ class _CelebrationOverlayState extends ConsumerState<_CelebrationOverlay>
 
   @override
   Widget build(BuildContext context) {
+    final s = AppS(widget.lang);
     final name = widget.childName;
-    final title = widget.isEn
-        ? (name.isEmpty ? 'You did it! 🎉' : 'You did it, $name! 🎉')
-        : (name.isEmpty ? 'Молодець! 🎉' : 'Молодець, $name! 🎉');
-    final subtitle = widget.isEn
-        ? 'You learned 3 new words!'
-        : 'Ти вивчив 3 нових слова!';
+    final title = name.isEmpty
+        ? s('Молодець! 🎉', 'You did it! 🎉')
+        : s.p('Молодець, {name}! 🎉', 'You did it, {name}! 🎉',
+            {'name': name});
+    final subtitle =
+        s('Ти вивчив 3 нових слова!', 'You learned 3 new words!');
 
     return Positioned.fill(
       child: ColoredBox(
@@ -1073,7 +1066,7 @@ class _CelebrationOverlayState extends ConsumerState<_CelebrationOverlay>
                         elevation: 0,
                       ),
                       child: Text(
-                        widget.isEn ? 'Continue →' : 'Далі →',
+                        s('Далі →', 'Continue →'),
                         style: TextStyle(
                             fontSize: responsiveFont(context, 17),
                             fontWeight: FontWeight.w700),

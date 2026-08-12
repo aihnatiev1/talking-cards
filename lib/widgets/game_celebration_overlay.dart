@@ -81,7 +81,7 @@ class _GameCelebrationOverlay extends StatelessWidget {
     final name = childName.trim();
     final headline = name.isEmpty
         ? s('Молодець!', 'Great job!')
-        : s('Молодець, $name!', 'Great job, $name!');
+        : s.p('Молодець, {name}!', 'Great job, {name}!', {'name': name});
 
     return Stack(
       children: [

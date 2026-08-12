@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/pack_model.dart';
 import '../utils/design_tokens.dart';
+import '../utils/l10n.dart';
 
 /// "Continue where you left off" hero tile. Visually mirrors [CardOfDayHero]
 /// so the home row stays consistent when it swaps in.
@@ -128,7 +129,8 @@ class _ContinueHeroState extends State<ContinueHero>
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
-                              widget.isEn ? '▶ Continue' : '▶ Продовжити',
+                              AppS(widget.isEn ? 'en' : 'uk')(
+                                  '▶ Продовжити', '▶ Continue'),
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,

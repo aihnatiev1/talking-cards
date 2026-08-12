@@ -34,18 +34,25 @@ class _StopInfo {
   });
 }
 
-List<_StopInfo> _buildStops(bool isEn) => [
-  _StopInfo(task: QuestTask.listenCardOfDay, emoji: '👂',
-      label: isEn ? 'Listen!' : 'Послухай!', color: const Color(0xFFFF7043)),
-  _StopInfo(task: QuestTask.viewCards3, emoji: '🎴',
-      label: isEn ? 'Find 3\ncards!' : 'Знайди 3\nкартки!', color: const Color(0xFF42A5F5)),
-  _StopInfo(task: QuestTask.playQuiz, emoji: '🎵',
-      label: isEn ? 'Guess\nthe word!' : 'Вгадай\nзвук!', color: const Color(0xFFAB47BC)),
-  _StopInfo(task: QuestTask.viewCards5, emoji: '⭐',
-      label: isEn ? '5 more\ncards!' : 'Ще 5\nкарток!', color: const Color(0xFFFFCA28)),
-  _StopInfo(task: QuestTask.reviewOldCard, emoji: '🔁',
-      label: isEn ? 'Repeat\nafter me!' : 'Повтори\nза мною!', color: const Color(0xFF26A69A)),
-];
+List<_StopInfo> _buildStops(String lang) {
+  final s = AppS(lang);
+  return [
+    _StopInfo(task: QuestTask.listenCardOfDay, emoji: '👂',
+        label: s('Послухай!', 'Listen!'), color: const Color(0xFFFF7043)),
+    _StopInfo(task: QuestTask.viewCards3, emoji: '🎴',
+        label: s('Знайди 3\nкартки!', 'Find 3\ncards!'),
+        color: const Color(0xFF42A5F5)),
+    _StopInfo(task: QuestTask.playQuiz, emoji: '🎵',
+        label: s('Вгадай\nзвук!', 'Guess\nthe word!'),
+        color: const Color(0xFFAB47BC)),
+    _StopInfo(task: QuestTask.viewCards5, emoji: '⭐',
+        label: s('Ще 5\nкарток!', '5 more\ncards!'),
+        color: const Color(0xFFFFCA28)),
+    _StopInfo(task: QuestTask.reviewOldCard, emoji: '🔁',
+        label: s('Повтори\nза мною!', 'Repeat\nafter me!'),
+        color: const Color(0xFF26A69A)),
+  ];
+}
 
 // Stop positions — snake path left→right→left
 const _stopPositions = [
@@ -117,9 +124,8 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
     final done = quest.doneCount;
     final total = quest.totalCount;
     final lang = ref.read(languageProvider);
-    final isEn = lang == 'en';
     final s = AppS(lang);
-    final stops = _buildStops(isEn);
+    final stops = _buildStops(lang);
 
     // Restore unlocked card/pack from persisted IDs
     CardModel? rewardCard;
@@ -266,7 +272,8 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
         Row(
           children: [
             Text(
-              s('$done з $total зупинок', '$done of $total stops'),
+              s.p('{done} з {total} зупинок', '{done} of {total} stops',
+                  {'done': done, 'total': total}),
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,

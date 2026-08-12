@@ -114,8 +114,13 @@ class StatsScreen extends ConsumerWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              s('$seenCards з $totalCards карток переглянуто',
-                                '$seenCards of $totalCards cards viewed'),
+                              s.p(
+                                  '{seenCards} з {totalCards} карток переглянуто',
+                                  '{seenCards} of {totalCards} cards viewed',
+                                  {
+                                    'seenCards': seenCards,
+                                    'totalCards': totalCards,
+                                  }),
                               style: const TextStyle(
                                 fontSize: 13,
                                 color: Colors.white70,
@@ -181,7 +186,9 @@ class StatsScreen extends ConsumerWidget {
                             style: TextStyle(fontSize: 28)),
                         const SizedBox(height: 6),
                         Text(
-                          s('~$approxMinutes хв навчання', '~$approxMinutes min learning'),
+                          s.p('~{approxMinutes} хв навчання',
+                              '~{approxMinutes} min learning',
+                              {'approxMinutes': approxMinutes}),
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -189,7 +196,9 @@ class StatsScreen extends ConsumerWidget {
                           ),
                         ),
                         Text(
-                          s('$totalViews переглядів карток', '$totalViews card views'),
+                          s.p('{totalViews} переглядів карток',
+                              '{totalViews} card views',
+                              {'totalViews': totalViews}),
                           style: TextStyle(
                               fontSize: 13, color: Colors.grey[600]),
                         ),

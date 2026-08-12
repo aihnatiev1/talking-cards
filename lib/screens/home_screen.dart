@@ -69,7 +69,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final isDefaultName = name.isEmpty || name == 'Малюк' || name == 'Kid';
     final greeting = isDefaultName
         ? s('Привіт!', 'Hello!')
-        : s('Привіт, $name!', 'Hello, $name!');
+        : s.p('Привіт, {name}!', 'Hello, {name}!', {'name': name});
     showDialog(
       context: context,
       builder: (ctx) => Dialog(

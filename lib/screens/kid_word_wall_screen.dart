@@ -171,12 +171,14 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = AppS(isEn ? 'en' : 'uk');
     final title = childName.isNotEmpty
-        ? (isEn ? "$childName's words" : 'Слова $childName')
-        : (isEn ? 'My words' : 'Мої слова');
+        ? s.p('Слова {childName}', "{childName}'s words",
+            {'childName': childName})
+        : s('Мої слова', 'My words');
     final word = isEn
         ? (count == 1 ? 'word' : 'words')
-        : _ukWord(count);
+        : _ukWord(count); // uk grammar helper — stays behavioral for now
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),

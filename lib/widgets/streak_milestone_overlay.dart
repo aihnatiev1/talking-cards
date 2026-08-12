@@ -4,6 +4,7 @@ import '../providers/streak_provider.dart';
 import '../utils/confetti_overlay_mixin.dart';
 import '../utils/constants.dart';
 import '../utils/design_tokens.dart';
+import '../utils/l10n.dart';
 import 'bloom_mascot.dart';
 
 /// Full-screen celebration shown the first time a user crosses a streak
@@ -78,19 +79,20 @@ class _MilestoneDialogState extends State<_MilestoneDialog>
 
   @override
   Widget build(BuildContext context) {
-    final s = widget.isEn;
+    final isEn = widget.isEn;
+    final s = AppS(isEn ? 'en' : 'uk');
     final m = widget.milestone;
-    final daysLabel = s
+    // uk day word is grammar-driven — stays behavioral for now.
+    final daysLabel = isEn
         ? (m.days == 1 ? 'day' : 'days')
         : _ukDaysWord(m.days);
-    final title = s
+    final title = isEn
         ? '${m.days}-day streak!'
         : 'Серія ${m.days} $daysLabel!';
     final subtitle = widget.childName.isNotEmpty
-        ? (s
-            ? 'Awesome job, ${widget.childName}!'
-            : 'Молодець, ${widget.childName}!')
-        : (s ? 'Awesome job!' : 'Молодець!');
+        ? s.p('Молодець, {childName}!', 'Awesome job, {childName}!',
+            {'childName': widget.childName})
+        : s('Молодець!', 'Awesome job!');
 
     return Center(
       child: ScaleTransition(
@@ -194,7 +196,7 @@ class _MilestoneDialogState extends State<_MilestoneDialog>
                       elevation: 0,
                     ),
                     child: Text(
-                      s ? 'Keep going!' : 'Так тримати!',
+                      s('Так тримати!', 'Keep going!'),
                       style: TextStyle(
                         fontSize: responsiveFont(context, 16),
                         fontWeight: FontWeight.w800,

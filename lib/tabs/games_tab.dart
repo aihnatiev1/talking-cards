@@ -15,6 +15,7 @@ import '../screens/repeat_game_screen.dart';
 import '../services/audio_service.dart';
 import '../services/paywall_flow.dart';
 import '../utils/design_tokens.dart';
+import '../utils/l10n.dart';
 
 /// Smooth fade+scale transition for games.
 Route<T> _gameRoute<T>(Widget page) => PageRouteBuilder<T>(
@@ -131,13 +132,15 @@ class _GamesTabState extends ConsumerState<GamesTab> {
   @override
   Widget build(BuildContext context) {
     final packsAsync = ref.watch(packsProvider);
-    final isEn = ref.watch(languageProvider) == 'en';
+    final lang = ref.watch(languageProvider);
+    final isEn = lang == 'en';
+    final s = AppS(lang);
 
     return Scaffold(
       backgroundColor: DT.bgWarm,
       appBar: AppBar(
         title: Text(
-          isEn ? '🎮 Games' : '🎮 Ігри',
+          s('🎮 Ігри', '🎮 Games'),
           style: DT.h1.copyWith(fontSize: 22),
         ),
         backgroundColor: Colors.transparent,
@@ -154,14 +157,14 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                 const Text('🐢', style: TextStyle(fontSize: 64)),
                 const SizedBox(height: 16),
                 Text(
-                  isEn ? 'Oops, didn\'t load' : 'Ой, не завантажилось',
+                  s('Ой, не завантажилось', 'Oops, didn\'t load'),
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton.icon(
                   onPressed: () => ref.invalidate(packsProvider),
                   icon: const Icon(Icons.refresh_rounded),
-                  label: Text(isEn ? 'Try again' : 'Спробувати ще раз'),
+                  label: Text(s('Спробувати ще раз', 'Try again')),
                 ),
               ],
             ),
@@ -186,32 +189,30 @@ class _GamesTabState extends ConsumerState<GamesTab> {
 
           final toddlerGames = <_BigGame>[
             _BigGame(
-              title: isEn ? 'Guess the word' : 'Вгадай звук',
-              subtitle: isEn ? 'Listen and tap the card' : 'Слухай і тисни картку',
+              title: s('Вгадай звук', 'Guess the word'),
+              subtitle: s('Слухай і тисни картку', 'Listen and tap the card'),
               color: DT.sky,
               bg: DT.skyTint,
               thumb: _pickThumb(allCards, skip: 0),
               badge: '🎧',
               onTap: playableCount >= 4 ? () => _openQuiz(allCards) : null,
-              lockedHint: isEn
-                  ? 'Open more cards in Packs first'
-                  : 'Спочатку відкрий більше карток',
+              lockedHint: s('Спочатку відкрий більше карток',
+                  'Open more cards in Packs first'),
             ),
             _BigGame(
-              title: isEn ? 'Find the pair' : 'Знайди пару',
-              subtitle: isEn ? 'Flip cards, match pairs' : 'Відкривай і шукай пари',
+              title: s('Знайди пару', 'Find the pair'),
+              subtitle: s('Відкривай і шукай пари', 'Flip cards, match pairs'),
               color: DT.mint,
               bg: DT.mintTint,
               thumb: _pickThumb(allCards, skip: 5),
               badge: '🧠',
               onTap: playableCount >= 6 ? () => _openMemoryMatch(allCards) : null,
-              lockedHint: isEn
-                  ? 'Open more cards in Packs first'
-                  : 'Спочатку відкрий більше карток',
+              lockedHint: s('Спочатку відкрий більше карток',
+                  'Open more cards in Packs first'),
             ),
             _BigGame(
-              title: isEn ? 'Pop the bubbles' : 'Лопай бульбашки',
-              subtitle: isEn ? 'Pop, pop, pop!' : 'Лоп-лоп-лоп!',
+              title: s('Лопай бульбашки', 'Pop the bubbles'),
+              subtitle: s('Лоп-лоп-лоп!', 'Pop, pop, pop!'),
               color: DT.coral,
               bg: DT.coralTint,
               thumb: _pickThumb(allCards, skip: 9),
@@ -220,30 +221,28 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                   ? () => Navigator.of(context)
                       .push(_gameRoute(const BubblePopScreen()))
                   : null,
-              lockedHint: isEn
-                  ? 'Open more cards in Packs first'
-                  : 'Спочатку відкрий більше карток',
+              lockedHint: s('Спочатку відкрий більше карток',
+                  'Open more cards in Packs first'),
             ),
             _BigGame(
-              title: isEn ? 'Repeat after me' : 'Повтори за мною',
-              subtitle: isEn ? 'Say the word, grown-up taps' : 'Скажи слово, дорослий натискає',
+              title: s('Повтори за мною', 'Repeat after me'),
+              subtitle: s('Скажи слово, дорослий натискає',
+                  'Say the word, grown-up taps'),
               color: DT.peach,
               bg: DT.peachTint,
               thumb: _pickThumb(allCards, skip: 12),
               badge: '🎤',
               onTap: playableCount >= 4 ? () => _openRepeatGame(packs) : null,
-              lockedHint: isEn
-                  ? 'Open more cards in Packs first'
-                  : 'Спочатку відкрий більше карток',
+              lockedHint: s('Спочатку відкрий більше карток',
+                  'Open more cards in Packs first'),
             ),
           ];
 
           final parentGames = <_BigGame>[
             _BigGame(
-              title: isEn ? 'Articulation' : 'Артикуляційна',
-              subtitle: isEn
-                  ? 'Daily tongue & lip workout'
-                  : 'Щоденна гімнастика язика',
+              title: s('Артикуляційна', 'Articulation'),
+              subtitle: s('Щоденна гімнастика язика',
+                  'Daily tongue & lip workout'),
               color: DT.violet,
               bg: DT.violetTint,
               thumb: null,
@@ -268,8 +267,8 @@ class _GamesTabState extends ConsumerState<GamesTab> {
               oppPack != null && !oppPack.isLocked && oppPack.cards.length >= 4;
           final advancedGames = <_BigGame>[
             _BigGame(
-              title: isEn ? 'Odd one out' : 'Знайди зайве',
-              subtitle: isEn ? 'Spot the different one' : 'Знайди не таке, як інші',
+              title: s('Знайди зайве', 'Odd one out'),
+              subtitle: s('Знайди не таке, як інші', 'Spot the different one'),
               color: DT.violet,
               bg: DT.violetTint,
               thumb: _pickThumb(allCards, skip: 20),
@@ -277,25 +276,22 @@ class _GamesTabState extends ConsumerState<GamesTab> {
               onTap: advancedPacks.length >= 2
                   ? () => _openOddOneOut(packs)
                   : null,
-              lockedHint: isEn
-                  ? 'Open at least 2 packs to play'
-                  : 'Відкрій хоча б 2 паки щоб грати',
+              lockedHint: s('Відкрій хоча б 2 паки щоб грати',
+                  'Open at least 2 packs to play'),
             ),
             _BigGame(
-              title: isEn ? 'Opposites' : 'Протилежності',
-              subtitle: isEn ? 'Big↔small, hot↔cold' : 'Великий↔малий, тепло↔холод',
+              title: s('Протилежності', 'Opposites'),
+              subtitle: s('Великий↔малий, тепло↔холод', 'Big↔small, hot↔cold'),
               color: DT.pink,
               bg: DT.pinkTint,
               thumb: oppPack != null ? _pickThumb(oppPack.cards) : null,
               badge: '↔️',
               onTap: oppPlayable ? () => _openOppositeGame(packs) : null,
-              lockedHint: isEn
-                  ? (oppLocked
-                      ? 'Subscribe to unlock Opposites'
-                      : 'Opposites pack is empty')
-                  : (oppLocked
-                      ? 'Розблокуй пак «Протилежності»'
-                      : 'Пак «Протилежності» порожній'),
+              lockedHint: oppLocked
+                  ? s('Розблокуй пак «Протилежності»',
+                      'Subscribe to unlock Opposites')
+                  : s('Пак «Протилежності» порожній',
+                      'Opposites pack is empty'),
               onLockedTap: oppLocked
                   ? () => runPaywallFlow(context, ref)
                   : null,
@@ -306,24 +302,24 @@ class _GamesTabState extends ConsumerState<GamesTab> {
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
             children: [
               _SectionHeader(
-                title: isEn ? 'For little ones' : 'Для малят',
-                subtitle: isEn ? 'ages 1–3' : '1–3 роки',
+                title: s('Для малят', 'For little ones'),
+                subtitle: s('1–3 роки', 'ages 1–3'),
                 emoji: '🧸',
               ),
               const SizedBox(height: 10),
               _GameGrid(games: toddlerGames),
               const SizedBox(height: 22),
               _SectionHeader(
-                title: isEn ? 'For grown-ups' : 'Для батьків',
-                subtitle: isEn ? 'speech therapy' : 'мовленнєва терапія',
+                title: s('Для батьків', 'For grown-ups'),
+                subtitle: s('мовленнєва терапія', 'speech therapy'),
                 emoji: '👨‍👧',
               ),
               const SizedBox(height: 10),
               _GameGrid(games: parentGames),
               const SizedBox(height: 22),
               _SectionHeader(
-                title: isEn ? 'For older kids' : 'Для старших',
-                subtitle: isEn ? 'ages 3+' : '3+',
+                title: s('Для старших', 'For older kids'),
+                subtitle: s('3+', 'ages 3+'),
                 emoji: '🎓',
               ),
               const SizedBox(height: 10),

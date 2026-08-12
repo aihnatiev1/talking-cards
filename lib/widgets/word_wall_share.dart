@@ -6,6 +6,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../models/card_model.dart';
 import '../utils/constants.dart';
+import '../utils/l10n.dart';
 import 'share_progress_card.dart' show renderWidgetToImage;
 
 const _storeUrl = 'https://aihnatiev1.github.io/talking-cards/';
@@ -29,9 +30,14 @@ Future<void> shareWordWall({
 
   final count = learnedCards.length;
   final preview = learnedCards.take(12).toList();
-  final fallbackText = isEn
-      ? '$childName has learned $count words with FirstWords Cards! 🗣️\nDownload free: $_storeUrl'
-      : '$childName вже вивчає слова з Картками-розмовлялками! 🗣️\nВивчено: $count\nСкачай безкоштовно: $_storeUrl';
+  final s = AppS(isEn ? 'en' : 'uk');
+  final fallbackText = s.p(
+    '{childName} вже вивчає слова з Картками-розмовлялками! 🗣️\n'
+        'Вивчено: {count}\nСкачай безкоштовно: {_storeUrl}',
+    '{childName} has learned {count} words with FirstWords Cards! 🗣️\n'
+        'Download free: {_storeUrl}',
+    {'childName': childName, 'count': count, '_storeUrl': _storeUrl},
+  );
 
   try {
     final widget = WordWallShareContent(
@@ -82,6 +88,7 @@ class WordWallShareContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = AppS(isEn ? 'en' : 'uk');
     return Container(
       width: 340,
       padding: const EdgeInsets.all(24),
@@ -97,7 +104,8 @@ class WordWallShareContent extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            isEn ? "$childName's Word Wall" : 'Слова, які знає $childName',
+            s.p('Слова, які знає {childName}', "{childName}'s Word Wall",
+                {'childName': childName}),
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 18,
@@ -117,9 +125,9 @@ class WordWallShareContent extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            isEn
-                ? (learnedCount == 1 ? 'word learned' : 'words learned')
-                : 'вивчених слів',
+            learnedCount == 1
+                ? s('вивчених слів', 'word learned')
+                : s('вивчених слів', 'words learned'),
             style: const TextStyle(
               fontSize: 14,
               color: Colors.white,
@@ -143,9 +151,8 @@ class WordWallShareContent extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               color: Colors.white.withValues(alpha: 0.2),
               child: Text(
-                isEn
-                    ? '📲 Download free\nApp Store · Google Play'
-                    : '📲 Скачай безкоштовно\nApp Store та Google Play',
+                s('📲 Скачай безкоштовно\nApp Store та Google Play',
+                    '📲 Download free\nApp Store · Google Play'),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 12,

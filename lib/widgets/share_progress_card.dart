@@ -8,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../services/analytics_service.dart';
 import '../utils/constants.dart';
+import '../utils/l10n.dart';
 import '../utils/uk_grammar.dart';
 
 /// Universal "get the app" link. Served by a small landing page on our
@@ -74,9 +75,13 @@ Future<void> shareProgress({
 
     await Share.shareXFiles(
       [XFile(file.path)],
-      text: isEn
-          ? 'My child is learning words with FirstWords Cards! 🗣️\nDownload free: $_storeUrl'
-          : 'Мій малюк вивчає слова з Картками-розмовлялками! 🗣️\nСкачай безкоштовно: $_storeUrl',
+      text: AppS(isEn ? 'en' : 'uk').p(
+        'Мій малюк вивчає слова з Картками-розмовлялками! 🗣️\n'
+            'Скачай безкоштовно: {_storeUrl}',
+        'My child is learning words with FirstWords Cards! 🗣️\n'
+            'Download free: {_storeUrl}',
+        {'_storeUrl': _storeUrl},
+      ),
       sharePositionOrigin: sharePositionOrigin,
     );
   } catch (e, st) {
@@ -84,11 +89,13 @@ Future<void> shareProgress({
     // Last resort: text share (respects current language).
     try {
       await Share.share(
-        isEn
-          ? 'My child is learning words with FirstWords Cards! 🗣️\n'
-            'Download free: $_storeUrl'
-          : 'Мій малюк вивчає слова з Картками-розмовлялками! 🗣️\n'
-            'Скачай безкоштовно: $_storeUrl',
+        AppS(isEn ? 'en' : 'uk').p(
+          'Мій малюк вивчає слова з Картками-розмовлялками! 🗣️\n'
+              'Скачай безкоштовно: {_storeUrl}',
+          'My child is learning words with FirstWords Cards! 🗣️\n'
+              'Download free: {_storeUrl}',
+          {'_storeUrl': _storeUrl},
+        ),
         sharePositionOrigin: sharePositionOrigin,
       );
     } catch (_) {}

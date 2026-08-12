@@ -114,9 +114,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     final learned = _learnedCount;
     if (learned >= _minLearnedForAnchor) {
       final who = hasName ? name : s('Ваш малюк', 'Your child');
-      return s(
-        '$who вже знає $learned ${wordWord(learned)}!',
-        '$who already knows $learned words!',
+      return s.p(
+        '{who} вже знає {learned} {wordWord}!',
+        '{who} already knows {learned} words!',
+        {'who': who, 'learned': learned, 'wordWord': wordWord(learned)},
       );
     }
 
@@ -130,10 +131,11 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     const ages = {1: '1–2', 2: '2–3', 3: '3–4', 4: '4–5'};
     final age = ages[profile?.level ?? 0];
     if (age == null) {
-      return s('План розвитку: $name', "$name's learning plan");
+      return s.p(
+          'План розвитку: {name}', "{name}'s learning plan", {'name': name});
     }
-    return s('План розвитку: $name ($age р.)',
-        "$name's learning plan (age $age)");
+    return s.p('План розвитку: {name} ({age} р.)',
+        "{name}'s learning plan (age {age})", {'name': name, 'age': age});
   }
 
   Future<void> _purchase() async {
@@ -351,9 +353,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      s(
-                        '3 дні безкоштовно, потім ${plans[_selectedPlan].price}${plans[_selectedPlan].period} • Скасувати будь-коли',
-                        '3 days free, then ${plans[_selectedPlan].price}${plans[_selectedPlan].period} • Cancel anytime',
+                      s.p(
+                        '3 дні безкоштовно, потім {price}{period} • Скасувати будь-коли',
+                        '3 days free, then {price}{period} • Cancel anytime',
+                        {
+                          'price': plans[_selectedPlan].price,
+                          'period': plans[_selectedPlan].period,
+                        },
                       ),
                       textAlign: TextAlign.center,
                       style: TextStyle(

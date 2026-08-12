@@ -133,7 +133,9 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                 style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 4),
-              Text(s('Версія ${info.version}', 'Version ${info.version}'),
+              Text(
+                  s.p('Версія {version}', 'Version {version}',
+                      {'version': info.version}),
                   style: TextStyle(fontSize: 13, color: Colors.grey[500])),
               const SizedBox(height: 16),
               Text(
@@ -393,6 +395,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
     required Set<String> completedPacks,
     required bool isEn,
   }) {
+    final s = AppS(isEn ? 'en' : 'uk');
     // Recommended pack: first non-locked, non-virtual, non-completed.
     PackModel? recommendedPack;
     for (final p in packs) {
@@ -455,7 +458,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
     final stones = <TodayPlanStone>[
       TodayPlanStone(
         emoji: '🔊',
-        label: isEn ? "Today's Card" : 'Картка дня',
+        label: s('Картка дня', "Today's Card"),
         isDone: listenDone,
         isActive: firstPending == 1,
         onTap: () {
@@ -474,7 +477,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
       ),
       TodayPlanStone(
         emoji: '🃏',
-        label: isEn ? "Today's Pack" : 'Пак дня',
+        label: s('Пак дня', "Today's Pack"),
         isDone: viewDone,
         isActive: firstPending == 2,
         onTap: () {
@@ -489,7 +492,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
       ),
       TodayPlanStone(
         emoji: '🗺️',
-        label: isEn ? 'Daily Adventure' : 'Пригода дня',
+        label: s('Пригода дня', 'Daily Adventure'),
         isDone: playDone,
         isActive: firstPending == 3,
         onTap: () {
@@ -939,7 +942,7 @@ class _TreasureBoxBanner extends ConsumerWidget {
 
     final word = isEn
         ? (count == 1 ? 'word' : 'words')
-        : _ukWord(count);
+        : _ukWord(count); // uk grammar helper — stays behavioral for now
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -977,7 +980,7 @@ class _TreasureBoxBanner extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      isEn ? 'Treasure box' : 'Скарбничка',
+                      AppS(isEn ? 'en' : 'uk')('Скарбничка', 'Treasure box'),
                       style: TextStyle(
                         fontSize: responsiveFont(context, 11),
                         fontWeight: FontWeight.w700,
@@ -1123,9 +1126,9 @@ class _TodayPlanIntroHint extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  isEn
-                      ? 'Finish 3 daily steps to unlock a new card 🎁'
-                      : 'Виконай 3 щоденні кроки і отримай нову картку 🎁',
+                  AppS(isEn ? 'en' : 'uk')(
+                      'Виконай 3 щоденні кроки і отримай нову картку 🎁',
+                      'Finish 3 daily steps to unlock a new card 🎁'),
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,

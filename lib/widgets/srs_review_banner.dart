@@ -80,8 +80,8 @@ class SrsReviewBanner extends ConsumerWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      s('${dueCards.length} карток чекають',
-                          '${dueCards.length} cards waiting'),
+                      s.p('{length} карток чекають', '{length} cards waiting',
+                          {'length': dueCards.length}),
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../utils/constants.dart';
+import '../utils/l10n.dart';
 
 /// Simple parental gate: an addition question written in WORDS (so a
 /// pre-reading child can't parse it) answered on a numeric keypad.
@@ -81,7 +82,7 @@ class _ParentalGateDialogState extends State<_ParentalGateDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final s = widget.isEn;
+    final s = AppS(widget.isEn ? 'en' : 'uk');
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Padding(
@@ -90,7 +91,7 @@ class _ParentalGateDialogState extends State<_ParentalGateDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              s ? 'For parents' : 'Для батьків',
+              s('Для батьків', 'For parents'),
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
             const SizedBox(height: 8),
@@ -129,7 +130,7 @@ class _ParentalGateDialogState extends State<_ParentalGateDialog> {
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
               child: Text(
-                s ? 'Cancel' : 'Скасувати',
+                s('Скасувати', 'Cancel'),
                 style: TextStyle(color: Colors.grey[600]),
               ),
             ),

@@ -243,9 +243,8 @@ class _GuessScreenState extends ConsumerState<GuessScreen>
             const SizedBox(width: 8),
             Flexible(
               child: Text(
-                ref.read(languageProvider) == 'en'
-                    ? 'Guess the word'
-                    : 'Вгадай звук',
+                AppS(ref.read(languageProvider))(
+                    'Вгадай звук', 'Guess the word'),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(

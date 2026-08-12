@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../utils/design_tokens.dart';
+import '../utils/l10n.dart';
 
 /// Compact daily-quest progress tile shown next to [CardOfDayHero].
 ///
@@ -135,7 +136,8 @@ class _TreasureCardState extends State<TreasureCard>
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
-                            widget.isEn ? '🗺️ Quest' : '🗺️ Скарб',
+                            AppS(widget.isEn ? 'en' : 'uk')(
+                                '🗺️ Скарб', '🗺️ Quest'),
                             style: const TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w800,
@@ -149,7 +151,8 @@ class _TreasureCardState extends State<TreasureCard>
                           alignment: Alignment.centerLeft,
                           child: Text(
                             allDone
-                                ? (widget.isEn ? 'Done! 🎉' : 'Готово!')
+                                ? AppS(widget.isEn ? 'en' : 'uk')(
+                                    'Готово!', 'Done! 🎉')
                                 : '${widget.done} / ${widget.total}',
                             maxLines: 1,
                             style: const TextStyle(

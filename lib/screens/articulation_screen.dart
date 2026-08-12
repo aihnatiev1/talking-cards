@@ -626,8 +626,9 @@ class _ExercisePlayerScreenState extends State<_ExercisePlayerScreen>
                 const Text('🎉', style: TextStyle(fontSize: 56)),
                 const SizedBox(height: 12),
                 Text(
-                  s('Молодець! Виконано $_maxReps разів!',
-                      'Well done! Completed $_maxReps times!'),
+                  s.p('Молодець! Виконано {_maxReps} разів!',
+                      'Well done! Completed {_maxReps} times!',
+                      {'_maxReps': _maxReps}),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 20,

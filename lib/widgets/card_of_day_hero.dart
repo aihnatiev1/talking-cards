@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/card_model.dart';
 import '../utils/design_tokens.dart';
+import '../utils/l10n.dart';
 
 /// "Card of the Day" hero tile shown on the home screen.
 ///
@@ -120,7 +121,8 @@ class _CardOfDayHeroState extends State<CardOfDayHero>
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
-                              widget.isEn ? '🔊 Card of the day' : '🔊 Картка дня',
+                              AppS(widget.isEn ? 'en' : 'uk')(
+                                  '🔊 Картка дня', '🔊 Card of the day'),
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,

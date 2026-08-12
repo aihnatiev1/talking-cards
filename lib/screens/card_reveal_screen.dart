@@ -526,8 +526,8 @@ class _CardRevealScreenState extends ConsumerState<CardRevealScreen>
               icon: Text(widget.pack.icon,
                   style: const TextStyle(fontSize: 20)),
               label: Text(
-                s('До розділу "${widget.pack.title}"',
-                    'To "${widget.pack.title}"'),
+                s.p('До розділу "{title}"', 'To "{title}"',
+                    {'title': widget.pack.title}),
                 style: const TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 15,

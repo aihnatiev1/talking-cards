@@ -541,8 +541,7 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
 
   String get _childName {
     final p = ref.read(profileProvider).active;
-    final isEn = ref.read(languageProvider) == 'en';
-    final fallback = isEn ? 'Kiddo' : 'Малюк';
+    final fallback = AppS(ref.read(languageProvider))('Малюк', 'Kiddo');
     final n = p?.name.trim();
     return (n == null || n.isEmpty) ? fallback : n;
   }
@@ -966,15 +965,17 @@ class _CelebrationOverlay extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  s('Молодець, $childName!', 'Great job, $childName!'),
+                  s.p('Молодець, {childName}!', 'Great job, {childName}!',
+                      {'childName': childName}),
                   textAlign: TextAlign.center,
                   style: DT.h1.copyWith(fontSize: 22),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  s(
-                    'Ти лопнув $popped бульок!',
-                    'You popped $popped bubbles!',
+                  s.p(
+                    'Ти лопнув {popped} бульок!',
+                    'You popped {popped} bubbles!',
+                    {'popped': popped},
                   ),
                   textAlign: TextAlign.center,
                   style: DT.body.copyWith(fontSize: 16),
