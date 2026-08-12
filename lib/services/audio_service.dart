@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -586,6 +587,69 @@ class AudioService {
 
   /// Whether audio exists for the given key (loaded lazily on first play).
   bool hasSound(String? key) => key != null && _knownKeys.contains(key);
+
+  // --- Reward & guidance layer -------------------------------------------
+  // SFX in assets/audio_sfx/ are tiny synthesized v1 placeholders — swap
+  // for studio sounds when available. Praise and instruction clips must be
+  // recorded with the same voice as the cards; until those files ship the
+  // methods below silently no-op, so call sites are safe to wire now.
+
+  final Map<String, AudioSource> _fx = {};
+  final Set<String> _fxMissing = {};
+  final _rng = Random();
+  int _praiseCounter = 0;
+
+  Future<AudioSource?> _getFx(String assetPath) async {
+    final cached = _fx[assetPath];
+    if (cached != null) return cached;
+    if (_fxMissing.contains(assetPath)) return null;
+    try {
+      // Tiny clips: RAM decode keeps latency at its lowest.
+      final src = await _soloud.loadAsset(assetPath);
+      _fx[assetPath] = src;
+      return src;
+    } catch (_) {
+      _fxMissing.add(assetPath);
+      return null;
+    }
+  }
+
+  /// Fire-and-forget UI sound: 'pop', 'ding' or 'tada'. Plays over the
+  /// current word without touching [stop] state — a bubble pop must never
+  /// cut the narrator off.
+  Future<void> playSfx(String name, {double volume = 1.0}) async {
+    final src = await _getFx('assets/audio_sfx/$name.wav');
+    if (src == null) return;
+    try {
+      await _soloud.play(src, volume: volume);
+    } catch (_) {}
+  }
+
+  /// Random recorded praise clip ("Молодець!" / "Great job!"). Rate-limited
+  /// to every other call so it stays special; pass [always] for game-final
+  /// celebrations. Expects assets/audio_mp3/praise_{uk|en}_1..5.mp3.
+  Future<void> playPraise({required bool isEn, bool always = false}) async {
+    _praiseCounter++;
+    if (!always && _praiseCounter.isOdd) return;
+    final src = await _getFx(
+        'assets/audio_mp3/praise_${isEn ? 'en' : 'uk'}_${_rng.nextInt(5) + 1}.mp3');
+    if (src == null) return;
+    try {
+      await _soloud.play(src);
+    } catch (_) {}
+  }
+
+  /// Per-game voice instruction played on entry ("Лопай бульбашки!").
+  /// Expects assets/audio_mp3/instr_{uk|en}_{gameId}.mp3.
+  Future<void> playInstruction(String gameId, {required bool isEn}) async {
+    final src = await _getFx(
+        'assets/audio_mp3/instr_${isEn ? 'en' : 'uk'}_$gameId.mp3');
+    if (src == null) return;
+    try {
+      stop();
+      _currentHandle = await _soloud.play(src);
+    } catch (_) {}
+  }
 
   SoundHandle? _currentHandle;
 

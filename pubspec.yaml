@@ -53,3 +53,4 @@ flutter:
     - assets/images/
     - assets/images/webp/
     - assets/audio_mp3/
+    - assets/audio_sfx/
