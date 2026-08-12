@@ -1,5 +1,7 @@
-- Games and coloring now say just the word — no extra phrases or verses
-- Rate the app right from the Parent area
-- Performance and stability improvements
+- Games are a celebration now: mascot, confetti and reward sounds
+- Memory Match gets a toddler mode (3 pairs)
+- Faster start-up and lower memory use on older tablets
+- Parent area is protected by a simple grown-ups question
+- Fixes and stability improvements
 
-Thank you for playing!
+Thanks for growing with us!
