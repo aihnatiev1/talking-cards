@@ -10,53 +10,39 @@
 
 ### Суть продукту
 
-Озвучені картки з зображеннями, розбиті на тематичні паки (Фрази, Дії, Протилежності, звукові паки Р/Л/Ш/С/З/Ж/Ч/Щ/Ц, Прикметники тощо). Дитина бачить картку, чує слово + речення. Використовується батьками вдома і логопедами на заняттях.
+Озвучені картки з зображеннями, розбиті на тематичні паки (Фрази, Дії, Протилежності, звукові паки Р/Л/Ш/С/З/Ж/Ч/Щ/Ц, Прикметники тощо) + 10+ міні-ігор, водна розмальовка, щоденний квест. Дитина бачить картку, чує слово + речення. Використовується батьками вдома і логопедами на заняттях.
 
-Поточний стан: **238 карток × 2 аудіо = 453 аудіофайли** в українській версії, англійська в розробці (424 картки).
+Поточний стан: **471 озвучена картка, 21 пак**, обидві мови живі (UA — основна, EN — бренд **FirstWords Cards**). У сторах: iOS (App Store), Android (Google Play).
 
-## Tech Stack
+## Tech Stack (реальний — перевірено 2026-08)
 
-- **Flutter** (latest stable)
-- **Dart** (latest stable)
-- **State management:** Riverpod 2.x з code generation (`@riverpod`)
-- **Routing:** go_router
-- **Локалізація:** `flutter_localizations` + `.arb` файли
-- **Audio:** `just_audio` (кращий за `audioplayers` для складних плейлістів)
-- **Storage:** `shared_preferences` для простих налаштувань, `hive` для прогресу
-- **Animations:** Rive (складні), Lottie (готові), Flutter Animation API (прості)
-- **Тестування:** flutter_test, mocktail, golden_toolkit
+- **Flutter** (stable; Xcode Cloud пінить 3.41.5 для iOS CI)
+- **State management:** ручний Riverpod — `StateNotifierProvider`/`Provider`, **БЕЗ codegen** (`@riverpod`/build_runner не використовуються — не запроваджуй їх для окремої фічі)
+- **Routing:** звичайний `Navigator` + `MaterialPageRoute` (go_router НЕ використовується)
+- **Локалізація:** власний хелпер `AppS` в `lib/utils/l10n.dart` (`s('укр', 'eng')`), НЕ .arb
+- **Audio:** `flutter_soloud` (lazy-load з диска через `AudioService`) + `audio_session`
+- **Storage:** `shared_preferences` (з префіксом профілю через `ProfileService`)
+- **Монетизація:** `in_app_purchase` (Billing 8), SKU: `yearly_premium`, `monthly_premium`, `lifetime_premium`
+- **Analytics:** Firebase Analytics через `AnalyticsService` (COPPA-обережно), Crashlytics
+- **Тестування:** flutter_test (widget/unit; `flutter test test/`)
 
-## Architecture
-
-**Clean Architecture + feature-first structure:**
+## Architecture (реальна — плоска, НЕ clean-arch)
 
 ```
 lib/
-├── core/                    # Загальні утиліти, theme, constants, DI
-│   ├── theme/
-│   ├── router/
-│   ├── constants/
-│   ├── extensions/
-│   └── utils/
-├── features/
-│   ├── packs/              # Список паків карток
-│   │   ├── data/           # Repository, data sources
-│   │   ├── domain/         # Entities, use cases
-│   │   └── presentation/   # Screens, widgets, providers
-│   ├── card_viewer/        # Перегляд картки (слово + аудіо)
-│   ├── settings/
-│   └── paywall/            # Майбутня монетизація
-├── shared/                  # Переіспользуємі widgets
-│   └── widgets/
+├── models/        # CardModel, PackModel, ProfileModel...
+├── providers/     # StateNotifierProvider-и (packs, profile, streak, srs...)
+├── screens/       # Повноекранні екрани (cards, games, paywall, onboarding...)
+├── tabs/          # Таби home_screen: packs_tab, games_tab
+├── services/      # Синглтони: AudioService, PurchaseService, AnalyticsService...
+├── widgets/       # Перевикористовувані віджети (parental_gate, bloom_mascot...)
+├── utils/         # l10n (AppS), constants, design_tokens, міксини
 └── main.dart
 ```
 
-**Правила архітектури:**
-- Feature не знає про інші features напряму
-- Domain layer не залежить від Flutter (pure Dart)
-- Repository повертає domain entities, не DTO
-- UI читає providers, не викликає repo напряму
-- Кожен use case = один клас з `call()` методом
+**Правила:**
+- Синглтон-сервіси зі `instance`, UI читає providers
+- Новий код має відповідати цьому плоскому стилю — НЕ запроваджуй features/-структуру, codegen чи go_router
 
 ## Code Style
 
@@ -84,51 +70,39 @@ lib/
 4. **Мінімум тексту в UI** — іконки + аудіо, текст тільки для батьків у settings
 5. **Яскраві контрастні кольори** — WCAG AAA де можливо
 6. **Анімації при кожній взаємодії** — візуальний зворотний зв'язок обов'язковий
-7. **Parental Gate** перед налаштуваннями/покупками (Apple Kids category вимога)
+7. **Parental Gate** перед батьківською зоною — Є в коді: `lib/widgets/parental_gate.dart` (math-питання словами + keypad); викликати `showParentalGate()` перед будь-якою новою батьківською/зовнішньою дією
 8. **COPPA/GDPR-K compliance** — ніяких трекерів, ніякої реклами в дитячій зоні
 9. **Offline-first** — контент має працювати без інтернету
 10. **60fps навіть на слабких девайсах** — багато батьків дають дітям старі планшети
 
 ## Content Structure
 
-Контент зберігається в structured форматі. Картка має:
+Реальна модель — `lib/models/card_model.dart` (`CardModel`: id, sound/text, `audio` ключ, `image` ім'я webp). Дані карток — JSON у `assets/data/` (uk_cards.json тощо).
 
-```dart
-class Card {
-  final String id;              // наприклад "sr01" (звук Р, картка 1)
-  final String word;            // "РАК"
-  final String? phrase;         // "Рак живе у річці!" (nullable для Adjectives)
-  final String wordAudioPath;   // assets/audio/uk/sr01_word.wav
-  final String? phraseAudioPath;
-  final String imagePath;       // assets/images/sr01.webp
-  final int wordDurationMs;     // 1000 (для таймінгу)
-  final int? phraseDurationMs;  // 2000 або 3000
-  final PackId packId;
-}
-```
-
-Структура asset-ів:
+Структура asset-ів (реальна):
 ```
 assets/
-├── audio/
-│   ├── uk/                   # українська озвучка
-│   └── en/                   # англійська озвучка
-├── images/                   # WebP, різні resolutions
-└── animations/               # Rive/Lottie
+├── audio_mp3/     # ВСЯ озвучка (uk + en, ~923 mp3) + praise_/instr_ кліпи
+├── audio_sfx/     # SFX винагороди: pop/ding/tada.wav
+├── images/webp/   # ілюстрації карток (1 файл на картку, спільні для мов)
+└── data/          # JSON карток/паків
 ```
+
+Аудіо-ключі мапляться в `AudioService._audioMap`; playWordOnly ріже до слова за `assets/data/audio_word_lengths.json`. Аудіо ВЖЕ lazy-load'иться з диска — не повертай eager precache.
 
 ## Publishing Context
 
-- **Apple Developer:** аккаунт є, проходили rejection по Terms of Use/EULA (вирішено)
-- **Google Play:** ФОП-акаунт, проходили 12-tester/14-day closed testing з фрілансерами з Fiverr
-- **Kids category** — дуже строгий review процес, всі правила виконуємо
+- **App Store:** категорія Education (4+), НЕ Kids category. Бренд EN — FirstWords Cards. Метадані версіонуються у `ios/fastlane/metadata/` (5 локалей: uk, en-US, en-GB, en-AU, en-CA), скріншоти — `ios/fastlane/screenshots/`. Xcode Cloud збирає і заливає білд на push у main (workflow "Default").
+- **Google Play:** ФОП-акаунт; метадані у `android/fastlane/metadata/`.
+- ASC API-доступ налаштований (див. memory `reference_appstore_api`) — версії/метадані/скріншоти/сабміт робляться через API.
 
-## Current Priorities (оновлювати!)
+## Current Priorities (оновлено 2026-08-12)
 
-- Фінальна озвучка 453 укр аудіофайлів (готується у TTS через ElevenLabs)
-- Англійська версія — 424 картки, TTS-safe скрипт готовий
-- Підготовка оновлення для App Store + Google Play
-- Розробка паку "Числа" (в обговоренні)
+- v1.3.0 на App Review (нове ASO: назва/keywords/скріншоти + ігровий overhaul)
+- Записати praise/інструкції через ElevenLabs (`tools/gen_praise_instructions.py` — чекає API-ключ)
+- Нові ціни/SKU: yearly $29.99 / monthly $7.99 / lifetime $59.99 (US); 649/149/1299 грн (UA)
+- Play: залити свіжий AAB + метадані
+- Далі: рекапчур 2 скріншот-слотів (прогрес, профілі), Play Asset Delivery (розмір), weekly parent email
 
 ---
 
@@ -169,22 +143,22 @@ assets/
 ## Commands & Scripts
 
 ```bash
-# Dev
-flutter run --flavor dev
+# Dev (флейворів немає)
+flutter run
 
 # Build release
-flutter build ipa --release
-flutter build appbundle --release
+flutter build ipa --release        # зазвичай робить Xcode Cloud на push у main
+flutter build appbundle --release  # AAB для Play
 
-# Code generation (Riverpod, Freezed, go_router)
-dart run build_runner watch --delete-conflicting-outputs
-
-# Tests
+# Tests + аналіз (мають бути зелені перед комітом)
 flutter test
-flutter test --update-goldens  # оновити golden files
+flutter analyze
 
-# Локалізація
-flutter gen-l10n
+# Стор-скріншоти (Remotion, gitignored marketing/)
+cd marketing && npx remotion still src/index.ts StoreScreenshot out/store-v2/slot-1-en.png --props='{"locale":"en","slot":1}'
+
+# Praise/інструкції озвучка (потрібен ELEVENLABS_API_KEY)
+python3 tools/gen_praise_instructions.py --list-voices
 ```
 
 ## Important Notes for Claude

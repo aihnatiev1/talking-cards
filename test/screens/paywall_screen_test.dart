@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talking_cards/screens/paywall_screen.dart';
 
+/// Widget tests for the current paywall. Firebase isn't initialized in the
+/// test environment — RemoteConfigService falls back to its baked-in
+/// defaults, so RC-driven strings assert the default copy.
 void main() {
   Widget createPaywallApp() {
     return ProviderScope(
@@ -12,72 +15,74 @@ void main() {
     );
   }
 
-  group('PaywallScreen', () {
-    testWidgets('renders title and benefits', (tester) async {
-      await tester.pumpWidget(createPaywallApp());
-      await tester.pumpAndSettle();
+  /// Pumps the paywall and advances past its 3-second close-button delay
+  /// so no timer is left pending at teardown.
+  Future<void> pumpPaywall(WidgetTester tester) async {
+    await tester.pumpWidget(createPaywallApp());
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+  }
 
+  group('PaywallScreen', () {
+    testWidgets('renders headline and benefits', (tester) async {
+      await pumpPaywall(tester);
+
+      // RC-default headline (no child profile in tests → non-personalized)
       expect(find.text('Розблокуй всі картки!'), findsOneWidget);
-      expect(find.textContaining('8 розділів'), findsOneWidget);
-      expect(find.textContaining('234 яскраві картки'), findsOneWidget);
+      expect(find.textContaining('19 розділів'), findsOneWidget);
+      expect(find.textContaining('400+ яскравих карток'), findsOneWidget);
       expect(find.textContaining('Нові розділи'), findsOneWidget);
-      expect(find.textContaining('3 дні безкоштовно'), findsAtLeast(1));
     });
 
-    testWidgets('shows two plan options', (tester) async {
-      await tester.pumpWidget(createPaywallApp());
-      await tester.pumpAndSettle();
+    testWidgets('shows two fallback plan options', (tester) async {
+      await pumpPaywall(tester);
 
-      // Fallback plans when products not loaded
+      // Fallback plans when store products are not loaded
       expect(find.text('Річна'), findsOneWidget);
       expect(find.text('Місячна'), findsOneWidget);
     });
 
     testWidgets('shows yearly badge "Найвигідніше"', (tester) async {
-      await tester.pumpWidget(createPaywallApp());
-      await tester.pumpAndSettle();
+      await pumpPaywall(tester);
 
       expect(find.text('Найвигідніше'), findsOneWidget);
     });
 
-    testWidgets('shows purchase button', (tester) async {
-      await tester.pumpWidget(createPaywallApp());
-      await tester.pumpAndSettle();
+    testWidgets('shows trial CTA and cancel-anytime note', (tester) async {
+      await pumpPaywall(tester);
 
       expect(find.text('Спробувати 3 дні безкоштовно'), findsOneWidget);
+      expect(find.textContaining('Скасувати будь-коли'), findsAtLeast(1));
     });
 
     testWidgets('shows restore purchases button', (tester) async {
-      await tester.pumpWidget(createPaywallApp());
-      await tester.pumpAndSettle();
+      await pumpPaywall(tester);
 
       expect(find.text('Відновити покупки'), findsOneWidget);
     });
 
-    testWidgets('shows "Може пізніше" button', (tester) async {
-      await tester.pumpWidget(createPaywallApp());
-      await tester.pumpAndSettle();
-
-      expect(find.text('Може пізніше'), findsOneWidget);
-    });
-
     testWidgets('shows Terms of Use link', (tester) async {
-      await tester.pumpWidget(createPaywallApp());
-      await tester.pumpAndSettle();
+      await pumpPaywall(tester);
 
       expect(find.text('Умови використання'), findsOneWidget);
     });
 
     testWidgets('shows Privacy Policy link', (tester) async {
-      await tester.pumpWidget(createPaywallApp());
-      await tester.pumpAndSettle();
+      await pumpPaywall(tester);
 
-      expect(find.text('Політика конфіденційності'), findsOneWidget);
+      expect(find.text('Конфіденційність'), findsOneWidget);
     });
 
-    testWidgets('close button exists', (tester) async {
-      await tester.pumpWidget(createPaywallApp());
-      await tester.pumpAndSettle();
+    testWidgets('honest social proof: no fabricated 4.9 rating',
+        (tester) async {
+      await pumpPaywall(tester);
+
+      expect(find.textContaining('4.9'), findsNothing);
+    });
+
+    testWidgets('close button appears after the 3s read delay',
+        (tester) async {
+      await pumpPaywall(tester);
 
       expect(find.byIcon(Icons.close), findsOneWidget);
     });
@@ -106,30 +111,31 @@ void main() {
 
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
+      // Fire the 3s close-button timer scheduled in initState.
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.close));
+      // Invoke the close IconButton directly — its top-right position can
+      // fall outside the tappable area in the small test viewport.
+      final closeButton = tester.widget<IconButton>(
+        find.ancestor(
+          of: find.byIcon(Icons.close),
+          matching: find.byType(IconButton),
+        ),
+      );
+      closeButton.onPressed!();
       await tester.pumpAndSettle();
 
       expect(popped, true);
     });
 
     testWidgets('can select monthly plan', (tester) async {
-      await tester.pumpWidget(createPaywallApp());
-      await tester.pumpAndSettle();
+      await pumpPaywall(tester);
 
-      // Tap on monthly plan
       await tester.tap(find.text('Місячна'));
       await tester.pumpAndSettle();
 
-      // Price text below button should show monthly price
       expect(find.textContaining('/місяць'), findsAtLeast(1));
-    });
-
-    testWidgets('shows star emoji', (tester) async {
-      await tester.pumpWidget(createPaywallApp());
-      await tester.pumpAndSettle();
-
-      expect(find.text('🌟'), findsOneWidget);
     });
   });
 }

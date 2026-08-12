@@ -88,16 +88,19 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   String _headline(AppS s) {
     final profile = ref.watch(profileProvider).active;
     final name = profile?.name.trim() ?? '';
-    if (name.isEmpty) {
+    // 'Малюк' is the unnamed-profile placeholder, not a real name. The
+    // colon phrasing keeps the name in nominative case — no Ukrainian
+    // declension needed for arbitrary names.
+    if (name.isEmpty || name == 'Малюк') {
       return s(RemoteConfigService.instance.paywallTitle,
           'Unlock full potential');
     }
     const ages = {1: '1–2', 2: '2–3', 3: '3–4', 4: '4–5'};
     final age = ages[profile?.level ?? 0];
     if (age == null) {
-      return s('План розвитку для $name', "$name's learning plan");
+      return s('План розвитку: $name', "$name's learning plan");
     }
-    return s('План розвитку для $name ($age р.)',
+    return s('План розвитку: $name ($age р.)',
         "$name's learning plan (age $age)");
   }
 
