@@ -42,6 +42,7 @@ import '../widgets/card_of_day_hero.dart';
 import '../widgets/continue_hero.dart';
 import '../widgets/notification_toggle_tile.dart';
 import '../widgets/pack_grid_card.dart';
+import '../widgets/parental_gate.dart';
 import '../widgets/profile_avatar_chip.dart';
 import '../widgets/streak_chip.dart';
 import '../widgets/streak_milestone_overlay.dart';
@@ -98,9 +99,14 @@ class _PacksTabState extends ConsumerState<PacksTab> {
     await AnalyticsService.instance.logTodayPlanComplete();
   }
 
-  void _openParentArea(BuildContext context) {
-    // Dashboard is view-only stats; no PIN needed. Destructive actions
-    // (profile deletion) still have their own confirmation dialogs.
+  Future<void> _openParentArea(BuildContext context) async {
+    // Parental gate: a worded-math question keeps random toddler taps out
+    // of the parent area (and the review/share actions inside it).
+    final ok = await showParentalGate(
+      context,
+      isEn: ref.read(languageProvider) == 'en',
+    );
+    if (!ok || !context.mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const ParentDashboardScreen()),
     );
