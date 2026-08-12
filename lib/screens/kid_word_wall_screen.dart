@@ -38,7 +38,6 @@ class _KidWordWallScreenState extends ConsumerState<KidWordWallScreen> {
     final packsAsync = ref.watch(packsProvider);
     final profile = ref.watch(profileProvider);
     final lang = ref.watch(languageProvider);
-    final isEn = lang == 'en';
     final s = AppS(lang);
     final childName = profile.active?.name ?? '';
 
@@ -83,7 +82,7 @@ class _KidWordWallScreenState extends ConsumerState<KidWordWallScreen> {
               .toList();
 
           if (learned.isEmpty) {
-            return _emptyState(context, isEn, s);
+            return _emptyState(context, s);
           }
 
           return CustomScrollView(
@@ -92,7 +91,7 @@ class _KidWordWallScreenState extends ConsumerState<KidWordWallScreen> {
                 child: _Header(
                   childName: childName,
                   count: learned.length,
-                  isEn: isEn,
+                  lang: lang,
                 ),
               ),
               SliverPadding(
@@ -121,7 +120,7 @@ class _KidWordWallScreenState extends ConsumerState<KidWordWallScreen> {
     );
   }
 
-  Widget _emptyState(BuildContext context, bool isEn, AppS s) {
+  Widget _emptyState(BuildContext context, AppS s) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -161,22 +160,22 @@ class _KidWordWallScreenState extends ConsumerState<KidWordWallScreen> {
 class _Header extends StatelessWidget {
   final String childName;
   final int count;
-  final bool isEn;
+  final String lang;
 
   const _Header({
     required this.childName,
     required this.count,
-    required this.isEn,
+    required this.lang,
   });
 
   @override
   Widget build(BuildContext context) {
-    final s = AppS(isEn ? 'en' : 'uk');
+    final s = AppS(lang);
     final title = childName.isNotEmpty
         ? s.p('Слова {childName}', "{childName}'s words",
             {'childName': childName})
         : s('Мої слова', 'My words');
-    final word = isEn
+    final word = lang == 'en'
         ? (count == 1 ? 'word' : 'words')
         : _ukWord(count); // uk grammar helper — stays behavioral for now
 

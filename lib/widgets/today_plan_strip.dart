@@ -28,7 +28,7 @@ class TodayPlanStone {
 /// so the strip is backed by [dailyQuestProvider] state (no new state).
 class TodayPlanStrip extends StatelessWidget {
   final List<TodayPlanStone> stones;
-  final bool isEn;
+  final String lang;
   final VoidCallback onViewAll;
 
   /// Tap target for the whole strip when every stone is done. Routes the
@@ -39,14 +39,14 @@ class TodayPlanStrip extends StatelessWidget {
   const TodayPlanStrip({
     super.key,
     required this.stones,
-    required this.isEn,
+    required this.lang,
     required this.onViewAll,
     this.onAllDoneTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final s = AppS(isEn ? 'en' : 'uk');
+    final s = AppS(lang);
     final allDone = stones.every((st) => st.isDone);
     final scale = screenScale(context);
 
@@ -109,7 +109,7 @@ class TodayPlanStrip extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(14, 4, 14, 8),
               child: allDone
-                  ? _CelebrationRow(isEn: isEn)
+                  ? _CelebrationRow(lang: lang)
                   : _StoneRow(stones: stones),
             ),
           ),
@@ -351,9 +351,9 @@ class _StoneCircleState extends State<_StoneCircle>
 }
 
 class _CelebrationRow extends StatelessWidget {
-  final bool isEn;
+  final String lang;
 
-  const _CelebrationRow({required this.isEn});
+  const _CelebrationRow({required this.lang});
 
   @override
   Widget build(BuildContext context) {
@@ -365,7 +365,7 @@ class _CelebrationRow extends StatelessWidget {
           const Text('🎉', style: TextStyle(fontSize: 36, height: 1)),
           const SizedBox(height: 4),
           Text(
-            AppS(isEn ? 'en' : 'uk')('Все готово! Повертайся завтра!',
+            AppS(lang)('Все готово! Повертайся завтра!',
                 'All done today! Come back tomorrow'),
             textAlign: TextAlign.center,
             maxLines: 1,

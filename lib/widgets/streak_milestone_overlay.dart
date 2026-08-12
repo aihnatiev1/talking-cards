@@ -17,7 +17,7 @@ Future<void> showStreakMilestone(
   BuildContext context, {
   required Milestone milestone,
   required String childName,
-  required bool isEn,
+  required String lang,
   required VoidCallback onCelebrated,
 }) async {
   await showDialog<void>(
@@ -27,7 +27,7 @@ Future<void> showStreakMilestone(
     builder: (_) => _MilestoneDialog(
       milestone: milestone,
       childName: childName,
-      isEn: isEn,
+      lang: lang,
     ),
   );
   onCelebrated();
@@ -36,12 +36,12 @@ Future<void> showStreakMilestone(
 class _MilestoneDialog extends StatefulWidget {
   final Milestone milestone;
   final String childName;
-  final bool isEn;
+  final String lang;
 
   const _MilestoneDialog({
     required this.milestone,
     required this.childName,
-    required this.isEn,
+    required this.lang,
   });
 
   @override
@@ -79,14 +79,14 @@ class _MilestoneDialogState extends State<_MilestoneDialog>
 
   @override
   Widget build(BuildContext context) {
-    final isEn = widget.isEn;
-    final s = AppS(isEn ? 'en' : 'uk');
+    final en = widget.lang == 'en';
+    final s = AppS(widget.lang);
     final m = widget.milestone;
     // uk day word is grammar-driven — stays behavioral for now.
-    final daysLabel = isEn
+    final daysLabel = en
         ? (m.days == 1 ? 'day' : 'days')
         : _ukDaysWord(m.days);
-    final title = isEn
+    final title = en
         ? '${m.days}-day streak!'
         : 'Серія ${m.days} $daysLabel!';
     final subtitle = widget.childName.isNotEmpty

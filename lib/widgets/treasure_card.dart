@@ -10,7 +10,7 @@ import '../utils/l10n.dart';
 class TreasureCard extends StatefulWidget {
   final int done;
   final int total;
-  final bool isEn;
+  final String lang;
   final VoidCallback onTap;
 
   const TreasureCard({
@@ -18,7 +18,7 @@ class TreasureCard extends StatefulWidget {
     required this.done,
     required this.total,
     required this.onTap,
-    this.isEn = false,
+    this.lang = 'uk',
   });
 
   @override
@@ -136,7 +136,7 @@ class _TreasureCardState extends State<TreasureCard>
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
-                            AppS(widget.isEn ? 'en' : 'uk')(
+                            AppS(widget.lang)(
                                 '🗺️ Скарб', '🗺️ Quest'),
                             style: const TextStyle(
                               fontSize: 10,
@@ -151,7 +151,7 @@ class _TreasureCardState extends State<TreasureCard>
                           alignment: Alignment.centerLeft,
                           child: Text(
                             allDone
-                                ? AppS(widget.isEn ? 'en' : 'uk')(
+                                ? AppS(widget.lang)(
                                     'Готово!', 'Done! 🎉')
                                 : '${widget.done} / ${widget.total}',
                             maxLines: 1,

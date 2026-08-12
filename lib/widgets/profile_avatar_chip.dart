@@ -18,7 +18,8 @@ class ProfileAvatarChip extends ConsumerWidget {
 
     // Only show chip if more than one profile exists, or the default was renamed
     final showName = active.name != 'Малюк' || profileState.profiles.length > 1;
-    final isEn = active.language == 'en';
+    // Show the flag next to the avatar only for non-default (en) profiles.
+    final showEnFlag = active.language == 'en';
 
     return GestureDetector(
       onTap: () => showProfileSelector(context),
@@ -35,7 +36,7 @@ class ProfileAvatarChip extends ConsumerWidget {
           children: [
             Text(active.avatarEmoji,
                 style: const TextStyle(fontSize: 16)),
-            if (isEn) ...[
+            if (showEnFlag) ...[
               const SizedBox(width: 2),
               const Text('🇬🇧', style: TextStyle(fontSize: 12)),
             ],

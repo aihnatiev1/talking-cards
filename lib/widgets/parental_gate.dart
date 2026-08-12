@@ -13,10 +13,11 @@ import '../utils/l10n.dart';
 /// Kept deliberately friction-light (no PIN to forget) — the goal is to
 /// stop random toddler taps from reaching the parent area, per Apple's
 /// parental-gate guidance for kids-oriented apps.
-Future<bool> showParentalGate(BuildContext context, {required bool isEn}) async {
+Future<bool> showParentalGate(BuildContext context,
+    {required String lang}) async {
   final ok = await showDialog<bool>(
     context: context,
-    builder: (_) => _ParentalGateDialog(isEn: isEn),
+    builder: (_) => _ParentalGateDialog(lang: lang),
   );
   return ok ?? false;
 }
@@ -30,8 +31,8 @@ const _enWords = [
 ];
 
 class _ParentalGateDialog extends StatefulWidget {
-  final bool isEn;
-  const _ParentalGateDialog({required this.isEn});
+  final String lang;
+  const _ParentalGateDialog({required this.lang});
 
   @override
   State<_ParentalGateDialog> createState() => _ParentalGateDialogState();
@@ -57,8 +58,8 @@ class _ParentalGateDialogState extends State<_ParentalGateDialog> {
   }
 
   String get _question {
-    final words = widget.isEn ? _enWords : _ukWords;
-    return widget.isEn
+    final words = widget.lang == 'en' ? _enWords : _ukWords;
+    return widget.lang == 'en'
         ? '${words[_a]} plus ${words[_b]}?'
         : '${words[_a]} плюс ${words[_b]}?';
   }
@@ -82,7 +83,7 @@ class _ParentalGateDialogState extends State<_ParentalGateDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final s = AppS(widget.isEn ? 'en' : 'uk');
+    final s = AppS(widget.lang);
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Padding(

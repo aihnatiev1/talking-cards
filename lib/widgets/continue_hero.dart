@@ -9,14 +9,14 @@ import '../utils/l10n.dart';
 class ContinueHero extends StatefulWidget {
   final PackModel pack;
   final int progress;
-  final bool isEn;
+  final String lang;
   final VoidCallback onTap;
 
   const ContinueHero({
     super.key,
     required this.pack,
     required this.progress,
-    required this.isEn,
+    required this.lang,
     required this.onTap,
   });
 
@@ -129,7 +129,7 @@ class _ContinueHeroState extends State<ContinueHero>
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
-                              AppS(widget.isEn ? 'en' : 'uk')(
+                              AppS(widget.lang)(
                                   '▶ Продовжити', '▶ Continue'),
                               style: TextStyle(
                                 fontSize: 10,

@@ -168,7 +168,7 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
             totalCards:
                 allPacks.fold<int>(0, (s, p) => s + p.cards.length),
             streak: 0,
-            isEn: ref.read(languageProvider) == 'en',
+            lang: ref.read(languageProvider),
             badges: {},
           );
         },
@@ -364,17 +364,12 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
       case QuestTask.playQuiz:
         // GuessScreen calls completeTask(playQuiz) on its own Results screen.
         final allCards = packs.expand((p) => p.cards).toList();
-        final lang = ref.read(languageProvider);
-        // Same sanitation as games_tab: real recorded audio + webp image.
-        final playable = lang == 'en'
-            ? allCards
-                .where((c) =>
-                    c.image != null &&
-                    AudioService.instance.hasSound(c.audioKey))
-                .toList()
-            : allCards
-                .where((c) => c.audioKey != null && c.image != null)
-                .toList();
+        // Same sanitation as games_tab: real recorded audio + webp image
+        // (locale-independent; equivalence pinned in packs_loader_test).
+        final playable = allCards
+            .where((c) =>
+                c.image != null && AudioService.instance.hasSound(c.audioKey))
+            .toList();
         if (playable.length >= 4) {
           Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => GuessScreen(cards: playable)),
@@ -465,7 +460,7 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
                   allPacks.fold<int>(0, (s, p) => s + p.cards.length),
               streak: 0,
               badges: {},
-              isEn: ref.read(languageProvider) == 'en',
+              lang: ref.read(languageProvider),
             );
           },
           onGoToPack: () {

@@ -18,7 +18,7 @@ Future<void> shareWordWall({
   required BuildContext context,
   required String childName,
   required List<CardModel> learnedCards,
-  required bool isEn,
+  required String lang,
 }) async {
   Rect? sharePositionOrigin;
   try {
@@ -30,7 +30,7 @@ Future<void> shareWordWall({
 
   final count = learnedCards.length;
   final preview = learnedCards.take(12).toList();
-  final s = AppS(isEn ? 'en' : 'uk');
+  final s = AppS(lang);
   final fallbackText = s.p(
     '{childName} вже вивчає слова з Картками-розмовлялками! 🗣️\n'
         'Вивчено: {count}\nСкачай безкоштовно: {_storeUrl}',
@@ -44,7 +44,7 @@ Future<void> shareWordWall({
       childName: childName,
       learnedCount: count,
       previewCards: preview,
-      isEn: isEn,
+      lang: lang,
     );
 
     final image = await renderWidgetToImage(widget, 340, context);
@@ -76,19 +76,19 @@ class WordWallShareContent extends StatelessWidget {
   final String childName;
   final int learnedCount;
   final List<CardModel> previewCards;
-  final bool isEn;
+  final String lang;
 
   const WordWallShareContent({
     super.key,
     required this.childName,
     required this.learnedCount,
     required this.previewCards,
-    required this.isEn,
+    required this.lang,
   });
 
   @override
   Widget build(BuildContext context) {
-    final s = AppS(isEn ? 'en' : 'uk');
+    final s = AppS(lang);
     return Container(
       width: 340,
       padding: const EdgeInsets.all(24),

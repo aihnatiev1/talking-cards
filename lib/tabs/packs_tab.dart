@@ -104,7 +104,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
     // of the parent area (and the review/share actions inside it).
     final ok = await showParentalGate(
       context,
-      isEn: ref.read(languageProvider) == 'en',
+      lang: ref.read(languageProvider),
     );
     if (!ok || !context.mounted) return;
     Navigator.of(context).push(
@@ -152,9 +152,8 @@ class _PacksTabState extends ConsumerState<PacksTab> {
               TextButton.icon(
                 onPressed: () {
                   Navigator.of(ctx).pop();
-                  final isEn = ref.read(languageProvider) == 'en';
                   launchUrl(
-                    Uri.parse(isEn
+                    Uri.parse(ref.read(languageProvider) == 'en'
                         ? 'https://aihnatiev1.github.io/talking-cards/privacy-policy-en.html'
                         : 'https://aihnatiev1.github.io/talking-cards/privacy-policy.html'),
                     mode: LaunchMode.externalApplication,
@@ -393,9 +392,9 @@ class _PacksTabState extends ConsumerState<PacksTab> {
     required bool cotdLocked,
     required DailyQuestState questState,
     required Set<String> completedPacks,
-    required bool isEn,
+    required String lang,
   }) {
-    final s = AppS(isEn ? 'en' : 'uk');
+    final s = AppS(lang);
     // Recommended pack: first non-locked, non-virtual, non-completed.
     PackModel? recommendedPack;
     for (final p in packs) {
@@ -547,7 +546,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
 
     return TodayPlanStrip(
       stones: stones,
-      isEn: isEn,
+      lang: lang,
       onViewAll: openQuestMap,
       onAllDoneTap: allDone ? onAllDone : null,
     );
@@ -573,7 +572,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
       _milestoneShowing = true;
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) return;
-        final isEnNow = ref.read(languageProvider) == 'en';
+        final langNow = ref.read(languageProvider);
         final childName =
             ref.read(profileProvider).active?.name ?? '';
         AnalyticsService.instance.logStreakMilestone(pending.days);
@@ -581,7 +580,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
           context,
           milestone: pending,
           childName: childName,
-          isEn: isEnNow,
+          lang: langNow,
           onCelebrated: () => ref
               .read(streakProvider.notifier)
               .markCelebrated(pending.bonusEmoji),
@@ -638,7 +637,6 @@ class _PacksTabState extends ConsumerState<PacksTab> {
         data: (packs) {
           final allCards = packs.expand((p) => p.cards).toList();
           final langMode = ref.read(languageProvider);
-          final isEnMode = langMode == 'en';
           final lastPackId = ref.watch(lastOpenedPackProvider);
           PackModel? continuePack;
           if (lastPackId != null) {
@@ -734,7 +732,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                 _GridItem.pack(
                   PackModel(
                     id: sp.id,
-                    title: sp.localizedTitle(isEnMode),
+                    title: sp.localizedTitle(langMode),
                     icon: sp.icon,
                     color: sp.color,
                     isLocked: false,
@@ -805,7 +803,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                         return ContinueHero(
                           pack: cp,
                           progress: continueProgress,
-                          isEn: isEnMode,
+                          lang: langMode,
                           onTap: () {
                             AnalyticsService.instance
                                 .logContinueHeroTap(cp.id);
@@ -816,7 +814,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                     : cotd != null
                         ? CardOfDayHero(
                             card: cotd,
-                            isEn: isEnMode,
+                            lang: langMode,
                             onTap: () {
                               _showCardOfDayPopup(cotd);
                               ref
@@ -839,7 +837,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                   cotdLocked: cotdLocked,
                   questState: quest,
                   completedPacks: completedPacks,
-                  isEn: isEnMode,
+                  lang: langMode,
                 ),
               ),
 
@@ -847,14 +845,14 @@ class _PacksTabState extends ConsumerState<PacksTab> {
               // session and self-dismisses as soon as the kid taps any stone.
               if (_todayPlanIntroVisible)
                 _TodayPlanIntroHint(
-                  isEn: isEnMode,
+                  lang: langMode,
                   isVisible: quest.completed.isEmpty,
                   onDismiss: _dismissTodayPlanIntro,
                 ),
 
               // Treasure box — kid-facing entry to learned-words collection.
               // Hidden until at least one word is "learned" (SRS reps >= 2).
-              _TreasureBoxBanner(isEn: isEnMode),
+              _TreasureBoxBanner(lang: langMode),
 
               // SRS review entry lives in the grid as the "Повторення"
               // virtual pack — the extra banner here just stacked a third
@@ -934,8 +932,8 @@ class _PacksTabState extends ConsumerState<PacksTab> {
 /// Hidden when the child has zero "learned" cards (SRS reps >= 2) to avoid
 /// teasing an empty treasure box.
 class _TreasureBoxBanner extends ConsumerWidget {
-  final bool isEn;
-  const _TreasureBoxBanner({required this.isEn});
+  final String lang;
+  const _TreasureBoxBanner({required this.lang});
 
   static const _learnedThreshold = 2;
 
@@ -947,7 +945,7 @@ class _TreasureBoxBanner extends ConsumerWidget {
         .length;
     if (count == 0) return const SizedBox.shrink();
 
-    final word = isEn
+    final word = lang == 'en'
         ? (count == 1 ? 'word' : 'words')
         : _ukWord(count); // uk grammar helper — stays behavioral for now
 
@@ -987,7 +985,7 @@ class _TreasureBoxBanner extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      AppS(isEn ? 'en' : 'uk')('Скарбничка', 'Treasure box'),
+                      AppS(lang)('Скарбничка', 'Treasure box'),
                       style: TextStyle(
                         fontSize: responsiveFont(context, 11),
                         fontWeight: FontWeight.w700,
@@ -1098,12 +1096,12 @@ class _CategoryChip extends StatelessWidget {
 /// the [isVisible] flag from the parent), and persists "seen" state once the
 /// fade-out completes so it never reappears.
 class _TodayPlanIntroHint extends StatelessWidget {
-  final bool isEn;
+  final String lang;
   final bool isVisible;
   final VoidCallback onDismiss;
 
   const _TodayPlanIntroHint({
-    required this.isEn,
+    required this.lang,
     required this.isVisible,
     required this.onDismiss,
   });
@@ -1126,7 +1124,7 @@ class _TodayPlanIntroHint extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  AppS(isEn ? 'en' : 'uk')(
+                  AppS(lang)(
                       'Виконай 3 щоденні кроки і отримай нову картку 🎁',
                       'Finish 3 daily steps to unlock a new card 🎁'),
                   style: TextStyle(

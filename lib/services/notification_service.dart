@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:math';
 
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,6 +9,7 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
 import 'analytics_service.dart';
+import 'locale_registry.dart';
 
 class NotificationService {
   NotificationService._();
@@ -29,124 +32,44 @@ class NotificationService {
   /// reminder notification. Splash reads this and routes through paywall.
   bool launchedFromPaywallReminder = false;
 
-  // (title_emoji, body)
-  final _cards = [
-    // Тваринки — звуки
-    ('🐱', 'Кішка каже МЯУ! Повтори разом із малюком!'),
-    ('🐶', 'Собака каже ГАВ-ГАВ! Час для карток!'),
-    ('🐮', 'Корова каже МУ-У! Що ще живе на фермі?'),
-    ('🐷', 'Свинка каже ХРЮ! Пограйте у картки разом!'),
-    ('🐸', 'Жабка каже КВА! Вивчаємо нові слова?'),
-    ('🦁', 'Лев каже Р-Р-Р! Тренуємо звук Р сьогодні?'),
-    ('🐔', 'Курочка каже КО-КО! Нові картки чекають!'),
-    ('🦆', 'Качка каже КРЯ! 5 хвилин — і малюк вивчить нове слово!'),
-    ('🐝', 'Бджілка каже Ж-Ж-Ж! Час гратись з картками!'),
-    ('🚗', 'Машина каже БІ-БІ! Вивчаємо транспорт?'),
-    // Ігри
-    ('🔍', 'Знайди зайве! Чи впорається малюк сьогодні?'),
-    ('🥁', 'КО-РО-ВА — три склади! Пограйте в «Рахуй склади»!'),
-    ('↔️', 'Що протилежне до «ВЕЛИКИЙ»? Пограйте разом!'),
-    ('🎤', 'Повтори за мною: РИБА, РАКЕТА, РУКА! Тренуємо вимову!'),
-    ('🗂️', 'Розклади картки по купках! Нова гра чекає!'),
-    ('🧠', 'Знайди пару! Тренуємо пам\'ять разом із малюком!'),
-    ('🎧', 'Вгадай слово на слух! Вікторина вже відкрита!'),
-    // Логопедичні — звуки
-    ('🦁', 'Звук Р: РАК, РИБА, РАКЕТА! Тренуємо разом!'),
-    ('🦋', 'Звук Л: ЛЕВ, ЛИМОН, ЛІТАК! Грайте зі звуком Л!'),
-    ('🐍', 'Ш-Ш-Ш! Звук Ш: ШАПКА, МИШКА, МАШИНА!'),
-    ('⭐', 'Звук С: СЛОН, СОНЦЕ, СОБАКА! Логопедичний пак відкрито!'),
-    // Дії
-    ('🏃', 'Бігти, стрибати, їсти — вивчаємо дії разом!'),
-    ('💃', 'ТАНЦЮВАТИ, СПІВАТИ, МАЛЮВАТИ — нові слова-дії!'),
-    ('🤗', 'Обіймати, цілувати, допомагати — вчимо добрі дії!'),
-    // Протилежності
-    ('↔️', 'ВЕЛИКИЙ і МАЛЕНЬКИЙ, ДЕНЬ і НІЧ — вчимо протилежності!'),
-    ('🔥', 'ГАРЯЧИЙ чи ХОЛОДНИЙ? Відгадай протилежність!'),
-    // Мотиваційні
-    ('🔥', 'Продовжуйте серію! Малюк вже так добре знає слова!'),
-    ('🌟', 'Щоденні 5 хвилин — і мовлення розвивається!'),
-    ('⭐', 'Маленькі кроки щодня — великий результат!'),
-    ('🏆', 'Ви вже так далеко! Продовжуйте займатись щодня!'),
-    ('💪', 'Сьогодні — нове слово, завтра — впевнена мова!'),
-  ];
+  // ── Copy decks ──────────────────────────────────────────────────────────
+  // All notification copy lives in assets/l10n/notifications_<lang>.json
+  // (daily / winBack / streakSave / paywallReminder decks + title templates,
+  // {streak} placeholder in streakSave). Content-equality with the legacy
+  // hardcoded arrays is pinned in test/services/notification_decks_test.dart.
 
-  // EN mirror of _cards — same thematic proportions: 10 animal sounds,
-  // 7 game invites, 4 speech sounds, 3 actions, 2 opposites, 5 motivational.
-  final _cardsEn = [
-    // Animal sounds
-    ('🐱', 'Cats say MEOW! Say it together with your little one.'),
-    ('🐶', 'Dogs say WOOF-WOOF! Card time with your little one.'),
-    ('🐮', 'Cows say MOO! Who else lives on the farm?'),
-    ('🐷', 'Pigs say OINK! Play a round of cards together.'),
-    ('🐸', 'Frogs say RIBBIT! Ready for new words?'),
-    ('🦁', 'Lions ROAR! A perfect day to learn the R sound.'),
-    ('🐔', 'Hens say CLUCK! New cards are waiting.'),
-    ('🦆', 'Ducks say QUACK! 5 minutes — one new word.'),
-    ('🐝', 'Bees say BUZZ-Z-Z! Time to play with cards.'),
-    ('🚗', 'Cars say BEEP-BEEP! Let\'s learn about transport.'),
-    // Games
-    ('🔍', 'Spot the odd one out! Can your little one do it today?'),
-    ('🥁', 'BA-NA-NA — three syllables! Try the "Count Syllables" game.'),
-    ('↔️', 'What\'s the opposite of BIG? Play together!'),
-    ('🎤', 'Repeat after me: FISH, ROCKET, HAND. Practice speaking!'),
-    ('🗂️', 'Sort the cards into piles! A new game is waiting.'),
-    ('🧠', 'Find the pair! Train memory with your little one.'),
-    ('🎧', 'Guess the word by sound! The quiz is open.'),
-    // Speech sounds
-    ('🦁', 'R sound: RABBIT, ROCKET, RING! Practice together.'),
-    ('🦋', 'L sound: LION, LEMON, LEAF! Play with the L sound.'),
-    ('🐍', 'SH-SH-SH! Sound SH: SHIP, FISH, SHOES!'),
-    ('⭐', 'S sound: SUN, STAR, SNAKE! Speech pack is ready.'),
-    // Actions
-    ('🏃', 'Run, jump, eat — let\'s learn action words together.'),
-    ('💃', 'DANCE, SING, DRAW — fresh action words to try.'),
-    ('🤗', 'Hug, kiss, help — learn kind actions together.'),
-    // Opposites
-    ('↔️', 'BIG and SMALL, DAY and NIGHT — learning opposites.'),
-    ('🔥', 'HOT or COLD? Guess the opposite!'),
-    // Motivational
-    ('🔥', 'Keep the streak going! Your little one knows so many words already.'),
-    ('🌟', 'Daily 5 minutes — and speech keeps growing.'),
-    ('⭐', 'Small steps every day — big results.'),
-    ('🏆', 'You\'ve come so far! Keep practicing every day.'),
-    ('💪', 'A new word today — confident speech tomorrow.'),
-  ];
+  Map<String, dynamic>? _decks;
+  String? _decksLang;
 
-  // Win-back copy (T+48h inactivity).
-  final _winBackUk = [
-    ('👋', 'Скучили за картками! 3 хвилини — і нове слово вивчено.'),
-    ('🎈', 'Час для карток! Повертайся до малюка сьогодні.'),
-    ('📚', 'Нові картки чекають на малюка. Загляньте на 5 хвилин!'),
-    ('🌈', 'Пам\'ятаєш своїх друзів-тваринок? Вони скучили!'),
-    ('✨', 'Маленький перерив — і знову до нових слів!'),
-    ('🧸', 'Картки сумують без малюка. Пограємо сьогодні?'),
-    ('💬', 'Одне нове слово щодня — велика різниця за місяць.'),
-  ];
+  /// Loads (and caches) the deck manifest for [lang], falling back to the
+  /// English file for locales without one, and to null when no asset is
+  /// available at all (schedulers then skip silently).
+  Future<Map<String, dynamic>?> _loadDecks(String lang) async {
+    if (_decksLang == lang && _decks != null) return _decks;
+    for (final candidate in [lang, 'en']) {
+      try {
+        final raw = await rootBundle
+            .loadString('assets/l10n/notifications_$candidate.json');
+        _decks = json.decode(raw) as Map<String, dynamic>;
+        _decksLang = lang;
+        return _decks;
+      } catch (_) {
+        // Try the next candidate.
+      }
+    }
+    return null;
+  }
 
-  final _winBackEn = [
-    ('👋', 'We miss you! 3 minutes of cards — one new word learned.'),
-    ('🎈', 'Shall we learn a word with your little one today?'),
-    ('📚', 'Your cards are waiting. 5 minutes makes a difference.'),
-    ('🌈', 'Remember your animal friends? They miss you!'),
-    ('✨', 'A small break — and back to new words together!'),
-    ('🧸', 'The cards miss your little one. Shall we play today?'),
-    ('💬', 'One new word a day — a big difference in a month.'),
-  ];
-
-  // Streak-save copy (day X+1 at 20:00). Must interpolate currentStreak.
-  List<(String, String)> _streakSaveUk(int currentStreak) => [
-        ('🔥', 'Серія $currentStreak днів — не втрачай! 5 хвилин на картки сьогодні?'),
-        ('⭐', '$currentStreak днів поспіль — чудово! Одна картка — і серія жива.'),
-        ('🎯', 'Малюк на серії $currentStreak днів. Трохи карток перед сном?'),
-        ('🏅', 'Не розривай серію $currentStreak днів — одна картка рятує день.'),
-      ];
-
-  List<(String, String)> _streakSaveEn(int currentStreak) => [
-        ('🔥', 'Keep the $currentStreak-day streak alive! Just 5 minutes of cards.'),
-        ('⭐', '$currentStreak days in a row! One card keeps the streak going.'),
-        ('🎯', 'Your little one is on a $currentStreak-day roll. A quick card before bed?'),
-        ('🏅', 'Don\'t break your $currentStreak-day streak — one card saves the day.'),
-      ];
+  List<({String emoji, String body})> _deck(
+      Map<String, dynamic> decks, String key) {
+    return [
+      for (final e in decks[key] as List<dynamic>? ?? const [])
+        (
+          emoji: (e as Map<String, dynamic>)['emoji'] as String? ?? '',
+          body: e['body'] as String? ?? '',
+        ),
+    ];
+  }
 
   Future<void> init({String lang = 'uk'}) async {
     tz.initializeTimeZones();
@@ -228,10 +151,9 @@ class NotificationService {
   }
 
   Future<void> _scheduleSeasonalNotifications({required String lang}) async {
-    if (lang == 'en') {
-      // Seasonal packs are UA-only content; skip EN users entirely.
-      return;
-    }
+    // Seasonal packs are UA-only content; the registry capability skips
+    // every other locale (identical to the old `lang == 'en'` early return).
+    if (!LocaleRegistry.instance.capabilities(lang).seasonalPacks) return;
     const seasons = [
       (id: 10, month: 12, day: 1,
        title: '🎄 Новорічний пак відкрився!',
@@ -283,10 +205,18 @@ class NotificationService {
   /// Schedules a one-time soft-paywall reminder 3 days after first launch.
   /// No-op if already scheduled (tracked via SharedPreferences) or if
   /// notifications are disabled. Cancelled when user becomes pro.
-  Future<void> schedulePaywallReminderIfNeeded() async {
+  ///
+  /// Copy comes from the locale deck file — this fixes the old bug where
+  /// the reminder was hardcoded in Ukrainian for every locale.
+  Future<void> schedulePaywallReminderIfNeeded({String lang = 'uk'}) async {
     final prefs = await SharedPreferences.getInstance();
     if (prefs.getBool(_paywallScheduledKey) ?? false) return;
     if (!(prefs.getBool(_enabledKey) ?? true)) return;
+
+    final decks = await _loadDecks(lang);
+    final reminders = decks?['paywallReminder'] as List<dynamic>? ?? const [];
+    if (reminders.isEmpty) return;
+    final reminder = reminders.first as Map<String, dynamic>;
 
     final scheduled =
         tz.TZDateTime.now(tz.local).add(const Duration(days: 3));
@@ -301,8 +231,8 @@ class NotificationService {
 
     await _plugin.zonedSchedule(
       _paywallReminderId,
-      '🎁 Подарунок для нової родини',
-      '3 дні безкоштовно — відкрий 234 картки для розвитку мовлення',
+      reminder['title'] as String? ?? '',
+      reminder['body'] as String? ?? '',
       atElevenAM,
       const NotificationDetails(
         android: AndroidNotificationDetails(
@@ -334,12 +264,12 @@ class NotificationService {
   Future<void> _scheduleDailyNotification({required String lang}) async {
     // Preserve the paywall reminder when re-scheduling daily/seasonal notifs.
     await _plugin.cancel(0);
-    final random = Random();
-    final deck = lang == 'en' ? _cardsEn : _cards;
-    final card = deck[random.nextInt(deck.length)];
-    final title = lang == 'en'
-        ? '${card.$1} Card time!'
-        : '${card.$1} Час для карток!';
+    final decks = await _loadDecks(lang);
+    if (decks == null) return;
+    final deck = _deck(decks, 'daily');
+    if (deck.isEmpty) return;
+    final card = deck[Random().nextInt(deck.length)];
+    final title = '${card.emoji} ${decks['dailyTitle'] as String? ?? ''}';
 
     final now = tz.TZDateTime.now(tz.local);
     var scheduled = tz.TZDateTime(tz.local, now.year, now.month, now.day, 10);
@@ -350,7 +280,7 @@ class NotificationService {
     await _plugin.zonedSchedule(
       0,
       title,
-      card.$2,
+      card.body,
       scheduled,
       const NotificationDetails(
         android: AndroidNotificationDetails(
@@ -376,18 +306,19 @@ class NotificationService {
     await _plugin.cancel(_winBackId);
     if (!(await isEnabled)) return;
 
-    final deck = lang == 'en' ? _winBackEn : _winBackUk;
+    final decks = await _loadDecks(lang);
+    if (decks == null) return;
+    final deck = _deck(decks, 'winBack');
+    if (deck.isEmpty) return;
     final card = deck[Random().nextInt(deck.length)];
-    final title = lang == 'en'
-        ? '${card.$1} Card time!'
-        : '${card.$1} Час для карток!';
+    final title = '${card.emoji} ${decks['dailyTitle'] as String? ?? ''}';
 
     final when = tz.TZDateTime.now(tz.local).add(const Duration(hours: 48));
 
     await _plugin.zonedSchedule(
       _winBackId,
       title,
-      card.$2,
+      card.body,
       when,
       const NotificationDetails(
         android: AndroidNotificationDetails(
@@ -420,18 +351,20 @@ class NotificationService {
     final when =
         tz.TZDateTime(tz.local, now.year, now.month, now.day + 1, 20);
 
-    final deck = lang == 'en'
-        ? _streakSaveEn(currentStreak)
-        : _streakSaveUk(currentStreak);
+    final decks = await _loadDecks(lang);
+    if (decks == null) return;
+    final deck = _deck(decks, 'streakSave');
+    if (deck.isEmpty) return;
     final card = deck[Random().nextInt(deck.length)];
-    final title = lang == 'en'
-        ? '${card.$1} Streak day $currentStreak'
-        : '${card.$1} Серія $currentStreak днів';
+    final streakText = '$currentStreak';
+    final titleTemplate = decks['streakSaveTitle'] as String? ?? '';
+    final title =
+        '${card.emoji} ${titleTemplate.replaceAll('{streak}', streakText)}';
 
     await _plugin.zonedSchedule(
       _streakSaveId,
       title,
-      card.$2,
+      card.body.replaceAll('{streak}', streakText),
       when,
       const NotificationDetails(
         android: AndroidNotificationDetails(

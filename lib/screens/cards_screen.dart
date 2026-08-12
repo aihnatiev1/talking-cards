@@ -271,7 +271,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
       totalCards: packs.fold<int>(0, (s, p) => s + p.cards.length),
       streak: streak.currentStreak,
       badges: streak.unlockedRewards,
-      isEn: ref.read(languageProvider) == 'en',
+      lang: ref.read(languageProvider),
     );
   }
 

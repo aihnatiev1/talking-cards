@@ -11,13 +11,13 @@ import '../utils/l10n.dart';
 class CardOfDayHero extends StatefulWidget {
   final CardModel card;
   final VoidCallback onTap;
-  final bool isEn;
+  final String lang;
 
   const CardOfDayHero({
     super.key,
     required this.card,
     required this.onTap,
-    this.isEn = false,
+    this.lang = 'uk',
   });
 
   @override
@@ -121,7 +121,7 @@ class _CardOfDayHeroState extends State<CardOfDayHero>
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
-                              AppS(widget.isEn ? 'en' : 'uk')(
+                              AppS(widget.lang)(
                                   '🔊 Картка дня', '🔊 Card of the day'),
                               style: TextStyle(
                                 fontSize: 10,

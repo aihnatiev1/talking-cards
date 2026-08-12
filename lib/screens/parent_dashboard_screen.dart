@@ -305,7 +305,6 @@ class _WeeklyTab extends ConsumerWidget {
     final totalWeek =
         chartData.fold(0, (sum, e) => sum + e.value);
     final lang = ref.watch(languageProvider);
-    final isEn = lang == 'en';
     final s = AppS(lang);
 
     final weeklyMsg = totalWeek == 0
@@ -333,7 +332,7 @@ class _WeeklyTab extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 20),
-          ActivityChart(data: chartData, isEn: isEn),
+          ActivityChart(data: chartData, lang: lang),
           const SizedBox(height: 24),
           Text(
             weeklyMsg,
@@ -364,7 +363,6 @@ class _WordsTab extends ConsumerWidget {
     final packsAsync = ref.watch(packsProvider);
     final profile = ref.watch(profileProvider);
     final lang = ref.watch(languageProvider);
-    final isEn = lang == 'en';
     final s = AppS(lang);
     final childName = profile.active?.name ?? s('Малюк', 'Kiddo');
 
@@ -418,12 +416,12 @@ class _WordsTab extends ConsumerWidget {
             _WordWallHeader(
               childName: childName,
               learnedCount: allLearnedCards.length,
-              isEn: isEn,
+              lang: lang,
               onShare: () => shareWordWall(
                 context: context,
                 childName: childName,
                 learnedCards: allLearnedCards,
-                isEn: isEn,
+                lang: lang,
               ),
             ),
             const SizedBox(height: 20),
@@ -481,19 +479,19 @@ class _WordsTab extends ConsumerWidget {
 class _WordWallHeader extends StatelessWidget {
   final String childName;
   final int learnedCount;
-  final bool isEn;
+  final String lang;
   final VoidCallback onShare;
 
   const _WordWallHeader({
     required this.childName,
     required this.learnedCount,
-    required this.isEn,
+    required this.lang,
     required this.onShare,
   });
 
   @override
   Widget build(BuildContext context) {
-    final s = AppS(isEn ? 'en' : 'uk');
+    final s = AppS(lang);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -751,7 +749,6 @@ class _GamesTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(gameStatsProvider);
     final lang = ref.watch(languageProvider);
-    final isEn = lang == 'en';
     final s = AppS(lang);
 
     return statsAsync.when(
@@ -806,7 +803,7 @@ class _GamesTab extends ConsumerWidget {
                   child: _StatCard(
                     emoji: favorite.emoji,
                     label: s('Улюблена гра', 'Favorite game'),
-                    value: isEn ? favorite.labelEn : favorite.labelUk,
+                    value: lang == 'en' ? favorite.labelEn : favorite.labelUk,
                     color: const Color(0xFF7B1FA2),
                   ),
                 ),
@@ -837,7 +834,6 @@ class _GameStatRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasPlays = stat.plays > 0;
-    final isEn = lang == 'en';
     final s = AppS(lang);
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -861,7 +857,7 @@ class _GameStatRow extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                isEn ? stat.labelEn : stat.labelUk,
+                lang == 'en' ? stat.labelEn : stat.labelUk,
                 style: TextStyle(
                   fontSize: responsiveFont(context, 14),
                   fontWeight: FontWeight.w600,
@@ -874,7 +870,7 @@ class _GameStatRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '${stat.plays} ${_playsLabel(stat.plays, isEn)}',
+                    '${stat.plays} ${_playsLabel(stat.plays, lang)}',
                     style: TextStyle(
                       fontSize: responsiveFont(context, 13),
                       fontWeight: FontWeight.w700,
@@ -904,8 +900,8 @@ class _GameStatRow extends StatelessWidget {
     );
   }
 
-  String _playsLabel(int n, bool isEn) {
-    if (isEn) return n == 1 ? 'time' : 'times';
+  String _playsLabel(int n, String lang) {
+    if (lang == 'en') return n == 1 ? 'time' : 'times';
     if (n == 1) return 'раз';
     if (n >= 2 && n <= 4) return 'рази';
     return 'разів';

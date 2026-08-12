@@ -218,7 +218,6 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   @override
   Widget build(BuildContext context) {
     final lang = ref.watch(languageProvider);
-    final isEn = lang == 'en';
     final s = AppS(lang);
     final plans = _buildPlans(s);
     return Scaffold(
@@ -406,13 +405,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                         children: [
                           _legalLink(
                               s('Умови використання', 'Terms of Use'),
-                              isEn
+                              lang == 'en'
                                   ? 'https://aihnatiev1.github.io/talking-cards/terms-en.html'
                                   : 'https://aihnatiev1.github.io/talking-cards/terms.html'),
                           _legalLink('EULA', 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/'),
                           _legalLink(
                               s('Конфіденційність', 'Privacy'),
-                              isEn
+                              lang == 'en'
                                   ? 'https://aihnatiev1.github.io/talking-cards/privacy-policy-en.html'
                                   : 'https://aihnatiev1.github.io/talking-cards/privacy-policy.html'),
                         ],

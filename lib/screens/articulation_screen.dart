@@ -180,7 +180,6 @@ class ArticulationScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final lang = ref.watch(languageProvider);
-    final isEn = lang == 'en';
     final s = AppS(lang);
 
     return Scaffold(
@@ -218,7 +217,7 @@ class ArticulationScreen extends ConsumerWidget {
                 final ex = _exercises[i];
                 return _ExerciseCard(
                   exercise: ex,
-                  isEn: isEn,
+                  lang: lang,
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => _ExercisePlayerScreen(
@@ -239,12 +238,12 @@ class ArticulationScreen extends ConsumerWidget {
 
 class _ExerciseCard extends StatelessWidget {
   final _Exercise exercise;
-  final bool isEn;
+  final String lang;
   final VoidCallback onTap;
 
   const _ExerciseCard({
     required this.exercise,
-    required this.isEn,
+    required this.lang,
     required this.onTap,
   });
 
@@ -266,7 +265,7 @@ class _ExerciseCard extends StatelessWidget {
                 style: const TextStyle(fontSize: 40)),
             const SizedBox(height: 8),
             Text(
-              isEn ? exercise.nameEn : exercise.name,
+              lang == 'en' ? exercise.nameEn : exercise.name,
               style: const TextStyle(
                   fontSize: 14, fontWeight: FontWeight.bold),
             ),

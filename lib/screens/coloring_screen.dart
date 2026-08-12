@@ -245,7 +245,6 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
 
     _done = true;
     final card = _card;
-    final isEn = ref.read(languageProvider) == 'en';
     HapticFeedback.mediumImpact();
     _revealCtrl.animateTo(0.0, curve: Curves.easeOutCubic);
     _incrementCompletedCount();
@@ -259,7 +258,7 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
         AudioService.instance.playWordOnly(
           card.audioKey,
           card.sound,
-          locale: isEn ? 'en-US' : 'uk-UA',
+          locale: ref.read(languageProvider) == 'en' ? 'en-US' : 'uk-UA',
         );
       }
       AnalyticsService.instance.logGameComplete('coloring', 1);

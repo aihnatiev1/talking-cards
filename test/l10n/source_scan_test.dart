@@ -63,6 +63,28 @@ void main() {
             '{placeholder} templates:\n${offenders.join('\n')}');
   });
 
+  test('no isEn identifier anywhere in lib/', () {
+    // Phases 3–5 replaced every `bool isEn` param/local with `String lang`
+    // (behavioral branches use `lang == 'en'` inline). The allowlist is
+    // intentionally EMPTY — a new isEn is always a regression.
+    const allowlist = <String>{};
+    final pattern = RegExp(r'\bisEn\b');
+    final offenders = <String>[];
+
+    for (final file in dartFiles()) {
+      if (allowlist.contains(file.path)) continue;
+      final src = file.readAsStringSync();
+      for (final m in pattern.allMatches(src)) {
+        final line = '\n'.allMatches(src.substring(0, m.start)).length + 1;
+        offenders.add('${file.path}:$line');
+      }
+    }
+
+    expect(offenders, isEmpty,
+        reason: 'isEn found — pass the locale string (lang) instead:\n'
+            '${offenders.join('\n')}');
+  });
+
   test("no AppS(...) call fed by an == 'en' comparison", () {
     final pattern = RegExp(r"AppS\([^)]*==\s*'en'");
     final offenders = <String>[];

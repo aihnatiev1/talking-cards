@@ -109,8 +109,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
   }
 
   void _openOppositeGame(List<PackModel> packs) {
-    final isEn = ref.read(languageProvider) == 'en';
-    final id = isEn ? 'en_opposites' : 'opposites';
+    final id = ref.read(languageProvider) == 'en' ? 'en_opposites' : 'opposites';
     final oppPack = packs.where((p) => p.id == id).firstOrNull;
     if (oppPack == null || oppPack.cards.length < 4) return;
     Navigator.of(context)
@@ -128,7 +127,6 @@ class _GamesTabState extends ConsumerState<GamesTab> {
   Widget build(BuildContext context) {
     final packsAsync = ref.watch(packsProvider);
     final lang = ref.watch(languageProvider);
-    final isEn = lang == 'en';
     final s = AppS(lang);
 
     return Scaffold(
@@ -250,7 +248,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                   p.cards.length >= 4 &&
                   p.cards.any((c) => c.image != null))
               .toList();
-          final oppPackId = isEn ? 'en_opposites' : 'opposites';
+          final oppPackId = lang == 'en' ? 'en_opposites' : 'opposites';
           final oppPack = packs.where((p) => p.id == oppPackId).firstOrNull;
           final oppLocked = oppPack?.isLocked ?? false;
           final oppPlayable =

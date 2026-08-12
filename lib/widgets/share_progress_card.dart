@@ -26,7 +26,7 @@ Future<void> shareProgress({
   required int totalCards,
   required int streak,
   required Set<String> badges,
-  bool isEn = false,
+  String lang = 'uk',
 }) async {
   AnalyticsService.instance.logShareProgress();
   // Get position for iPad popover
@@ -53,7 +53,7 @@ Future<void> shareProgress({
     if (image == null) {
       // Fallback: text-only share
       await Share.share(
-        isEn
+        lang == 'en'
           ? 'My child is learning words with FirstWords Cards! 🗣️\n'
             '⭐ Packs: $completedPacks/$totalPacks\n'
             '🃏 Cards: $seenCards/$totalCards'
@@ -75,7 +75,7 @@ Future<void> shareProgress({
 
     await Share.shareXFiles(
       [XFile(file.path)],
-      text: AppS(isEn ? 'en' : 'uk').p(
+      text: AppS(lang).p(
         'Мій малюк вивчає слова з Картками-розмовлялками! 🗣️\n'
             'Скачай безкоштовно: {_storeUrl}',
         'My child is learning words with FirstWords Cards! 🗣️\n'
@@ -89,7 +89,7 @@ Future<void> shareProgress({
     // Last resort: text share (respects current language).
     try {
       await Share.share(
-        AppS(isEn ? 'en' : 'uk').p(
+        AppS(lang).p(
           'Мій малюк вивчає слова з Картками-розмовлялками! 🗣️\n'
               'Скачай безкоштовно: {_storeUrl}',
           'My child is learning words with FirstWords Cards! 🗣️\n'

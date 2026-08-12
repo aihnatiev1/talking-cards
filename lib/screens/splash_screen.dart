@@ -92,15 +92,6 @@ class _SplashScreenState extends State<SplashScreen>
       guard('localeRegistry', () => LocaleRegistry.instance.load()),
     ]);
 
-    // Schedule day-3 soft paywall reminder for non-pro users; cancel for pro.
-    await guard('paywallReminder', () async {
-      if (PurchaseService.instance.isPro.value) {
-        await NotificationService.instance.cancelPaywallReminder();
-      } else {
-        await NotificationService.instance.schedulePaywallReminderIfNeeded();
-      }
-    });
-
     await guard('deepLink', () async {
       _deepLink = await EngageService.instance.getInitialLink();
     });
@@ -126,6 +117,18 @@ class _SplashScreenState extends State<SplashScreen>
     } catch (_) {}
     // UI translation table for locales beyond uk/en — silent no-op today.
     await guard('l10n', () => AppS.preload(activeLang));
+
+    // Schedule day-3 soft paywall reminder for non-pro users; cancel for
+    // pro. Runs after the language read so the reminder copy is localized.
+    await guard('paywallReminder', () async {
+      if (PurchaseService.instance.isPro.value) {
+        await NotificationService.instance.cancelPaywallReminder();
+      } else {
+        await NotificationService.instance
+            .schedulePaywallReminderIfNeeded(lang: activeLang);
+      }
+    });
+
     final onboardingDone = prefs.getBool('onboarding_done') ?? false;
     if (!onboardingDone) {
       // Existing user upgrading from <1.1.0: they have real pack progress

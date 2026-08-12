@@ -1,0 +1,184 @@
+{
+  "dailyTitle": "Card time!",
+  "daily": [
+    {
+      "emoji": "🐱",
+      "body": "Cats say MEOW! Say it together with your little one."
+    },
+    {
+      "emoji": "🐶",
+      "body": "Dogs say WOOF-WOOF! Card time with your little one."
+    },
+    {
+      "emoji": "🐮",
+      "body": "Cows say MOO! Who else lives on the farm?"
+    },
+    {
+      "emoji": "🐷",
+      "body": "Pigs say OINK! Play a round of cards together."
+    },
+    {
+      "emoji": "🐸",
+      "body": "Frogs say RIBBIT! Ready for new words?"
+    },
+    {
+      "emoji": "🦁",
+      "body": "Lions ROAR! A perfect day to learn the R sound."
+    },
+    {
+      "emoji": "🐔",
+      "body": "Hens say CLUCK! New cards are waiting."
+    },
+    {
+      "emoji": "🦆",
+      "body": "Ducks say QUACK! 5 minutes — one new word."
+    },
+    {
+      "emoji": "🐝",
+      "body": "Bees say BUZZ-Z-Z! Time to play with cards."
+    },
+    {
+      "emoji": "🚗",
+      "body": "Cars say BEEP-BEEP! Let's learn about transport."
+    },
+    {
+      "emoji": "🔍",
+      "body": "Spot the odd one out! Can your little one do it today?"
+    },
+    {
+      "emoji": "🥁",
+      "body": "BA-NA-NA — three syllables! Try the \"Count Syllables\" game."
+    },
+    {
+      "emoji": "↔️",
+      "body": "What's the opposite of BIG? Play together!"
+    },
+    {
+      "emoji": "🎤",
+      "body": "Repeat after me: FISH, ROCKET, HAND. Practice speaking!"
+    },
+    {
+      "emoji": "🗂️",
+      "body": "Sort the cards into piles! A new game is waiting."
+    },
+    {
+      "emoji": "🧠",
+      "body": "Find the pair! Train memory with your little one."
+    },
+    {
+      "emoji": "🎧",
+      "body": "Guess the word by sound! The quiz is open."
+    },
+    {
+      "emoji": "🦁",
+      "body": "R sound: RABBIT, ROCKET, RING! Practice together."
+    },
+    {
+      "emoji": "🦋",
+      "body": "L sound: LION, LEMON, LEAF! Play with the L sound."
+    },
+    {
+      "emoji": "🐍",
+      "body": "SH-SH-SH! Sound SH: SHIP, FISH, SHOES!"
+    },
+    {
+      "emoji": "⭐",
+      "body": "S sound: SUN, STAR, SNAKE! Speech pack is ready."
+    },
+    {
+      "emoji": "🏃",
+      "body": "Run, jump, eat — let's learn action words together."
+    },
+    {
+      "emoji": "💃",
+      "body": "DANCE, SING, DRAW — fresh action words to try."
+    },
+    {
+      "emoji": "🤗",
+      "body": "Hug, kiss, help — learn kind actions together."
+    },
+    {
+      "emoji": "↔️",
+      "body": "BIG and SMALL, DAY and NIGHT — learning opposites."
+    },
+    {
+      "emoji": "🔥",
+      "body": "HOT or COLD? Guess the opposite!"
+    },
+    {
+      "emoji": "🔥",
+      "body": "Keep the streak going! Your little one knows so many words already."
+    },
+    {
+      "emoji": "🌟",
+      "body": "Daily 5 minutes — and speech keeps growing."
+    },
+    {
+      "emoji": "⭐",
+      "body": "Small steps every day — big results."
+    },
+    {
+      "emoji": "🏆",
+      "body": "You've come so far! Keep practicing every day."
+    },
+    {
+      "emoji": "💪",
+      "body": "A new word today — confident speech tomorrow."
+    }
+  ],
+  "winBack": [
+    {
+      "emoji": "👋",
+      "body": "We miss you! 3 minutes of cards — one new word learned."
+    },
+    {
+      "emoji": "🎈",
+      "body": "Shall we learn a word with your little one today?"
+    },
+    {
+      "emoji": "📚",
+      "body": "Your cards are waiting. 5 minutes makes a difference."
+    },
+    {
+      "emoji": "🌈",
+      "body": "Remember your animal friends? They miss you!"
+    },
+    {
+      "emoji": "✨",
+      "body": "A small break — and back to new words together!"
+    },
+    {
+      "emoji": "🧸",
+      "body": "The cards miss your little one. Shall we play today?"
+    },
+    {
+      "emoji": "💬",
+      "body": "One new word a day — a big difference in a month."
+    }
+  ],
+  "streakSaveTitle": "Streak day {streak}",
+  "streakSave": [
+    {
+      "emoji": "🔥",
+      "body": "Keep the {streak}-day streak alive! Just 5 minutes of cards."
+    },
+    {
+      "emoji": "⭐",
+      "body": "{streak} days in a row! One card keeps the streak going."
+    },
+    {
+      "emoji": "🎯",
+      "body": "Your little one is on a {streak}-day roll. A quick card before bed?"
+    },
+    {
+      "emoji": "🏅",
+      "body": "Don't break your {streak}-day streak — one card saves the day."
+    }
+  ],
+  "paywallReminder": [
+    {
+      "title": "🎁 A gift for your family",
+      "body": "3 days free — unlock every speech pack for your little one"
+    }
+  ]
+}

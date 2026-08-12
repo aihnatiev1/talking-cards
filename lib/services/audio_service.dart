@@ -405,6 +405,12 @@ class AudioService {
   /// Registers every non-null audio key of freshly-loaded content so
   /// [hasSound]/[_getSource] accept them alongside the static map.
   void registerKeys(Iterable<String> keys) => _registered.addAll(keys);
+
+  /// Latin mp3 filename (without extension) a key resolves to:
+  /// `_audioMap` alias when present, identity otherwise. Exposed so content
+  /// integrity tests can verify every manifest key maps to a bundled file.
+  @visibleForTesting
+  static String resolveFileForTesting(String key) => _audioMap[key] ?? key;
   /// Pre-computed millisecond offset for the end of the WORD portion of each
   /// recording (everything after this is the example sentence). Loaded at
   /// init from `assets/data/audio_word_lengths.json`. Files not in this map

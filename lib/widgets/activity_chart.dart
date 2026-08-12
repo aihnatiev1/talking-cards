@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 class ActivityChart extends StatelessWidget {
   final List<MapEntry<String, int>> data;
-  final bool isEn;
+  final String lang;
 
-  const ActivityChart({super.key, required this.data, this.isEn = false});
+  const ActivityChart({super.key, required this.data, this.lang = 'uk'});
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +65,7 @@ class ActivityChart extends StatelessWidget {
       final date = DateTime.parse(dateKey);
       const uk = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд'];
       const en = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-      return (isEn ? en : uk)[date.weekday - 1];
+      return (lang == 'en' ? en : uk)[date.weekday - 1];
     } catch (_) {
       return '';
     }

@@ -36,9 +36,9 @@ class SeasonalPackModel extends PackModel {
     this.titleEn = '',
   }) : super(isLocked: false, isFree: true);
 
-  /// Returns the localised title.
-  String localizedTitle(bool isEn) =>
-      isEn && titleEn.isNotEmpty ? titleEn : title;
+  /// Returns the localised title (uk default, en override when present).
+  String localizedTitle(String lang) =>
+      lang == 'en' && titleEn.isNotEmpty ? titleEn : title;
 
   /// True when [now] falls within the active window.
   /// Handles cross-year ranges (e.g. Dec–Jan).
