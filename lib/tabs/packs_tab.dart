@@ -544,11 +544,36 @@ class _PacksTabState extends ConsumerState<PacksTab> {
       openQuestMap();
     }
 
+    if (allDone) {
+      // Living done-state: compact warm card instead of a dead banner.
+      // With ≥1 learned word it opens the treasure box; otherwise it
+      // routes to the day's reward / adventure like before.
+      final learnedCount = ref
+          .watch(srsProvider)
+          .cards
+          .values
+          .where((c) => c.repetitions >= 2)
+          .length;
+      final hasTreasure = learnedCount > 0;
+      return TodayPlanDoneCard(
+        lang: lang,
+        hasTreasure: hasTreasure,
+        onTap: () {
+          if (hasTreasure) {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const KidWordWallScreen()),
+            );
+          } else {
+            onAllDone();
+          }
+        },
+      );
+    }
+
     return TodayPlanStrip(
       stones: stones,
       lang: lang,
       onViewAll: openQuestMap,
-      onAllDoneTap: allDone ? onAllDone : null,
     );
   }
 
@@ -706,10 +731,18 @@ class _PacksTabState extends ConsumerState<PacksTab> {
             }
           }
 
-          // Filter by category
-          final filteredPacks = packs
+          // Filter by category, then sort unlocked/free first and locked
+          // after — stable within each group and computed once per build
+          // from provider data, so tiles never jump mid-session.
+          final categoryPacks = packs
               .where((p) => p.category == _selectedCategory)
               .toList();
+          final filteredPacks = [
+            for (final p in categoryPacks)
+              if (!p.isLocked) p,
+            for (final p in categoryPacks)
+              if (p.isLocked) p,
+          ];
 
           // Build grid items
           final gridItems = <_GridItem>[
@@ -783,17 +816,9 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                   ],
                 ),
               ),
-              Text(
-                s('🗣️ Картки-розмовлялки', '🗣️ FirstWords Cards'),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 24 * scale, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 6 * scale),
-
-              // Streak/progress chip lives in the top header now (StreakChip);
-              // the inline subtitle here was a duplicate readout — removed.
-              const SizedBox(height: 6),
+              // Brand row removed — the store owns the brand name; inside
+              // the app that vertical space belongs to tappable content.
+              const SizedBox(height: 4),
 
               // Hero: Continue or Card of the Day — full-width
               Padding(
@@ -1081,7 +1106,9 @@ class _CategoryChip extends StatelessWidget {
         ),
       ),
       selected: selected,
-      selectedColor: kAccent,
+      // Each category fills with its own accent so the selected tab reads
+      // by color, not just by bold text.
+      selectedColor: kPackCategoryColors[categoryId] ?? kAccent,
       backgroundColor: Colors.grey.withValues(alpha: 0.18),
       showCheckmark: false,
       shape: RoundedRectangleBorder(

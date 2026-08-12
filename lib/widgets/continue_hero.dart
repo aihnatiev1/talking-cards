@@ -6,6 +6,10 @@ import '../utils/l10n.dart';
 
 /// "Continue where you left off" hero tile. Visually mirrors [CardOfDayHero]
 /// so the home row stays consistent when it swaps in.
+///
+/// Illustration-first: the pack artwork fills the whole card edge-to-edge,
+/// with the title and progress overlaid on a bottom scrim — a non-reader
+/// recognizes the picture, the parent reads the label.
 class ContinueHero extends StatefulWidget {
   final PackModel pack;
   final int progress;
@@ -77,7 +81,7 @@ class _ContinueHeroState extends State<ContinueHero>
           duration: DT.pressMs,
           curve: Curves.easeOut,
           child: Container(
-            height: 108,
+            height: 132,
             decoration: BoxDecoration(
               color: DT.surfaceWhite,
               borderRadius: BorderRadius.circular(DT.rLg),
@@ -89,86 +93,121 @@ class _ContinueHeroState extends State<ContinueHero>
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(DT.rLg - 2),
-              child: Row(
+              child: Stack(
+                fit: StackFit.expand,
                 children: [
-                  SizedBox(
-                    width:
-                        MediaQuery.of(context).size.width < 360 ? 76 : 92,
-                    height: 108,
+                  // Edge-to-edge illustration on a soft tinted pane.
+                  Container(
+                    color: accent.withValues(alpha: 0.16),
+                    padding: const EdgeInsets.only(top: 8, bottom: 24),
+                    child: thumb != null
+                        ? Image.asset(
+                            'assets/images/webp/$thumb.webp',
+                            fit: BoxFit.contain,
+                          )
+                        : Center(
+                            child: Text(widget.pack.icon,
+                                style: const TextStyle(fontSize: 64)),
+                          ),
+                  ),
+                  // Bottom scrim keeps the overlaid title readable on any art.
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
                     child: Container(
-                      color: accent.withValues(alpha: 0.12),
-                      alignment: Alignment.center,
-                      child: thumb != null
-                          ? Padding(
-                              padding: const EdgeInsets.all(6),
-                              child: Image.asset(
-                                'assets/images/webp/$thumb.webp',
-                                height: 88,
-                                fit: BoxFit.contain,
-                              ),
-                            )
-                          : FittedBox(
-                              fit: BoxFit.contain,
-                              child: Text(widget.pack.icon,
-                                  style: const TextStyle(fontSize: 48)),
-                            ),
+                      height: 60,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withValues(alpha: 0.55),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: accent.withValues(alpha: 0.14),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              AppS(widget.lang)(
-                                  '▶ Продовжити', '▶ Continue'),
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
-                                color: accent,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              widget.pack.title,
-                              maxLines: 1,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w900,
-                                color: accent,
-                                letterSpacing: 0.2,
-                              ),
-                            ),
-                          ),
-                          if (showProgress) ...[
-                            const SizedBox(height: 4),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(2),
-                              child: LinearProgressIndicator(
-                                value: progressValue,
-                                minHeight: 3,
-                                backgroundColor:
-                                    accent.withValues(alpha: 0.15),
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(accent),
-                              ),
-                            ),
-                          ],
-                        ],
+                  // Context badge (parent-facing) — top-left over the art.
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: DT.surfaceWhite.withValues(alpha: 0.92),
+                        borderRadius: BorderRadius.circular(10),
                       ),
+                      child: Text(
+                        AppS(widget.lang)('▶ Продовжити', '▶ Continue'),
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: accent,
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Title + progress on the scrim, play affordance to the right.
+                  Positioned(
+                    left: 12,
+                    right: 12,
+                    bottom: 10,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.pack.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                  letterSpacing: 0.2,
+                                ),
+                              ),
+                              if (showProgress) ...[
+                                const SizedBox(height: 5),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(2),
+                                  child: LinearProgressIndicator(
+                                    value: progressValue,
+                                    minHeight: 4,
+                                    backgroundColor:
+                                        Colors.white.withValues(alpha: 0.35),
+                                    valueColor:
+                                        const AlwaysStoppedAnimation<Color>(
+                                            Colors.white),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Container(
+                          width: 34,
+                          height: 34,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          alignment: Alignment.center,
+                          child: Icon(
+                            Icons.play_arrow_rounded,
+                            color: accent,
+                            size: 24,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

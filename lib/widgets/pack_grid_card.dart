@@ -138,7 +138,9 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
                 Expanded(
                   flex: 5,
                   child: Container(
-                    color: accent.withValues(alpha: 0.10),
+                    // 0.22 (was 0.10) so each pack's color actually reads
+                    // at a glance and tiles differentiate on the grid.
+                    color: accent.withValues(alpha: 0.22),
                     child: Stack(
                       children: [
                         Positioned.fill(
@@ -285,8 +287,10 @@ class _StatusBadge extends StatelessWidget {
       );
       bg = const Color(0xFF22C55E); // clean kid-friendly green
     } else if (locked) {
-      child = Icon(Icons.lock_rounded, size: 15, color: accent);
-      bg = DT.surfaceWhite;
+      // Soft "open me" sparkle instead of a padlock — inviting, not
+      // punishing, for a child who can't read why something is closed.
+      child = const Text('✨', style: TextStyle(fontSize: 13, height: 1));
+      bg = Color.alphaBlend(accent.withValues(alpha: 0.30), Colors.white);
     } else {
       child = const Text('✨', style: TextStyle(fontSize: 14));
       bg = DT.sunBurst;

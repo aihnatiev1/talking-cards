@@ -6,8 +6,9 @@ import '../utils/l10n.dart';
 
 /// "Card of the Day" hero tile shown on the home screen.
 ///
-/// Larger, illustrated, with a subtle pulse — designed to be the first thing a
-/// toddler wants to tap when the app opens.
+/// Illustration-first, mirroring [ContinueHero]: the card art fills the tile
+/// edge-to-edge with the word overlaid on a bottom scrim — designed to be the
+/// first thing a toddler wants to tap when the app opens.
 class CardOfDayHero extends StatefulWidget {
   final CardModel card;
   final VoidCallback onTap;
@@ -65,7 +66,7 @@ class _CardOfDayHeroState extends State<CardOfDayHero>
           duration: DT.pressMs,
           curve: Curves.easeOut,
           child: Container(
-            height: 108,
+            height: 132,
             decoration: BoxDecoration(
               color: DT.surfaceWhite,
               borderRadius: BorderRadius.circular(DT.rLg),
@@ -77,76 +78,101 @@ class _CardOfDayHeroState extends State<CardOfDayHero>
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(DT.rLg - 2),
-              child: Row(
+              child: Stack(
+                fit: StackFit.expand,
                 children: [
-                  // Illustration pane — fixed width so intrinsic sizing is
-                  // bounded on both axes and the image never balloons to its
-                  // natural resolution. Shrinks slightly on small screens
-                  // (<360dp) so the right-side title pane keeps room.
-                  SizedBox(
-                    width:
-                        MediaQuery.of(context).size.width < 360 ? 76 : 92,
-                    height: 108,
+                  // Edge-to-edge illustration on a soft tinted pane.
+                  Container(
+                    color: accent.withValues(alpha: 0.16),
+                    padding: const EdgeInsets.only(top: 8, bottom: 24),
+                    child: hasImage
+                        ? Image.asset(
+                            'assets/images/webp/${widget.card.image}.webp',
+                            fit: BoxFit.contain,
+                          )
+                        : Center(
+                            child: Text(widget.card.emoji,
+                                style: const TextStyle(fontSize: 64)),
+                          ),
+                  ),
+                  // Bottom scrim keeps the overlaid word readable on any art.
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
                     child: Container(
-                      color: accent.withValues(alpha: 0.12),
-                      alignment: Alignment.center,
-                      child: hasImage
-                          ? Padding(
-                              padding: const EdgeInsets.all(6),
-                              child: Image.asset(
-                                'assets/images/webp/${widget.card.image}.webp',
-                                height: 88,
-                                fit: BoxFit.contain,
-                              ),
-                            )
-                          : FittedBox(
-                              fit: BoxFit.contain,
-                              child: Text(widget.card.emoji,
-                                  style: const TextStyle(fontSize: 48)),
-                            ),
+                      height: 60,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withValues(alpha: 0.55),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: accent.withValues(alpha: 0.14),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              AppS(widget.lang)(
-                                  '🔊 Картка дня', '🔊 Card of the day'),
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
-                                color: accent,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              widget.card.sound,
-                              maxLines: 1,
-                              style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w900,
-                                color: accent,
-                                letterSpacing: 0.2,
-                              ),
-                            ),
-                          ),
-                        ],
+                  // Context badge (parent-facing) — top-left over the art.
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: DT.surfaceWhite.withValues(alpha: 0.92),
+                        borderRadius: BorderRadius.circular(10),
                       ),
+                      child: Text(
+                        AppS(widget.lang)(
+                            '🔊 Картка дня', '🔊 Card of the day'),
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: accent,
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Word on the scrim, audio affordance to the right.
+                  Positioned(
+                    left: 12,
+                    right: 12,
+                    bottom: 10,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            widget.card.sound,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 19,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Container(
+                          width: 34,
+                          height: 34,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          alignment: Alignment.center,
+                          child: Icon(
+                            Icons.volume_up_rounded,
+                            color: accent,
+                            size: 22,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

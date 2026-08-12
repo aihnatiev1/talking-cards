@@ -204,10 +204,6 @@
     "en": "Finish 3 daily steps to unlock a new card 🎁"
   },
   {
-    "uk": "Все готово! Повертайся завтра!",
-    "en": "All done today! Come back tomorrow"
-  },
-  {
     "uk": "Всього сесій",
     "en": "Total sessions"
   },
@@ -318,6 +314,10 @@
   {
     "uk": "Досягнення",
     "en": "Achievements"
+  },
+  {
+    "uk": "Зазирни у скарбничку",
+    "en": "Peek in your treasure box"
   },
   {
     "uk": "Закрити",
@@ -446,6 +446,10 @@
   {
     "uk": "Молодець! Виконано {_maxReps} разів!",
     "en": "Well done! Completed {_maxReps} times!"
+  },
+  {
+    "uk": "Молодець! Завтра — нова пригода",
+    "en": "All done! New adventure tomorrow"
   },
   {
     "uk": "Молодець! 🎉",
@@ -1034,10 +1038,6 @@
   {
     "uk": "🔊 Картка дня",
     "en": "🔊 Card of the day"
-  },
-  {
-    "uk": "🗣️ Картки-розмовлялки",
-    "en": "🗣️ FirstWords Cards"
   },
   {
     "uk": "🗺️ Пригода дня",

@@ -1,7 +1,9 @@
 import 'dart:math';
+import 'dart:ui';
 
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
+import 'constants.dart';
 import 'l10n.dart';
 
 /// Category ids in display order for the home-grid filter chips. Each pack
@@ -14,6 +16,14 @@ const kPackCategoryIcons = <String, String>{
   'speech': '💬',
   'sounds': '🔤',
   'world': '🌍',
+};
+
+/// Accent fill for the selected category chip, keyed by category id — each
+/// tab gets its own color so the selected state reads without text.
+const kPackCategoryColors = <String, Color>{
+  'speech': kAccent,
+  'sounds': kTeal,
+  'world': kStreakOrange,
 };
 
 /// Localized label for a category id.

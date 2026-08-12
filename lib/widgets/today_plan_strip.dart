@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../utils/constants.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
+import 'bloom_mascot.dart';
 
 /// One node in the Today's Plan path.
 class TodayPlanStone {
@@ -31,26 +32,19 @@ class TodayPlanStrip extends StatelessWidget {
   final String lang;
   final VoidCallback onViewAll;
 
-  /// Tap target for the whole strip when every stone is done. Routes the
-  /// kid straight to the next reward — Daily Adventure for Pro, the won
-  /// card for everyone else.
-  final VoidCallback? onAllDoneTap;
-
   const TodayPlanStrip({
     super.key,
     required this.stones,
     required this.lang,
     required this.onViewAll,
-    this.onAllDoneTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final s = AppS(lang);
-    final allDone = stones.every((st) => st.isDone);
     final scale = screenScale(context);
 
-    final box = Container(
+    return Container(
       height: 118 * scale.clamp(1.0, 1.15),
       decoration: BoxDecoration(
         color: DT.surfaceWhite,
@@ -108,26 +102,113 @@ class TodayPlanStrip extends StatelessWidget {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(14, 4, 14, 8),
-              child: allDone
-                  ? _CelebrationRow(lang: lang)
-                  : _StoneRow(stones: stones),
+              child: _StoneRow(stones: stones),
             ),
           ),
         ],
       ),
     );
+  }
+}
 
-    if (allDone && onAllDoneTap != null) {
-      return GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () {
-          HapticFeedback.lightImpact();
-          onAllDoneTap!();
-        },
-        child: box,
-      );
-    }
-    return box;
+/// Compact, warm done-state card shown instead of the strip once the daily
+/// plan is finished. Stays alive instead of going dead: Bloom waves, and the
+/// whole card is one big tap target — treasure box if the child already has
+/// learned words, the day's reward otherwise.
+class TodayPlanDoneCard extends StatelessWidget {
+  final String lang;
+
+  /// Child has at least one learned word — the card advertises and opens
+  /// the treasure box.
+  final bool hasTreasure;
+  final VoidCallback onTap;
+
+  const TodayPlanDoneCard({
+    super.key,
+    required this.lang,
+    required this.hasTreasure,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final s = AppS(lang);
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
+      child: Container(
+        // Kid-sized tap target; roughly half the old 118dp done block.
+        height: 72,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              kAccent.withValues(alpha: 0.14),
+              kTeal.withValues(alpha: 0.20),
+            ],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(DT.rLg),
+          border: Border.all(
+            color: kAccent.withValues(alpha: 0.25),
+            width: 2,
+          ),
+          boxShadow: DT.shadowSoft(kAccent),
+        ),
+        child: Row(
+          children: [
+            const BloomMascot(
+              size: 48,
+              emotion: BloomEmotion.waving,
+              interactive: false,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    s('Молодець! Завтра — нова пригода',
+                        'All done! New adventure tomorrow'),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: kAccent,
+                      height: 1.2,
+                    ),
+                  ),
+                  if (hasTreasure) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      s('Зазирни у скарбничку', 'Peek in your treasure box'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              hasTreasure ? '🎁' : '🎉',
+              style: const TextStyle(fontSize: 24, height: 1),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -345,38 +426,6 @@ class _StoneCircleState extends State<_StoneCircle>
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _CelebrationRow extends StatelessWidget {
-  final String lang;
-
-  const _CelebrationRow({required this.lang});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text('🎉', style: TextStyle(fontSize: 36, height: 1)),
-          const SizedBox(height: 4),
-          Text(
-            AppS(lang)('Все готово! Повертайся завтра!',
-                'All done today! Come back tomorrow'),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: kAccent,
-            ),
-          ),
-        ],
       ),
     );
   }
