@@ -90,3 +90,9 @@ EN daily items about the syllable game and R/L/SH/S phoneme packs were
 replaced with generic word/animal/opposites prompts because es v1 ships
 with `syllableGame: false` and `articulation: false` — a push must not
 advertise a feature the locale doesn't have. Same deck size (31/7/4/1).
+
+
+## Затверджені рішення (owner, 2026-08-12)
+- Бренд es: ГІБРИД — appTitle в апці лишається "FirstWords Cards" (як у locales_entry.json), а стор-сабтайтл es-MX: "Primeras palabras y juegos" / вживати "mis primeras palabras" у метаданих.
+- Прапор мови: 🌎 затверджено.
+- Лишилось перед озвучкою: вичитка носієм слів зі списку в цьому файлі.
