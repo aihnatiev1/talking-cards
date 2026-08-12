@@ -1,0 +1,2902 @@
+[
+  {
+    "id": "es_animals",
+    "category": "world",
+    "title": "Animales",
+    "icon": "🦁",
+    "color": "#E17055",
+    "isLocked": false,
+    "cards": [
+      {
+        "id": "es_a01",
+        "sound": "GATO",
+        "text": "¡El gato es suave y esponjoso!",
+        "emoji": "🐱",
+        "colorBg": "#FFF5E6",
+        "colorAccent": "#F0B27A",
+        "image": "cat",
+        "audio": "es_cat"
+      },
+      {
+        "id": "es_a02",
+        "sound": "PERRO",
+        "text": "¡El perro mueve la cola!",
+        "emoji": "🐕",
+        "colorBg": "#FFF0E6",
+        "colorAccent": "#E67E22",
+        "image": "dog",
+        "audio": "es_dog"
+      },
+      {
+        "id": "es_a03",
+        "sound": "VACA",
+        "text": "¡La vaca nos da leche!",
+        "emoji": "🐄",
+        "colorBg": "#F0FFF0",
+        "colorAccent": "#58D68D",
+        "image": "cow",
+        "audio": "es_cow"
+      },
+      {
+        "id": "es_a04",
+        "sound": "CABALLO",
+        "text": "¡El caballo corre muy rápido!",
+        "emoji": "🐴",
+        "colorBg": "#FFF5E6",
+        "colorAccent": "#D4A373",
+        "image": "horse",
+        "audio": "es_horse"
+      },
+      {
+        "id": "es_a05",
+        "sound": "CERDO",
+        "text": "¡El cerdo tiene la cola rizada!",
+        "emoji": "🐷",
+        "colorBg": "#FFE6F0",
+        "colorAccent": "#FF85A1",
+        "image": "pig",
+        "audio": "es_pig"
+      },
+      {
+        "id": "es_a06",
+        "sound": "GALLINA",
+        "text": "¡La gallina pone huevos!",
+        "emoji": "🐔",
+        "colorBg": "#FFFFF0",
+        "colorAccent": "#F4D03F",
+        "image": "chicken",
+        "audio": "es_chicken"
+      },
+      {
+        "id": "es_a07",
+        "sound": "GALLO",
+        "text": "¡El gallo se despierta al amanecer!",
+        "emoji": "🐓",
+        "colorBg": "#FFE6E6",
+        "colorAccent": "#E74C3C",
+        "image": "rooster",
+        "audio": "es_rooster"
+      },
+      {
+        "id": "es_a08",
+        "sound": "PATO",
+        "text": "¡El pato nada en el estanque!",
+        "emoji": "🦆",
+        "colorBg": "#E6FFFF",
+        "colorAccent": "#45B7D1",
+        "image": "duck",
+        "audio": "es_duck"
+      },
+      {
+        "id": "es_a09",
+        "sound": "RANA",
+        "text": "¡La rana salta muy alto!",
+        "emoji": "🐸",
+        "colorBg": "#E6FFE6",
+        "colorAccent": "#4CAF50",
+        "image": "frog",
+        "audio": "es_frog"
+      },
+      {
+        "id": "es_a10",
+        "sound": "PEZ",
+        "text": "¡El pez nada en el agua!",
+        "emoji": "🐟",
+        "colorBg": "#E6F0FF",
+        "colorAccent": "#3498DB",
+        "image": "fish",
+        "audio": "es_fish"
+      },
+      {
+        "id": "es_a11",
+        "sound": "PÁJARO",
+        "text": "¡El pájaro canta una linda canción!",
+        "emoji": "🐦",
+        "colorBg": "#F0FFFF",
+        "colorAccent": "#76D7EA",
+        "image": "bird",
+        "audio": "es_bird"
+      },
+      {
+        "id": "es_a12",
+        "sound": "MARIPOSA",
+        "text": "¡La mariposa tiene alas de colores!",
+        "emoji": "🦋",
+        "colorBg": "#F5E6FF",
+        "colorAccent": "#9B59B6",
+        "image": "butterfly",
+        "audio": "es_butterfly"
+      },
+      {
+        "id": "es_a13",
+        "sound": "ABEJA",
+        "text": "¡La abeja hace miel dulce!",
+        "emoji": "🐝",
+        "colorBg": "#FFFFF0",
+        "colorAccent": "#F5B041",
+        "image": "bee",
+        "audio": "es_bee"
+      },
+      {
+        "id": "es_a14",
+        "sound": "CARACOL",
+        "text": "¡El caracol se mueve muy despacio!",
+        "emoji": "🐌",
+        "colorBg": "#FFF5F0",
+        "colorAccent": "#D4A373",
+        "image": "snail",
+        "audio": "es_snail"
+      },
+      {
+        "id": "es_a15",
+        "sound": "CONEJO",
+        "text": "¡El conejo tiene orejas largas!",
+        "emoji": "🐰",
+        "colorBg": "#F5F0FF",
+        "colorAccent": "#A78BFA",
+        "image": "bunny",
+        "audio": "es_bunny"
+      },
+      {
+        "id": "es_a16",
+        "sound": "OSO",
+        "text": "¡El oso grande vive en el bosque!",
+        "emoji": "🐻",
+        "colorBg": "#FFF0E6",
+        "colorAccent": "#CD853F",
+        "image": "bear",
+        "audio": "es_bear"
+      },
+      {
+        "id": "es_a17",
+        "sound": "ZORRO",
+        "text": "¡El zorro rojo es muy listo!",
+        "emoji": "🦊",
+        "colorBg": "#FFF5E6",
+        "colorAccent": "#FF8C42",
+        "image": "lisichka",
+        "audio": "es_fox"
+      },
+      {
+        "id": "es_a18",
+        "sound": "LOBO",
+        "text": "¡El lobo vive en el bosque!",
+        "emoji": "🐺",
+        "colorBg": "#F0F0F5",
+        "colorAccent": "#7F8C8D",
+        "image": "wolf",
+        "audio": "es_wolf"
+      },
+      {
+        "id": "es_a19",
+        "sound": "VENADO",
+        "text": "¡El venado tiene cuernos bonitos!",
+        "emoji": "🦌",
+        "colorBg": "#FFF5E6",
+        "colorAccent": "#A0522D",
+        "image": "deer",
+        "audio": "es_deer"
+      },
+      {
+        "id": "es_a20",
+        "sound": "ERIZO",
+        "text": "¡El erizo tiene muchas púas!",
+        "emoji": "🦔",
+        "colorBg": "#FFF5F0",
+        "colorAccent": "#C4A882",
+        "image": "hedgehog",
+        "audio": "es_hedgehog"
+      },
+      {
+        "id": "es_a21",
+        "sound": "BÚHO",
+        "text": "¡El búho está despierto de noche!",
+        "emoji": "🦉",
+        "colorBg": "#F5F0E6",
+        "colorAccent": "#8B7355",
+        "image": "owl",
+        "audio": "es_owl"
+      },
+      {
+        "id": "es_a22",
+        "sound": "PINGÜINO",
+        "text": "¡El pingüino camina sobre el hielo!",
+        "emoji": "🐧",
+        "colorBg": "#E6F0FF",
+        "colorAccent": "#2C3E50",
+        "image": "pingvin",
+        "audio": "es_penguin"
+      },
+      {
+        "id": "es_a23",
+        "sound": "ELEFANTE",
+        "text": "¡El elefante tiene una trompa larga!",
+        "emoji": "🐘",
+        "colorBg": "#F0F0F5",
+        "colorAccent": "#95A5A6",
+        "image": "slon",
+        "audio": "es_elephant"
+      },
+      {
+        "id": "es_a24",
+        "sound": "LEÓN",
+        "text": "¡El león tiene una gran melena!",
+        "emoji": "🦁",
+        "colorBg": "#FFFFF0",
+        "colorAccent": "#DAA520",
+        "image": "lev",
+        "audio": "es_lion"
+      },
+      {
+        "id": "es_a25",
+        "sound": "MONO",
+        "text": "¡El mono trepa a los árboles!",
+        "emoji": "🐒",
+        "colorBg": "#FFF5E6",
+        "colorAccent": "#A0522D",
+        "image": "mavpochka",
+        "audio": "es_monkey"
+      },
+      {
+        "id": "es_a26",
+        "sound": "COCODRILO",
+        "text": "¡El cocodrilo nada en el río!",
+        "emoji": "🐊",
+        "colorBg": "#E6FFE6",
+        "colorAccent": "#228B22",
+        "image": "krokodil",
+        "audio": "es_crocodile"
+      },
+      {
+        "id": "es_a27",
+        "sound": "TORTUGA",
+        "text": "¡La tortuga camina muy despacio!",
+        "emoji": "🐢",
+        "colorBg": "#E6FFE6",
+        "colorAccent": "#6BCB77",
+        "image": "cherepaha",
+        "audio": "es_turtle"
+      },
+      {
+        "id": "es_a28",
+        "sound": "DELFÍN",
+        "text": "¡El delfín salta en el mar!",
+        "emoji": "🐬",
+        "colorBg": "#E6F0FF",
+        "colorAccent": "#5DADE2",
+        "image": "delfin",
+        "audio": "es_dolphin"
+      },
+      {
+        "id": "es_a30",
+        "sound": "ARDILLA",
+        "text": "¡A la ardilla le encantan las nueces!",
+        "emoji": "🐿️",
+        "colorBg": "#FFF5E6",
+        "colorAccent": "#D4A373",
+        "image": "bilochka",
+        "audio": "es_squirrel"
+      }
+    ]
+  },
+  {
+    "id": "es_home",
+    "category": "world",
+    "title": "Hogar y familia",
+    "icon": "🏡",
+    "color": "#6C5CE7",
+    "isLocked": true,
+    "cards": [
+      {
+        "id": "es_h01",
+        "sound": "MAMÁ",
+        "text": "¡Quiero mucho a mi mamá!",
+        "emoji": "🤱",
+        "colorBg": "#FFEFD5",
+        "colorAccent": "#D63031",
+        "audio": "es_mommy",
+        "image": "mommy"
+      },
+      {
+        "id": "es_h02",
+        "sound": "PAPÁ",
+        "text": "¡Quiero mucho a mi papá!",
+        "emoji": "👨",
+        "colorBg": "#FFEFD5",
+        "colorAccent": "#D63031",
+        "audio": "es_dad",
+        "image": "dad"
+      },
+      {
+        "id": "es_h03",
+        "sound": "ABUELA",
+        "text": "¡La abuela da abrazos muy tiernos!",
+        "emoji": "👵",
+        "colorBg": "#FFEFD5",
+        "colorAccent": "#D63031",
+        "audio": "es_grandma",
+        "image": "grandma"
+      },
+      {
+        "id": "es_h04",
+        "sound": "ABUELO",
+        "text": "¡El abuelo cuenta cuentos divertidos!",
+        "emoji": "👴",
+        "colorBg": "#FFEFD5",
+        "colorAccent": "#D63031",
+        "audio": "es_grandpa",
+        "image": "grandpa"
+      },
+      {
+        "id": "es_h05",
+        "sound": "BEBÉ",
+        "text": "¡El bebé está durmiendo!",
+        "emoji": "👶",
+        "colorBg": "#FFEFD5",
+        "colorAccent": "#D63031",
+        "audio": "es_baby",
+        "image": "baby"
+      },
+      {
+        "id": "es_h06",
+        "sound": "FAMILIA",
+        "text": "¡Mi familia me quiere mucho!",
+        "emoji": "👨‍👩‍👧",
+        "colorBg": "#FFEFD5",
+        "colorAccent": "#D63031",
+        "audio": "es_family",
+        "image": "family"
+      },
+      {
+        "id": "es_h07",
+        "sound": "ABRAZO",
+        "text": "¡Dame un abrazo grande!",
+        "emoji": "🤗",
+        "colorBg": "#FFEFD5",
+        "colorAccent": "#D63031",
+        "audio": "es_hug",
+        "image": "hug"
+      },
+      {
+        "id": "es_h08",
+        "sound": "MAÑANA",
+        "text": "¡Buenos días, rayito de sol!",
+        "emoji": "🌅",
+        "colorBg": "#FFEFD5",
+        "colorAccent": "#D63031",
+        "audio": "es_morning",
+        "image": "morning"
+      },
+      {
+        "id": "es_h09",
+        "sound": "NOCHE",
+        "text": "¡Buenas noches, hora de descansar!",
+        "emoji": "🌆",
+        "colorBg": "#FFEFD5",
+        "colorAccent": "#D63031",
+        "audio": "es_evening",
+        "image": "evening"
+      },
+      {
+        "id": "es_h10",
+        "sound": "SONRISA",
+        "text": "¡Una sonrisita muy feliz!",
+        "emoji": "😊",
+        "colorBg": "#FFEFD5",
+        "colorAccent": "#D63031",
+        "audio": "es_smile",
+        "image": "smile"
+      },
+      {
+        "id": "es_h11",
+        "sound": "BESO",
+        "text": "¡Un besito dulce!",
+        "emoji": "😘",
+        "colorBg": "#FFEFD5",
+        "colorAccent": "#D63031",
+        "audio": "es_kiss",
+        "image": "en_kiss"
+      },
+      {
+        "id": "es_h12",
+        "sound": "CANCIÓN",
+        "text": "¡Canta una canción de cuna!",
+        "emoji": "🎵",
+        "colorBg": "#FFEFD5",
+        "colorAccent": "#D63031",
+        "audio": "es_song",
+        "image": "en_song"
+      },
+      {
+        "id": "es_h13",
+        "sound": "PELOTA",
+        "text": "¡Haz rebotar la pelota!",
+        "emoji": "⚽",
+        "colorBg": "#FFEFD5",
+        "colorAccent": "#D63031",
+        "audio": "es_ball",
+        "image": "ball"
+      },
+      {
+        "id": "es_h14",
+        "sound": "MUÑECA",
+        "text": "¡Mi muñeca favorita!",
+        "emoji": "🪆",
+        "colorBg": "#FFEFD5",
+        "colorAccent": "#D63031",
+        "audio": "es_doll",
+        "image": "doll"
+      },
+      {
+        "id": "es_h15",
+        "sound": "CARRITO",
+        "text": "¡Empuja el carrito de juguete!",
+        "emoji": "🚗",
+        "colorBg": "#FFEFD5",
+        "colorAccent": "#D63031",
+        "audio": "es_toy_car",
+        "image": "toy_car"
+      },
+      {
+        "id": "es_h16",
+        "sound": "LIBRO",
+        "text": "¡Vamos a leer un libro!",
+        "emoji": "📖",
+        "colorBg": "#FFEFD5",
+        "colorAccent": "#D63031",
+        "audio": "es_book",
+        "image": "book"
+      },
+      {
+        "id": "es_h17",
+        "sound": "BLOQUES",
+        "text": "¡Construye una torre con bloques!",
+        "emoji": "🧱",
+        "colorBg": "#FFEFD5",
+        "colorAccent": "#D63031",
+        "audio": "es_blocks",
+        "image": "blocks"
+      },
+      {
+        "id": "es_h18",
+        "sound": "AVENA",
+        "text": "¡Rica avena calientita!",
+        "emoji": "🥣",
+        "colorBg": "#FFEFD5",
+        "colorAccent": "#D63031",
+        "audio": "es_porridge",
+        "image": "kasha"
+      },
+      {
+        "id": "es_h19",
+        "sound": "MANZANA",
+        "text": "¡Una manzana roja y jugosa!",
+        "emoji": "🍎",
+        "colorBg": "#FFEFD5",
+        "colorAccent": "#D63031",
+        "audio": "es_apple",
+        "image": "apple"
+      },
+      {
+        "id": "es_h20",
+        "sound": "AGUA",
+        "text": "¡Agua fresca y rica!",
+        "emoji": "💧",
+        "colorBg": "#FFEFD5",
+        "colorAccent": "#D63031",
+        "audio": "es_water",
+        "image": "water"
+      },
+      {
+        "id": "es_h21",
+        "sound": "PASEO",
+        "text": "¡Vamos a dar un paseo!",
+        "emoji": "🚶",
+        "colorBg": "#FFEFD5",
+        "colorAccent": "#D63031",
+        "audio": "es_walk",
+        "image": "walk"
+      },
+      {
+        "id": "es_h22",
+        "sound": "BAÑO",
+        "text": "¡A tomar un baño calientito!",
+        "emoji": "🛁",
+        "colorBg": "#FFEFD5",
+        "colorAccent": "#D63031",
+        "audio": "es_bath",
+        "image": "bath"
+      },
+      {
+        "id": "es_h23",
+        "sound": "MANOS",
+        "text": "¡Lávate las manos!",
+        "emoji": "🙌",
+        "colorBg": "#FFEFD5",
+        "colorAccent": "#D63031",
+        "audio": "es_hands",
+        "image": "wash_hands"
+      },
+      {
+        "id": "es_h24",
+        "sound": "DIENTES",
+        "text": "¡Cepíllate los dientes!",
+        "emoji": "🦷",
+        "colorBg": "#FFEFD5",
+        "colorAccent": "#D63031",
+        "audio": "es_teeth",
+        "image": "brush_teeth"
+      },
+      {
+        "id": "es_h25",
+        "sound": "CAMA",
+        "text": "¡Es hora de ir a la cama!",
+        "emoji": "🛏️",
+        "colorBg": "#FFEFD5",
+        "colorAccent": "#D63031",
+        "audio": "es_bed",
+        "image": "bed"
+      },
+      {
+        "id": "es_h26",
+        "sound": "GRACIAS",
+        "text": "¡Muchas gracias!",
+        "emoji": "🙏",
+        "colorBg": "#FFEFD5",
+        "colorAccent": "#D63031",
+        "audio": "es_thank_you",
+        "image": "thankyou"
+      },
+      {
+        "id": "es_h27",
+        "sound": "POR FAVOR",
+        "text": "¡Di por favor!",
+        "emoji": "🥺",
+        "colorBg": "#FFEFD5",
+        "colorAccent": "#D63031",
+        "audio": "es_please",
+        "image": "please"
+      },
+      {
+        "id": "es_h28",
+        "sound": "AMOR",
+        "text": "¡Te quiero mucho!",
+        "emoji": "💗",
+        "colorBg": "#FFEFD5",
+        "colorAccent": "#D63031",
+        "audio": "es_love",
+        "image": "love"
+      },
+      {
+        "id": "es_h29",
+        "sound": "CASA",
+        "text": "¡Hogar, dulce hogar!",
+        "emoji": "🏠",
+        "colorBg": "#FFEFD5",
+        "colorAccent": "#D63031",
+        "audio": "es_home",
+        "image": "en_home_card"
+      },
+      {
+        "id": "es_h30",
+        "sound": "JUGAR",
+        "text": "¡Vamos a jugar juntos!",
+        "emoji": "🎮",
+        "colorBg": "#FFEFD5",
+        "colorAccent": "#D63031",
+        "audio": "es_play",
+        "image": "en_play"
+      }
+    ]
+  },
+  {
+    "id": "es_emotions",
+    "category": "world",
+    "title": "Emociones",
+    "icon": "😊",
+    "color": "#FDCB6E",
+    "isLocked": true,
+    "cards": [
+      {
+        "id": "es_f01",
+        "sound": "FELIZ",
+        "text": "¡Me siento muy feliz!",
+        "emoji": "😀",
+        "colorBg": "#FFE4E1",
+        "colorAccent": "#E84393",
+        "audio": "es_happy",
+        "image": "happy"
+      },
+      {
+        "id": "es_f02",
+        "sound": "TRISTE",
+        "text": "Me siento un poco triste.",
+        "emoji": "😢",
+        "colorBg": "#FFE4E1",
+        "colorAccent": "#E84393",
+        "audio": "es_sad",
+        "image": "sad"
+      },
+      {
+        "id": "es_f03",
+        "sound": "ENOJADO",
+        "text": "Me siento enojado ahora.",
+        "emoji": "😠",
+        "colorBg": "#FFE4E1",
+        "colorAccent": "#E84393",
+        "audio": "es_angry",
+        "image": "angry"
+      },
+      {
+        "id": "es_f04",
+        "sound": "ASUSTADO",
+        "text": "Tengo un poco de miedo.",
+        "emoji": "😱",
+        "colorBg": "#FFE4E1",
+        "colorAccent": "#E84393",
+        "audio": "es_scared",
+        "image": "scared"
+      },
+      {
+        "id": "es_f05",
+        "sound": "CANSADO",
+        "text": "Me siento cansado y con sueño.",
+        "emoji": "😴",
+        "colorBg": "#FFE4E1",
+        "colorAccent": "#E84393",
+        "audio": "es_tired",
+        "image": "tired"
+      },
+      {
+        "id": "es_f06",
+        "sound": "SORPRENDIDO",
+        "text": "¡Qué gran sorpresa!",
+        "emoji": "😲",
+        "colorBg": "#FFE4E1",
+        "colorAccent": "#E84393",
+        "audio": "es_surprised",
+        "image": "surprised"
+      },
+      {
+        "id": "es_f07",
+        "sound": "EMOCIONADO",
+        "text": "¡Estoy muy emocionado!",
+        "emoji": "🤩",
+        "colorBg": "#FFE4E1",
+        "colorAccent": "#E84393",
+        "audio": "es_excited",
+        "image": "excited"
+      },
+      {
+        "id": "es_f08",
+        "sound": "TRANQUILO",
+        "text": "Me siento muy tranquilo.",
+        "emoji": "😌",
+        "colorBg": "#FFE4E1",
+        "colorAccent": "#E84393",
+        "audio": "es_calm",
+        "image": "calm"
+      },
+      {
+        "id": "es_f09",
+        "sound": "TÍMIDO",
+        "text": "Me siento un poco tímido.",
+        "emoji": "😊",
+        "colorBg": "#FFE4E1",
+        "colorAccent": "#E84393",
+        "audio": "es_shy",
+        "image": "shy"
+      },
+      {
+        "id": "es_f10",
+        "sound": "CHISTOSO",
+        "text": "¡Estoy siendo muy chistoso!",
+        "emoji": "🤪",
+        "colorBg": "#FFE4E1",
+        "colorAccent": "#E84393",
+        "audio": "es_silly",
+        "image": "en_silly"
+      },
+      {
+        "id": "es_f11",
+        "sound": "ORGULLOSO",
+        "text": "¡Me siento muy orgulloso!",
+        "emoji": "😎",
+        "colorBg": "#FFE4E1",
+        "colorAccent": "#E84393",
+        "audio": "es_proud",
+        "image": "proud"
+      },
+      {
+        "id": "es_f12",
+        "sound": "QUERIDO",
+        "text": "¡Me siento querido y seguro!",
+        "emoji": "🥰",
+        "colorBg": "#FFE4E1",
+        "colorAccent": "#E84393",
+        "audio": "es_loved",
+        "image": "love"
+      }
+    ]
+  },
+  {
+    "id": "es_transport",
+    "category": "world",
+    "title": "Transporte",
+    "icon": "🚗",
+    "color": "#0984E3",
+    "isLocked": true,
+    "cards": [
+      {
+        "id": "es_t01",
+        "sound": "CARRO",
+        "text": "¡El carro va por la calle!",
+        "emoji": "🚗",
+        "colorBg": "#FFE6E6",
+        "colorAccent": "#E74C3C",
+        "audio": "es_car",
+        "image": "avtomobil"
+      },
+      {
+        "id": "es_t02",
+        "sound": "AUTOBÚS",
+        "text": "¡El autobús nos lleva a casa!",
+        "emoji": "🚌",
+        "colorBg": "#FFE6E6",
+        "colorAccent": "#E74C3C",
+        "audio": "es_bus",
+        "image": "avtobus"
+      },
+      {
+        "id": "es_t03",
+        "sound": "TREN",
+        "text": "¡El tren va por las vías!",
+        "emoji": "🚂",
+        "colorBg": "#FFE6E6",
+        "colorAccent": "#E74C3C",
+        "audio": "es_train",
+        "image": "poizd"
+      },
+      {
+        "id": "es_t04",
+        "sound": "AVIÓN",
+        "text": "¡El avión vuela muy alto!",
+        "emoji": "✈️",
+        "colorBg": "#FFE6E6",
+        "colorAccent": "#E74C3C",
+        "audio": "es_airplane",
+        "image": "litak"
+      },
+      {
+        "id": "es_t05",
+        "sound": "BARCO",
+        "text": "¡El gran barco navega en el mar!",
+        "emoji": "🚢",
+        "colorBg": "#FFE6E6",
+        "colorAccent": "#E74C3C",
+        "audio": "es_ship",
+        "image": "korabel"
+      },
+      {
+        "id": "es_t06",
+        "sound": "BICICLETA",
+        "text": "¡Vamos a andar en bicicleta!",
+        "emoji": "🚲",
+        "colorBg": "#FFE6E6",
+        "colorAccent": "#E74C3C",
+        "audio": "es_bicycle",
+        "image": "velosiped"
+      },
+      {
+        "id": "es_t07",
+        "sound": "MOTOCICLETA",
+        "text": "¡La motocicleta va muy rápido!",
+        "emoji": "🏍️",
+        "colorBg": "#FFE6E6",
+        "colorAccent": "#E74C3C",
+        "audio": "es_motorcycle",
+        "image": "motocikl"
+      },
+      {
+        "id": "es_t08",
+        "sound": "HELICÓPTERO",
+        "text": "¡El helicóptero gira sus hélices!",
+        "emoji": "🚁",
+        "colorBg": "#FFE6E6",
+        "colorAccent": "#E74C3C",
+        "audio": "es_helicopter",
+        "image": "gelicopter"
+      },
+      {
+        "id": "es_t09",
+        "sound": "TRANVÍA",
+        "text": "¡El tranvía va sobre rieles!",
+        "emoji": "🚋",
+        "colorBg": "#FFE6E6",
+        "colorAccent": "#E74C3C",
+        "audio": "es_tram",
+        "image": "tramvai"
+      },
+      {
+        "id": "es_t10",
+        "sound": "METRO",
+        "text": "¡El metro viaja bajo la tierra!",
+        "emoji": "🚇",
+        "colorBg": "#FFE6E6",
+        "colorAccent": "#E74C3C",
+        "audio": "es_subway",
+        "image": "metro"
+      },
+      {
+        "id": "es_t11",
+        "sound": "TAXI",
+        "text": "¡El taxi amarillo se detiene aquí!",
+        "emoji": "🚕",
+        "colorBg": "#FFE6E6",
+        "colorAccent": "#E74C3C",
+        "audio": "es_taxi",
+        "image": "taxi"
+      },
+      {
+        "id": "es_t12",
+        "sound": "CAMIÓN DE BOMBEROS",
+        "text": "¡El camión de bomberos ayuda a la gente!",
+        "emoji": "🚒",
+        "colorBg": "#FFE6E6",
+        "colorAccent": "#E74C3C",
+        "audio": "es_fire_truck",
+        "image": "pojejna"
+      },
+      {
+        "id": "es_t13",
+        "sound": "AMBULANCIA",
+        "text": "¡La ambulancia ayuda a los enfermos!",
+        "emoji": "🚑",
+        "colorBg": "#FFE6E6",
+        "colorAccent": "#E74C3C",
+        "audio": "es_ambulance",
+        "image": "shvidka"
+      },
+      {
+        "id": "es_t14",
+        "sound": "PATRULLA",
+        "text": "¡La patrulla enciende sus luces!",
+        "emoji": "🚓",
+        "colorBg": "#FFE6E6",
+        "colorAccent": "#E74C3C",
+        "audio": "es_police_car",
+        "image": "policia"
+      },
+      {
+        "id": "es_t15",
+        "sound": "CAMIÓN",
+        "text": "¡El camión lleva cosas grandes!",
+        "emoji": "🚚",
+        "colorBg": "#FFE6E6",
+        "colorAccent": "#E74C3C",
+        "audio": "es_truck",
+        "image": "vantajivka"
+      },
+      {
+        "id": "es_t16",
+        "sound": "TRACTOR",
+        "text": "¡El tractor trabaja en la granja!",
+        "emoji": "🚜",
+        "colorBg": "#FFE6E6",
+        "colorAccent": "#E74C3C",
+        "audio": "es_tractor",
+        "image": "tractor"
+      },
+      {
+        "id": "es_t17",
+        "sound": "SCOOTER",
+        "text": "¡Empuja el scooter bien rápido!",
+        "emoji": "🛴",
+        "colorBg": "#FFE6E6",
+        "colorAccent": "#E74C3C",
+        "audio": "es_scooter",
+        "image": "samokat"
+      },
+      {
+        "id": "es_t18",
+        "sound": "COHETE",
+        "text": "¡El cohete vuela al espacio!",
+        "emoji": "🚀",
+        "colorBg": "#FFE6E6",
+        "colorAccent": "#E74C3C",
+        "audio": "es_rocket",
+        "image": "raketa"
+      },
+      {
+        "id": "es_t19",
+        "sound": "BOTE",
+        "text": "¡El bote flota en el agua!",
+        "emoji": "⛵",
+        "colorBg": "#FFE6E6",
+        "colorAccent": "#E74C3C",
+        "audio": "es_boat",
+        "image": "chovnik"
+      },
+      {
+        "id": "es_t20",
+        "sound": "YATE",
+        "text": "¡Un elegante yate blanco!",
+        "emoji": "🛥️",
+        "colorBg": "#FFE6E6",
+        "colorAccent": "#E74C3C",
+        "audio": "es_yacht",
+        "image": "yahta"
+      },
+      {
+        "id": "es_t21",
+        "sound": "GLOBO AEROSTÁTICO",
+        "text": "¡El globo aerostático sube muy alto!",
+        "emoji": "🎈",
+        "colorBg": "#FFE6E6",
+        "colorAccent": "#E74C3C",
+        "audio": "es_hot_air_balloon",
+        "image": "povitriana_kulia"
+      },
+      {
+        "id": "es_t22",
+        "sound": "TRINEO",
+        "text": "¡El trineo se desliza en la nieve!",
+        "emoji": "🛷",
+        "colorBg": "#FFE6E6",
+        "colorAccent": "#E74C3C",
+        "audio": "es_sled",
+        "image": "sanki"
+      },
+      {
+        "id": "es_t23",
+        "sound": "PATINETA",
+        "text": "¡Anda en la patineta!",
+        "emoji": "🛹",
+        "colorBg": "#FFE6E6",
+        "colorAccent": "#E74C3C",
+        "audio": "es_skateboard",
+        "image": "skateboard"
+      },
+      {
+        "id": "es_t24",
+        "sound": "EXCAVADORA",
+        "text": "¡La excavadora hace hoyos grandes!",
+        "emoji": "🚧",
+        "colorBg": "#FFE6E6",
+        "colorAccent": "#E74C3C",
+        "audio": "es_excavator",
+        "image": "ekskavator"
+      },
+      {
+        "id": "es_t25",
+        "sound": "SUBMARINO",
+        "text": "¡El submarino baja muy profundo!",
+        "emoji": "🌊",
+        "colorBg": "#FFE6E6",
+        "colorAccent": "#E74C3C",
+        "audio": "es_submarine",
+        "image": "pidvodnii_choven"
+      }
+    ]
+  },
+  {
+    "id": "es_food",
+    "category": "world",
+    "title": "Comida y frutas",
+    "icon": "🍎",
+    "color": "#00B894",
+    "isLocked": true,
+    "cards": [
+      {
+        "id": "es_fd01",
+        "sound": "MANZANA",
+        "text": "¡Una manzana roja y crujiente!",
+        "emoji": "🍎",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E67E22",
+        "audio": "es_apple_f",
+        "image": "apple"
+      },
+      {
+        "id": "es_fd02",
+        "sound": "PLÁTANO",
+        "text": "¡Un plátano dulce y amarillo!",
+        "emoji": "🍌",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E67E22",
+        "audio": "es_banana",
+        "image": "banana"
+      },
+      {
+        "id": "es_fd03",
+        "sound": "UVAS",
+        "text": "¡Uvas pequeñas y jugosas!",
+        "emoji": "🍇",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E67E22",
+        "audio": "es_grapes",
+        "image": "grapes"
+      },
+      {
+        "id": "es_fd04",
+        "sound": "NARANJA",
+        "text": "¡Una naranja redonda y rica!",
+        "emoji": "🍊",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E67E22",
+        "audio": "es_orange",
+        "image": "apelsin"
+      },
+      {
+        "id": "es_fd05",
+        "sound": "FRESA",
+        "text": "¡Una fresa roja y brillante!",
+        "emoji": "🍓",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E67E22",
+        "audio": "es_strawberry",
+        "image": "polunicia"
+      },
+      {
+        "id": "es_fd06",
+        "sound": "SANDÍA",
+        "text": "¡Una sandía grande y jugosa!",
+        "emoji": "🍉",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E67E22",
+        "audio": "es_watermelon",
+        "image": "kavun"
+      },
+      {
+        "id": "es_fd07",
+        "sound": "PERA",
+        "text": "¡Una pera verde y dulce!",
+        "emoji": "🍐",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E67E22",
+        "audio": "es_pear",
+        "image": "grusha"
+      },
+      {
+        "id": "es_fd08",
+        "sound": "CEREZA",
+        "text": "¡Una cereza roja y pequeñita!",
+        "emoji": "🍒",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E67E22",
+        "audio": "es_cherry",
+        "image": "vishnia"
+      },
+      {
+        "id": "es_fd09",
+        "sound": "DURAZNO",
+        "text": "¡Un durazno suave y rico!",
+        "emoji": "🍑",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E67E22",
+        "audio": "es_peach",
+        "image": "persik"
+      },
+      {
+        "id": "es_fd10",
+        "sound": "LIMÓN",
+        "text": "¡Un limón amarillo y ácido!",
+        "emoji": "🍋",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E67E22",
+        "audio": "es_lemon",
+        "image": "limon"
+      },
+      {
+        "id": "es_fd11",
+        "sound": "PAN",
+        "text": "¡Pan fresco y calientito!",
+        "emoji": "🍞",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E67E22",
+        "audio": "es_bread",
+        "image": "hlib"
+      },
+      {
+        "id": "es_fd12",
+        "sound": "LECHE",
+        "text": "¡Un vaso de leche!",
+        "emoji": "🥛",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E67E22",
+        "audio": "es_milk",
+        "image": "moloko"
+      },
+      {
+        "id": "es_fd13",
+        "sound": "QUESO",
+        "text": "¡Rico queso amarillo!",
+        "emoji": "🧀",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E67E22",
+        "audio": "es_cheese",
+        "image": "sir"
+      },
+      {
+        "id": "es_fd14",
+        "sound": "AVENA",
+        "text": "¡Avena tibia y sabrosa!",
+        "emoji": "🥣",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E67E22",
+        "audio": "es_porridge_f",
+        "image": "kasha"
+      },
+      {
+        "id": "es_fd15",
+        "sound": "SOPA",
+        "text": "¡Sopa calientita y rica!",
+        "emoji": "🍲",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E67E22",
+        "audio": "es_soup",
+        "image": "sup"
+      },
+      {
+        "id": "es_fd16",
+        "sound": "TARTA",
+        "text": "¡Una tarta dulce de frutas!",
+        "emoji": "🥧",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E67E22",
+        "audio": "es_pie",
+        "image": "pirijok"
+      },
+      {
+        "id": "es_fd17",
+        "sound": "GALLETA",
+        "text": "¡Una galleta crujiente!",
+        "emoji": "🍪",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E67E22",
+        "audio": "es_cookie",
+        "image": "pechivo"
+      },
+      {
+        "id": "es_fd18",
+        "sound": "PASTEL",
+        "text": "¡Un rico pastel de cumpleaños!",
+        "emoji": "🎂",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E67E22",
+        "audio": "es_cake",
+        "image": "tort"
+      },
+      {
+        "id": "es_fd19",
+        "sound": "HELADO",
+        "text": "¡Helado frío y dulce!",
+        "emoji": "🍦",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E67E22",
+        "audio": "es_ice_cream",
+        "image": "morozivo"
+      },
+      {
+        "id": "es_fd20",
+        "sound": "PANQUEQUE",
+        "text": "¡Un panqueque esponjosito!",
+        "emoji": "🥞",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E67E22",
+        "audio": "es_pancake",
+        "image": "en_pancake"
+      },
+      {
+        "id": "es_fd21",
+        "sound": "ZANAHORIA",
+        "text": "¡Una zanahoria naranja y crujiente!",
+        "emoji": "🥕",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E67E22",
+        "audio": "es_carrot",
+        "image": "morkva"
+      },
+      {
+        "id": "es_fd22",
+        "sound": "PEPINO",
+        "text": "¡Un pepino verde y fresco!",
+        "emoji": "🥒",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E67E22",
+        "audio": "es_cucumber",
+        "image": "ogirok"
+      },
+      {
+        "id": "es_fd23",
+        "sound": "TOMATE",
+        "text": "¡Un tomate rojo y redondo!",
+        "emoji": "🍅",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E67E22",
+        "audio": "es_tomato",
+        "image": "pomidor"
+      },
+      {
+        "id": "es_fd24",
+        "sound": "PAPA",
+        "text": "¡Una papa grande y rica!",
+        "emoji": "🥔",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E67E22",
+        "audio": "es_potato",
+        "image": "kartoplia"
+      },
+      {
+        "id": "es_fd25",
+        "sound": "MAÍZ",
+        "text": "¡Maíz dulce y amarillo!",
+        "emoji": "🌽",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E67E22",
+        "audio": "es_corn",
+        "image": "kukurudza"
+      },
+      {
+        "id": "es_fd26",
+        "sound": "CALABAZA",
+        "text": "¡Una calabaza grande y naranja!",
+        "emoji": "🎃",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E67E22",
+        "audio": "es_pumpkin",
+        "image": "garbuz"
+      },
+      {
+        "id": "es_fd27",
+        "sound": "MIEL",
+        "text": "¡Miel dulce y dorada!",
+        "emoji": "🍯",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E67E22",
+        "audio": "es_honey",
+        "image": "med"
+      },
+      {
+        "id": "es_fd28",
+        "sound": "HUEVO",
+        "text": "¡Un huevo blanco y pequeño!",
+        "emoji": "🥚",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E67E22",
+        "audio": "es_egg",
+        "image": "yaice"
+      },
+      {
+        "id": "es_fd29",
+        "sound": "DULCE",
+        "text": "¡Un dulce pequeñito y rico!",
+        "emoji": "🍬",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E67E22",
+        "audio": "es_candy",
+        "image": "cukerka"
+      },
+      {
+        "id": "es_fd30",
+        "sound": "JUGO",
+        "text": "¡Rico jugo de frutas!",
+        "emoji": "🧃",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E67E22",
+        "audio": "es_juice",
+        "image": "en_juice"
+      }
+    ]
+  },
+  {
+    "id": "es_colors",
+    "category": "world",
+    "title": "Colores y formas",
+    "icon": "🎨",
+    "color": "#E84393",
+    "isLocked": true,
+    "cards": [
+      {
+        "id": "es_c01",
+        "sound": "ROJO",
+        "text": "¡Rojo como una manzana!",
+        "emoji": "🔴",
+        "colorBg": "#E6F3FF",
+        "colorAccent": "#3498DB",
+        "audio": "es_red",
+        "image": "red"
+      },
+      {
+        "id": "es_c02",
+        "sound": "AZUL",
+        "text": "¡Azul como el cielo!",
+        "emoji": "🔵",
+        "colorBg": "#E6F3FF",
+        "colorAccent": "#3498DB",
+        "audio": "es_blue",
+        "image": "blue"
+      },
+      {
+        "id": "es_c03",
+        "sound": "AMARILLO",
+        "text": "¡Amarillo como el sol!",
+        "emoji": "🟡",
+        "colorBg": "#E6F3FF",
+        "colorAccent": "#3498DB",
+        "audio": "es_yellow",
+        "image": "yellow"
+      },
+      {
+        "id": "es_c04",
+        "sound": "VERDE",
+        "text": "¡Verde como el pasto!",
+        "emoji": "🟢",
+        "colorBg": "#E6F3FF",
+        "colorAccent": "#3498DB",
+        "audio": "es_green",
+        "image": "green"
+      },
+      {
+        "id": "es_c05",
+        "sound": "BLANCO",
+        "text": "¡Blanco como la nieve!",
+        "emoji": "⚪",
+        "colorBg": "#E6F3FF",
+        "colorAccent": "#3498DB",
+        "audio": "es_white",
+        "image": "white"
+      },
+      {
+        "id": "es_c06",
+        "sound": "NEGRO",
+        "text": "¡Negro como la noche!",
+        "emoji": "⚫",
+        "colorBg": "#E6F3FF",
+        "colorAccent": "#3498DB",
+        "audio": "es_black",
+        "image": "black"
+      },
+      {
+        "id": "es_c07",
+        "sound": "NARANJA",
+        "text": "¡Naranja como una calabaza!",
+        "emoji": "🟠",
+        "colorBg": "#E6F3FF",
+        "colorAccent": "#3498DB",
+        "audio": "es_orange_c",
+        "image": "orange"
+      },
+      {
+        "id": "es_c08",
+        "sound": "ROSA",
+        "text": "¡Rosa como una flor!",
+        "emoji": "🩷",
+        "colorBg": "#E6F3FF",
+        "colorAccent": "#3498DB",
+        "audio": "es_pink",
+        "image": "pink"
+      },
+      {
+        "id": "es_c09",
+        "sound": "MORADO",
+        "text": "¡Morado como las uvas!",
+        "emoji": "🟣",
+        "colorBg": "#E6F3FF",
+        "colorAccent": "#3498DB",
+        "audio": "es_purple",
+        "image": "purple"
+      },
+      {
+        "id": "es_c10",
+        "sound": "CAFÉ",
+        "text": "¡Café como el chocolate!",
+        "emoji": "🟤",
+        "colorBg": "#E6F3FF",
+        "colorAccent": "#3498DB",
+        "audio": "es_brown",
+        "image": "brown"
+      },
+      {
+        "id": "es_c11",
+        "sound": "GRIS",
+        "text": "¡Gris como una nube!",
+        "emoji": "⬜",
+        "colorBg": "#E6F3FF",
+        "colorAccent": "#3498DB",
+        "audio": "es_gray",
+        "image": "gray"
+      },
+      {
+        "id": "es_c12",
+        "sound": "CELESTE",
+        "text": "¡Celeste como el mar!",
+        "emoji": "🩵",
+        "colorBg": "#E6F3FF",
+        "colorAccent": "#3498DB",
+        "audio": "es_sky_blue",
+        "image": "sky-blue"
+      },
+      {
+        "id": "es_c13",
+        "sound": "DORADO",
+        "text": "¡Dorado como el sol brillante!",
+        "emoji": "🟨",
+        "colorBg": "#E6F3FF",
+        "colorAccent": "#3498DB",
+        "audio": "es_gold",
+        "image": "gold"
+      },
+      {
+        "id": "es_c14",
+        "sound": "CÍRCULO",
+        "text": "¡Redondo como una pelota!",
+        "emoji": "⭕",
+        "colorBg": "#E6F3FF",
+        "colorAccent": "#3498DB",
+        "audio": "es_circle",
+        "image": "circle"
+      },
+      {
+        "id": "es_c15",
+        "sound": "CUADRADO",
+        "text": "¡Cuatro lados iguales!",
+        "emoji": "🟥",
+        "colorBg": "#E6F3FF",
+        "colorAccent": "#3498DB",
+        "audio": "es_square",
+        "image": "square"
+      },
+      {
+        "id": "es_c16",
+        "sound": "TRIÁNGULO",
+        "text": "¡Tres lados con puntas!",
+        "emoji": "🔺",
+        "colorBg": "#E6F3FF",
+        "colorAccent": "#3498DB",
+        "audio": "es_triangle",
+        "image": "triangle"
+      },
+      {
+        "id": "es_c17",
+        "sound": "ESTRELLA",
+        "text": "¡Una estrella brillante!",
+        "emoji": "⭐",
+        "colorBg": "#E6F3FF",
+        "colorAccent": "#3498DB",
+        "audio": "es_star",
+        "image": "star"
+      },
+      {
+        "id": "es_c18",
+        "sound": "CORAZÓN",
+        "text": "¡Un corazón lleno de amor!",
+        "emoji": "❤️",
+        "colorBg": "#E6F3FF",
+        "colorAccent": "#3498DB",
+        "audio": "es_heart",
+        "image": "hart_k"
+      },
+      {
+        "id": "es_c19",
+        "sound": "ÓVALO",
+        "text": "¡Ovalado como un huevo!",
+        "emoji": "⚪",
+        "colorBg": "#E6F3FF",
+        "colorAccent": "#3498DB",
+        "audio": "es_oval",
+        "image": "oval"
+      },
+      {
+        "id": "es_c20",
+        "sound": "ROMBO",
+        "text": "¡Un rombo que brilla!",
+        "emoji": "💎",
+        "colorBg": "#E6F3FF",
+        "colorAccent": "#3498DB",
+        "audio": "es_diamond",
+        "image": "diamond"
+      },
+      {
+        "id": "es_c21",
+        "sound": "RECTÁNGULO",
+        "text": "¡Dos lados largos y dos cortos!",
+        "emoji": "🟫",
+        "colorBg": "#E6F3FF",
+        "colorAccent": "#3498DB",
+        "audio": "es_rectangle",
+        "image": "en_rectangle"
+      },
+      {
+        "id": "es_c22",
+        "sound": "CRUZ",
+        "text": "¡Una cruz en forma de más!",
+        "emoji": "➕",
+        "colorBg": "#E6F3FF",
+        "colorAccent": "#3498DB",
+        "audio": "es_cross",
+        "image": "en_cross"
+      },
+      {
+        "id": "es_c23",
+        "sound": "FLECHA",
+        "text": "¡La flecha señala el camino!",
+        "emoji": "➡️",
+        "colorBg": "#E6F3FF",
+        "colorAccent": "#3498DB",
+        "audio": "es_arrow",
+        "image": "en_arrow"
+      },
+      {
+        "id": "es_c24",
+        "sound": "LUNA",
+        "text": "¡Una luna curva y brillante!",
+        "emoji": "🌙",
+        "colorBg": "#E6F3FF",
+        "colorAccent": "#3498DB",
+        "audio": "es_moon",
+        "image": "moon"
+      },
+      {
+        "id": "es_c25",
+        "sound": "FLOR",
+        "text": "¡Una flor con pétalos!",
+        "emoji": "🌸",
+        "colorBg": "#E6F3FF",
+        "colorAccent": "#3498DB",
+        "audio": "es_flower",
+        "image": "flower_pink"
+      },
+      {
+        "id": "es_c26",
+        "sound": "ESPIRAL",
+        "text": "¡La espiral da vueltas y vueltas!",
+        "emoji": "🌀",
+        "colorBg": "#E6F3FF",
+        "colorAccent": "#3498DB",
+        "audio": "es_spiral",
+        "image": "en_spiral"
+      },
+      {
+        "id": "es_c27",
+        "sound": "NUBE",
+        "text": "¡Una nube blanca y esponjosa!",
+        "emoji": "☁️",
+        "colorBg": "#E6F3FF",
+        "colorAccent": "#3498DB",
+        "audio": "es_cloud",
+        "image": "cloud_blue"
+      },
+      {
+        "id": "es_c28",
+        "sound": "RAYO",
+        "text": "¡La forma de un rayo!",
+        "emoji": "⚡",
+        "colorBg": "#E6F3FF",
+        "colorAccent": "#3498DB",
+        "audio": "es_lightning",
+        "image": "en_lightning"
+      },
+      {
+        "id": "es_c29",
+        "sound": "ARCOÍRIS",
+        "text": "¡Un arcoíris de colores!",
+        "emoji": "🌈",
+        "colorBg": "#E6F3FF",
+        "colorAccent": "#3498DB",
+        "audio": "es_rainbow",
+        "image": "bright"
+      },
+      {
+        "id": "es_c30",
+        "sound": "SOL",
+        "text": "¡Un sol grande y brillante!",
+        "emoji": "☀️",
+        "colorBg": "#E6F3FF",
+        "colorAccent": "#3498DB",
+        "audio": "es_sun",
+        "image": "sun_yellow"
+      }
+    ]
+  },
+  {
+    "id": "es_body",
+    "category": "world",
+    "title": "Partes del cuerpo",
+    "icon": "🤸",
+    "color": "#00CEC9",
+    "isLocked": true,
+    "cards": [
+      {
+        "id": "es_b01",
+        "sound": "CABEZA",
+        "text": "¡Toca tu cabeza!",
+        "emoji": "🗿",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "es_head",
+        "image": "head"
+      },
+      {
+        "id": "es_b02",
+        "sound": "OJOS",
+        "text": "¡Parpadea con tus ojos!",
+        "emoji": "👀",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "es_eyes",
+        "image": "eyes"
+      },
+      {
+        "id": "es_b03",
+        "sound": "OREJAS",
+        "text": "¡Mueve tus orejas!",
+        "emoji": "👂",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "es_ears",
+        "image": "ears"
+      },
+      {
+        "id": "es_b04",
+        "sound": "NARIZ",
+        "text": "¡Toca tu nariz!",
+        "emoji": "👃",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "es_nose",
+        "image": "nose"
+      },
+      {
+        "id": "es_b05",
+        "sound": "BOCA",
+        "text": "¡Abre la boca!",
+        "emoji": "👄",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "es_mouth",
+        "image": "mouse"
+      },
+      {
+        "id": "es_b06",
+        "sound": "DIENTES",
+        "text": "¡Muestra tus dientes!",
+        "emoji": "🦷",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "es_teeth_b",
+        "image": "teeth"
+      },
+      {
+        "id": "es_b07",
+        "sound": "LENGUA",
+        "text": "¡Saca la lengua!",
+        "emoji": "👅",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "es_tongue",
+        "image": "tonge"
+      },
+      {
+        "id": "es_b08",
+        "sound": "PELO",
+        "text": "¡Péinate el pelo!",
+        "emoji": "💇",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "es_hair",
+        "image": "hair"
+      },
+      {
+        "id": "es_b09",
+        "sound": "CUELLO",
+        "text": "¡Gira el cuello!",
+        "emoji": "🧑",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "es_neck",
+        "image": "neck"
+      },
+      {
+        "id": "es_b10",
+        "sound": "HOMBROS",
+        "text": "¡Sube y baja los hombros!",
+        "emoji": "🤷",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "es_shoulders",
+        "image": "sholdes"
+      },
+      {
+        "id": "es_b11",
+        "sound": "MANOS",
+        "text": "¡Aplaude con las manos!",
+        "emoji": "👏",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "es_hands_b",
+        "image": "hands"
+      },
+      {
+        "id": "es_b12",
+        "sound": "DEDOS",
+        "text": "¡Mueve los dedos!",
+        "emoji": "✋",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "es_fingers",
+        "image": "fingers"
+      },
+      {
+        "id": "es_b13",
+        "sound": "PANCITA",
+        "text": "¡Acaricia tu pancita!",
+        "emoji": "🤰",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "es_tummy",
+        "image": "stomack"
+      },
+      {
+        "id": "es_b14",
+        "sound": "ESPALDA",
+        "text": "¡Endereza la espalda!",
+        "emoji": "🚶",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "es_back",
+        "image": "back"
+      },
+      {
+        "id": "es_b15",
+        "sound": "PIERNAS",
+        "text": "¡Estira las piernas!",
+        "emoji": "🦵",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "es_legs",
+        "image": "legs"
+      },
+      {
+        "id": "es_b16",
+        "sound": "RODILLAS",
+        "text": "¡Dobla las rodillas!",
+        "emoji": "🦿",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "es_knees",
+        "image": "knees"
+      },
+      {
+        "id": "es_b17",
+        "sound": "PIES",
+        "text": "¡Zapatea con los pies!",
+        "emoji": "🦶",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "es_feet",
+        "image": "foots"
+      },
+      {
+        "id": "es_b18",
+        "sound": "CORAZÓN",
+        "text": "¡Tu corazón late adentro!",
+        "emoji": "❤️",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "es_heart_b",
+        "image": "hart_t"
+      },
+      {
+        "id": "es_b19",
+        "sound": "PULMONES",
+        "text": "¡Tus pulmones se llenan de aire!",
+        "emoji": "🫁",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "es_lungs",
+        "image": "lungs"
+      },
+      {
+        "id": "es_b20",
+        "sound": "CODO",
+        "text": "¡Dobla el codo!",
+        "emoji": "💪",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "es_elbow",
+        "image": "elbow"
+      },
+      {
+        "id": "es_b21",
+        "sound": "PALMAS",
+        "text": "¡Abre las palmas!",
+        "emoji": "🖐️",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "es_palms",
+        "image": "palms"
+      },
+      {
+        "id": "es_b22",
+        "sound": "CEJAS",
+        "text": "¡Levanta las cejas!",
+        "emoji": "😀",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "es_eyebrows",
+        "image": "eyebrows"
+      },
+      {
+        "id": "es_b23",
+        "sound": "CACHETES",
+        "text": "¡Infla los cachetes!",
+        "emoji": "😊",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "es_cheeks",
+        "image": "cheeks"
+      },
+      {
+        "id": "es_b24",
+        "sound": "FRENTE",
+        "text": "¡Toca tu frente!",
+        "emoji": "🙇",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "es_forehead",
+        "image": "forehead"
+      },
+      {
+        "id": "es_b25",
+        "sound": "BARBILLA",
+        "text": "¡Toca tu barbilla!",
+        "emoji": "🧔",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "es_chin",
+        "image": "chin"
+      },
+      {
+        "id": "es_b26",
+        "sound": "UÑAS",
+        "text": "¡Limpia tus uñas!",
+        "emoji": "💅",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "es_nails",
+        "image": "neils"
+      },
+      {
+        "id": "es_b27",
+        "sound": "PIEL",
+        "text": "¡Piel suave y tibia!",
+        "emoji": "🧴",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "es_skin",
+        "image": "skin"
+      },
+      {
+        "id": "es_b28",
+        "sound": "OMBLIGO",
+        "text": "¡Encuentra tu ombligo!",
+        "emoji": "🎀",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "es_belly_button",
+        "image": "jellybutton"
+      },
+      {
+        "id": "es_b29",
+        "sound": "SONRISA",
+        "text": "¡Una sonrisa grande y feliz!",
+        "emoji": "😁",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "es_smile_b",
+        "image": "smile"
+      },
+      {
+        "id": "es_b30",
+        "sound": "DEDITOS DEL PIE",
+        "text": "¡Mueve los deditos del pie!",
+        "emoji": "🦶",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#9C27B0",
+        "audio": "es_toes",
+        "image": "en_toes"
+      }
+    ]
+  },
+  {
+    "id": "es_actions",
+    "category": "speech",
+    "title": "Acciones",
+    "icon": "🏃",
+    "color": "#FF8C42",
+    "isLocked": false,
+    "cards": [
+      {
+        "id": "es_ac01",
+        "sound": "CORRER",
+        "text": "¡Vamos a correr muy rápido!",
+        "emoji": "🏃",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "es_run",
+        "image": "en_run"
+      },
+      {
+        "id": "es_ac02",
+        "sound": "SALTAR",
+        "text": "¡Salta como un conejo!",
+        "emoji": "🦘",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "es_jump",
+        "image": "bunny"
+      },
+      {
+        "id": "es_ac03",
+        "sound": "COMER",
+        "text": "¡Come tu rica comida!",
+        "emoji": "🍽️",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "es_eat",
+        "image": "kasha"
+      },
+      {
+        "id": "es_ac04",
+        "sound": "BEBER",
+        "text": "¡Bebe un poco de agua!",
+        "emoji": "🥤",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "es_drink",
+        "image": "voda"
+      },
+      {
+        "id": "es_ac05",
+        "sound": "DORMIR",
+        "text": "¡Es hora de dormir!",
+        "emoji": "😴",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "es_sleep",
+        "image": "bed"
+      },
+      {
+        "id": "es_ac06",
+        "sound": "JUGAR",
+        "text": "¡A jugar todos juntos!",
+        "emoji": "🎮",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "es_play_a",
+        "image": "en_play_a"
+      },
+      {
+        "id": "es_ac07",
+        "sound": "DIBUJAR",
+        "text": "¡Haz un dibujo bonito!",
+        "emoji": "🎨",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "es_draw",
+        "image": "nathnenia"
+      },
+      {
+        "id": "es_ac08",
+        "sound": "BAILAR",
+        "text": "¡Baila conmigo!",
+        "emoji": "💃",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "es_dance",
+        "image": "en_dance"
+      },
+      {
+        "id": "es_ac09",
+        "sound": "NADAR",
+        "text": "¡Nada en el agua!",
+        "emoji": "🏊",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "es_swim",
+        "image": "korabel"
+      },
+      {
+        "id": "es_ac10",
+        "sound": "REÍR",
+        "text": "¡Reír nos hace felices!",
+        "emoji": "😂",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "es_laugh",
+        "image": "laugh"
+      },
+      {
+        "id": "es_ac11",
+        "sound": "LLORAR",
+        "text": "No llores, todo está bien.",
+        "emoji": "😢",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "es_cry",
+        "image": "sad"
+      },
+      {
+        "id": "es_ac12",
+        "sound": "LAVAR",
+        "text": "¡Lávate bien las manos!",
+        "emoji": "🧼",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "es_wash",
+        "image": "wash_hands"
+      },
+      {
+        "id": "es_ac13",
+        "sound": "CAMINAR",
+        "text": "¡Vamos a caminar!",
+        "emoji": "🚶",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "es_walk_a",
+        "image": "walk"
+      },
+      {
+        "id": "es_ac14",
+        "sound": "SENTARSE",
+        "text": "¡Siéntate tranquilito!",
+        "emoji": "🪑",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "es_sit",
+        "image": "en_sit"
+      },
+      {
+        "id": "es_ac15",
+        "sound": "MIRAR",
+        "text": "¡Mira con atención!",
+        "emoji": "👀",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "es_look",
+        "image": "eyebrows"
+      },
+      {
+        "id": "es_ac16",
+        "sound": "ESCUCHAR",
+        "text": "¡Escucha el sonido!",
+        "emoji": "👂",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "es_listen",
+        "image": "ears"
+      },
+      {
+        "id": "es_ac17",
+        "sound": "ABRAZAR",
+        "text": "¡Un abrazo grande y calientito!",
+        "emoji": "🤗",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "es_hug_a",
+        "image": "hug"
+      },
+      {
+        "id": "es_ac18",
+        "sound": "CANTAR",
+        "text": "¡Canta una canción alegre!",
+        "emoji": "🎤",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "es_sing",
+        "image": "en_sing"
+      },
+      {
+        "id": "es_ac19",
+        "sound": "LANZAR",
+        "text": "¡Lanza la pelota!",
+        "emoji": "⚾",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "es_throw",
+        "image": "en_throw"
+      },
+      {
+        "id": "es_ac20",
+        "sound": "ATRAPAR",
+        "text": "¡Atrapa la pelota!",
+        "emoji": "🥎",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "es_catch",
+        "image": "en_catch"
+      },
+      {
+        "id": "es_ac21",
+        "sound": "LEER",
+        "text": "¡Lee un libro divertido!",
+        "emoji": "📖",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "es_read",
+        "image": "book"
+      },
+      {
+        "id": "es_ac22",
+        "sound": "CONSTRUIR",
+        "text": "¡Construye una torre alta!",
+        "emoji": "🏗️",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "es_build",
+        "image": "en_build"
+      },
+      {
+        "id": "es_ac23",
+        "sound": "COCINAR",
+        "text": "¡Cocina algo delicioso!",
+        "emoji": "👨‍🍳",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "es_cook",
+        "image": "en_cook"
+      },
+      {
+        "id": "es_ac24",
+        "sound": "LIMPIAR",
+        "text": "¡Limpia y guarda los juguetes!",
+        "emoji": "🧹",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "es_clean",
+        "image": "en_clean"
+      },
+      {
+        "id": "es_ac25",
+        "sound": "AYUDAR",
+        "text": "¡Ayuda a tu mamá!",
+        "emoji": "🤝",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "es_help",
+        "image": "en_help"
+      }
+    ]
+  },
+  {
+    "id": "es_opposites",
+    "category": "speech",
+    "title": "Opuestos",
+    "icon": "↔️",
+    "color": "#7B1FA2",
+    "isLocked": true,
+    "cards": [
+      {
+        "id": "es_op01",
+        "sound": "GRANDE",
+        "text": "¡Grande como un elefante!",
+        "emoji": "🐘",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "es_big",
+        "image": "big"
+      },
+      {
+        "id": "es_op02",
+        "sound": "PEQUEÑO",
+        "text": "¡Pequeño como un ratón!",
+        "emoji": "🐭",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "es_small",
+        "image": "little"
+      },
+      {
+        "id": "es_op03",
+        "sound": "CALIENTE",
+        "text": "¡Caliente como el fuego!",
+        "emoji": "🔥",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "es_hot",
+        "image": "en_hot"
+      },
+      {
+        "id": "es_op04",
+        "sound": "FRÍO",
+        "text": "¡Frío como la nieve!",
+        "emoji": "❄️",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "es_cold",
+        "image": "en_cold"
+      },
+      {
+        "id": "es_op05",
+        "sound": "CONTENTO",
+        "text": "¡Contento y sonriente!",
+        "emoji": "😀",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "es_happy_o",
+        "image": "happy"
+      },
+      {
+        "id": "es_op06",
+        "sound": "TRISTE",
+        "text": "¡No estés triste!",
+        "emoji": "😢",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "es_sad_o",
+        "image": "sad"
+      },
+      {
+        "id": "es_op07",
+        "sound": "RÁPIDO",
+        "text": "¡Rápido como un guepardo!",
+        "emoji": "🐆",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "es_fast",
+        "image": "en_fast"
+      },
+      {
+        "id": "es_op08",
+        "sound": "LENTO",
+        "text": "¡Lento como una tortuga!",
+        "emoji": "🐢",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "es_slow",
+        "image": "en_slow"
+      },
+      {
+        "id": "es_op09",
+        "sound": "DÍA",
+        "text": "¡Un día lleno de sol!",
+        "emoji": "☀️",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "es_day",
+        "image": "en_day"
+      },
+      {
+        "id": "es_op10",
+        "sound": "NOCHE",
+        "text": "¡Una noche de estrellas!",
+        "emoji": "🌙",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "es_night",
+        "image": "en_night"
+      },
+      {
+        "id": "es_op11",
+        "sound": "FUERTE",
+        "text": "¡Un sonido muy fuerte!",
+        "emoji": "📢",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "es_loud",
+        "image": "en_loud"
+      },
+      {
+        "id": "es_op12",
+        "sound": "SILENCIOSO",
+        "text": "¡Un sonido suave y bajito!",
+        "emoji": "🤫",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "es_quiet",
+        "image": "en_quiet"
+      },
+      {
+        "id": "es_op13",
+        "sound": "LIMPIO",
+        "text": "¡Limpio y reluciente!",
+        "emoji": "🧼",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "es_clean_o",
+        "image": "en_clean_o"
+      },
+      {
+        "id": "es_op14",
+        "sound": "SUCIO",
+        "text": "¡Todo lleno de lodo!",
+        "emoji": "💩",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "es_dirty",
+        "image": "en_dirty"
+      },
+      {
+        "id": "es_op15",
+        "sound": "LARGO",
+        "text": "¡Un cuello muy largo!",
+        "emoji": "🦒",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "es_long",
+        "image": "long"
+      },
+      {
+        "id": "es_op16",
+        "sound": "CORTO",
+        "text": "¡Unas piernitas muy cortas!",
+        "emoji": "🐕",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "es_short",
+        "image": "en_short"
+      },
+      {
+        "id": "es_op17",
+        "sound": "PESADO",
+        "text": "¡Pesado como una roca!",
+        "emoji": "🪨",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "es_heavy",
+        "image": "en_heavy"
+      },
+      {
+        "id": "es_op18",
+        "sound": "LIGERO",
+        "text": "¡Ligero como una pluma!",
+        "emoji": "🪶",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "es_light",
+        "image": "fluffy"
+      },
+      {
+        "id": "es_op19",
+        "sound": "ABIERTO",
+        "text": "¡La puerta está abierta!",
+        "emoji": "🚪",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "es_open",
+        "image": "en_open"
+      },
+      {
+        "id": "es_op20",
+        "sound": "CERRADO",
+        "text": "¡La puerta está cerrada!",
+        "emoji": "🔒",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "es_closed",
+        "image": "en_closed"
+      },
+      {
+        "id": "es_op21",
+        "sound": "ARRIBA",
+        "text": "¡Volando alto hacia arriba!",
+        "emoji": "⬆️",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "es_up",
+        "image": "en_up"
+      },
+      {
+        "id": "es_op22",
+        "sound": "ABAJO",
+        "text": "¡Va bajando hacia abajo!",
+        "emoji": "⬇️",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "es_down",
+        "image": "en_down"
+      },
+      {
+        "id": "es_op23",
+        "sound": "DURO",
+        "text": "¡Duro como un diamante!",
+        "emoji": "💎",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "es_hard",
+        "image": "en_hard"
+      },
+      {
+        "id": "es_op24",
+        "sound": "SUAVE",
+        "text": "¡Suave como un osito de peluche!",
+        "emoji": "🧸",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "es_soft",
+        "image": "en_soft"
+      },
+      {
+        "id": "es_op25",
+        "sound": "LLENO",
+        "text": "¡El plato está lleno!",
+        "emoji": "🍽️",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "es_full",
+        "image": "en_full"
+      },
+      {
+        "id": "es_op26",
+        "sound": "VACÍO",
+        "text": "¡El plato está vacío!",
+        "emoji": "🥣",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "es_empty",
+        "image": "en_empty"
+      },
+      {
+        "id": "es_op27",
+        "sound": "JOVEN",
+        "text": "¡Un cachorrito muy joven!",
+        "emoji": "🐶",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "es_young",
+        "image": "en_young"
+      },
+      {
+        "id": "es_op28",
+        "sound": "VIEJO",
+        "text": "¡Un abuelito sabio!",
+        "emoji": "👴",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "es_old",
+        "image": "en_old"
+      },
+      {
+        "id": "es_op29",
+        "sound": "MOJADO",
+        "text": "¡Todo mojado por la lluvia!",
+        "emoji": "💧",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "es_wet",
+        "image": "en_wet"
+      },
+      {
+        "id": "es_op30",
+        "sound": "SECO",
+        "text": "¡Calientito y seco!",
+        "emoji": "☀️",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#43A047",
+        "audio": "es_dry",
+        "image": "en_dry"
+      }
+    ]
+  },
+  {
+    "id": "es_phrases",
+    "category": "speech",
+    "title": "Frases",
+    "icon": "💬",
+    "color": "#FF8C00",
+    "isLocked": true,
+    "cards": [
+      {
+        "id": "es_ph01",
+        "sound": "TENGO SED",
+        "text": "Necesito agua.",
+        "emoji": "🥤",
+        "colorBg": "#FFF9C4",
+        "colorAccent": "#F57F17",
+        "audio": "es_im_thirsty",
+        "image": "voda"
+      },
+      {
+        "id": "es_ph02",
+        "sound": "TENGO HAMBRE",
+        "text": "Quiero comer.",
+        "emoji": "🍽️",
+        "colorBg": "#FFF9C4",
+        "colorAccent": "#F57F17",
+        "audio": "es_im_hungry",
+        "image": "stomack"
+      },
+      {
+        "id": "es_ph03",
+        "sound": "TENGO SUEÑO",
+        "text": "Quiero dormir.",
+        "emoji": "😴",
+        "colorBg": "#FFF9C4",
+        "colorAccent": "#F57F17",
+        "audio": "es_im_sleepy",
+        "image": "en_im_sleepy"
+      },
+      {
+        "id": "es_ph04",
+        "sound": "TENGO FRÍO",
+        "text": "Tengo mucho frío.",
+        "emoji": "🥶",
+        "colorBg": "#FFF9C4",
+        "colorAccent": "#F57F17",
+        "audio": "es_im_cold",
+        "image": "en_im_cold"
+      },
+      {
+        "id": "es_ph05",
+        "sound": "TENGO CALOR",
+        "text": "Tengo mucho calor.",
+        "emoji": "🥵",
+        "colorBg": "#FFF9C4",
+        "colorAccent": "#F57F17",
+        "audio": "es_im_hot",
+        "image": "en_im_hot"
+      },
+      {
+        "id": "es_ph06",
+        "sound": "¿DÓNDE ESTÁ MAMÁ?",
+        "text": "¿Dónde está mi mamá?",
+        "emoji": "❓",
+        "colorBg": "#FFF9C4",
+        "colorAccent": "#F57F17",
+        "audio": "es_wheres_mommy",
+        "image": "en_wheres_mommy"
+      },
+      {
+        "id": "es_ph07",
+        "sound": "¿DÓNDE ESTÁ PAPÁ?",
+        "text": "¿Dónde está mi papá?",
+        "emoji": "❓",
+        "colorBg": "#FFF9C4",
+        "colorAccent": "#F57F17",
+        "audio": "es_wheres_daddy",
+        "image": "en_wheres_daddy"
+      },
+      {
+        "id": "es_ph08",
+        "sound": "VEN AQUÍ",
+        "text": "Ven conmigo.",
+        "emoji": "🙋",
+        "colorBg": "#FFF9C4",
+        "colorAccent": "#F57F17",
+        "audio": "es_come_here",
+        "image": "en_come_here"
+      },
+      {
+        "id": "es_ph09",
+        "sound": "TE QUIERO",
+        "text": "Te quiero mucho.",
+        "emoji": "❤️",
+        "colorBg": "#FFF9C4",
+        "colorAccent": "#F57F17",
+        "audio": "es_i_love_you",
+        "image": "love"
+      },
+      {
+        "id": "es_ph10",
+        "sound": "ABRÁZAME",
+        "text": "Dame un abrazo.",
+        "emoji": "🤗",
+        "colorBg": "#FFF9C4",
+        "colorAccent": "#F57F17",
+        "audio": "es_hug_me",
+        "image": "hug"
+      },
+      {
+        "id": "es_ph11",
+        "sound": "GRACIAS",
+        "text": "Muchas gracias.",
+        "emoji": "🙏",
+        "colorBg": "#FFF9C4",
+        "colorAccent": "#F57F17",
+        "audio": "es_thank_you_p",
+        "image": "thankyou"
+      },
+      {
+        "id": "es_ph12",
+        "sound": "POR FAVOR",
+        "text": "Por favor.",
+        "emoji": "🥺",
+        "colorBg": "#FFF9C4",
+        "colorAccent": "#F57F17",
+        "audio": "es_please_p",
+        "image": "please"
+      },
+      {
+        "id": "es_ph13",
+        "sound": "PERDÓN",
+        "text": "Lo siento.",
+        "emoji": "😔",
+        "colorBg": "#FFF9C4",
+        "colorAccent": "#F57F17",
+        "audio": "es_sorry",
+        "image": "en_sorry"
+      },
+      {
+        "id": "es_ph14",
+        "sound": "¡HOLA!",
+        "text": "¡Hola! ¿Cómo estás?",
+        "emoji": "👋",
+        "colorBg": "#FFF9C4",
+        "colorAccent": "#F57F17",
+        "audio": "es_hello",
+        "image": "en_hello"
+      },
+      {
+        "id": "es_ph15",
+        "sound": "¡ADIÓS!",
+        "text": "¡Hasta luego!",
+        "emoji": "👋",
+        "colorBg": "#FFF9C4",
+        "colorAccent": "#F57F17",
+        "audio": "es_bye_bye",
+        "image": "en_bye_bye"
+      },
+      {
+        "id": "es_ph16",
+        "sound": "DAME",
+        "text": "Dame, por favor.",
+        "emoji": "🤲",
+        "colorBg": "#FFF9C4",
+        "colorAccent": "#F57F17",
+        "audio": "es_give_me",
+        "image": "en_give_me"
+      },
+      {
+        "id": "es_ph17",
+        "sound": "AYÚDAME",
+        "text": "¿Me puedes ayudar?",
+        "emoji": "🆘",
+        "colorBg": "#FFF9C4",
+        "colorAccent": "#F57F17",
+        "audio": "es_help_me",
+        "image": "en_help_me"
+      },
+      {
+        "id": "es_ph18",
+        "sound": "OTRA VEZ",
+        "text": "Hazlo otra vez.",
+        "emoji": "🔁",
+        "colorBg": "#FFF9C4",
+        "colorAccent": "#F57F17",
+        "audio": "es_again",
+        "image": "en_again"
+      },
+      {
+        "id": "es_ph19",
+        "sound": "¡NO!",
+        "text": "No, no quiero.",
+        "emoji": "🙅",
+        "colorBg": "#FFF9C4",
+        "colorAccent": "#F57F17",
+        "audio": "es_no",
+        "image": "en_no"
+      },
+      {
+        "id": "es_ph20",
+        "sound": "ESPERA",
+        "text": "Espera, por favor.",
+        "emoji": "⏸️",
+        "colorBg": "#FFF9C4",
+        "colorAccent": "#F57F17",
+        "audio": "es_wait",
+        "image": "en_wait"
+      },
+      {
+        "id": "es_ph21",
+        "sound": "ME DUELE",
+        "text": "Me duele la rodilla.",
+        "emoji": "🤕",
+        "colorBg": "#FFF9C4",
+        "colorAccent": "#F57F17",
+        "audio": "es_it_hurts",
+        "image": "en_it_hurts"
+      },
+      {
+        "id": "es_ph22",
+        "sound": "ESTOY TRISTE",
+        "text": "Me siento triste.",
+        "emoji": "😢",
+        "colorBg": "#FFF9C4",
+        "colorAccent": "#F57F17",
+        "audio": "es_im_sad",
+        "image": "sad"
+      },
+      {
+        "id": "es_ph23",
+        "sound": "ESTOY FELIZ",
+        "text": "Me siento feliz.",
+        "emoji": "😀",
+        "colorBg": "#FFF9C4",
+        "colorAccent": "#F57F17",
+        "audio": "es_im_happy",
+        "image": "happy"
+      },
+      {
+        "id": "es_ph24",
+        "sound": "TENGO MIEDO",
+        "text": "Tengo un poquito de miedo.",
+        "emoji": "😨",
+        "colorBg": "#FFF9C4",
+        "colorAccent": "#F57F17",
+        "audio": "es_im_scared",
+        "image": "scared"
+      },
+      {
+        "id": "es_ph25",
+        "sound": "NO SÉ",
+        "text": "No estoy seguro.",
+        "emoji": "🤷",
+        "colorBg": "#FFF9C4",
+        "colorAccent": "#F57F17",
+        "audio": "es_i_dont_know",
+        "image": "en_i_dont_know"
+      }
+    ]
+  },
+  {
+    "id": "es_adjectives",
+    "category": "speech",
+    "title": "Adjetivos",
+    "icon": "🎨",
+    "color": "#E65100",
+    "isLocked": true,
+    "cards": [
+      {
+        "id": "es_adj01",
+        "sound": "ESPONJOSO",
+        "text": "¡Suave y esponjoso!",
+        "emoji": "☁️",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#D84315",
+        "audio": "es_fluffy",
+        "image": "fluffy"
+      },
+      {
+        "id": "es_adj02",
+        "sound": "ESPINOSO",
+        "text": "¡Cuidado, es espinoso!",
+        "emoji": "🦔",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#D84315",
+        "audio": "es_prickly",
+        "image": "en_prickly"
+      },
+      {
+        "id": "es_adj03",
+        "sound": "LISO",
+        "text": "¡Liso como el vidrio!",
+        "emoji": "🪞",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#D84315",
+        "audio": "es_smooth",
+        "image": "en_smooth"
+      },
+      {
+        "id": "es_adj04",
+        "sound": "BABOSO",
+        "text": "¡Uy, qué baboso!",
+        "emoji": "🐌",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#D84315",
+        "audio": "es_slimy",
+        "image": "en_slimy"
+      },
+      {
+        "id": "es_adj05",
+        "sound": "ÁSPERO",
+        "text": "¡Áspero como un camino!",
+        "emoji": "🛣️",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#D84315",
+        "audio": "es_bumpy",
+        "image": "en_bumpy"
+      },
+      {
+        "id": "es_adj06",
+        "sound": "PEGAJOSO",
+        "text": "¡Pegajoso como la miel!",
+        "emoji": "🍯",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#D84315",
+        "audio": "es_sticky",
+        "image": "en_sticky"
+      },
+      {
+        "id": "es_adj07",
+        "sound": "DULCE",
+        "text": "¡Rico y dulce!",
+        "emoji": "🍬",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#D84315",
+        "audio": "es_sweet",
+        "image": "en_sweet"
+      },
+      {
+        "id": "es_adj08",
+        "sound": "ÁCIDO",
+        "text": "¡Uy, qué ácido!",
+        "emoji": "🍋",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#D84315",
+        "audio": "es_sour",
+        "image": "en_sour"
+      },
+      {
+        "id": "es_adj09",
+        "sound": "AMARGO",
+        "text": "¡Qué sabor tan amargo!",
+        "emoji": "☕",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#D84315",
+        "audio": "es_bitter",
+        "image": "en_bitter"
+      },
+      {
+        "id": "es_adj10",
+        "sound": "SALADO",
+        "text": "¡Salado como el mar!",
+        "emoji": "🧂",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#D84315",
+        "audio": "es_salty",
+        "image": "en_salty"
+      },
+      {
+        "id": "es_adj11",
+        "sound": "PICANTE",
+        "text": "¡Qué picante está!",
+        "emoji": "🌶️",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#D84315",
+        "audio": "es_spicy",
+        "image": "en_spicy"
+      },
+      {
+        "id": "es_adj12",
+        "sound": "JUGOSO",
+        "text": "¡Jugoso y fresco!",
+        "emoji": "🍑",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#D84315",
+        "audio": "es_juicy",
+        "image": "en_juicy"
+      },
+      {
+        "id": "es_adj13",
+        "sound": "CRUJIENTE",
+        "text": "¡Crujiente como una zanahoria!",
+        "emoji": "🥕",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#D84315",
+        "audio": "es_crunchy",
+        "image": "en_crunchy"
+      }
+    ]
+  }
+]

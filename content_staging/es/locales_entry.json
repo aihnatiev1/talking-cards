@@ -1,0 +1,12 @@
+{
+  "code": "es",
+  "flag": "🌎",
+  "nativeName": "Español",
+  "appTitle": "FirstWords Cards",
+  "onboardingSublabel": "279 tarjetas",
+  "capabilities": {
+    "syllableGame": false,
+    "articulation": false,
+    "seasonalPacks": false
+  }
+}

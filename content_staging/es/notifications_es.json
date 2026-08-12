@@ -1,0 +1,184 @@
+{
+  "dailyTitle": "¡Hora de tarjetas!",
+  "daily": [
+    {
+      "emoji": "🐱",
+      "body": "¡Los gatos dicen MIAU! Dilo junto con tu peque."
+    },
+    {
+      "emoji": "🐶",
+      "body": "¡Los perros dicen GUAU GUAU! Hora de tarjetas con tu peque."
+    },
+    {
+      "emoji": "🐮",
+      "body": "¡Las vacas dicen MUU! ¿Quién más vive en la granja?"
+    },
+    {
+      "emoji": "🐷",
+      "body": "¡Los cerditos dicen OINC! Jueguen una ronda de tarjetas."
+    },
+    {
+      "emoji": "🐸",
+      "body": "¡Las ranas dicen CROAC! ¿Listos para palabras nuevas?"
+    },
+    {
+      "emoji": "🦁",
+      "body": "¡El león ruge fuerte! Un día perfecto para aprender animales."
+    },
+    {
+      "emoji": "🐔",
+      "body": "¡Las gallinas dicen CLO-CLO! Hay tarjetas nuevas esperando."
+    },
+    {
+      "emoji": "🦆",
+      "body": "¡Los patos dicen CUAC! 5 minutos, una palabra nueva."
+    },
+    {
+      "emoji": "🐝",
+      "body": "¡Las abejas dicen BZZZ! Hora de jugar con las tarjetas."
+    },
+    {
+      "emoji": "🚗",
+      "body": "¡Los carros dicen BIP BIP! Vamos a aprender los transportes."
+    },
+    {
+      "emoji": "🔍",
+      "body": "¡Encuentra el intruso! ¿Tu peque puede lograrlo hoy?"
+    },
+    {
+      "emoji": "🥁",
+      "body": "¡A jugar! Una ronda de tarjetas antes de dormir."
+    },
+    {
+      "emoji": "↔️",
+      "body": "¿Cuál es el opuesto de GRANDE? ¡Jueguen juntos!"
+    },
+    {
+      "emoji": "🎤",
+      "body": "Repite conmigo: PEZ, COHETE, MANO. ¡A practicar el habla!"
+    },
+    {
+      "emoji": "🗂️",
+      "body": "¡Ordena las tarjetas en montones! Un juego nuevo te espera."
+    },
+    {
+      "emoji": "🧠",
+      "body": "¡Encuentra el par! Entrena la memoria con tu peque."
+    },
+    {
+      "emoji": "🎧",
+      "body": "¡Adivina la palabra por su sonido! El quiz está abierto."
+    },
+    {
+      "emoji": "🦁",
+      "body": "LEÓN, ELEFANTE, MONO: ¡practiquen los animales juntos!"
+    },
+    {
+      "emoji": "🦋",
+      "body": "LUNA, LIMÓN, LEÓN: ¡palabras nuevas para jugar hoy!"
+    },
+    {
+      "emoji": "🐍",
+      "body": "La serpiente se mueve despacito… ¡descubre más animales hoy!"
+    },
+    {
+      "emoji": "⭐",
+      "body": "SOL, ESTRELLA, SANDÍA: ¡palabras brillantes te esperan!"
+    },
+    {
+      "emoji": "🏃",
+      "body": "Correr, saltar, comer: vamos a aprender las acciones juntos."
+    },
+    {
+      "emoji": "💃",
+      "body": "BAILAR, CANTAR, DIBUJAR: acciones nuevas para probar."
+    },
+    {
+      "emoji": "🤗",
+      "body": "Abrazar, besar, ayudar: aprendan acciones amables juntos."
+    },
+    {
+      "emoji": "↔️",
+      "body": "GRANDE y PEQUEÑO, DÍA y NOCHE: aprendiendo los opuestos."
+    },
+    {
+      "emoji": "🔥",
+      "body": "¿CALIENTE o FRÍO? ¡Adivina el opuesto!"
+    },
+    {
+      "emoji": "🔥",
+      "body": "¡Que siga la racha! Tu peque ya sabe muchísimas palabras."
+    },
+    {
+      "emoji": "🌟",
+      "body": "5 minutos al día, y el lenguaje sigue creciendo."
+    },
+    {
+      "emoji": "⭐",
+      "body": "Pasitos pequeños cada día, resultados grandes."
+    },
+    {
+      "emoji": "🏆",
+      "body": "¡Han llegado muy lejos! Sigan practicando cada día."
+    },
+    {
+      "emoji": "💪",
+      "body": "Una palabra nueva hoy, un habla segura mañana."
+    }
+  ],
+  "winBack": [
+    {
+      "emoji": "👋",
+      "body": "¡Los extrañamos! 3 minutos de tarjetas, una palabra nueva."
+    },
+    {
+      "emoji": "🎈",
+      "body": "¿Aprendemos una palabra con tu peque hoy?"
+    },
+    {
+      "emoji": "📚",
+      "body": "Tus tarjetas te esperan. 5 minutos hacen la diferencia."
+    },
+    {
+      "emoji": "🌈",
+      "body": "¿Recuerdas a tus amigos los animales? ¡Ellos te extrañan!"
+    },
+    {
+      "emoji": "✨",
+      "body": "Una pausa pequeña… ¡y de vuelta a las palabras nuevas!"
+    },
+    {
+      "emoji": "🧸",
+      "body": "Las tarjetas extrañan a tu peque. ¿Jugamos hoy?"
+    },
+    {
+      "emoji": "💬",
+      "body": "Una palabra nueva al día, una gran diferencia en un mes."
+    }
+  ],
+  "streakSaveTitle": "Racha: día {streak}",
+  "streakSave": [
+    {
+      "emoji": "🔥",
+      "body": "¡No pierdas tu racha de {streak} días! Solo 5 minutos de tarjetas."
+    },
+    {
+      "emoji": "⭐",
+      "body": "¡{streak} días seguidos! Una tarjeta mantiene viva la racha."
+    },
+    {
+      "emoji": "🎯",
+      "body": "Tu peque lleva {streak} días seguidos. ¿Una tarjetita antes de dormir?"
+    },
+    {
+      "emoji": "🏅",
+      "body": "No rompas tu racha de {streak} días: una tarjeta salva el día."
+    }
+  ],
+  "paywallReminder": [
+    {
+      "title": "🎁 Un regalo para tu familia",
+      "body": "3 días gratis: desbloquea todos los paquetes para tu peque"
+    }
+  ]
+}
