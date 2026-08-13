@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
@@ -30,6 +31,10 @@ void main() async {
     // Disable collection in debug so dev crashes don't pollute prod dashboards.
     await FirebaseCrashlytics.instance
         .setCrashlyticsCollectionEnabled(!kDebugMode);
+    // Same for Analytics — emulator/dev runs were showing up as real "new
+    // users" and skewing the funnel (e.g. the fake 12.08 spike).
+    await FirebaseAnalytics.instance
+        .setAnalyticsCollectionEnabled(!kDebugMode);
 
     FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
     PlatformDispatcher.instance.onError = (error, stack) {
