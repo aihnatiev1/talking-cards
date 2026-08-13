@@ -135,6 +135,9 @@ class _TalkingCardsAppState extends ConsumerState<TalkingCardsApp>
         useMaterial3: true,
         fontFamily: 'Roboto',
         brightness: Brightness.dark,
+        // Deep indigo instead of the M3 near-black default — keeps the
+        // brand's warm feel and lets the white content cards float.
+        scaffoldBackgroundColor: const Color(0xFF1E1B2A),
       ),
       themeMode: themeMode,
       home: const SplashScreen(),

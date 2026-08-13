@@ -1058,6 +1058,7 @@ class _CategoryChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final icon = _categoryIcons[label];
     final display = icon != null ? '$icon $label' : label;
+    final dark = Theme.of(context).brightness == Brightness.dark;
     return FilterChip(
       label: Center(
         child: Text(
@@ -1065,13 +1066,19 @@ class _CategoryChip extends StatelessWidget {
           style: TextStyle(
             fontSize: 13,
             fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-            color: selected ? Colors.white : null,
+            // Explicit unselected color: the M3 default lands on a dim
+            // grey-on-dark that fails contrast in dark mode.
+            color: selected
+                ? Colors.white
+                : (dark ? Colors.white.withValues(alpha: 0.85) : null),
           ),
         ),
       ),
       selected: selected,
       selectedColor: kAccent,
-      backgroundColor: Colors.grey.withValues(alpha: 0.18),
+      backgroundColor: dark
+          ? Colors.white.withValues(alpha: 0.10)
+          : Colors.grey.withValues(alpha: 0.18),
       showCheckmark: false,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),

@@ -259,7 +259,6 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
 
   Widget _buildProgress(int done, int total) {
     final s = AppS(ref.read(languageProvider) == 'en');
-    final progress = total > 0 ? done / total : 0.0;
     return Column(
       children: [
         Row(
@@ -287,16 +286,8 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
             }),
           ],
         ),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(5),
-          child: LinearProgressIndicator(
-            value: progress,
-            minHeight: 7,
-            backgroundColor: Colors.orange.withValues(alpha: 0.1),
-            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFFB347)),
-          ),
-        ),
+        // No linear bar here — the star row above already shows the same
+        // progress; two indicators for one number read as clutter.
       ],
     );
   }
@@ -709,9 +700,10 @@ class _StopWaypointState extends ConsumerState<_StopWaypoint>
             ),
             const SizedBox(height: 4),
             Text(
-              widget.isDone
-                  ? AppS(ref.read(languageProvider) == 'en')('Готово! ✅', 'Done! ✅')
-                  : widget.info.label,
+              // Keep the stop's own label when done — the green check on the
+              // circle already says "done"; a wall of «Готово!» hides what
+              // the child actually accomplished.
+              widget.info.label,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 15,
