@@ -28,6 +28,7 @@ class PackModel {
   /// to teach one word ends up narrating a minute-long poem or a babble sound.
   static const Set<String> nonWordPackIds = {
     'poems', // Віршики — full verses
+    'rhymes', // Забавлянки — full action rhymes
     'rozmovlyalky', // Розмовлялки — babble sounds (ай/ба/ва), not real words
     'phrases', // Фрази — full sentences
     'en_phrases', // Phrases (EN)

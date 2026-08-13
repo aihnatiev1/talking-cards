@@ -6222,5 +6222,275 @@
       }
     ],
     "freePreviewCount": 3
+  },
+  {
+    "id": "rhymes",
+    "title": "Забавлянки",
+    "icon": "🤗",
+    "color": "#E91E63",
+    "isLocked": true,
+    "cards": [
+      {
+        "id": "rh01",
+        "sound": "БАРАБАН",
+        "text": "Стукайте в ритм долоньками, як у барабан",
+        "emoji": "🥁",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "rhyme_baraban",
+        "image": "rhyme_baraban"
+      },
+      {
+        "id": "rh02",
+        "sound": "БАРАН БУЦ",
+        "text": "На «буц» легенько торкніться лобиком до лобика",
+        "emoji": "🐏",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#6D4C41",
+        "audio": "rhyme_baran_buts",
+        "image": "rhyme_baran_buts"
+      },
+      {
+        "id": "rh03",
+        "sound": "БЕГЕМОТИК",
+        "text": "Погойдуйтеся з боку на бік, як бегемотик",
+        "emoji": "🦛",
+        "colorBg": "#E1F5FE",
+        "colorAccent": "#0277BD",
+        "audio": "rhyme_behemotyk",
+        "image": "rhyme_behemotyk"
+      },
+      {
+        "id": "rh04",
+        "sound": "ВІДПОЧИНОК",
+        "text": "Потягніться і «засніть» разом на слові відпочинок",
+        "emoji": "😴",
+        "colorBg": "#EDE7F6",
+        "colorAccent": "#6A1B9A",
+        "audio": "rhyme_vidpochynok",
+        "image": "rhyme_vidpochynok"
+      },
+      {
+        "id": "rh05",
+        "sound": "ГОРОБЦІ",
+        "text": "Помахайте крильцями-ручками, як горобчики",
+        "emoji": "🐦",
+        "colorBg": "#ECEFF1",
+        "colorAccent": "#546E7A",
+        "audio": "rhyme_horobtsi",
+        "image": "rhyme_horobtsi"
+      },
+      {
+        "id": "rh06",
+        "sound": "ГУСИ",
+        "text": "Складіть долоньку дзьобиком: «га-га-га»",
+        "emoji": "🪿",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#388E3C",
+        "audio": "rhyme_husy",
+        "image": "rhyme_husy"
+      },
+      {
+        "id": "rh07",
+        "sound": "ЇЖАЧОК",
+        "text": "Пальчиками легенько «поколіть» спинку, як їжачок",
+        "emoji": "🦔",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#6D4C41",
+        "audio": "rhyme_yizhachok",
+        "image": "rhyme_yizhachok"
+      },
+      {
+        "id": "rh08",
+        "sound": "ЇХАВ ПАН",
+        "text": "Гойдайте малюка на колінах, на останніх словах — «в ямку»",
+        "emoji": "🐴",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "rhyme_yikhav_pan",
+        "image": "rhyme_yikhav_pan"
+      },
+      {
+        "id": "rh09",
+        "sound": "КАПУСТА",
+        "text": "«Шаткуйте» і «соліть» капусту долоньками",
+        "emoji": "🥬",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32",
+        "audio": "rhyme_kapusta",
+        "image": "rhyme_kapusta"
+      },
+      {
+        "id": "rh10",
+        "sound": "КЕНГУРУ",
+        "text": "Пострибайте разом, як кенгуру",
+        "emoji": "🦘",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#FF8F00",
+        "audio": "rhyme_kenhuru",
+        "image": "rhyme_kenhuru"
+      },
+      {
+        "id": "rh11",
+        "sound": "КОЗЕНЯ",
+        "text": "Покажіть «ріжки» пальчиками",
+        "emoji": "🐐",
+        "colorBg": "#F1F8E9",
+        "colorAccent": "#558B2F",
+        "audio": "rhyme_kozenia",
+        "image": "rhyme_kozenia"
+      },
+      {
+        "id": "rh12",
+        "sound": "КУЮ ЧОБІТОК",
+        "text": "Постукуйте по п'ятці малюка в ритм слів",
+        "emoji": "🥾",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#6D4C41",
+        "audio": "rhyme_kuiu_chobitok",
+        "image": "rhyme_kuiu_chobitok"
+      },
+      {
+        "id": "rh13",
+        "sound": "ЛЕЛЕКИ",
+        "text": "Постійте на одній ніжці, як лелека",
+        "emoji": "🦩",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#AD1457",
+        "audio": "rhyme_leleky",
+        "image": "rhyme_leleky"
+      },
+      {
+        "id": "rh14",
+        "sound": "ЛІЧИЛОЧКА",
+        "text": "Загинайте пальчики малюка по одному",
+        "emoji": "🖐️",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#1565C0",
+        "audio": "rhyme_lichylochka",
+        "image": "rhyme_lichylochka"
+      },
+      {
+        "id": "rh15",
+        "sound": "МАЛЯТА-БЛИЗНЯТА",
+        "text": "Плескайте в долоньки одне одному",
+        "emoji": "👶",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#EC407A",
+        "audio": "rhyme_maliata_blyzniata",
+        "image": "rhyme_maliata_blyzniata"
+      },
+      {
+        "id": "rh16",
+        "sound": "МАСАЖИК",
+        "text": "Робіть легкий масаж по спинці в ритм слів",
+        "emoji": "💆",
+        "colorBg": "#E0F2F1",
+        "colorAccent": "#00695C",
+        "audio": "rhyme_masazhyk",
+        "image": "rhyme_masazhyk"
+      },
+      {
+        "id": "rh17",
+        "sound": "МИШКА",
+        "text": "Пробіжіться пальчиками по ручці, як мишка",
+        "emoji": "🐭",
+        "colorBg": "#ECEFF1",
+        "colorAccent": "#546E7A",
+        "audio": "rhyme_myshka",
+        "image": "rhyme_myshka"
+      },
+      {
+        "id": "rh18",
+        "sound": "МЛИНЦІ",
+        "text": "«Печіть млинці»: плескайте долонькою об долоньку",
+        "emoji": "🥞",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FF8F00",
+        "audio": "rhyme_mlyntsi",
+        "image": "rhyme_mlyntsi"
+      },
+      {
+        "id": "rh19",
+        "sound": "МОЛОДЦІ",
+        "text": "Поплескайте в долоні і обійміться на «молодці!»",
+        "emoji": "👏",
+        "colorBg": "#FFFDE7",
+        "colorAccent": "#F9A825",
+        "audio": "rhyme_molodtsi",
+        "image": "rhyme_molodtsi"
+      },
+      {
+        "id": "rh20",
+        "sound": "ОХ-ОХ",
+        "text": "Зітхайте кумедно разом: «ох-ох!» — і всміхніться",
+        "emoji": "😮‍💨",
+        "colorBg": "#EDE7F6",
+        "colorAccent": "#6A1B9A",
+        "audio": "rhyme_okh_okh",
+        "image": "rhyme_okh_okh"
+      },
+      {
+        "id": "rh21",
+        "sound": "ПЕЧУ ХЛІБЧИК",
+        "text": "«Ліпіть» хлібчик долоньками малюка",
+        "emoji": "🍞",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "rhyme_pechu_khlibchyk",
+        "image": "rhyme_pechu_khlibchyk"
+      },
+      {
+        "id": "rh22",
+        "sound": "ПИРІГ",
+        "text": "Розкачуйте «тісто» — погладьте животик",
+        "emoji": "🥧",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FF8F00",
+        "audio": "rhyme_pyrih",
+        "image": "rhyme_pyrih"
+      },
+      {
+        "id": "rh23",
+        "sound": "ПОДОЛЯНОЧКА",
+        "text": "Хороводна гра: покрутіться і присядьте, як у пісеньці",
+        "emoji": "💃",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#C2185B",
+        "audio": "rhyme_podolianochka",
+        "image": "rhyme_podolianochka"
+      },
+      {
+        "id": "rh24",
+        "sound": "ПРАПОРЦІ",
+        "text": "Помахайте ручками-прапорцями вгорі",
+        "emoji": "🚩",
+        "colorBg": "#FFEBEE",
+        "colorAccent": "#C62828",
+        "audio": "rhyme_praportsi",
+        "image": "rhyme_praportsi"
+      },
+      {
+        "id": "rh25",
+        "sound": "ТАНОК",
+        "text": "Потанцюйте разом, тримаючись за ручки",
+        "emoji": "🕺",
+        "colorBg": "#E1F5FE",
+        "colorAccent": "#0277BD",
+        "audio": "rhyme_tanok",
+        "image": "rhyme_tanok"
+      },
+      {
+        "id": "rh26",
+        "sound": "ЧЕМПІОН",
+        "text": "Підніміть ручки вгору: «чемпіон!»",
+        "emoji": "🏆",
+        "colorBg": "#FFFDE7",
+        "colorAccent": "#F9A825",
+        "audio": "rhyme_chempion",
+        "image": "rhyme_chempion"
+      }
+    ],
+    "freePreviewCount": 3
   }
 ]
