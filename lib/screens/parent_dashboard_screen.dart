@@ -10,6 +10,7 @@ import '../providers/packs_provider.dart';
 import '../providers/profile_provider.dart';
 import '../providers/srs_provider.dart';
 import '../providers/streak_provider.dart';
+import '../providers/theme_provider.dart';
 import '../providers/weak_words_provider.dart';
 import '../screens/profile_selector_screen.dart';
 import '../utils/constants.dart';
@@ -175,7 +176,19 @@ class _OverviewTab extends ConsumerWidget {
                   ))
               .toList(),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 24),
+        _sectionTitle(s('Налаштування', 'Settings')),
+        const SizedBox(height: 8),
+        // Theme lives here (not in the child-reachable about dialog) so a
+        // toddler tap can't flip the whole app to dark mode.
+        SwitchListTile(
+          value: ref.watch(themeModeProvider) == ThemeMode.dark,
+          onChanged: (_) => ref.read(themeModeProvider.notifier).toggle(),
+          secondary: const Icon(Icons.dark_mode_rounded),
+          title: Text(s('Темна тема', 'Dark theme')),
+          contentPadding: EdgeInsets.zero,
+        ),
+        const SizedBox(height: 24),
         _RateAppTile(
           label: s('Оцінити додаток', 'Rate the app'),
           onTap: () => ref.read(appReviewControllerProvider).requestReview(),

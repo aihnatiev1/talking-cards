@@ -19,7 +19,6 @@ import '../providers/review_provider.dart';
 import '../providers/seasonal_packs_provider.dart';
 import '../providers/srs_provider.dart';
 import '../providers/streak_provider.dart';
-import '../providers/theme_provider.dart';
 import '../screens/card_reveal_screen.dart';
 import '../screens/cards_screen.dart';
 import '../screens/kid_word_wall_screen.dart';
@@ -178,22 +177,9 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                 label: Text(s('Підтримка', 'Support')),
               ),
               const NotificationToggleTile(),
-              Consumer(builder: (_, themeRef, __) {
-                final dark =
-                    themeRef.watch(themeModeProvider) == ThemeMode.dark;
-                return TextButton.icon(
-                  onPressed: () =>
-                      themeRef.read(themeModeProvider.notifier).toggle(),
-                  icon: Icon(
-                    dark
-                        ? Icons.light_mode_rounded
-                        : Icons.dark_mode_rounded,
-                    size: 18,
-                  ),
-                  label: Text(
-                      dark ? s('Світла тема', 'Light theme') : s('Темна тема', 'Dark theme')),
-                );
-              }),
+              // Theme toggle intentionally NOT here: this dialog is one tap
+              // from the child's home screen — it moved behind the parental
+              // gate (parent dashboard → Settings).
               TextButton.icon(
                 onPressed: () {
                   Navigator.of(ctx).pop();
@@ -668,19 +654,6 @@ class _PacksTabState extends ConsumerState<PacksTab> {
           final reviewCardIds =
               ref.watch(reviewProvider.notifier).reviewCardIds;
 
-          // Virtual packs
-          final favCards =
-              allCards.where((c) => favorites.contains(c.id)).toList();
-          final favoritesPack = PackModel(
-            id: '_favorites',
-            title: s('Улюблені', 'Favorites'),
-            icon: '❤️',
-            color: kStreakOrange,
-            isLocked: false,
-            isFree: true,
-            cards: favCards,
-          );
-
           PackModel? reviewPack;
           if (reviewCardIds.length >= 5) {
             final reviewCards = allCards
@@ -704,13 +677,26 @@ class _PacksTabState extends ConsumerState<PacksTab> {
               .where((p) => packCategories[p.id] == _selectedCategory)
               .toList();
 
+          // Favorites are scoped to the open category tab — each of
+          // Мовлення/Звуки/Світ shows its own hearts, first in the grid.
+          final favCards = filteredPacks
+              .expand((p) => p.cards)
+              .where((c) => favorites.contains(c.id))
+              .toList();
+          final favoritesPack = PackModel(
+            id: '_favorites',
+            title: s('Улюблені', 'Favorites'),
+            icon: '❤️',
+            color: kStreakOrange,
+            isLocked: false,
+            isFree: true,
+            cards: favCards,
+          );
+
           // Build grid items
           final gridItems = <_GridItem>[
             for (final p in filteredPacks) _GridItem.pack(p),
           ];
-          if (favCards.isNotEmpty) {
-            gridItems.add(_GridItem.pack(favoritesPack));
-          }
           if (reviewPack != null) {
             gridItems.add(_GridItem.pack(reviewPack));
           }
@@ -737,6 +723,12 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                 ),
               );
             }
+          }
+
+          // Favorites go first — inserted after the seasonal loop so they
+          // beat even the highlighted seasonal pack to the top slot.
+          if (favCards.isNotEmpty) {
+            gridItems.insert(0, _GridItem.pack(favoritesPack));
           }
 
           final topPadding = MediaQuery.of(context).padding.top;
