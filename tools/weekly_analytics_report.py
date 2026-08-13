@@ -83,6 +83,58 @@ def users(tok, start, end):
     return (int(row[0].get('value', 0)), int(row[1].get('value', 0)))
 
 
+def crash_summary(tok):
+    """Top Crashlytics issues for the last 7 days from the BigQuery export.
+
+    Returns a list of markdown lines; empty-safe while the first daily
+    export hasn't landed yet.
+    """
+    sql = '''
+        SELECT issue_title, COUNT(*) AS events,
+               COUNT(DISTINCT installation_uuid) AS users,
+               COUNTIF(is_fatal) AS fatal
+        FROM `smartapp-b109a.firebase_crashlytics.*`
+        WHERE event_timestamp >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
+        GROUP BY issue_title ORDER BY events DESC LIMIT 10
+    '''
+    req = urllib.request.Request(
+        'https://bigquery.googleapis.com/bigquery/v2/projects/smartapp-b109a/queries',
+        data=json.dumps({'query': sql, 'useLegacySql': False,
+                         'timeoutMs': 30000}).encode(),
+        headers={'Authorization': f'Bearer {tok}',
+                 'Content-Type': 'application/json'})
+    try:
+        d = json.load(urllib.request.urlopen(req))
+    except Exception as e:
+        return [f'- Crashlytics: експорт ще без даних ({type(e).__name__})']
+    rows = d.get('rows') or []
+    if not rows:
+        return ['- Crashlytics: за тиждень крашів немає 🎉']
+    lines = ['', '### Топ крашів (7 дн)',
+             '| Проблема | подій | users | fatal |', '|---|---|---|---|']
+    for r in rows:
+        f = [c.get('v') for c in r['f']]
+        lines.append(f'| {f[0][:70]} | {f[1]} | {f[2]} | {f[3]} |')
+    return lines
+
+
+def bq_token():
+    sa = json.load(open(SA_KEY))
+    now = int(time.time())
+    assertion = jwt.encode(
+        {'iss': sa['client_email'],
+         'scope': 'https://www.googleapis.com/auth/bigquery.readonly',
+         'aud': 'https://oauth2.googleapis.com/token',
+         'iat': now, 'exp': now + 3600},
+        sa['private_key'], algorithm='RS256')
+    resp = urllib.request.urlopen(urllib.request.Request(
+        'https://oauth2.googleapis.com/token',
+        data=urllib.parse.urlencode({
+            'grant_type': 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+            'assertion': assertion}).encode()))
+    return json.load(resp)['access_token']
+
+
 def fmt_delta(cur, prev):
     if prev == 0:
         return 'new' if cur else '—'
@@ -119,6 +171,8 @@ def main():
         lines.append(f'- Прослуховування/перегляди: {cl}/{cv} ({cl / cv:.0%})')
     if pw:
         lines.append(f'- Конверсія paywall→покупка: {ps}/{pw} ({ps / pw:.0%})')
+
+    lines.extend(crash_summary(bq_token()))
 
     OUT.parent.mkdir(exist_ok=True)
     header = '# Skillar — щотижнева аналітика\n' if not OUT.exists() else ''
