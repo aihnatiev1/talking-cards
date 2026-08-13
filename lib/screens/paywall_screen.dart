@@ -66,9 +66,24 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     final products = PurchaseService.instance.products;
     final labelYearly = s('Річна', 'Yearly');
     final labelMonthly = s('Місячна', 'Monthly');
-    final badgeBest = s('Найвигідніше', 'Best value');
     final perYear = s('/рік', '/year');
     final perMonth = s('/місяць', '/month');
+
+    // A concrete "−69%" anchors the yearly plan against 12× monthly far
+    // better than a vague "best value" — computed from live store prices,
+    // generic wording only when the math isn't available.
+    var badgeBest = s('Найвигідніше', 'Best value');
+    double? yearlyRaw, monthlyRaw;
+    for (final p in products) {
+      if (p.id == 'yearly_premium') yearlyRaw = p.rawPrice;
+      if (p.id == 'monthly_premium') monthlyRaw = p.rawPrice;
+    }
+    if (yearlyRaw != null && monthlyRaw != null && monthlyRaw > 0) {
+      final pct = ((1 - yearlyRaw / (monthlyRaw * 12)) * 100).round();
+      if (pct >= 10) {
+        badgeBest = s('Вигідніше на $pct%', 'Save $pct%');
+      }
+    }
 
     // Use the live store price everywhere when products are loaded — Apple
     // and Google return it already formatted in the user's region currency
@@ -76,7 +91,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     // is only for offline / first-launch while the store query is pending.
     if (products.isEmpty) {
       return [
-        _Plan(labelYearly, s('649 грн', '\$29.99'), perYear, badgeBest,
+        // 649/(149×12) → −64%; 29.99/(7.99×12) → −69% (matches the
+        // fallback price strings below).
+        _Plan(labelYearly, s('649 грн', '\$29.99'), perYear,
+            s('Вигідніше на 64%', 'Save 69%'),
             productId: 'yearly_premium'),
         _Plan(labelMonthly, s('149 грн', '\$7.99'), perMonth, null,
             productId: 'monthly_premium'),

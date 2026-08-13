@@ -42,10 +42,11 @@ void main() {
       expect(find.text('Місячна'), findsOneWidget);
     });
 
-    testWidgets('shows yearly badge "Найвигідніше"', (tester) async {
+    testWidgets('shows yearly savings badge', (tester) async {
       await pumpPaywall(tester);
 
-      expect(find.text('Найвигідніше'), findsOneWidget);
+      // Fallback prices: 649 vs 149×12 → −64%.
+      expect(find.text('Вигідніше на 64%'), findsOneWidget);
     });
 
     testWidgets('shows trial CTA and cancel-anytime note', (tester) async {
