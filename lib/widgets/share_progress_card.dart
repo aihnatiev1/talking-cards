@@ -10,11 +10,12 @@ import '../services/analytics_service.dart';
 import '../utils/constants.dart';
 import '../utils/uk_grammar.dart';
 
-/// Universal "get the app" link. Served by a small landing page on our
-/// GitHub Pages site that sniffs the user-agent of the recipient and
-/// redirects to App Store or Play Store automatically. See
-/// `docs/share-landing-page.html` for the HTML to deploy there.
-const _storeUrl = 'https://aihnatiev1.github.io/talking-cards/';
+/// Direct store link for the sender's platform — parents overwhelmingly
+/// share within the same ecosystem, and a real store page converts better
+/// than the GitHub Pages redirect landing.
+final String _storeUrl = Platform.isIOS
+    ? 'https://apps.apple.com/app/id6760210043'
+    : 'https://play.google.com/store/apps/details?id=com.talkingcards.app';
 
 /// Captures the share card as image and shares it.
 Future<void> shareProgress({

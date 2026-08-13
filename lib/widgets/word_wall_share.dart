@@ -8,7 +8,10 @@ import '../models/card_model.dart';
 import '../utils/constants.dart';
 import 'share_progress_card.dart' show renderWidgetToImage;
 
-const _storeUrl = 'https://aihnatiev1.github.io/talking-cards/';
+/// Direct store link for the sender's platform (see share_progress_card.dart).
+final String _storeUrl = Platform.isIOS
+    ? 'https://apps.apple.com/app/id6760210043'
+    : 'https://play.google.com/store/apps/details?id=com.talkingcards.app';
 
 /// Captures the Word Wall card as image and shares it.
 /// [learnedCards] is sorted with the most recently-learned first; up to 12 are
