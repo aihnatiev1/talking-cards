@@ -43,7 +43,9 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
   static const double _completionRatio = 0.85;
 
   static const _completedCountKey = 'coloring_completed_count';
-  static const _freeAllowance = 1;
+  // 3 free drawings before the paywall gate — one felt exhausted too fast
+  // for the value this tab demonstrates.
+  static const _freeAllowance = 3;
 
   final math.Random _rng = math.Random();
 
