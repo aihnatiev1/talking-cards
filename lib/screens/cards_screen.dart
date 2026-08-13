@@ -291,8 +291,12 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   Future<void> _showCelebrationAfterSound() async {
     final audio = AudioService.instance;
     final start = DateTime.now();
-    final graceEnd = start.add(const Duration(seconds: 4));
-    final hardCap = start.add(const Duration(seconds: 10));
+    // Verse packs (poems, забавлянки, весела абетка) play long clips — let
+    // the last rhyme finish instead of cutting to the modal mid-line. Word
+    // packs keep the snappy timings. Swipe-forward still skips instantly.
+    final isVerse = PackModel.nonWordPackIds.contains(widget.pack.id);
+    final graceEnd = start.add(Duration(seconds: isVerse ? 6 : 4));
+    final hardCap = start.add(Duration(seconds: isVerse ? 120 : 10));
 
     while (mounted && DateTime.now().isBefore(hardCap)) {
       if (_skipEndWait) break;
