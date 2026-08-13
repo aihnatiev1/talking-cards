@@ -3980,7 +3980,8 @@
         "emoji": "🔤",
         "colorBg": "#F3E5F5",
         "colorAccent": "#6A1B9A",
-        "audio": "abc_letter_l"
+        "audio": "abc_letter_l",
+        "image": "abc_l"
       },
       {
         "id": "al17",
@@ -6996,7 +6997,8 @@
         "emoji": "🔤",
         "colorBg": "#F3E5F5",
         "colorAccent": "#6A1B9A",
-        "audio": "abc_rhyme_l"
+        "audio": "abc_rhyme_l",
+        "image": "abc_l"
       },
       {
         "id": "ar17",
