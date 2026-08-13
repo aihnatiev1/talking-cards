@@ -12,8 +12,11 @@ class RemoteConfigService {
     'daily_notification_hour': 10,
     'show_card_of_day': true,
     'onboarding_version': 1,
-    // A/B lever: paywall right after onboarding vs first-lock-touch only.
-    'show_onboarding_paywall': true,
+    // Off by default: selling before the user has touched any content
+    // converts poorly and sours the first impression. The first paywall
+    // touchpoint is the first locked-content tap. Remote Config can
+    // re-enable this for an A/B without a release.
+    'show_onboarding_paywall': false,
   };
 
   FirebaseRemoteConfig? _cached;
