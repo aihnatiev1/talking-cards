@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
 import '../providers/bonus_cards_provider.dart';
+import '../providers/app_review_provider.dart';
 import '../providers/daily_quest_provider.dart';
 import '../providers/daily_stats_provider.dart';
 import '../providers/packs_provider.dart';
@@ -318,8 +319,15 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     _celebrating = true;
     AudioService.instance.stop();
     // Don't mark virtual packs (favorites, review) as completed
+    var askReview = false;
     if (!widget.pack.id.startsWith('_')) {
       AnalyticsService.instance.logPackComplete(widget.pack.id);
+      // First fully-finished pack EVER → the one auto review ask. This is
+      // the real peak-delight moment: previews of locked packs never reach
+      // celebration (they end in the unlock dialog), so a 5-card preview
+      // can't trigger it — only a complete free pack (or any pack for
+      // premium). completedPacks being empty makes this fire exactly once.
+      askReview = ref.read(completedPacksProvider).isEmpty;
       ref.read(completedPacksProvider.notifier).markCompleted(widget.pack.id);
     }
     // Capture the route's own Navigator and overlay context up-front so the
@@ -354,11 +362,13 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
           },
           onDone: () {
             dismissOverlay();
-            // NOTE: a review prompt used to auto-fire here, inside the child
-            // flow, which let a child tap "rate". Rating is now an explicit,
-            // parent-initiated action only — see the "Rate the app" tile in
-            // ParentDashboardScreen / AppReviewController.requestReview().
             if (mounted && navigator.canPop()) navigator.pop();
+            // OS-native in-app review sheet, once ever, right after the
+            // first-pack celebration — rate-limited by the OS and never
+            // leaves the app. Explicit parent path stays in ParentDashboard.
+            if (askReview && mounted) {
+              ref.read(appReviewControllerProvider).requestReview();
+            }
           },
         ),
       ),
