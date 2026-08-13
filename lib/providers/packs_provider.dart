@@ -13,10 +13,10 @@ final isProProvider = StateProvider<bool>(
   (ref) => PurchaseService.instance.isPro.value,
 );
 
-/// TEMP testing override — when true, all packs are unlocked regardless of
-/// subscription state. Flip back to `false` before any release build to
-/// restore the paywall sampler.
-const _kForceUnlockAllPacks = false;
+/// Testing override — unlocks all packs regardless of subscription state.
+/// Off by default; enable per-build (never in release) with:
+///   flutter build/run --dart-define=UNLOCK_ALL=true
+const _kForceUnlockAllPacks = bool.fromEnvironment('UNLOCK_ALL');
 
 final packsProvider = FutureProvider<List<PackModel>>((ref) async {
   final isPro = ref.watch(isProProvider);

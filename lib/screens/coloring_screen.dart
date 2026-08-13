@@ -116,7 +116,9 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
 
   /// Returns true if the user has exhausted the free allowance and is not Pro.
   /// Callers should skip card-loading and let the build show the paywall banner.
+  /// The UNLOCK_ALL dart-define (testing builds) bypasses the gate entirely.
   bool _isGated() {
+    if (const bool.fromEnvironment('UNLOCK_ALL')) return false;
     final isPro = ref.read(isProProvider);
     return !isPro && _completedCount >= _freeAllowance;
   }
