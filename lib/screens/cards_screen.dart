@@ -48,6 +48,9 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
 
   // Prevents dispose() from killing audio when navigating to "Play again"
   bool _celebrating = false;
+  // Set when the user swipes forward on the last card: the end-of-pack wait
+  // in [_showCelebrationAfterSound] aborts and the modal shows immediately.
+  bool _skipEndWait = false;
   bool _isFlipped = false;
 
   // Auto-play timer mode
@@ -275,33 +278,36 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     );
   }
 
-  /// Waits for the last-card audio to fully finish, then adds a 2-second
-  /// breather before revealing the celebration.
+  /// Waits briefly for the last-card audio, then reveals the celebration
+  /// (or the unlock dialog for locked packs).
   ///
   /// Loop-based watch: the child can either let auto-speak fire (500ms
-  /// debounce) OR manually tap to play. We watch `isSpeaking` continuously
-  /// until: (a) it's been quiet past the 6s grace window AND no audio is
-  /// currently playing, OR (b) the absolute 120s safety cap is hit. This
-  /// way a poem started at second 5 still plays to its end before the modal
-  /// pops, and a child who never taps still gets the modal after 6+2s.
+  /// debounce) OR manually tap to play. We watch `isSpeaking` until:
+  /// (a) it's been quiet past the 4s grace window, (b) the 10s cap is hit —
+  /// long poems get cut rather than holding the user hostage, or
+  /// (c) the user swipes forward on the last card ([_skipEndWait]), which
+  /// shows the modal immediately.
   Future<void> _showCelebrationAfterSound() async {
     final audio = AudioService.instance;
     final start = DateTime.now();
-    final graceEnd = start.add(const Duration(seconds: 6));
-    final hardCap = start.add(const Duration(seconds: 120));
+    final graceEnd = start.add(const Duration(seconds: 4));
+    final hardCap = start.add(const Duration(seconds: 10));
 
     while (mounted && DateTime.now().isBefore(hardCap)) {
+      if (_skipEndWait) break;
       final speaking = audio.isSpeaking.value;
       if (!speaking && DateTime.now().isAfter(graceEnd)) break;
       await Future.delayed(const Duration(milliseconds: 100));
     }
     if (!mounted) return;
 
-    // 2-second breather after audio finishes (or grace expires) so the
-    // tail of the voiceover doesn't bleed into the celebration modal.
-    await Future.delayed(const Duration(seconds: 2));
+    // Short breather so the voiceover tail doesn't bleed into the modal —
+    // skipped entirely when the user explicitly swiped to move on.
+    if (!_skipEndWait) {
+      await Future.delayed(const Duration(seconds: 1));
+    }
 
-    if (!mounted) return;
+    if (!mounted || _celebrating) return;
     if (widget.pack.isLocked) {
       _showUnlockDialog();
     } else {
@@ -598,7 +604,26 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
           Expanded(
             child: Stack(
               children: [
-                PageView.builder(
+                // Swiping forward on the last card = "I'm done" — cut the
+                // audio wait and show the celebration/unlock modal now.
+                // Android clamps (OverscrollNotification); iOS bounces past
+                // maxScrollExtent instead — handle both.
+                NotificationListener<ScrollNotification>(
+                  onNotification: (n) {
+                    final pastEnd = n is OverscrollNotification
+                        ? n.overscroll > 0
+                        : n is ScrollUpdateNotification &&
+                            n.metrics.pixels > n.metrics.maxScrollExtent + 24;
+                    if (pastEnd &&
+                        _currentIndex == cards.length - 1 &&
+                        !_celebrating &&
+                        !_skipEndWait) {
+                      _skipEndWait = true;
+                      AudioService.instance.stop();
+                    }
+                    return false;
+                  },
+                  child: PageView.builder(
                   controller: _pageController,
                   itemCount: cards.length,
                   onPageChanged: (index) {
@@ -671,6 +696,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                       ),
                     );
                   },
+                  ),
                 ),
                 if (!_isFlipped)
                   Positioned(
