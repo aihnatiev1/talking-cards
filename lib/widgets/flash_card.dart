@@ -160,7 +160,10 @@ class _FlashCardState extends ConsumerState<FlashCard>
         onTapDown: (_) => _pressCtrl.forward(),
         onTapUp: (_) {
           _pressCtrl.reverse();
-          if (_hasEnglish) {
+          // Tap = hear the word, always — a toddler taps the picture
+          // expecting sound, not a flip to English text. Flipping to the
+          // EN side moved to the 🇬🇧 chip; tapping the back flips home.
+          if (_showBack) {
             _toggleFlip();
           } else {
             AudioService.instance.speakCard(
@@ -319,17 +322,21 @@ class _FlashCardState extends ConsumerState<FlashCard>
         ),
         if (_hasEnglish)
           Positioned(
-            bottom: 10,
-            right: 10,
-            child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.grey.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
+            bottom: 6,
+            right: 6,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _toggleFlip,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Text('🇬🇧 English ↻',
+                    style: TextStyle(fontSize: 12, color: Colors.grey)),
               ),
-              child: const Text('🇬🇧 English',
-                  style: TextStyle(fontSize: 12, color: Colors.grey)),
             ),
           ),
       ],
