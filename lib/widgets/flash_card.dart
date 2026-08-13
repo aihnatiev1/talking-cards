@@ -269,10 +269,14 @@ class _FlashCardState extends ConsumerState<FlashCard>
                           child: Text(
                             widget.card.sound,
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 32,
+                            style: TextStyle(
+                              // Letter cards («Аа») carry 2-3 chars — let
+                              // them fill the space instead of floating
+                              // small in a bare white block.
+                              fontSize:
+                                  widget.card.sound.length <= 3 ? 72 : 32,
                               fontWeight: FontWeight.w900,
-                              color: Color(0xFFD63031),
+                              color: const Color(0xFFD63031),
                               letterSpacing: 1.0,
                               height: 1.1,
                             ),

@@ -3825,7 +3825,7 @@
     "cards": [
       {
         "id": "al01",
-        "sound": "А",
+        "sound": "Аа",
         "text": "Літера А",
         "emoji": "🔤",
         "colorBg": "#FFEBEE",
@@ -3835,7 +3835,7 @@
       },
       {
         "id": "al02",
-        "sound": "Б",
+        "sound": "Бб",
         "text": "Літера Б",
         "emoji": "🔤",
         "colorBg": "#E3F2FD",
@@ -3845,7 +3845,7 @@
       },
       {
         "id": "al03",
-        "sound": "В",
+        "sound": "Вв",
         "text": "Літера В",
         "emoji": "🔤",
         "colorBg": "#E8F5E9",
@@ -3855,7 +3855,7 @@
       },
       {
         "id": "al04",
-        "sound": "Г",
+        "sound": "Гг",
         "text": "Літера Г",
         "emoji": "🔤",
         "colorBg": "#FFF8E1",
@@ -3865,7 +3865,7 @@
       },
       {
         "id": "al05",
-        "sound": "Ґ",
+        "sound": "Ґґ",
         "text": "Літера Ґ",
         "emoji": "🔤",
         "colorBg": "#F3E5F5",
@@ -3875,7 +3875,7 @@
       },
       {
         "id": "al06",
-        "sound": "Д",
+        "sound": "Дд",
         "text": "Літера Д",
         "emoji": "🔤",
         "colorBg": "#E0F2F1",
@@ -3885,7 +3885,7 @@
       },
       {
         "id": "al07",
-        "sound": "Е",
+        "sound": "Ее",
         "text": "Літера Е",
         "emoji": "🔤",
         "colorBg": "#FFF3E0",
@@ -3895,7 +3895,7 @@
       },
       {
         "id": "al08",
-        "sound": "Є",
+        "sound": "Єє",
         "text": "Літера Є",
         "emoji": "🔤",
         "colorBg": "#FCE4EC",
@@ -3905,7 +3905,7 @@
       },
       {
         "id": "al09",
-        "sound": "Ж",
+        "sound": "Жж",
         "text": "Літера Ж",
         "emoji": "🔤",
         "colorBg": "#E8EAF6",
@@ -3915,7 +3915,7 @@
       },
       {
         "id": "al10",
-        "sound": "З",
+        "sound": "Зз",
         "text": "Літера З",
         "emoji": "🔤",
         "colorBg": "#FFFDE7",
@@ -3925,7 +3925,7 @@
       },
       {
         "id": "al11",
-        "sound": "И",
+        "sound": "Ии",
         "text": "Літера И",
         "emoji": "🔤",
         "colorBg": "#E1F5FE",
@@ -3935,7 +3935,7 @@
       },
       {
         "id": "al12",
-        "sound": "І",
+        "sound": "Іі",
         "text": "Літера І",
         "emoji": "🔤",
         "colorBg": "#FFEBEE",
@@ -3945,7 +3945,7 @@
       },
       {
         "id": "al13",
-        "sound": "Ї",
+        "sound": "Її",
         "text": "Літера Ї",
         "emoji": "🔤",
         "colorBg": "#E3F2FD",
@@ -3955,7 +3955,7 @@
       },
       {
         "id": "al14",
-        "sound": "Й",
+        "sound": "Йй",
         "text": "Літера Й",
         "emoji": "🔤",
         "colorBg": "#E8F5E9",
@@ -3965,7 +3965,7 @@
       },
       {
         "id": "al15",
-        "sound": "К",
+        "sound": "Кк",
         "text": "Літера К",
         "emoji": "🔤",
         "colorBg": "#FFF8E1",
@@ -3975,7 +3975,7 @@
       },
       {
         "id": "al16",
-        "sound": "Л",
+        "sound": "Лл",
         "text": "Літера Л",
         "emoji": "🔤",
         "colorBg": "#F3E5F5",
@@ -3985,7 +3985,7 @@
       },
       {
         "id": "al17",
-        "sound": "М",
+        "sound": "Мм",
         "text": "Літера М",
         "emoji": "🔤",
         "colorBg": "#E0F2F1",
@@ -3995,7 +3995,7 @@
       },
       {
         "id": "al18",
-        "sound": "Н",
+        "sound": "Нн",
         "text": "Літера Н",
         "emoji": "🔤",
         "colorBg": "#FFF3E0",
@@ -4005,7 +4005,7 @@
       },
       {
         "id": "al19",
-        "sound": "О",
+        "sound": "Оо",
         "text": "Літера О",
         "emoji": "🔤",
         "colorBg": "#FCE4EC",
@@ -4015,7 +4015,7 @@
       },
       {
         "id": "al20",
-        "sound": "П",
+        "sound": "Пп",
         "text": "Літера П",
         "emoji": "🔤",
         "colorBg": "#E8EAF6",
@@ -4025,7 +4025,7 @@
       },
       {
         "id": "al21",
-        "sound": "Р",
+        "sound": "Рр",
         "text": "Літера Р",
         "emoji": "🔤",
         "colorBg": "#FFFDE7",
@@ -4035,7 +4035,7 @@
       },
       {
         "id": "al22",
-        "sound": "С",
+        "sound": "Сс",
         "text": "Літера С",
         "emoji": "🔤",
         "colorBg": "#E1F5FE",
@@ -4045,7 +4045,7 @@
       },
       {
         "id": "al23",
-        "sound": "Т",
+        "sound": "Тт",
         "text": "Літера Т",
         "emoji": "🔤",
         "colorBg": "#FFEBEE",
@@ -4055,7 +4055,7 @@
       },
       {
         "id": "al24",
-        "sound": "У",
+        "sound": "Уу",
         "text": "Літера У",
         "emoji": "🔤",
         "colorBg": "#E3F2FD",
@@ -4065,7 +4065,7 @@
       },
       {
         "id": "al25",
-        "sound": "Ф",
+        "sound": "Фф",
         "text": "Літера Ф",
         "emoji": "🔤",
         "colorBg": "#E8F5E9",
@@ -4075,7 +4075,7 @@
       },
       {
         "id": "al26",
-        "sound": "Х",
+        "sound": "Хх",
         "text": "Літера Х",
         "emoji": "🔤",
         "colorBg": "#FFF8E1",
@@ -4085,7 +4085,7 @@
       },
       {
         "id": "al27",
-        "sound": "Ц",
+        "sound": "Цц",
         "text": "Літера Ц",
         "emoji": "🔤",
         "colorBg": "#F3E5F5",
@@ -4095,7 +4095,7 @@
       },
       {
         "id": "al28",
-        "sound": "Ч",
+        "sound": "Чч",
         "text": "Літера Ч",
         "emoji": "🔤",
         "colorBg": "#E0F2F1",
@@ -4105,7 +4105,7 @@
       },
       {
         "id": "al29",
-        "sound": "Ш",
+        "sound": "Шш",
         "text": "Літера Ш",
         "emoji": "🔤",
         "colorBg": "#FFF3E0",
@@ -4115,7 +4115,7 @@
       },
       {
         "id": "al30",
-        "sound": "Щ",
+        "sound": "Щщ",
         "text": "Літера Щ",
         "emoji": "🔤",
         "colorBg": "#FCE4EC",
@@ -4125,7 +4125,7 @@
       },
       {
         "id": "al31",
-        "sound": "Ь",
+        "sound": "ь",
         "text": "Літера мʼякий знак",
         "emoji": "🔤",
         "colorBg": "#E8EAF6",
@@ -4135,7 +4135,7 @@
       },
       {
         "id": "al32",
-        "sound": "Ю",
+        "sound": "Юю",
         "text": "Літера Ю",
         "emoji": "🔤",
         "colorBg": "#FFFDE7",
@@ -4145,7 +4145,7 @@
       },
       {
         "id": "al33",
-        "sound": "Я",
+        "sound": "Яя",
         "text": "Літера Я",
         "emoji": "🔤",
         "colorBg": "#E1F5FE",
@@ -6842,7 +6842,7 @@
     "cards": [
       {
         "id": "ar01",
-        "sound": "А",
+        "sound": "Аа",
         "text": "Віршик про літеру А",
         "emoji": "🔤",
         "colorBg": "#FFEBEE",
@@ -6852,7 +6852,7 @@
       },
       {
         "id": "ar02",
-        "sound": "Б",
+        "sound": "Бб",
         "text": "Віршик про літеру Б",
         "emoji": "🔤",
         "colorBg": "#E3F2FD",
@@ -6862,7 +6862,7 @@
       },
       {
         "id": "ar03",
-        "sound": "В",
+        "sound": "Вв",
         "text": "Віршик про літеру В",
         "emoji": "🔤",
         "colorBg": "#E8F5E9",
@@ -6872,7 +6872,7 @@
       },
       {
         "id": "ar04",
-        "sound": "Г",
+        "sound": "Гг",
         "text": "Віршик про літеру Г",
         "emoji": "🔤",
         "colorBg": "#FFF8E1",
@@ -6882,7 +6882,7 @@
       },
       {
         "id": "ar05",
-        "sound": "Ґ",
+        "sound": "Ґґ",
         "text": "Віршик про літеру Ґ",
         "emoji": "🔤",
         "colorBg": "#F3E5F5",
@@ -6892,7 +6892,7 @@
       },
       {
         "id": "ar06",
-        "sound": "Д",
+        "sound": "Дд",
         "text": "Віршик про літеру Д",
         "emoji": "🔤",
         "colorBg": "#E0F2F1",
@@ -6902,7 +6902,7 @@
       },
       {
         "id": "ar07",
-        "sound": "Е",
+        "sound": "Ее",
         "text": "Віршик про літеру Е",
         "emoji": "🔤",
         "colorBg": "#FFF3E0",
@@ -6912,7 +6912,7 @@
       },
       {
         "id": "ar08",
-        "sound": "Є",
+        "sound": "Єє",
         "text": "Віршик про літеру Є",
         "emoji": "🔤",
         "colorBg": "#FCE4EC",
@@ -6922,7 +6922,7 @@
       },
       {
         "id": "ar09",
-        "sound": "Ж",
+        "sound": "Жж",
         "text": "Віршик про літеру Ж",
         "emoji": "🔤",
         "colorBg": "#E8EAF6",
@@ -6932,7 +6932,7 @@
       },
       {
         "id": "ar10",
-        "sound": "З",
+        "sound": "Зз",
         "text": "Віршик про літеру З",
         "emoji": "🔤",
         "colorBg": "#FFFDE7",
@@ -6942,7 +6942,7 @@
       },
       {
         "id": "ar11",
-        "sound": "И",
+        "sound": "Ии",
         "text": "Віршик про літеру И",
         "emoji": "🔤",
         "colorBg": "#E1F5FE",
@@ -6952,7 +6952,7 @@
       },
       {
         "id": "ar12",
-        "sound": "І",
+        "sound": "Іі",
         "text": "Віршик про літеру І",
         "emoji": "🔤",
         "colorBg": "#FFEBEE",
@@ -6962,7 +6962,7 @@
       },
       {
         "id": "ar13",
-        "sound": "Ї",
+        "sound": "Її",
         "text": "Віршик про літеру Ї",
         "emoji": "🔤",
         "colorBg": "#E3F2FD",
@@ -6972,7 +6972,7 @@
       },
       {
         "id": "ar14",
-        "sound": "Й",
+        "sound": "Йй",
         "text": "Віршик про літеру Й",
         "emoji": "🔤",
         "colorBg": "#E8F5E9",
@@ -6982,7 +6982,7 @@
       },
       {
         "id": "ar15",
-        "sound": "К",
+        "sound": "Кк",
         "text": "Віршик про літеру К",
         "emoji": "🔤",
         "colorBg": "#FFF8E1",
@@ -6992,7 +6992,7 @@
       },
       {
         "id": "ar16",
-        "sound": "Л",
+        "sound": "Лл",
         "text": "Віршик про літеру Л",
         "emoji": "🔤",
         "colorBg": "#F3E5F5",
@@ -7002,7 +7002,7 @@
       },
       {
         "id": "ar17",
-        "sound": "М",
+        "sound": "Мм",
         "text": "Віршик про літеру М",
         "emoji": "🔤",
         "colorBg": "#E0F2F1",
@@ -7012,7 +7012,7 @@
       },
       {
         "id": "ar18",
-        "sound": "Н",
+        "sound": "Нн",
         "text": "Віршик про літеру Н",
         "emoji": "🔤",
         "colorBg": "#FFF3E0",
@@ -7022,7 +7022,7 @@
       },
       {
         "id": "ar19",
-        "sound": "О",
+        "sound": "Оо",
         "text": "Віршик про літеру О",
         "emoji": "🔤",
         "colorBg": "#FCE4EC",
@@ -7032,7 +7032,7 @@
       },
       {
         "id": "ar20",
-        "sound": "П",
+        "sound": "Пп",
         "text": "Віршик про літеру П",
         "emoji": "🔤",
         "colorBg": "#E8EAF6",
@@ -7042,7 +7042,7 @@
       },
       {
         "id": "ar21",
-        "sound": "Р",
+        "sound": "Рр",
         "text": "Віршик про літеру Р",
         "emoji": "🔤",
         "colorBg": "#FFFDE7",
@@ -7052,7 +7052,7 @@
       },
       {
         "id": "ar22",
-        "sound": "С",
+        "sound": "Сс",
         "text": "Віршик про літеру С",
         "emoji": "🔤",
         "colorBg": "#E1F5FE",
@@ -7062,7 +7062,7 @@
       },
       {
         "id": "ar23",
-        "sound": "Т",
+        "sound": "Тт",
         "text": "Віршик про літеру Т",
         "emoji": "🔤",
         "colorBg": "#FFEBEE",
@@ -7072,7 +7072,7 @@
       },
       {
         "id": "ar24",
-        "sound": "У",
+        "sound": "Уу",
         "text": "Віршик про літеру У",
         "emoji": "🔤",
         "colorBg": "#E3F2FD",
@@ -7082,7 +7082,7 @@
       },
       {
         "id": "ar25",
-        "sound": "Ф",
+        "sound": "Фф",
         "text": "Віршик про літеру Ф",
         "emoji": "🔤",
         "colorBg": "#E8F5E9",
@@ -7092,7 +7092,7 @@
       },
       {
         "id": "ar26",
-        "sound": "Х",
+        "sound": "Хх",
         "text": "Віршик про літеру Х",
         "emoji": "🔤",
         "colorBg": "#FFF8E1",
@@ -7102,7 +7102,7 @@
       },
       {
         "id": "ar27",
-        "sound": "Ц",
+        "sound": "Цц",
         "text": "Віршик про літеру Ц",
         "emoji": "🔤",
         "colorBg": "#F3E5F5",
@@ -7112,7 +7112,7 @@
       },
       {
         "id": "ar28",
-        "sound": "Ч",
+        "sound": "Чч",
         "text": "Віршик про літеру Ч",
         "emoji": "🔤",
         "colorBg": "#E0F2F1",
@@ -7122,7 +7122,7 @@
       },
       {
         "id": "ar29",
-        "sound": "Ш",
+        "sound": "Шш",
         "text": "Віршик про літеру Ш",
         "emoji": "🔤",
         "colorBg": "#FFF3E0",
@@ -7132,7 +7132,7 @@
       },
       {
         "id": "ar30",
-        "sound": "Щ",
+        "sound": "Щщ",
         "text": "Віршик про літеру Щ",
         "emoji": "🔤",
         "colorBg": "#FCE4EC",
@@ -7142,7 +7142,7 @@
       },
       {
         "id": "ar31",
-        "sound": "Ь",
+        "sound": "ь",
         "text": "Віршик про літеру мʼякий знак",
         "emoji": "🔤",
         "colorBg": "#E8EAF6",
@@ -7152,7 +7152,7 @@
       },
       {
         "id": "ar32",
-        "sound": "Ю",
+        "sound": "Юю",
         "text": "Віршик про літеру Ю",
         "emoji": "🔤",
         "colorBg": "#FFFDE7",
@@ -7162,7 +7162,7 @@
       },
       {
         "id": "ar33",
-        "sound": "Я",
+        "sound": "Яя",
         "text": "Віршик про літеру Я",
         "emoji": "🔤",
         "colorBg": "#E1F5FE",

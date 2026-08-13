@@ -491,13 +491,18 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    widget.pack.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: widget.pack.color,
-                      fontWeight: FontWeight.bold,
+                  // Shrink-to-fit instead of «Весела абе…» — long pack
+                  // names scale down a little rather than truncating.
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      widget.pack.title,
+                      maxLines: 1,
+                      style: TextStyle(
+                        color: widget.pack.color,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   if (widget.pack.id == '_review')
