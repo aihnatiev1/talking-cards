@@ -306,16 +306,26 @@ class _FlashCardState extends ConsumerState<FlashCard>
             onTap: () => ref
                 .read(favoritesProvider.notifier)
                 .toggle(widget.card.id),
+            // Same 44dp footprint as the SpeakerButton on the opposite
+            // corner — the two card controls read as one visual pair.
             child: Container(
-              padding: const EdgeInsets.all(6),
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.8),
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Icon(
                 isFav ? Icons.favorite : Icons.favorite_border,
                 color: isFav ? Colors.red : Colors.grey[400],
-                size: 24,
+                size: 26,
               ),
             ),
           ),

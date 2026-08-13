@@ -653,6 +653,17 @@ class _PaywallGate extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final s = AppS(ref.watch(languageProvider) == 'en');
+    // Real coloring pool size (every word-pack card with an illustration),
+    // rounded down to hundreds so the claim stays honest as content grows.
+    // "20+" undersold a 400+ library by a factor of 20.
+    final packs = ref.watch(packsProvider).valueOrNull ?? const <PackModel>[];
+    final poolSize = packs
+        .where((p) =>
+            !p.id.startsWith('_') && !PackModel.nonWordPackIds.contains(p.id))
+        .expand((p) => p.cards)
+        .where((c) => c.image != null)
+        .length;
+    final hundreds = math.max(1, poolSize ~/ 100) * 100;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -662,7 +673,8 @@ class _PaywallGate extends ConsumerWidget {
             const Text('🎨', style: TextStyle(fontSize: 96)),
             const SizedBox(height: 16),
             Text(
-              s('Ще 20+ малюнків чекають!', '20+ more drawings waiting!'),
+              s('Понад $hundreds малюнків чекають!',
+                  '$hundreds+ drawings waiting!'),
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
