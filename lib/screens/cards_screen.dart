@@ -135,8 +135,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   /// Load both auto-speak and auto-play-timer in a single prefs call.
   Future<void> _loadPrefs() async {
     final prefs = await SharedPreferences.getInstance();
-    AudioService.instance.autoSpeak.value =
-        prefs.getBool('auto_speak') ?? true;
+    // auto_speak is session-only now — no prefs read; see AudioService.
     if (mounted) {
       setState(() {
         _autoPlayTimer = prefs.getBool('auto_play_timer') ?? false;

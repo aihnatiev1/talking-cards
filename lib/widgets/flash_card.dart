@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
 import '../providers/favorites_provider.dart';
+import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../utils/image_cache_size.dart';
 
@@ -166,6 +167,7 @@ class _FlashCardState extends ConsumerState<FlashCard>
           if (_showBack) {
             _toggleFlip();
           } else {
+            AnalyticsService.instance.logCardListen(widget.card.id);
             AudioService.instance.speakCard(
               widget.card.audioKey,
               widget.card.sound,

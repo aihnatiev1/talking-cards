@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/audio_service.dart';
 import '../utils/constants.dart';
@@ -70,12 +69,12 @@ class _SpeakerButtonState extends State<SpeakerButton>
           valueListenable: AudioService.instance.isSpeaking,
           builder: (_, speaking, __) {
             return GestureDetector(
-              onTap: () async {
+              onTap: () {
                 final audio = AudioService.instance;
                 final newValue = !audio.autoSpeak.value;
+                // Session-only mute — never persisted, so an accidental
+                // toddler tap can't silence the app across launches.
                 audio.autoSpeak.value = newValue;
-                final prefs = await SharedPreferences.getInstance();
-                await prefs.setBool('auto_speak', newValue);
                 if (newValue) {
                   widget.onActivated?.call();
                 } else {

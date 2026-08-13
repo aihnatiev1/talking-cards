@@ -429,7 +429,10 @@ class AudioService {
   final Map<String, int> _wordEndMs = {};
 
   final ValueNotifier<bool> isSpeaking = ValueNotifier(false);
-  final ValueNotifier<bool> autoSpeak = ValueNotifier(false);
+  // Session-only: deliberately NOT persisted. A toddler poking the speaker
+  // button used to mute the app forever (analytics: 27 viewers, 1 listener) —
+  // now every launch starts voiced again.
+  final ValueNotifier<bool> autoSpeak = ValueNotifier(true);
   int _speakGeneration = 0;
 
   Future<void> precache() async {
