@@ -12,6 +12,8 @@ const packCategoriesUk = <String, String>{
   'adjectives': 'Мовлення',
   'poems': 'Мовлення',
   'rhymes': 'Мовлення',
+  'alphabet_rhymes': 'Мовлення',
+  'alphabet': 'Звуки',
   'sound_r': 'Звуки',
   'sound_l': 'Звуки',
   'sound_sh': 'Звуки',

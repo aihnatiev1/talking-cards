@@ -29,6 +29,7 @@ class PackModel {
   static const Set<String> nonWordPackIds = {
     'poems', // Віршики — full verses
     'rhymes', // Забавлянки — full action rhymes
+    'alphabet_rhymes', // Весела абетка — letter rhymes
     'rozmovlyalky', // Розмовлялки — babble sounds (ай/ба/ва), not real words
     'phrases', // Фрази — full sentences
     'en_phrases', // Phrases (EN)

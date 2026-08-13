@@ -71,8 +71,9 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     final visibleCards = widget.pack.isLocked
         ? allCards.take(widget.pack.effectiveFreePreviewCount + bonus).toList()
         : allCards.toList();
-    // Opposites pack: keep pair order (A→B, A→B...) — do not shuffle
-    if (!widget.pack.id.contains('opposites')) {
+    // Keep meaningful orders: opposites pairs (A→B) and the alphabet (А→Я).
+    if (!widget.pack.id.contains('opposites') &&
+        !widget.pack.id.startsWith('alphabet')) {
       visibleCards.shuffle(Random());
     }
     _cards = visibleCards;

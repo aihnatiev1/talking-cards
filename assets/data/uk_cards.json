@@ -3817,6 +3817,344 @@
     ]
   },
   {
+    "id": "alphabet",
+    "title": "Абетка",
+    "icon": "🅰️",
+    "color": "#1565C0",
+    "isLocked": true,
+    "cards": [
+      {
+        "id": "al01",
+        "sound": "А",
+        "text": "Літера А",
+        "emoji": "🔤",
+        "colorBg": "#FFEBEE",
+        "colorAccent": "#C62828",
+        "audio": "abc_letter_a",
+        "image": "abc_a"
+      },
+      {
+        "id": "al02",
+        "sound": "Б",
+        "text": "Літера Б",
+        "emoji": "🔤",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#1565C0",
+        "audio": "abc_letter_b",
+        "image": "abc_b"
+      },
+      {
+        "id": "al03",
+        "sound": "В",
+        "text": "Літера В",
+        "emoji": "🔤",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32",
+        "audio": "abc_letter_v",
+        "image": "abc_v"
+      },
+      {
+        "id": "al04",
+        "sound": "Г",
+        "text": "Літера Г",
+        "emoji": "🔤",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FF8F00",
+        "audio": "abc_letter_h",
+        "image": "abc_h"
+      },
+      {
+        "id": "al05",
+        "sound": "Ґ",
+        "text": "Літера Ґ",
+        "emoji": "🔤",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#6A1B9A",
+        "audio": "abc_letter_g",
+        "image": "abc_g"
+      },
+      {
+        "id": "al06",
+        "sound": "Д",
+        "text": "Літера Д",
+        "emoji": "🔤",
+        "colorBg": "#E0F2F1",
+        "colorAccent": "#00695C",
+        "audio": "abc_letter_d",
+        "image": "abc_d"
+      },
+      {
+        "id": "al07",
+        "sound": "Е",
+        "text": "Літера Е",
+        "emoji": "🔤",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "abc_letter_e",
+        "image": "abc_e"
+      },
+      {
+        "id": "al08",
+        "sound": "Є",
+        "text": "Літера Є",
+        "emoji": "🔤",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#AD1457",
+        "audio": "abc_letter_ye",
+        "image": "abc_ye"
+      },
+      {
+        "id": "al09",
+        "sound": "Ж",
+        "text": "Літера Ж",
+        "emoji": "🔤",
+        "colorBg": "#E8EAF6",
+        "colorAccent": "#3949AB",
+        "audio": "abc_letter_zh",
+        "image": "abc_zh"
+      },
+      {
+        "id": "al10",
+        "sound": "З",
+        "text": "Літера З",
+        "emoji": "🔤",
+        "colorBg": "#FFFDE7",
+        "colorAccent": "#F9A825",
+        "audio": "abc_letter_z",
+        "image": "abc_z"
+      },
+      {
+        "id": "al11",
+        "sound": "И",
+        "text": "Літера И",
+        "emoji": "🔤",
+        "colorBg": "#E1F5FE",
+        "colorAccent": "#0277BD",
+        "audio": "abc_letter_y",
+        "image": "abc_y"
+      },
+      {
+        "id": "al12",
+        "sound": "І",
+        "text": "Літера І",
+        "emoji": "🔤",
+        "colorBg": "#FFEBEE",
+        "colorAccent": "#C62828",
+        "audio": "abc_letter_i",
+        "image": "abc_i"
+      },
+      {
+        "id": "al13",
+        "sound": "Ї",
+        "text": "Літера Ї",
+        "emoji": "🔤",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#1565C0",
+        "audio": "abc_letter_yi",
+        "image": "abc_yi"
+      },
+      {
+        "id": "al14",
+        "sound": "Й",
+        "text": "Літера Й",
+        "emoji": "🔤",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32",
+        "audio": "abc_letter_yot",
+        "image": "abc_yot"
+      },
+      {
+        "id": "al15",
+        "sound": "К",
+        "text": "Літера К",
+        "emoji": "🔤",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FF8F00",
+        "audio": "abc_letter_k",
+        "image": "abc_k"
+      },
+      {
+        "id": "al16",
+        "sound": "Л",
+        "text": "Літера Л",
+        "emoji": "🔤",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#6A1B9A",
+        "audio": "abc_letter_l"
+      },
+      {
+        "id": "al17",
+        "sound": "М",
+        "text": "Літера М",
+        "emoji": "🔤",
+        "colorBg": "#E0F2F1",
+        "colorAccent": "#00695C",
+        "audio": "abc_letter_m",
+        "image": "abc_m"
+      },
+      {
+        "id": "al18",
+        "sound": "Н",
+        "text": "Літера Н",
+        "emoji": "🔤",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "abc_letter_n",
+        "image": "abc_n"
+      },
+      {
+        "id": "al19",
+        "sound": "О",
+        "text": "Літера О",
+        "emoji": "🔤",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#AD1457",
+        "audio": "abc_letter_o",
+        "image": "abc_o"
+      },
+      {
+        "id": "al20",
+        "sound": "П",
+        "text": "Літера П",
+        "emoji": "🔤",
+        "colorBg": "#E8EAF6",
+        "colorAccent": "#3949AB",
+        "audio": "abc_letter_p",
+        "image": "abc_p"
+      },
+      {
+        "id": "al21",
+        "sound": "Р",
+        "text": "Літера Р",
+        "emoji": "🔤",
+        "colorBg": "#FFFDE7",
+        "colorAccent": "#F9A825",
+        "audio": "abc_letter_r",
+        "image": "abc_r"
+      },
+      {
+        "id": "al22",
+        "sound": "С",
+        "text": "Літера С",
+        "emoji": "🔤",
+        "colorBg": "#E1F5FE",
+        "colorAccent": "#0277BD",
+        "audio": "abc_letter_s",
+        "image": "abc_s"
+      },
+      {
+        "id": "al23",
+        "sound": "Т",
+        "text": "Літера Т",
+        "emoji": "🔤",
+        "colorBg": "#FFEBEE",
+        "colorAccent": "#C62828",
+        "audio": "abc_letter_t",
+        "image": "abc_t"
+      },
+      {
+        "id": "al24",
+        "sound": "У",
+        "text": "Літера У",
+        "emoji": "🔤",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#1565C0",
+        "audio": "abc_letter_u",
+        "image": "abc_u"
+      },
+      {
+        "id": "al25",
+        "sound": "Ф",
+        "text": "Літера Ф",
+        "emoji": "🔤",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32",
+        "audio": "abc_letter_f",
+        "image": "abc_f"
+      },
+      {
+        "id": "al26",
+        "sound": "Х",
+        "text": "Літера Х",
+        "emoji": "🔤",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FF8F00",
+        "audio": "abc_letter_kh",
+        "image": "abc_kh"
+      },
+      {
+        "id": "al27",
+        "sound": "Ц",
+        "text": "Літера Ц",
+        "emoji": "🔤",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#6A1B9A",
+        "audio": "abc_letter_ts",
+        "image": "abc_ts"
+      },
+      {
+        "id": "al28",
+        "sound": "Ч",
+        "text": "Літера Ч",
+        "emoji": "🔤",
+        "colorBg": "#E0F2F1",
+        "colorAccent": "#00695C",
+        "audio": "abc_letter_ch",
+        "image": "abc_ch"
+      },
+      {
+        "id": "al29",
+        "sound": "Ш",
+        "text": "Літера Ш",
+        "emoji": "🔤",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "abc_letter_sh",
+        "image": "abc_sh"
+      },
+      {
+        "id": "al30",
+        "sound": "Щ",
+        "text": "Літера Щ",
+        "emoji": "🔤",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#AD1457",
+        "audio": "abc_letter_shch",
+        "image": "abc_shch"
+      },
+      {
+        "id": "al31",
+        "sound": "Ь",
+        "text": "Літера мʼякий знак",
+        "emoji": "🔤",
+        "colorBg": "#E8EAF6",
+        "colorAccent": "#3949AB",
+        "audio": "abc_letter_soft",
+        "image": "abc_soft"
+      },
+      {
+        "id": "al32",
+        "sound": "Ю",
+        "text": "Літера Ю",
+        "emoji": "🔤",
+        "colorBg": "#FFFDE7",
+        "colorAccent": "#F9A825",
+        "audio": "abc_letter_yu",
+        "image": "abc_yu"
+      },
+      {
+        "id": "al33",
+        "sound": "Я",
+        "text": "Літера Я",
+        "emoji": "🔤",
+        "colorBg": "#E1F5FE",
+        "colorAccent": "#0277BD",
+        "audio": "abc_letter_ya",
+        "image": "abc_ya"
+      }
+    ]
+  },
+  {
     "id": "sound_r",
     "title": "Звук Р",
     "icon": "Р",
@@ -6492,5 +6830,344 @@
       }
     ],
     "freePreviewCount": 3
+  },
+  {
+    "id": "alphabet_rhymes",
+    "title": "Весела абетка",
+    "icon": "🎠",
+    "color": "#AD1457",
+    "isLocked": true,
+    "freePreviewCount": 3,
+    "cards": [
+      {
+        "id": "ar01",
+        "sound": "А",
+        "text": "Віршик про літеру А",
+        "emoji": "🔤",
+        "colorBg": "#FFEBEE",
+        "colorAccent": "#C62828",
+        "audio": "abc_rhyme_a",
+        "image": "abc_a"
+      },
+      {
+        "id": "ar02",
+        "sound": "Б",
+        "text": "Віршик про літеру Б",
+        "emoji": "🔤",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#1565C0",
+        "audio": "abc_rhyme_b",
+        "image": "abc_b"
+      },
+      {
+        "id": "ar03",
+        "sound": "В",
+        "text": "Віршик про літеру В",
+        "emoji": "🔤",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32",
+        "audio": "abc_rhyme_v",
+        "image": "abc_v"
+      },
+      {
+        "id": "ar04",
+        "sound": "Г",
+        "text": "Віршик про літеру Г",
+        "emoji": "🔤",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FF8F00",
+        "audio": "abc_rhyme_h",
+        "image": "abc_h"
+      },
+      {
+        "id": "ar05",
+        "sound": "Ґ",
+        "text": "Віршик про літеру Ґ",
+        "emoji": "🔤",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#6A1B9A",
+        "audio": "abc_rhyme_g",
+        "image": "abc_g"
+      },
+      {
+        "id": "ar06",
+        "sound": "Д",
+        "text": "Віршик про літеру Д",
+        "emoji": "🔤",
+        "colorBg": "#E0F2F1",
+        "colorAccent": "#00695C",
+        "audio": "abc_rhyme_d",
+        "image": "abc_d"
+      },
+      {
+        "id": "ar07",
+        "sound": "Е",
+        "text": "Віршик про літеру Е",
+        "emoji": "🔤",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "abc_rhyme_e",
+        "image": "abc_e"
+      },
+      {
+        "id": "ar08",
+        "sound": "Є",
+        "text": "Віршик про літеру Є",
+        "emoji": "🔤",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#AD1457",
+        "audio": "abc_rhyme_ye",
+        "image": "abc_ye"
+      },
+      {
+        "id": "ar09",
+        "sound": "Ж",
+        "text": "Віршик про літеру Ж",
+        "emoji": "🔤",
+        "colorBg": "#E8EAF6",
+        "colorAccent": "#3949AB",
+        "audio": "abc_rhyme_zh",
+        "image": "abc_zh"
+      },
+      {
+        "id": "ar10",
+        "sound": "З",
+        "text": "Віршик про літеру З",
+        "emoji": "🔤",
+        "colorBg": "#FFFDE7",
+        "colorAccent": "#F9A825",
+        "audio": "abc_rhyme_z",
+        "image": "abc_z"
+      },
+      {
+        "id": "ar11",
+        "sound": "И",
+        "text": "Віршик про літеру И",
+        "emoji": "🔤",
+        "colorBg": "#E1F5FE",
+        "colorAccent": "#0277BD",
+        "audio": "abc_rhyme_y",
+        "image": "abc_y"
+      },
+      {
+        "id": "ar12",
+        "sound": "І",
+        "text": "Віршик про літеру І",
+        "emoji": "🔤",
+        "colorBg": "#FFEBEE",
+        "colorAccent": "#C62828",
+        "audio": "abc_rhyme_i",
+        "image": "abc_i"
+      },
+      {
+        "id": "ar13",
+        "sound": "Ї",
+        "text": "Віршик про літеру Ї",
+        "emoji": "🔤",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#1565C0",
+        "audio": "abc_rhyme_yi",
+        "image": "abc_yi"
+      },
+      {
+        "id": "ar14",
+        "sound": "Й",
+        "text": "Віршик про літеру Й",
+        "emoji": "🔤",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32",
+        "audio": "abc_rhyme_yot",
+        "image": "abc_yot"
+      },
+      {
+        "id": "ar15",
+        "sound": "К",
+        "text": "Віршик про літеру К",
+        "emoji": "🔤",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FF8F00",
+        "audio": "abc_rhyme_k",
+        "image": "abc_k"
+      },
+      {
+        "id": "ar16",
+        "sound": "Л",
+        "text": "Віршик про літеру Л",
+        "emoji": "🔤",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#6A1B9A",
+        "audio": "abc_rhyme_l"
+      },
+      {
+        "id": "ar17",
+        "sound": "М",
+        "text": "Віршик про літеру М",
+        "emoji": "🔤",
+        "colorBg": "#E0F2F1",
+        "colorAccent": "#00695C",
+        "audio": "abc_rhyme_m",
+        "image": "abc_m"
+      },
+      {
+        "id": "ar18",
+        "sound": "Н",
+        "text": "Віршик про літеру Н",
+        "emoji": "🔤",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "abc_rhyme_n",
+        "image": "abc_n"
+      },
+      {
+        "id": "ar19",
+        "sound": "О",
+        "text": "Віршик про літеру О",
+        "emoji": "🔤",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#AD1457",
+        "audio": "abc_rhyme_o",
+        "image": "abc_o"
+      },
+      {
+        "id": "ar20",
+        "sound": "П",
+        "text": "Віршик про літеру П",
+        "emoji": "🔤",
+        "colorBg": "#E8EAF6",
+        "colorAccent": "#3949AB",
+        "audio": "abc_rhyme_p",
+        "image": "abc_p"
+      },
+      {
+        "id": "ar21",
+        "sound": "Р",
+        "text": "Віршик про літеру Р",
+        "emoji": "🔤",
+        "colorBg": "#FFFDE7",
+        "colorAccent": "#F9A825",
+        "audio": "abc_rhyme_r",
+        "image": "abc_r"
+      },
+      {
+        "id": "ar22",
+        "sound": "С",
+        "text": "Віршик про літеру С",
+        "emoji": "🔤",
+        "colorBg": "#E1F5FE",
+        "colorAccent": "#0277BD",
+        "audio": "abc_rhyme_s",
+        "image": "abc_s"
+      },
+      {
+        "id": "ar23",
+        "sound": "Т",
+        "text": "Віршик про літеру Т",
+        "emoji": "🔤",
+        "colorBg": "#FFEBEE",
+        "colorAccent": "#C62828",
+        "audio": "abc_rhyme_t",
+        "image": "abc_t"
+      },
+      {
+        "id": "ar24",
+        "sound": "У",
+        "text": "Віршик про літеру У",
+        "emoji": "🔤",
+        "colorBg": "#E3F2FD",
+        "colorAccent": "#1565C0",
+        "audio": "abc_rhyme_u",
+        "image": "abc_u"
+      },
+      {
+        "id": "ar25",
+        "sound": "Ф",
+        "text": "Віршик про літеру Ф",
+        "emoji": "🔤",
+        "colorBg": "#E8F5E9",
+        "colorAccent": "#2E7D32",
+        "audio": "abc_rhyme_f",
+        "image": "abc_f"
+      },
+      {
+        "id": "ar26",
+        "sound": "Х",
+        "text": "Віршик про літеру Х",
+        "emoji": "🔤",
+        "colorBg": "#FFF8E1",
+        "colorAccent": "#FF8F00",
+        "audio": "abc_rhyme_kh",
+        "image": "abc_kh"
+      },
+      {
+        "id": "ar27",
+        "sound": "Ц",
+        "text": "Віршик про літеру Ц",
+        "emoji": "🔤",
+        "colorBg": "#F3E5F5",
+        "colorAccent": "#6A1B9A",
+        "audio": "abc_rhyme_ts",
+        "image": "abc_ts"
+      },
+      {
+        "id": "ar28",
+        "sound": "Ч",
+        "text": "Віршик про літеру Ч",
+        "emoji": "🔤",
+        "colorBg": "#E0F2F1",
+        "colorAccent": "#00695C",
+        "audio": "abc_rhyme_ch",
+        "image": "abc_ch"
+      },
+      {
+        "id": "ar29",
+        "sound": "Ш",
+        "text": "Віршик про літеру Ш",
+        "emoji": "🔤",
+        "colorBg": "#FFF3E0",
+        "colorAccent": "#E65100",
+        "audio": "abc_rhyme_sh",
+        "image": "abc_sh"
+      },
+      {
+        "id": "ar30",
+        "sound": "Щ",
+        "text": "Віршик про літеру Щ",
+        "emoji": "🔤",
+        "colorBg": "#FCE4EC",
+        "colorAccent": "#AD1457",
+        "audio": "abc_rhyme_shch",
+        "image": "abc_shch"
+      },
+      {
+        "id": "ar31",
+        "sound": "Ь",
+        "text": "Віршик про літеру мʼякий знак",
+        "emoji": "🔤",
+        "colorBg": "#E8EAF6",
+        "colorAccent": "#3949AB",
+        "audio": "abc_rhyme_soft",
+        "image": "abc_soft"
+      },
+      {
+        "id": "ar32",
+        "sound": "Ю",
+        "text": "Віршик про літеру Ю",
+        "emoji": "🔤",
+        "colorBg": "#FFFDE7",
+        "colorAccent": "#F9A825",
+        "audio": "abc_rhyme_yu",
+        "image": "abc_yu"
+      },
+      {
+        "id": "ar33",
+        "sound": "Я",
+        "text": "Віршик про літеру Я",
+        "emoji": "🔤",
+        "colorBg": "#E1F5FE",
+        "colorAccent": "#0277BD",
+        "audio": "abc_rhyme_ya",
+        "image": "abc_ya"
+      }
+    ]
   }
 ]
