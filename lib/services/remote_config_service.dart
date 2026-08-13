@@ -12,6 +12,8 @@ class RemoteConfigService {
     'daily_notification_hour': 10,
     'show_card_of_day': true,
     'onboarding_version': 1,
+    // A/B lever: paywall right after onboarding vs first-lock-touch only.
+    'show_onboarding_paywall': true,
   };
 
   FirebaseRemoteConfig? _cached;
@@ -75,4 +77,5 @@ class RemoteConfigService {
   int get dailyNotificationHour => _getInt('daily_notification_hour');
   bool get showCardOfDay => _getBool('show_card_of_day');
   int get onboardingVersion => _getInt('onboarding_version');
+  bool get showOnboardingPaywall => _getBool('show_onboarding_paywall');
 }

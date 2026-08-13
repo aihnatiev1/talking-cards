@@ -11,6 +11,7 @@ import '../providers/profile_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../services/paywall_flow.dart';
+import '../services/remote_config_service.dart';
 import '../utils/confetti_overlay_mixin.dart';
 import '../utils/constants.dart';
 import '../utils/design_tokens.dart';
@@ -33,14 +34,21 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   String _selectedAvatar = '👶';
   int _selectedLevel = 2;
 
-  static const _totalPages = 4;
-  static const _magicMomentPage = 3;
+  static const _totalPages = 3;
+  static const _magicMomentPage = 2;
 
   @override
   void initState() {
     super.initState();
-    // Rebuild when name changes so _canProceed is re-evaluated
-    _nameCtrl.addListener(() => setState(() {}));
+    // Language is auto-detected from the system locale instead of asking on
+    // a dedicated screen — one step less before the magic moment. The
+    // profile switcher still lets parents change it later.
+    final sysLang =
+        WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+    // uk/ru/be device locales → Ukrainian (many UA parents run ru-locale
+    // phones); everything else → English (FirstWords Cards markets).
+    _selectedLang = const {'uk', 'ru', 'be'}.contains(sysLang) ? 'uk' : 'en';
+    AnalyticsService.instance.logOnboardingLangSelected(_selectedLang);
     AnalyticsService.instance.logOnboardingStart();
   }
 
@@ -62,7 +70,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     // the next page lays out against full screen height, not the cropped
     // viewport behind the IME.
     FocusScope.of(context).unfocus();
-    if (_page == 1 && _nameCtrl.text.trim().isNotEmpty) {
+    if (_page == 0 && _nameCtrl.text.trim().isNotEmpty) {
       AnalyticsService.instance.logOnboardingNameEntered();
     }
     if (_page < _totalPages - 1) {
@@ -75,10 +83,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     }
   }
 
-  bool get _canProceed {
-    if (_page == 1) return _nameCtrl.text.trim().isNotEmpty;
-    return true;
-  }
+  // Name is optional — "Далі" is never blocked. An empty field falls back
+  // to «Малюк»/"Kid" in _finish; the keyboard was the funnel's biggest drop.
+  bool get _canProceed => true;
 
   Future<void> _finish() async {
     final name = _nameCtrl.text.trim();
@@ -103,9 +110,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
     if (!mounted) return;
 
-    // Show paywall right after onboarding — peak intent moment.
-    // Whether they convert or dismiss, we then proceed to HomeScreen.
-    await runPaywallFlow(context, ref, isOnboarding: true);
+    // Paywall right after onboarding — A/B lever via Remote Config
+    // (show_onboarding_paywall). When off, the first paywall touchpoint is
+    // the first locked-content tap instead.
+    if (RemoteConfigService.instance.showOnboardingPaywall) {
+      await runPaywallFlow(context, ref, isOnboarding: true);
+    }
 
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
@@ -153,13 +163,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 physics: const NeverScrollableScrollPhysics(),
                 onPageChanged: (p) => setState(() => _page = p),
                 children: [
-                  _LanguagePage(
-                    selected: _selectedLang,
-                    onSelect: (l) {
-                      AnalyticsService.instance.logOnboardingLangSelected(l);
-                      setState(() => _selectedLang = l);
-                    },
-                  ),
                   _ChildSetupPage(
                     nameCtrl: _nameCtrl,
                     selectedAvatar: _selectedAvatar,
@@ -221,130 +224,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 }
 
 // ─────────────────────────────────────────────
-//  Page 1 — Language
-// ─────────────────────────────────────────────
-
-class _LanguagePage extends StatelessWidget {
-  final String selected;
-  final ValueChanged<String> onSelect;
-
-  const _LanguagePage({required this.selected, required this.onSelect});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 28),
-      child: Column(
-        children: [
-          const SizedBox(height: 12),
-          Text('🗣️', style: TextStyle(fontSize: screenScale(context) * 64)),
-          const SizedBox(height: 20),
-          Text(
-            selected == 'en' ? 'Choose card language' : 'Виберіть мову карток',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-                fontSize: responsiveFont(context, 26),
-                fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            selected == 'en'
-                ? 'Can be changed per child'
-                : 'Можна змінити окремо для кожної дитини',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-          ),
-          const SizedBox(height: 40),
-          Row(
-            children: [
-              Expanded(child: _LangCard(
-                flag: '🇺🇦',
-                label: 'Українська',
-                sublabel: '234 картки',
-                selected: selected == 'uk',
-                onTap: () => onSelect('uk'),
-              )),
-              const SizedBox(width: 16),
-              Expanded(child: _LangCard(
-                flag: '🇬🇧',
-                label: 'English',
-                sublabel: '209 cards',
-                selected: selected == 'en',
-                onTap: () => onSelect('en'),
-              )),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LangCard extends StatelessWidget {
-  final String flag, label, sublabel;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _LangCard({
-    required this.flag,
-    required this.label,
-    required this.sublabel,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
-        decoration: BoxDecoration(
-          color: selected
-              ? kAccent.withValues(alpha: 0.1)
-              : Colors.grey.withValues(alpha: 0.07),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: selected ? kAccent : Colors.grey.shade300,
-            width: selected ? 2.5 : 1.5,
-          ),
-        ),
-        child: Column(
-          children: [
-            Text(flag, style: const TextStyle(fontSize: 40)),
-            const SizedBox(height: 10),
-            Text(label,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: selected ? kAccent : null,
-                )),
-            const SizedBox(height: 4),
-            Text(sublabel,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: selected
-                      ? kAccent.withValues(alpha: 0.7)
-                      : Colors.grey[500],
-                )),
-            if (selected) ...[
-              const SizedBox(height: 8),
-              const Icon(Icons.check_circle_rounded,
-                  color: kAccent, size: 20),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────
-//  Page 2 — Child setup
+//  Page 1 — Child setup (language is auto-detected from system locale)
 // ─────────────────────────────────────────────
 
 class _ChildSetupPage extends StatelessWidget {
@@ -395,8 +275,10 @@ class _ChildSetupPage extends StatelessWidget {
             textCapitalization: TextCapitalization.words,
             style: TextStyle(fontSize: responsiveFont(context, 18)),
             decoration: InputDecoration(
-              labelText: _isEn ? "Child's name" : "Як звати дитину?",
-              hintText: _isEn ? "e.g. Emma" : "Наприклад: Оленка",
+              labelText: _isEn
+                  ? "Child's name (optional)"
+                  : 'Як звати дитину? (не обовʼязково)',
+              hintText: _isEn ? 'e.g. Emma' : 'Наприклад: Оленка',
               counterText: '',
               border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14)),
