@@ -76,10 +76,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     // is only for offline / first-launch while the store query is pending.
     if (products.isEmpty) {
       return [
-        _Plan(labelYearly, s('449 грн', '\$14.99'), perYear, badgeBest,
+        _Plan(labelYearly, s('649 грн', '\$29.99'), perYear, badgeBest,
             productId: 'yearly_premium'),
-        _Plan(labelMonthly, s('79 грн', '\$1.99'), perMonth, null,
+        _Plan(labelMonthly, s('149 грн', '\$7.99'), perMonth, null,
             productId: 'monthly_premium'),
+        _Plan(s('Назавжди', 'Lifetime'), s('1299 грн', '\$59.99'),
+            s('одноразово', 'one-time'), s('Без підписки', 'No subscription'),
+            productId: 'lifetime_premium'),
       ];
     }
 
@@ -132,8 +135,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     if (age == null) {
       return s('План розвитку: $name', "$name's learning plan");
     }
-    return s('План розвитку: $name ($age р.)',
-        "$name's learning plan (age $age)");
+    // NBSP glues "(2–3 р.)" together — with a plain space the closing
+    // "р.)" wraps onto its own line for longer names.
+    return s('План розвитку: $name ($age р.)',
+        "$name's learning plan (age $age)");
   }
 
   Future<void> _purchase() async {
