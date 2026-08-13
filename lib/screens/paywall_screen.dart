@@ -769,7 +769,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
             text,
             style: TextStyle(
               fontSize: responsiveFont(context, 16),
-              color: const Color(0xFF3A3A3A),
+              // Hardcoded dark grey was invisible on the dark theme.
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white.withValues(alpha: 0.87)
+                  : const Color(0xFF3A3A3A),
               height: 1.3,
               fontWeight: FontWeight.w500,
             ),

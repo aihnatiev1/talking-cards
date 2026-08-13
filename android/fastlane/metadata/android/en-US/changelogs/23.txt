@@ -1,4 +1,3 @@
-- Lifetime plan — one purchase, every pack and game forever
 - Sound no longer turns off forever after an accidental tap
 - Faster start: two-tap onboarding, no keyboard required
 - Bubble Pop: no repeated cards, bubbles from the first second

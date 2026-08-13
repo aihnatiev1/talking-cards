@@ -1,7 +1,8 @@
-What's new in 1.3.0:
+- Lifetime plan — one purchase, every pack and game forever
+- Sound no longer turns off forever after an accidental tap
+- Faster start: two-tap onboarding, no keyboard required
+- Bubble Pop: no repeated cards, bubbles from the first second
+- Favorites now live in every tab — always first
+- 3 free coloring pictures instead of one
 
-- Games and coloring now say just the word — no extra phrases or verses
-- Rate the app right from the Parent area
-- Performance and stability improvements
-
-Thank you for using FirstWords Cards!
+Thanks for growing with us!
