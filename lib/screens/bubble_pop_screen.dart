@@ -148,6 +148,9 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
 
   // Cards usable for the current mode (cached on round build).
   List<CardModel> _pool = const [];
+  // Shuffled draw order over [_pool] — a card can't repeat until the whole
+  // pool has been shown once (refilled + reshuffled when exhausted).
+  final List<CardModel> _deck = [];
 
   // Live, on-screen bubbles still floating.
   final List<_LiveBubble> _live = [];
@@ -219,6 +222,7 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
 
     _live.clear();
     _popping.clear();
+    _deck.clear();
     _popped = 0;
     _elapsedMs = 0;
     _msSinceSpawn = 0;
@@ -228,6 +232,15 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     _lastTick = Duration.zero;
 
     AnalyticsService.instance.logGameStart('bubble_pop_${_mode.name}');
+
+    // Pre-seed two bubbles mid-screen so the round doesn't open on an empty
+    // sky — the first bottom spawn otherwise takes several seconds to drift
+    // into view. Screen size is known: _startRound runs post-first-frame.
+    final screen = _screenSize;
+    if (screen != null) {
+      _spawnBubble(0, screen, startYFactor: 0.55);
+      _spawnBubble(0, screen, startYFactor: 0.8);
+    }
 
     if (!_ticker.isActive) _ticker.start();
   }
@@ -354,9 +367,26 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
   int _randomSpawnInterval() =>
       _kMinSpawnMs + _rng.nextInt(_kMaxSpawnMs - _kMinSpawnMs);
 
-  void _spawnBubble(int nowMs, Size screen) {
+  /// Next card from the shuffle-bag: no repeats until [_pool] is exhausted.
+  CardModel _drawCard() {
+    if (_deck.isEmpty) {
+      _deck
+        ..addAll(_pool)
+        ..shuffle(_rng);
+    }
+    // After a reshuffle a card still floating on screen could come up again
+    // immediately — skip it when there is an alternative (matters for the
+    // small tricky-mode pools; with 200+ cards this never triggers).
+    final liveIds = {for (final b in _live) b.card.id};
+    final idx = _deck.lastIndexWhere((c) => !liveIds.contains(c.id));
+    return idx >= 0 ? _deck.removeAt(idx) : _deck.removeLast();
+  }
+
+  /// [startYFactor] places the bubble at a fraction of screen height instead
+  /// of just below the bottom edge — used to pre-seed the round start.
+  void _spawnBubble(int nowMs, Size screen, {double? startYFactor}) {
     if (_pool.isEmpty) return;
-    final card = _pool[_rng.nextInt(_pool.length)];
+    final card = _drawCard();
     final size = _kMinBubble + _rng.nextDouble() * (_kMaxBubble - _kMinBubble);
     // Bigger bubble → slower; map size in [_kMin, _kMax] inversely to velocity.
     final t = (size - _kMinBubble) / (_kMaxBubble - _kMinBubble); // 0..1
@@ -371,7 +401,10 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     final minX = size / 2 + amplitude;
     final maxX = screen.width - size / 2 - amplitude;
     final anchor = minX + _rng.nextDouble() * (maxX - minX);
-    final posY = screen.height + size; // start just below the visible area
+    // Default: start just below the visible area.
+    final posY = startYFactor != null
+        ? screen.height * startYFactor
+        : screen.height + size;
 
     _live.add(_LiveBubble(
       id: _nextBubbleId++,
@@ -586,35 +619,40 @@ class _LiveBubbleVisual extends StatelessWidget {
           ),
         ],
       ),
-      child: Stack(
-        children: [
-          // Card image inside — the key WOW element.
-          Center(
-            child: Padding(
-              padding: EdgeInsets.all(size * 0.18),
-              child: bubble.card.image != null
-                  ? Image.asset(
-                      'assets/images/webp/${bubble.card.image}.webp',
-                      fit: BoxFit.contain,
-                    )
-                  : const SizedBox.shrink(),
+      // ClipOval keeps the (portrait) card illustration inside the glass —
+      // unclipped it pokes out past the circle on tall images.
+      child: ClipOval(
+        child: Stack(
+          children: [
+            // Card image inside — the key WOW element.
+            Center(
+              child: Padding(
+                padding: EdgeInsets.all(size * 0.18),
+                child: bubble.card.image != null
+                    ? Image.asset(
+                        'assets/images/webp/${bubble.card.image}.webp',
+                        fit: BoxFit.contain,
+                      )
+                    : const SizedBox.shrink(),
+              ),
             ),
-          ),
-          // Top-left highlight dot.
-          const Align(
-            alignment: Alignment(-0.4, -0.4),
-            child: FractionallySizedBox(
-              widthFactor: 0.28,
-              heightFactor: 0.28,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
+            // Top-left highlight dot — translucent so it reads as glass
+            // shine instead of covering the illustration underneath.
+            Align(
+              alignment: const Alignment(-0.4, -0.4),
+              child: FractionallySizedBox(
+                widthFactor: 0.28,
+                heightFactor: 0.28,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.55),
+                    shape: BoxShape.circle,
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
