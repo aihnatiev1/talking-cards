@@ -1,8 +1,4 @@
-- Lifetime plan — one purchase, every pack and game forever
-- Sound no longer turns off forever after an accidental tap
-- Faster start: two-tap onboarding, no keyboard required
-- Bubble Pop: no repeated cards, bubbles from the first second
-- Favorites now live in every tab — always first
-- 3 free coloring pictures instead of one
+- Clearer Lifetime plan: it's a one-time purchase, no subscription
+- Small fixes and stability improvements
 
 Thanks for growing with us!
