@@ -358,10 +358,17 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                             : FittedBox(
                                 fit: BoxFit.scaleDown,
                                 child: Text(
-                                  s(
-                                    RemoteConfigService.instance.paywallCta,
-                                    'Start 3-day free trial',
-                                  ),
+                                  // Lifetime is a one-time purchase — promising
+                                  // a free trial here contradicted the native
+                                  // payment sheet and users backed out.
+                                  plans[_selectedPlan].productId ==
+                                          'lifetime_premium'
+                                      ? s('Купити назавжди', 'Buy lifetime')
+                                      : s(
+                                          RemoteConfigService
+                                              .instance.paywallCta,
+                                          'Start 3-day free trial',
+                                        ),
                                   style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -373,10 +380,15 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      s(
-                        '3 дні безкоштовно, потім ${plans[_selectedPlan].price}${plans[_selectedPlan].period} • Скасувати будь-коли',
-                        '3 days free, then ${plans[_selectedPlan].price}${plans[_selectedPlan].period} • Cancel anytime',
-                      ),
+                      plans[_selectedPlan].productId == 'lifetime_premium'
+                          ? s(
+                              'Одна покупка ${plans[_selectedPlan].price} • без підписки, назавжди',
+                              'One-time ${plans[_selectedPlan].price} • no subscription, forever',
+                            )
+                          : s(
+                              '3 дні безкоштовно, потім ${plans[_selectedPlan].price}${plans[_selectedPlan].period} • Скасувати будь-коли',
+                              '3 days free, then ${plans[_selectedPlan].price}${plans[_selectedPlan].period} • Cancel anytime',
+                            ),
                       textAlign: TextAlign.center,
                       style: TextStyle(
                           fontSize: responsiveFont(context, 13),
