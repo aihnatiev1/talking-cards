@@ -37,15 +37,13 @@ import '../utils/l10n.dart';
 import '../utils/pack_categories.dart';
 import '../widgets/bloom_mascot.dart';
 import '../widgets/bubble_pop.dart';
-import '../widgets/card_of_day_hero.dart';
-import '../widgets/continue_hero.dart';
+import '../widgets/daily_hero_card.dart';
 import '../widgets/notification_toggle_tile.dart';
 import '../widgets/pack_grid_card.dart';
 import '../widgets/parental_gate.dart';
 import '../widgets/profile_avatar_chip.dart';
 import '../widgets/streak_chip.dart';
 import '../widgets/streak_milestone_overlay.dart';
-import '../widgets/today_plan_strip.dart';
 
 class PacksTab extends ConsumerStatefulWidget {
   const PacksTab({super.key});
@@ -370,13 +368,22 @@ class _PacksTabState extends ConsumerState<PacksTab> {
     });
   }
 
-  Widget _buildTodayPlanStrip(
+  /// The single above-the-fold block: hero (Continue, or Card of the Day) plus
+  /// the two remaining daily steps as compact buttons in the same frame.
+  ///
+  /// The daily-quest wiring is unchanged — the hero simply *is* one of the
+  /// three steps now, so the same [QuestTask]s get completed and the same
+  /// analytics fire; only the presentation collapsed from two framed cards
+  /// into one.
+  Widget _buildDailyHero(
     BuildContext context, {
     required List<PackModel> packs,
     required CardModel? cotd,
     required bool cotdLocked,
     required DailyQuestState questState,
     required Set<String> completedPacks,
+    required PackModel? continuePack,
+    required int continueProgress,
     required bool isEn,
   }) {
     // Recommended pack: first non-locked, non-virtual, non-completed.
@@ -438,56 +445,57 @@ class _PacksTabState extends ConsumerState<PacksTab> {
       );
     }
 
-    final stones = <TodayPlanStone>[
-      TodayPlanStone(
-        emoji: '🔊',
-        label: isEn ? "Today's Card" : 'Картка дня',
-        isDone: listenDone,
-        isActive: firstPending == 1,
-        onTap: () {
-          AnalyticsService.instance.logTodayPlanStoneTap(
-            stoneId: 1,
-            wasDone: listenDone,
-            wasActive: firstPending == 1,
-          );
-          if (cotd != null) {
-            _showCardOfDayPopup(cotd);
-            ref
-                .read(dailyQuestProvider.notifier)
-                .completeTask(QuestTask.listenCardOfDay);
-          }
-        },
-      ),
-      TodayPlanStone(
-        emoji: '🃏',
-        label: isEn ? "Today's Pack" : 'Пак дня',
-        isDone: viewDone,
-        isActive: firstPending == 2,
-        onTap: () {
-          AnalyticsService.instance.logTodayPlanStoneTap(
-            stoneId: 2,
-            wasDone: viewDone,
-            wasActive: firstPending == 2,
-          );
-          final rp = recommendedPack;
-          if (rp != null) _onPackTap(context, rp);
-        },
-      ),
-      TodayPlanStone(
-        emoji: '🗺️',
-        label: isEn ? 'Daily Adventure' : 'Пригода дня',
-        isDone: playDone,
-        isActive: firstPending == 3,
-        onTap: () {
-          AnalyticsService.instance.logTodayPlanStoneTap(
-            stoneId: 3,
-            wasDone: playDone,
-            wasActive: firstPending == 3,
-          );
-          openQuestMap();
-        },
-      ),
-    ];
+    void openCardOfDay() {
+      if (cotd == null) return;
+      _showCardOfDayPopup(cotd);
+      ref
+          .read(dailyQuestProvider.notifier)
+          .completeTask(QuestTask.listenCardOfDay);
+    }
+
+    final cardTask = DailyTask(
+      emoji: '🔊',
+      label: isEn ? "Today's Card" : 'Картка дня',
+      isDone: listenDone,
+      isActive: firstPending == 1,
+      onTap: () {
+        AnalyticsService.instance.logTodayPlanStoneTap(
+          stoneId: 1,
+          wasDone: listenDone,
+          wasActive: firstPending == 1,
+        );
+        openCardOfDay();
+      },
+    );
+    final packTask = DailyTask(
+      emoji: '🃏',
+      label: isEn ? "Today's Pack" : 'Пак дня',
+      isDone: viewDone,
+      isActive: firstPending == 2,
+      onTap: () {
+        AnalyticsService.instance.logTodayPlanStoneTap(
+          stoneId: 2,
+          wasDone: viewDone,
+          wasActive: firstPending == 2,
+        );
+        final rp = recommendedPack;
+        if (rp != null) _onPackTap(context, rp);
+      },
+    );
+    final adventureTask = DailyTask(
+      emoji: '🗺️',
+      label: isEn ? 'Adventure' : 'Пригода дня',
+      isDone: playDone,
+      isActive: firstPending == 3,
+      onTap: () {
+        AnalyticsService.instance.logTodayPlanStoneTap(
+          stoneId: 3,
+          wasDone: playDone,
+          wasActive: firstPending == 3,
+        );
+        openQuestMap();
+      },
+    );
 
     // When the day's plan is finished, the whole strip becomes one big tap
     // target: Pro users go straight into the Daily Adventure, free users
@@ -528,11 +536,73 @@ class _PacksTabState extends ConsumerState<PacksTab> {
       openQuestMap();
     }
 
-    return TodayPlanStrip(
-      stones: stones,
-      isEn: isEn,
-      onViewAll: openQuestMap,
+    String? packThumb(PackModel p) {
+      if (p.cover != null) return p.cover;
+      for (final c in p.cards) {
+        if (c.image != null) return c.image;
+      }
+      return null;
+    }
+
+    // Which of the three steps the hero itself represents:
+    //  • an unfinished pack → "Continue" (our most-tapped element) stands in
+    //    for "Today's Pack", because resuming it views cards all the same;
+    //  • otherwise → the Card of the Day.
+    if (continuePack != null) {
+      final cp = continuePack;
+      final total = cp.cards.length;
+      return DailyHeroCard(
+        badge: isEn ? '▶ Continue' : '▶ Продовжити',
+        title: cp.title,
+        accent: cp.color,
+        image: packThumb(cp),
+        fallbackEmoji: cp.icon,
+        progress:
+            continueProgress > 0 && total > 0 ? continueProgress / total : null,
+        heroDone: viewDone,
+        onHeroTap: () {
+          AnalyticsService.instance.logContinueHeroTap(cp.id);
+          _onPackTap(context, cp);
+        },
+        tasks: [cardTask, adventureTask],
+        allDone: allDone,
+        onAllDoneTap: allDone ? onAllDone : null,
+        isEn: isEn,
+      );
+    }
+
+    if (cotd != null) {
+      return DailyHeroCard(
+        badge: isEn ? '🔊 Card of the day' : '🔊 Картка дня',
+        title: cotd.sound,
+        accent: cotd.colorAccent,
+        image: cotd.image,
+        fallbackEmoji: cotd.emoji,
+        heroDone: listenDone,
+        onHeroTap: openCardOfDay,
+        tasks: [packTask, adventureTask],
+        allDone: allDone,
+        onAllDoneTap: allDone ? onAllDone : null,
+        isEn: isEn,
+      );
+    }
+
+    // No card of the day and nothing in progress (first launch of an empty
+    // catalogue) — point at the recommended pack rather than showing nothing.
+    final rp = recommendedPack;
+    if (rp == null) return const SizedBox.shrink();
+    return DailyHeroCard(
+      badge: isEn ? '🃏 Start here' : '🃏 Почнемо',
+      title: rp.title,
+      accent: rp.color,
+      image: packThumb(rp),
+      fallbackEmoji: rp.icon,
+      heroDone: viewDone,
+      onHeroTap: () => _onPackTap(context, rp),
+      tasks: [adventureTask],
+      allDone: allDone,
       onAllDoneTap: allDone ? onAllDone : null,
+      isEn: isEn,
     );
   }
 
@@ -745,15 +815,20 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                     // occupying a line of its own — ~15% less vertical chrome
                     // before the first real content block.
                     Expanded(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          s('🗣️ Картки-розмовлялки', '🗣️ FirstWords Cards'),
-                          maxLines: 1,
-                          style: TextStyle(
-                            fontSize: 19 * scale,
-                            fontWeight: FontWeight.bold,
+                      // Reserve a gutter: StreakChip pulses (scales past its
+                      // layout box) and used to graze the title's last letter.
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 10),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            s('🗣️ Картки-розмовлялки', '🗣️ FirstWords Cards'),
+                            maxLines: 1,
+                            style: TextStyle(
+                              fontSize: 19 * scale,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
@@ -787,49 +862,19 @@ class _PacksTabState extends ConsumerState<PacksTab> {
               // the inline subtitle here was a duplicate readout — removed.
               const SizedBox(height: 6),
 
-              // Hero: Continue or Card of the Day — full-width
+              // One hero block: Continue / Card of the Day + the day's two
+              // remaining steps, all inside a single frame.
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                child: continuePack != null
-                    ? Builder(builder: (_) {
-                        final cp = continuePack!;
-                        return ContinueHero(
-                          pack: cp,
-                          progress: continueProgress,
-                          isEn: isEnMode,
-                          onTap: () {
-                            AnalyticsService.instance
-                                .logContinueHeroTap(cp.id);
-                            _onPackTap(context, cp);
-                          },
-                        );
-                      })
-                    : cotd != null
-                        ? CardOfDayHero(
-                            card: cotd,
-                            isEn: isEnMode,
-                            onTap: () {
-                              _showCardOfDayPopup(cotd);
-                              ref
-                                  .read(dailyQuestProvider.notifier)
-                                  .completeTask(QuestTask.listenCardOfDay);
-                            },
-                          )
-                        : const SizedBox.shrink(),
-              ),
-
-              const SizedBox(height: 8),
-
-              // Today's Plan — 3-stone daily path backed by dailyQuestProvider
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                child: _buildTodayPlanStrip(
+                child: _buildDailyHero(
                   context,
                   packs: packs,
                   cotd: cotd,
                   cotdLocked: cotdLocked,
                   questState: quest,
                   completedPacks: completedPacks,
+                  continuePack: continuePack,
+                  continueProgress: continueProgress,
                   isEn: isEnMode,
                 ),
               ),
