@@ -143,7 +143,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ColoringScreen(),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
+      // Lift the bar off the content with a soft shadow so the grid doesn't
+      // appear to run underneath it.
+      bottomNavigationBar: DecoratedBox(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.07),
+              blurRadius: 12,
+              offset: const Offset(0, -3),
+            ),
+          ],
+        ),
+        child: BottomNavigationBar(
         currentIndex: _tab,
         onTap: (i) => setState(() => _tab = i),
         selectedItemColor: const Color(0xFF6C63FF),
@@ -164,6 +176,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             label: s('Малюємо', 'Coloring'),
           ),
         ],
+        ),
       ),
     );
   }

@@ -118,14 +118,23 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
         duration: DT.pressMs,
         curve: Curves.easeOut,
         child: Container(
+          // One quiet neutral base for every tile: nine differently-tinted
+          // frames side by side read as noise. The category colour now lives
+          // only in the title (and the progress bar).
           decoration: BoxDecoration(
             color: DT.surfaceWhite,
             borderRadius: BorderRadius.circular(DT.rLg),
             border: Border.all(
-              color: accent.withValues(alpha: 0.28),
-              width: 2,
+              color: Colors.black.withValues(alpha: 0.06),
+              width: 1,
             ),
-            boxShadow: DT.shadowSoft(accent),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(DT.rLg - 2),
@@ -136,9 +145,9 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
                 // actually reads at a glance. No inner padding: let the image
                 // hug the corners of the tinted pane.
                 Expanded(
-                  flex: 5,
+                  flex: 6,
                   child: Container(
-                    color: accent.withValues(alpha: 0.10),
+                    color: accent.withValues(alpha: 0.05),
                     child: Stack(
                       children: [
                         Positioned.fill(
@@ -186,22 +195,26 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
                 // Title strip — compact, anchored at bottom so the image
                 // dominates the tile.
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(6, 4, 6, 6),
+                  padding: const EdgeInsets.fromLTRB(6, 3, 6, 5),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
+                      // Shrink-to-fit on one line: «Протилежності» used to
+                      // wrap to two lines and look heavier than «Дії».
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
                         pack.title,
                         textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 12.5,
                           fontWeight: FontWeight.w800,
                           color: accent,
                           height: 1.1,
                         ),
+                      ),
                       ),
                       if (hasProgress) ...[
                         const SizedBox(height: 4),
