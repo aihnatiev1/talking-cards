@@ -745,13 +745,16 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                     // occupying a line of its own — ~15% less vertical chrome
                     // before the first real content block.
                     Expanded(
-                      child: Text(
-                        s('🗣️ Картки-розмовлялки', '🗣️ FirstWords Cards'),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 19 * scale,
-                          fontWeight: FontWeight.bold,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          s('🗣️ Картки-розмовлялки', '🗣️ FirstWords Cards'),
+                          maxLines: 1,
+                          style: TextStyle(
+                            fontSize: 19 * scale,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
