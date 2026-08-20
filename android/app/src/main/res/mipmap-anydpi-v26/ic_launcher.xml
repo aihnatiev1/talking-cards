@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- The artwork already carries its own blue plate and safe margins, so the
+       foreground fills the full 108dp canvas (no inset) and the launcher mask
+       crops it directly. Background colour matches the artwork's blue. -->
   <background android:drawable="@color/ic_launcher_background"/>
-  <foreground>
-      <inset
-          android:drawable="@drawable/ic_launcher_foreground"
-          android:inset="16%" />
-  </foreground>
+  <foreground android:drawable="@drawable/ic_launcher_foreground"/>
 </adaptive-icon>
