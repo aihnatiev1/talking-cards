@@ -741,9 +741,20 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                 padding: EdgeInsets.only(top: 4 * scale, left: 12, right: 12),
                 child: Row(
                   children: [
-                    // Theme toggle moved to the About sheet — a 2-year-old's
-                    // home screen is no place for app-chrome settings.
-                    const Spacer(),
+                    // Title shares the row with streak/profile/info instead of
+                    // occupying a line of its own — ~15% less vertical chrome
+                    // before the first real content block.
+                    Expanded(
+                      child: Text(
+                        s('🗣️ Картки-розмовлялки', '🗣️ FirstWords Cards'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 19 * scale,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                     if (streak.currentStreak > 0) ...[
                       StreakChip(
                         streak: streak.currentStreak,
@@ -768,13 +779,6 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                   ],
                 ),
               ),
-              Text(
-                s('🗣️ Картки-розмовлялки', '🗣️ FirstWords Cards'),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 24 * scale, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 6 * scale),
 
               // Streak/progress chip lives in the top header now (StreakChip);
               // the inline subtitle here was a duplicate readout — removed.
@@ -845,13 +849,23 @@ class _PacksTabState extends ConsumerState<PacksTab> {
               // call-to-action above the fold.
               const SizedBox(height: 8),
 
-              // Category filter chips — segmented pill control
+              // Category filter — one segmented control instead of three
+              // separate buttons: a single light track, only the active
+              // segment carries brand colour.
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white.withValues(alpha: 0.07)
+                        : Colors.black.withValues(alpha: 0.04),
+                    borderRadius: BorderRadius.circular(22),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Row(
                   children: [
                     for (int i = 0; i < allCategories.length; i++) ...[
-                      if (i > 0) const SizedBox(width: 8),
                       Expanded(
                         child: _CategoryChip(
                           label: allCategories[i],
@@ -871,6 +885,8 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                       ),
                     ],
                   ],
+                    ),
+                  ),
                 ),
               ),
 

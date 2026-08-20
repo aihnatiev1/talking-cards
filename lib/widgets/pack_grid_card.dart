@@ -278,9 +278,11 @@ class _StatusBadge extends StatelessWidget {
     Widget child;
     Color bg;
     if (completed) {
+      // Deliberately smaller than the other badges: a finished pack shouldn't
+      // pull the eye away from the packs the child hasn't opened yet.
       child = const Icon(
         Icons.check_rounded,
-        size: 18,
+        size: 13,
         color: Colors.white,
       );
       bg = const Color(0xFF22C55E); // clean kid-friendly green
@@ -292,12 +294,12 @@ class _StatusBadge extends StatelessWidget {
       bg = DT.sunBurst;
     }
     return Container(
-      padding: const EdgeInsets.all(5),
+      padding: EdgeInsets.all(completed ? 4 : 5),
       decoration: BoxDecoration(
         color: bg,
         shape: BoxShape.circle,
         border: completed
-            ? Border.all(color: Colors.white, width: 2)
+            ? Border.all(color: Colors.white, width: 1.5)
             : null,
         boxShadow: [
           BoxShadow(
