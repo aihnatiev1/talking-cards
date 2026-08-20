@@ -1,4 +1,4 @@
-- Clearer Lifetime plan: it's a one-time purchase, no subscription
-- Small fixes and stability improvements
+- Fixed a crash after finishing an articulation exercise
+- Small stability improvements
 
 Thanks for growing with us!
