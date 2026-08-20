@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -31,7 +29,6 @@ class _SplashScreenState extends State<SplashScreen>
   bool _imageReady = false;
   bool _showOnboarding = false;
   String? _deepLink;
-  bool _isEnLang = false;
 
   @override
   void initState() {
@@ -103,20 +100,7 @@ class _SplashScreenState extends State<SplashScreen>
     });
     EngageService.instance.publishFromPrefs();
 
-    // Read the active profile's learning language so the splash title
-    // matches before MaterialApp picks it up.
     final prefs = await SharedPreferences.getInstance();
-    try {
-      final activeId = prefs.getString('active_profile_id') ?? 'default';
-      final raw = prefs.getStringList('app_profiles') ?? const [];
-      for (final s in raw) {
-        final j = json.decode(s) as Map<String, dynamic>;
-        if (j['id'] == activeId && j['lang'] == 'en') {
-          if (mounted) setState(() => _isEnLang = true);
-          break;
-        }
-      }
-    } catch (_) {}
     final onboardingDone = prefs.getBool('onboarding_done') ?? false;
     if (!onboardingDone) {
       // Existing user upgrading from <1.1.0: they have real pack progress
@@ -191,22 +175,18 @@ class _SplashScreenState extends State<SplashScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Image.asset(
-                  'assets/images/webp/splash.webp',
-                  width: 280,
-                  height: 280,
-                  fit: BoxFit.contain,
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  _isEnLang ? 'FirstWords Cards' : 'Картки-розмовлялки',
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: kAccent,
+                // No wordmark here: the splash stays language-neutral so new
+                // locales need zero design work. The icon alone carries the brand.
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(64),
+                  child: Image.asset(
+                    'assets/images/webp/splash.webp',
+                    width: 280,
+                    height: 280,
+                    fit: BoxFit.contain,
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
                 const SizedBox(
                   width: 32,
                   height: 32,
