@@ -357,7 +357,11 @@ class _ExercisePlayerScreenState extends State<_ExercisePlayerScreen>
     _bounceScale = TweenSequence<double>([
       TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.25), weight: 1),
       TweenSequenceItem(tween: Tween(begin: 1.25, end: 1.0), weight: 1),
-    ]).animate(CurvedAnimation(parent: _bounceCtrl, curve: Curves.easeOutBack));
+      // NOT a *Back/*elastic curve here: those overshoot past 1.0 and
+      // TweenSequence.transform asserts t <= 1.0 — it crashed on every
+      // completed rep (Crashlytics: TweenSequence.transform, fatal).
+      // The bounce already comes from the sequence itself (1.0→1.25→1.0).
+    ]).animate(CurvedAnimation(parent: _bounceCtrl, curve: Curves.easeInOut));
   }
 
   void _onRepComplete() {
