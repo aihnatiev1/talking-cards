@@ -110,10 +110,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
     if (!mounted) return;
 
-    // Paywall right after onboarding — A/B lever via Remote Config
-    // (show_onboarding_paywall). When off, the first paywall touchpoint is
-    // the first locked-content tap instead.
-    if (RemoteConfigService.instance.showOnboardingPaywall) {
+    // Paywall right after onboarding — per-language lever via Remote Config.
+    // EN sees the offer here because English installs churn before they ever
+    // reach locked content; UA keeps the softer flow, where the first paywall
+    // touchpoint is the first locked-content tap.
+    if (RemoteConfigService.instance
+        .showOnboardingPaywallFor(_selectedLang)) {
       await runPaywallFlow(context, ref, isOnboarding: true);
     }
 

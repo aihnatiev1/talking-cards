@@ -322,79 +322,6 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                         child: _planTile(i, plans),
                       );
                     }),
-                    const SizedBox(height: 20),
-                    Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(22),
-                        boxShadow: [
-                          BoxShadow(
-                            color: kAccent.withValues(alpha: 0.35),
-                            blurRadius: 18,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      child: ElevatedButton(
-                        onPressed: _loading ? null : _purchase,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: kAccent,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 20),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(22),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: _loading
-                            ? const SizedBox(
-                                height: 22,
-                                width: 22,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2.5,
-                                ),
-                              )
-                            : FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  // Lifetime is a one-time purchase — promising
-                                  // a free trial here contradicted the native
-                                  // payment sheet and users backed out.
-                                  plans[_selectedPlan].productId ==
-                                          'lifetime_premium'
-                                      ? s('Купити назавжди', 'Buy lifetime')
-                                      : s(
-                                          RemoteConfigService
-                                              .instance.paywallCta,
-                                          'Start 3-day free trial',
-                                        ),
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 0.2,
-                                  ),
-                                ),
-                              ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      plans[_selectedPlan].productId == 'lifetime_premium'
-                          ? s(
-                              'Одна покупка ${plans[_selectedPlan].price} • без підписки, назавжди',
-                              'One-time ${plans[_selectedPlan].price} • no subscription, forever',
-                            )
-                          : s(
-                              '3 дні безкоштовно, потім ${plans[_selectedPlan].price}${plans[_selectedPlan].period} • Скасувати будь-коли',
-                              '3 days free, then ${plans[_selectedPlan].price}${plans[_selectedPlan].period} • Cancel anytime',
-                            ),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontSize: responsiveFont(context, 13),
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w500),
-                    ),
                     const SizedBox(height: 16),
                     TextButton(
                       onPressed: _loading ? null : _restore,
@@ -406,24 +333,6 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                             fontWeight: FontWeight.w500),
                       ),
                     ),
-                    if (widget.isOnboarding)
-                      TextButton(
-                        onPressed: _loading
-                            ? null
-                            : () {
-                                AnalyticsService.instance.logPaywallDismiss(
-                                    'paywall_onboarding_skip');
-                                Navigator.of(context).pop(false);
-                              },
-                        child: Text(
-                          s('Продовжити з безкоштовними розділами',
-                              'Continue with free packs'),
-                          style: TextStyle(
-                              color: Colors.grey[500],
-                              fontSize: responsiveFont(context, 13),
-                              fontWeight: FontWeight.w500),
-                        ),
-                      ),
                     const SizedBox(height: 20),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -451,12 +360,131 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                 ),
               ),
             ),
+            _stickyCta(context, s, plans),
           ],
         ),
         ),
       ),
     );
   }
+
+  /// CTA pinned below the scroll area. It used to sit at the bottom of the
+  /// scrolling column, which put it under the fold on a phone — the offer
+  /// asked for a decision the user could not see how to accept. Matters most
+  /// for the onboarding variant, where this is a cold first-session sell.
+  Widget _stickyCta(BuildContext context, AppS s, List<_Plan> plans) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(28, 12, 28, 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, -3),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: [
+                BoxShadow(
+                  color: kAccent.withValues(alpha: 0.35),
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: ElevatedButton(
+              onPressed: _loading ? null : _purchase,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kAccent,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(22),
+                ),
+                elevation: 0,
+              ),
+              child: _loading
+                  ? const SizedBox(
+                      height: 22,
+                      width: 22,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2.5,
+                      ),
+                    )
+                  : FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        // Lifetime is a one-time purchase — promising
+                        // a free trial here contradicted the native
+                        // payment sheet and users backed out.
+                        plans[_selectedPlan].productId ==
+                                'lifetime_premium'
+                            ? s('Купити назавжди', 'Buy lifetime')
+                            : s(
+                                RemoteConfigService
+                                    .instance.paywallCta,
+                                'Start 3-day free trial',
+                              ),
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            plans[_selectedPlan].productId == 'lifetime_premium'
+                ? s(
+                    'Одна покупка ${plans[_selectedPlan].price} • без підписки, назавжди',
+                    'One-time ${plans[_selectedPlan].price} • no subscription, forever',
+                  )
+                : s(
+                    '3 дні безкоштовно, потім ${plans[_selectedPlan].price}${plans[_selectedPlan].period} • Скасувати будь-коли',
+                    '3 days free, then ${plans[_selectedPlan].price}${plans[_selectedPlan].period} • Cancel anytime',
+                  ),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+                fontSize: responsiveFont(context, 13),
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500),
+          ),
+          // The escape hatch stays next to the CTA: a first-session offer must
+          // show both choices, not bury one below the fold.
+          if (widget.isOnboarding)
+            TextButton(
+              onPressed: _loading
+                  ? null
+                  : () {
+                      AnalyticsService.instance
+                          .logPaywallDismiss('paywall_onboarding_skip');
+                      Navigator.of(context).pop(false);
+                    },
+              child: Text(
+                s('Продовжити з безкоштовними розділами',
+                    'Continue with free packs'),
+                style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: responsiveFont(context, 13),
+                    fontWeight: FontWeight.w600),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
 
   Widget _legalLink(String title, String url) {
     return GestureDetector(

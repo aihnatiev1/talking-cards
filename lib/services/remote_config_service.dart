@@ -17,6 +17,12 @@ class RemoteConfigService {
     // touchpoint is the first locked-content tap. Remote Config can
     // re-enable this for an A/B without a release.
     'show_onboarding_paywall': false,
+    // ...except in English, where the funnel says otherwise (2026-08-21):
+    // of 22 US installs in two weeks, exactly 2 ever saw the paywall,
+    // because they churn long before touching locked content. A first-session
+    // offer is the only offer they will get. Separate key so it can be killed
+    // per locale from the console without shipping a release.
+    'show_onboarding_paywall_en': true,
   };
 
   FirebaseRemoteConfig? _cached;
@@ -81,4 +87,11 @@ class RemoteConfigService {
   bool get showCardOfDay => _getBool('show_card_of_day');
   int get onboardingVersion => _getInt('onboarding_version');
   bool get showOnboardingPaywall => _getBool('show_onboarding_paywall');
+
+  bool get showOnboardingPaywallEn =>
+      _getBool('show_onboarding_paywall_en');
+
+  /// Whether to sell right after onboarding, decided per language.
+  bool showOnboardingPaywallFor(String lang) =>
+      lang == 'en' ? showOnboardingPaywallEn : showOnboardingPaywall;
 }
