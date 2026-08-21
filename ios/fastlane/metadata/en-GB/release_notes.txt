@@ -1,6 +1,5 @@
-- Fresh home screen: one "today" block instead of two — less clutter, more cards in view
-- New app icon and launch screen
-- Fixed a crash after finishing an articulation exercise
-- Speed and stability improvements
+- Fixed rare cases where the app could hang on the loading screen
+- Faster startup on slow connections and older tablets
+- Small stability improvements
 
 Thanks for growing with us!
