@@ -7,7 +7,9 @@ import '../providers/packs_provider.dart';
 import '../providers/profile_provider.dart';
 import '../services/notification_service.dart';
 import '../services/paywall_flow.dart';
+import '../services/analytics_service.dart';
 import '../services/whatsnew_service.dart';
+import '../utils/app_startup.dart';
 import '../utils/constants.dart';
 import '../utils/l10n.dart';
 import '../tabs/packs_tab.dart';
@@ -27,8 +29,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _logAppReadyOnce();
     _showWelcomeIfNeeded();
     _maybeShowPaywallFromReminder();
+  }
+
+  /// Marks the end of cold start: usable UI on screen. Paired with
+  /// `splash_timeout`, this separates "install bounced" from "install never
+  /// got past the splash" — a distinction analytics could not make before.
+  void _logAppReadyOnce() {
+    if (AppStartup.readyLogged) return;
+    AppStartup.readyLogged = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AnalyticsService.instance
+          .logAppReady(AppStartup.clock.elapsedMilliseconds);
+    });
   }
 
   /// If the app was cold-launched via the day-3 reminder notification AND the

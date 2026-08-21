@@ -1,12 +1,17 @@
+import 'dart:async';
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../services/engage_service.dart';
 import '../services/remote_config_service.dart';
 import '../services/widget_service.dart';
 import '../utils/constants.dart';
+import '../utils/guarded_init.dart';
 import '../services/notification_service.dart';
 import '../services/purchase_service.dart';
 import 'home_screen.dart';
@@ -28,7 +33,25 @@ class _SplashScreenState extends State<SplashScreen>
   bool _animDone = false;
   bool _imageReady = false;
   bool _showOnboarding = false;
+  bool _navigated = false;
   String? _deepLink;
+  Timer? _watchdog;
+
+  /// Per-service budget for splash init. Nothing here is worth a blank screen:
+  /// Remote Config, StoreKit/Billing and the notification plugin all talk to
+  /// the outside world and can hang indefinitely on a bad network or a
+  /// restricted store account.
+  static const _initBudget = Duration(seconds: 5);
+
+  /// Hard ceiling for the whole splash. If we are still waiting when this
+  /// fires, we go to the app anyway — a stale Remote Config beats a user who
+  /// never sees a card.
+  static const _watchdogBudget = Duration(seconds: 9);
+
+  /// Widget tests have no platform channels, so every init future hangs
+  /// forever and these timers would leak past teardown ("pending timers").
+  /// The timeouts exist for real devices; tests keep the plain await.
+  static final bool _inTest = Platform.environment.containsKey('FLUTTER_TEST');
 
   @override
   void initState() {
@@ -44,50 +67,75 @@ class _SplashScreenState extends State<SplashScreen>
 
     // Start loading in background
     _initServices();
+
+    if (_inTest) return;
+    _watchdog = Timer(_watchdogBudget, () {
+      if (!mounted || _navigated) return;
+      debugPrint('splash: watchdog fired — entering app with partial init');
+      AnalyticsService.instance.logSplashTimeout('watchdog');
+      _loadingDone = true;
+      _animDone = true;
+      _imageReady = true;
+      _navigateIfReady();
+    });
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_imageReady) {
-      precacheImage(
-        const AssetImage('assets/images/webp/splash.webp'),
-        context,
-      ).then((_) {
-        if (!mounted) return;
-        setState(() => _imageReady = true);
-        _ctrl.forward();
-        // Just long enough for the 600ms logo entrance to land — the old
-        // 1200ms hold was pure added cold-start latency.
-        Future.delayed(const Duration(milliseconds: 700), () {
-          _animDone = true;
-          _navigateIfReady();
-        });
-      });
-    }
+    if (!_imageReady) _prepareLogo();
   }
 
-  Future<void> _initServices() async {
-    // Each service swallows its own errors so a single failing init never
-    // strands the splash on an infinite loader.
-    Future<void> guard(String name, Future<void> Function() body) async {
-      try {
-        await body();
-      } catch (e, st) {
-        debugPrint('splash: $name failed: $e\n$st');
-      }
+  Future<void> _prepareLogo() async {
+    try {
+      // Bounded: _imageReady gates the entire splash body, so a stalled
+      // decode used to mean a blank cream screen that never navigated.
+      final precache = precacheImage(
+        const AssetImage('assets/images/webp/splash.webp'),
+        context,
+      );
+      await (_inTest
+          ? precache
+          : precache.timeout(const Duration(milliseconds: 1200)));
+    } catch (e) {
+      debugPrint('splash: logo precache skipped: $e');
     }
+    if (!mounted) return;
+    setState(() => _imageReady = true);
+    _ctrl.forward();
+    // Just long enough for the 600ms logo entrance to land — the old
+    // 1200ms hold was pure added cold-start latency.
+    Future.delayed(const Duration(milliseconds: 700), () {
+      _animDone = true;
+      _navigateIfReady();
+    });
+  }
+
+  /// One init, time-boxed, with the timeout reported so analytics can name
+  /// the service that blocks real devices.
+  Future<void> _guard(String name, Future<void> Function() body) =>
+      runGuarded(
+        name,
+        body,
+        budget: _inTest ? null : _initBudget,
+        onTimeout: AnalyticsService.instance.logSplashTimeout,
+      );
+
+  Future<void> _initServices() async {
+    // Local prefs first: the onboarding decision has to be right even if a
+    // network-bound service below burns its whole budget.
+    await _guard('prefs', _resolveOnboarding);
 
     await Future.wait([
-      guard('remoteConfig', () => RemoteConfigService.instance.init()),
-      guard('widget', () => WidgetService.instance.init()),
-      guard('purchase', () => PurchaseService.instance.init()),
-      guard('audio', () => AudioService.instance.precache()),
-      guard('notifications', () => NotificationService.instance.init()),
+      _guard('remoteConfig', () => RemoteConfigService.instance.init()),
+      _guard('widget', () => WidgetService.instance.init()),
+      _guard('purchase', () => PurchaseService.instance.init()),
+      _guard('audio', () => AudioService.instance.precache()),
+      _guard('notifications', () => NotificationService.instance.init()),
     ]);
 
     // Schedule day-3 soft paywall reminder for non-pro users; cancel for pro.
-    await guard('paywallReminder', () async {
+    await _guard('paywallReminder', () async {
       if (PurchaseService.instance.isPro.value) {
         await NotificationService.instance.cancelPaywallReminder();
       } else {
@@ -95,11 +143,16 @@ class _SplashScreenState extends State<SplashScreen>
       }
     });
 
-    await guard('deepLink', () async {
+    await _guard('deepLink', () async {
       _deepLink = await EngageService.instance.getInitialLink();
     });
     EngageService.instance.publishFromPrefs();
 
+    _loadingDone = true;
+    _navigateIfReady();
+  }
+
+  Future<void> _resolveOnboarding() async {
     final prefs = await SharedPreferences.getInstance();
     final onboardingDone = prefs.getBool('onboarding_done') ?? false;
     if (!onboardingDone) {
@@ -121,13 +174,12 @@ class _SplashScreenState extends State<SplashScreen>
     } else {
       _showOnboarding = false;
     }
-
-    _loadingDone = true;
-    _navigateIfReady();
   }
 
   void _navigateIfReady() {
-    if (!_loadingDone || !_animDone || !mounted) return;
+    if (!_loadingDone || !_animDone || !mounted || _navigated) return;
+    _navigated = true;
+    _watchdog?.cancel();
 
     Widget dest = _showOnboarding ? const OnboardingScreen() : const HomeScreen();
 
@@ -159,6 +211,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
+    _watchdog?.cancel();
     _ctrl.dispose();
     super.dispose();
   }

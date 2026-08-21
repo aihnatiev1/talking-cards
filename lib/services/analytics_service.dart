@@ -156,6 +156,31 @@ class AnalyticsService {
   Future<void> logCategorySwitch(String category) =>
       _safeLog('category_switch', {'category': category});
 
+  // --- Startup health ---
+  //
+  // Added 2026-08-21: ~47 English-side installs in two weeks produced one
+  // ~10s session each with zero card_view. We could not tell "app never
+  // reached home" from "junk install that bounced", because nothing was
+  // logged between session_start and the first card. These two events close
+  // that gap: app_ready proves we got to the home screen, splash_timeout
+  // names the service that blocked us.
+
+  /// Fired once per cold start, when the home screen's first frame is up.
+  Future<void> logAppReady(int ms) =>
+      _safeLog('app_ready', {'ms': ms, 'bucket': _msBucket(ms)});
+
+  /// A splash init exceeded its budget and was abandoned.
+  Future<void> logSplashTimeout(String service) =>
+      _safeLog('splash_timeout', {'service': service});
+
+  static String _msBucket(int ms) {
+    if (ms < 1500) return 'lt_1_5s';
+    if (ms < 3000) return 'lt_3s';
+    if (ms < 5000) return 'lt_5s';
+    if (ms < 8000) return 'lt_8s';
+    return 'gte_8s';
+  }
+
   // --- Notifications ---
 
   Future<void> logNotificationOpened(String type) =>

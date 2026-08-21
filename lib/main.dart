@@ -18,6 +18,7 @@ import 'services/analytics_service.dart';
 import 'services/audio_service.dart';
 import 'services/notification_service.dart';
 import 'services/profile_service.dart';
+import 'utils/app_startup.dart';
 import 'utils/constants.dart';
 import 'screens/splash_screen.dart';
 
@@ -25,6 +26,7 @@ void main() async {
   // Crashlytics needs all uncaught zone errors funneled through one entrypoint,
   // so the whole bootstrap runs inside runZonedGuarded.
   await runZonedGuarded<Future<void>>(() async {
+    AppStartup.begin();
     WidgetsFlutterBinding.ensureInitialized();
     await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
