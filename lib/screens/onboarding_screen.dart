@@ -25,6 +25,9 @@ class OnboardingScreen extends ConsumerStatefulWidget {
   ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
+/// Steps of onboarding. The order differs per language — see [_pagesFor].
+enum _OnbStep { setup, age, magic }
+
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _pageCtrl = PageController();
   final _nameCtrl = TextEditingController();
@@ -34,8 +37,18 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   String _selectedAvatar = '👶';
   int _selectedLevel = 2;
 
-  static const _totalPages = 3;
-  static const _magicMomentPage = 2;
+  late final List<_OnbStep> _pages;
+
+  /// EN puts the magic moment first and drops the name/avatar page entirely.
+  ///
+  /// Why: on 1.3.6 only 2 of 6 English installs that opened onboarding ever
+  /// reached the magic moment — the keyboard page ate them before they heard
+  /// a single card. Age still shapes the content, so it moves *after* the
+  /// value; name and avatar stay editable in the profile switcher.
+  /// UA keeps the original order — its funnel is healthy.
+  static List<_OnbStep> _pagesFor(String lang) => lang == 'en'
+      ? const [_OnbStep.magic, _OnbStep.age]
+      : const [_OnbStep.setup, _OnbStep.age, _OnbStep.magic];
 
   @override
   void initState() {
@@ -48,6 +61,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     // uk/ru/be device locales → Ukrainian (many UA parents run ru-locale
     // phones); everything else → English (FirstWords Cards markets).
     _selectedLang = const {'uk', 'ru', 'be'}.contains(sysLang) ? 'uk' : 'en';
+    _pages = _pagesFor(_selectedLang);
     AnalyticsService.instance.logOnboardingLangSelected(_selectedLang);
     AnalyticsService.instance.logOnboardingStart();
   }
@@ -70,10 +84,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     // the next page lays out against full screen height, not the cropped
     // viewport behind the IME.
     FocusScope.of(context).unfocus();
-    if (_page == 0 && _nameCtrl.text.trim().isNotEmpty) {
+    if (_pages[_page] == _OnbStep.setup && _nameCtrl.text.trim().isNotEmpty) {
       AnalyticsService.instance.logOnboardingNameEntered();
     }
-    if (_page < _totalPages - 1) {
+    if (_page < _pages.length - 1) {
       _pageCtrl.nextPage(
         duration: const Duration(milliseconds: 350),
         curve: Curves.easeInOut,
@@ -130,9 +144,51 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
   }
 
+  /// The magic moment drives its own CTA: when it is the last step it wraps
+  /// up onboarding, otherwise (EN) it hands over to the age picker.
+  void _onMagicComplete() {
+    if (_page >= _pages.length - 1) {
+      _finish();
+    } else {
+      _next();
+    }
+  }
+
+  Widget _buildStep(_OnbStep step) {
+    switch (step) {
+      case _OnbStep.setup:
+        return _ChildSetupPage(
+          nameCtrl: _nameCtrl,
+          selectedAvatar: _selectedAvatar,
+          avatars: _avatars,
+          onAvatarSelect: (a) => setState(() => _selectedAvatar = a),
+          lang: _selectedLang,
+        );
+      case _OnbStep.age:
+        return _AgePage(
+          lang: _selectedLang,
+          childName: _nameCtrl.text.trim(),
+          selectedLevel: _selectedLevel,
+          onSelect: (lvl) {
+            AnalyticsService.instance.logOnboardingAgeSelected(lvl);
+            setState(() => _selectedLevel = lvl);
+          },
+        );
+      case _OnbStep.magic:
+        return _MagicMomentPage(
+          key: const ValueKey('magic-moment'),
+          childName: _nameCtrl.text.trim(),
+          level: _selectedLevel,
+          lang: _selectedLang,
+          onComplete: _onMagicComplete,
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final hideCta = _page == _magicMomentPage;
+    final hideCta = _pages[_page] == _OnbStep.magic;
+    final isLast = _page == _pages.length - 1;
     return Scaffold(
       backgroundColor: const Color(0xFFFAF8F5),
       body: SafeArea(
@@ -143,7 +199,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               padding: const EdgeInsets.symmetric(vertical: 20),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(_totalPages, (i) => AnimatedContainer(
+                children: List.generate(_pages.length, (i) => AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   margin: const EdgeInsets.symmetric(horizontal: 4),
                   width: i == _page ? 24 : 8,
@@ -164,31 +220,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 controller: _pageCtrl,
                 physics: const NeverScrollableScrollPhysics(),
                 onPageChanged: (p) => setState(() => _page = p),
-                children: [
-                  _ChildSetupPage(
-                    nameCtrl: _nameCtrl,
-                    selectedAvatar: _selectedAvatar,
-                    avatars: _avatars,
-                    onAvatarSelect: (a) => setState(() => _selectedAvatar = a),
-                    lang: _selectedLang,
-                  ),
-                  _AgePage(
-                    lang: _selectedLang,
-                    childName: _nameCtrl.text.trim(),
-                    selectedLevel: _selectedLevel,
-                    onSelect: (lvl) {
-                      AnalyticsService.instance.logOnboardingAgeSelected(lvl);
-                      setState(() => _selectedLevel = lvl);
-                    },
-                  ),
-                  _MagicMomentPage(
-                    key: const ValueKey('magic-moment'),
-                    childName: _nameCtrl.text.trim(),
-                    level: _selectedLevel,
-                    lang: _selectedLang,
-                    onComplete: _finish,
-                  ),
-                ],
+                children: _pages.map(_buildStep).toList(),
               ),
             ),
 
@@ -209,7 +241,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       elevation: 0,
                     ),
                     child: Text(
-                      _selectedLang == 'en' ? 'Next →' : 'Далі →',
+                      _selectedLang == 'en'
+                          ? (isLast ? "Let's start →" : 'Next →')
+                          : (isLast ? 'Почати →' : 'Далі →'),
                       style: const TextStyle(
                           fontSize: 17, fontWeight: FontWeight.w700),
                     ),
