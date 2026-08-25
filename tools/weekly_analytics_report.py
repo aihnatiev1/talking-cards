@@ -25,6 +25,8 @@ KEY_EVENTS = [
     'first_open', 'onboarding_start', 'onboarding_age_selected',
     'onboarding_name_entered', 'onboarding_magic_moment_complete',
     'tutorial_complete',
+    'app_ready', 'splash_timeout',
+    'notif_optin_shown', 'notif_optin_result',
     'card_view', 'card_listen', 'pack_open', 'pack_complete',
     'game_start', 'game_complete',
     'paywall_view', 'paywall_product_select',
@@ -81,6 +83,68 @@ def users(tok, start, end):
     })
     row = (r.get('rows') or [{}])[0].get('metricValues', [{}, {}])
     return (int(row[0].get('value', 0)), int(row[1].get('value', 0)))
+
+
+EN_COUNTRIES = ['United States', '(not set)', 'Canada',
+                'United Kingdom', 'Australia']
+
+
+def startup_health(tok):
+    """English-side cold-start funnel per app version.
+
+    Half of the EN installs before 1.3.6 never rendered onboarding — the
+    splash hung on an un-time-boxed init. This table is how we watch that
+    stay fixed: `% дійшли` is first_open → onboarding_start.
+    """
+    steps = ['first_open', 'onboarding_start',
+             'onboarding_magic_moment_start', 'app_ready']
+    r = run_report(tok, {
+        'dateRanges': [{'startDate': '7daysAgo', 'endDate': 'today'}],
+        'dimensions': [{'name': 'appVersion'}, {'name': 'eventName'}],
+        'metrics': [{'name': 'totalUsers'}],
+        'dimensionFilter': {'andGroup': {'expressions': [
+            {'filter': {'fieldName': 'eventName',
+                        'inListFilter': {'values': steps}}},
+            {'filter': {'fieldName': 'country',
+                        'inListFilter': {'values': EN_COUNTRIES}}},
+        ]}},
+        'limit': 200,
+    })
+    per_ver = {}
+    for row in r.get('rows', []):
+        ver = row['dimensionValues'][0]['value']
+        ev = row['dimensionValues'][1]['value']
+        per_ver.setdefault(ver, {})[ev] = int(row['metricValues'][0]['value'])
+
+    lines = ['', '### Холодний старт, EN-ринки (7 дн)',
+             '| версія | first_open | онбординг | % дійшли | magic | app_ready |',
+             '|---|---|---|---|---|---|']
+    for ver in sorted(per_ver):
+        v = per_ver[ver]
+        fo, ob = v.get('first_open', 0), v.get('onboarding_start', 0)
+        pct = f'{ob / fo:.0%}' if fo else '—'
+        lines.append(f"| {ver} | {fo} | {ob} | {pct} | "
+                     f"{v.get('onboarding_magic_moment_start', 0)} | "
+                     f"{v.get('app_ready', 0)} |")
+
+    # Which init blew its budget — needs the `service` custom dimension
+    # (registered 2026-08-22; no backfill before that date).
+    t = run_report(tok, {
+        'dateRanges': [{'startDate': '7daysAgo', 'endDate': 'today'}],
+        'dimensions': [{'name': 'customEvent:service'}],
+        'metrics': [{'name': 'eventCount'}],
+        'dimensionFilter': {'filter': {
+            'fieldName': 'eventName',
+            'stringFilter': {'value': 'splash_timeout'}}},
+        'limit': 20,
+    })
+    rows = t.get('rows', [])
+    if rows:
+        lines.append('')
+        lines.append('- splash_timeout за сервісом: ' + ', '.join(
+            f"{row['dimensionValues'][0]['value']} ×{row['metricValues'][0]['value']}"
+            for row in rows))
+    return lines
 
 
 def crash_summary(tok):
@@ -172,6 +236,7 @@ def main():
     if pw:
         lines.append(f'- Конверсія paywall→покупка: {ps}/{pw} ({ps / pw:.0%})')
 
+    lines.extend(startup_health(tok))
     lines.extend(crash_summary(bq_token()))
 
     OUT.parent.mkdir(exist_ok=True)
