@@ -1,5 +1,5 @@
-- Fixed rare cases where the app could hang on the loading screen
-- Faster startup on slow connections and older tablets
-- Small stability improvements
+- No more permission pop-ups before the first card — the app opens straight into play
+- Little ones jump into their first word right away
+- Daily reminders are now optional, and we explain them before asking
 
 Thanks for growing with us!
