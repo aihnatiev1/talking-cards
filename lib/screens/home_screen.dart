@@ -12,6 +12,7 @@ import '../services/whatsnew_service.dart';
 import '../utils/app_startup.dart';
 import '../utils/constants.dart';
 import '../utils/l10n.dart';
+import '../widgets/notification_opt_in_dialog.dart';
 import '../tabs/packs_tab.dart';
 import '../tabs/games_tab.dart';
 import 'coloring_screen.dart';
@@ -86,7 +87,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final greeting = isDefaultName
         ? s('Привіт!', 'Hello!')
         : s('Привіт, $name!', 'Hello, $name!');
-    showDialog(
+    await showDialog<void>(
       context: context,
       builder: (ctx) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -142,6 +143,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       ),
     );
+
+    // Only now — with the app open and the greeting read — is it fair to ask
+    // about notifications. It used to be the splash screen's job, awaited
+    // before the first frame.
+    if (!mounted) return;
+    await maybeAskNotificationOptIn(context, ref);
   }
 
   @override

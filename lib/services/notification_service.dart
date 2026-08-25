@@ -14,6 +14,7 @@ class NotificationService {
 
   final _plugin = FlutterLocalNotificationsPlugin();
   static const _enabledKey = 'notifications_enabled';
+  static const _askedKey = 'notifications_permission_asked';
   static const _paywallReminderId = 999;
   static const _paywallScheduledKey = 'paywall_reminder_scheduled';
   static const _winBackId = 100;
@@ -189,42 +190,84 @@ class NotificationService {
       AnalyticsService.instance.logNotificationOpened(coldPayload);
     }
 
-    // Enable by default on first launch, then re-schedule if enabled
+    // NO permission request here. This runs inside the splash init, and the
+    // OS dialog used to be awaited right there: analytics for 1.3.6 named
+    // `notifications` as the service that blew the splash budget, and before
+    // the time-box existed a parent who ignored the dialog got an endless
+    // spinner. Permission is now asked from the home screen, after the child
+    // has actually seen a card — see `maybeAskNotificationOptIn`.
     final prefs = await SharedPreferences.getInstance();
-    final enabled = prefs.getBool(_enabledKey);
-    if (enabled == null) {
-      // First launch — enable and request permission
-      await prefs.setBool(_enabledKey, true);
-      await _plugin
-          .resolvePlatformSpecificImplementation<
-              IOSFlutterLocalNotificationsPlugin>()
-          ?.requestPermissions(alert: true, badge: true, sound: true);
-      await _scheduleDailyNotification(lang: lang);
-      await _scheduleSeasonalNotifications(lang: lang);
-    } else if (enabled) {
+    if (prefs.getBool(_enabledKey) ?? false) {
       await _scheduleDailyNotification(lang: lang);
       await _scheduleSeasonalNotifications(lang: lang);
     }
+  }
+
+  /// False until the parent has answered the in-app pre-prompt.
+  ///
+  /// Users upgrading from a build that enabled notifications during startup
+  /// already have `_enabledKey` written — they are treated as asked, so the
+  /// pre-prompt never shows up for them.
+  Future<bool> get permissionAsked async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_askedKey) ?? prefs.containsKey(_enabledKey);
+  }
+
+  /// Shows the OS permission dialog and schedules the reminders if granted.
+  ///
+  /// Only ever call this in response to a parent tapping "yes" in the in-app
+  /// pre-prompt — never during startup.
+  Future<bool> requestPermission({String lang = 'uk'}) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_askedKey, true);
+    final granted = await _requestOsPermission();
+    await prefs.setBool(_enabledKey, granted);
+    if (granted) {
+      await _scheduleDailyNotification(lang: lang);
+      await _scheduleSeasonalNotifications(lang: lang);
+    }
+    return granted;
+  }
+
+  /// Marks the pre-prompt as answered without touching the OS dialog, so a
+  /// "not now" is never re-asked on the next launch.
+  Future<void> declinePermission() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_askedKey, true);
+    await prefs.setBool(_enabledKey, false);
+  }
+
+  Future<bool> _requestOsPermission() async {
+    final ios = _plugin.resolvePlatformSpecificImplementation<
+        IOSFlutterLocalNotificationsPlugin>();
+    if (ios != null) {
+      return await ios.requestPermissions(
+              alert: true, badge: true, sound: true) ??
+          false;
+    }
+    // Android 13+ needs POST_NOTIFICATIONS at runtime; older versions grant
+    // it at install time and return true without showing anything.
+    final android = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    return await android?.requestNotificationsPermission() ?? false;
   }
 
   Future<bool> get isEnabled async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_enabledKey) ?? true;
+    return prefs.getBool(_enabledKey) ?? false;
   }
 
   Future<void> setEnabled(bool enabled, {String lang = 'uk'}) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_enabledKey, enabled);
     if (enabled) {
-      // Request permission on iOS
-      await _plugin
-          .resolvePlatformSpecificImplementation<
-              IOSFlutterLocalNotificationsPlugin>()
-          ?.requestPermissions(alert: true, badge: true, sound: true);
-      await _scheduleDailyNotification(lang: lang);
-    } else {
-      await _plugin.cancelAll();
+      // The toggle is a deliberate parent action, so the OS dialog here is
+      // expected rather than ambushing them mid-startup.
+      await requestPermission(lang: lang);
+      return;
     }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_enabledKey, false);
+    await prefs.setBool(_askedKey, true);
+    await _plugin.cancelAll();
   }
 
   Future<void> _scheduleSeasonalNotifications({required String lang}) async {
@@ -286,7 +329,7 @@ class NotificationService {
   Future<void> schedulePaywallReminderIfNeeded() async {
     final prefs = await SharedPreferences.getInstance();
     if (prefs.getBool(_paywallScheduledKey) ?? false) return;
-    if (!(prefs.getBool(_enabledKey) ?? true)) return;
+    if (!(prefs.getBool(_enabledKey) ?? false)) return;
 
     final scheduled =
         tz.TZDateTime.now(tz.local).add(const Duration(days: 3));

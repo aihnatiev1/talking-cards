@@ -32,10 +32,12 @@ class _NotificationToggleTileState
 
   Future<void> _toggle() async {
     if (!mounted) return;
-    final newValue = !_enabled;
     final lang = ref.read(languageProvider);
-    await NotificationService.instance.setEnabled(newValue, lang: lang);
-    if (mounted) setState(() => _enabled = newValue);
+    await NotificationService.instance.setEnabled(!_enabled, lang: lang);
+    // Re-read instead of assuming: turning it on can still land on "off" if
+    // the parent denies the OS permission dialog.
+    final actual = await NotificationService.instance.isEnabled;
+    if (mounted) setState(() => _enabled = actual);
   }
 
   @override

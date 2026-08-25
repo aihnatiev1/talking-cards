@@ -186,6 +186,19 @@ class AnalyticsService {
   Future<void> logNotificationOpened(String type) =>
       _safeLog('notification_opened', {'type': type});
 
+  /// The in-app pre-prompt was shown instead of ambushing the parent with the
+  /// OS dialog during startup.
+  Future<void> logNotifOptInShown() => _safeLog('notif_optin_shown');
+
+  /// `accepted` — the parent said yes in the pre-prompt; `granted` — what the
+  /// OS dialog answered afterwards (false when they never got there).
+  Future<void> logNotifOptInResult(
+          {required bool accepted, required bool granted}) =>
+      _safeLog('notif_optin_result', {
+        'accepted': accepted.toString(),
+        'granted': granted.toString(),
+      });
+
   // --- User properties (for cohort slicing) ---
 
   Future<void> setLanguageProperty(String lang) =>
