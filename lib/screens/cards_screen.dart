@@ -372,7 +372,9 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
             // first-pack celebration — rate-limited by the OS and never
             // leaves the app. Explicit parent path stays in ParentDashboard.
             if (askReview && mounted) {
-              ref.read(appReviewControllerProvider).requestReview();
+              ref
+                  .read(appReviewControllerProvider)
+                  .maybeRequestAfterWin('first_pack');
             }
           },
         ),

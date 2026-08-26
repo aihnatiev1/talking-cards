@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
+import '../providers/app_review_provider.dart';
 import '../providers/daily_quest_provider.dart';
 import '../providers/favorites_provider.dart';
 import '../providers/language_provider.dart';
@@ -639,7 +640,14 @@ class _PacksTabState extends ConsumerState<PacksTab> {
               .read(streakProvider.notifier)
               .markCelebrated(pending.bonusEmoji),
         );
-        if (mounted) _milestoneShowing = false;
+        if (!mounted) return;
+        _milestoneShowing = false;
+        // A repeating "we're proud" beat, right after the celebration dialog
+        // closes — the app's only recurring moment where a parent is watching
+        // and pleased. Guarded by a 45-day cooldown inside the controller.
+        await ref
+            .read(appReviewControllerProvider)
+            .maybeRequestAfterWin('streak_${pending.days}');
       });
     }
 
