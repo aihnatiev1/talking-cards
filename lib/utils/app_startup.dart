@@ -13,6 +13,13 @@ class AppStartup {
   /// screen can be built again (profile switch, back navigation).
   static bool readyLogged = false;
 
+  /// True when this launch went through onboarding before reaching home.
+  ///
+  /// Without it `app_ready` lies: the clock runs until the home screen's
+  /// first frame, so a fresh install measures however long the parent spent
+  /// tapping through the magic moment, not how long the app took to start.
+  static bool viaOnboarding = false;
+
   static void begin() {
     if (!clock.isRunning) clock.start();
   }

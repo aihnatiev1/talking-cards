@@ -12,6 +12,7 @@ import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../services/paywall_flow.dart';
 import '../services/remote_config_service.dart';
+import '../utils/app_startup.dart';
 import '../utils/confetti_overlay_mixin.dart';
 import '../utils/constants.dart';
 import '../utils/design_tokens.dart';
@@ -62,6 +63,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     // phones); everything else → English (FirstWords Cards markets).
     _selectedLang = const {'uk', 'ru', 'be'}.contains(sysLang) ? 'uk' : 'en';
     _pages = _pagesFor(_selectedLang);
+    // Tell `app_ready` that this launch is paying for onboarding, not for
+    // a slow start.
+    AppStartup.viaOnboarding = true;
     AnalyticsService.instance.logOnboardingLangSelected(_selectedLang);
     AnalyticsService.instance.logOnboardingStart();
   }

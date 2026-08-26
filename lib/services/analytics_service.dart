@@ -166,8 +166,15 @@ class AnalyticsService {
   // names the service that blocked us.
 
   /// Fired once per cold start, when the home screen's first frame is up.
-  Future<void> logAppReady(int ms) =>
-      _safeLog('app_ready', {'ms': ms, 'bucket': _msBucket(ms)});
+  ///
+  /// `via_onboarding` separates a real cold start from a first install, where
+  /// the elapsed time includes the parent tapping through onboarding.
+  Future<void> logAppReady(int ms, {required bool viaOnboarding}) =>
+      _safeLog('app_ready', {
+        'ms': ms,
+        'bucket': _msBucket(ms),
+        'via_onboarding': viaOnboarding.toString(),
+      });
 
   /// A splash init exceeded its budget and was abandoned.
   Future<void> logSplashTimeout(String service) =>

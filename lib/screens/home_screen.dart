@@ -42,8 +42,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (AppStartup.readyLogged) return;
     AppStartup.readyLogged = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      AnalyticsService.instance
-          .logAppReady(AppStartup.clock.elapsedMilliseconds);
+      AnalyticsService.instance.logAppReady(
+        AppStartup.clock.elapsedMilliseconds,
+        viaOnboarding: AppStartup.viaOnboarding,
+      );
     });
   }
 
