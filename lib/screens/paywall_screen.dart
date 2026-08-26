@@ -168,11 +168,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       final success =
           await PurchaseService.instance.purchaseByProductId(plan.productId);
       if (!mounted) return;
+      // Outcome events (success / cancel / error) are logged by
+      // PurchaseService off the store stream — it outlives this screen,
+      // which the system purchase sheet regularly tears down.
       if (!success) {
-        // `buyNonConsumable` returns false when the user dismisses the
-        // system purchase sheet or the store rejects the request
-        // pre-flight. Treat both as a cancel from the funnel's POV.
-        AnalyticsService.instance.logPurchaseCancel(plan.productId);
         setState(() => _loading = false);
         return;
       }
@@ -181,20 +180,12 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       setState(() => _loading = false);
 
       if (PurchaseService.instance.isPro.value) {
-        AnalyticsService.instance.logPurchaseSuccess(plan.productId);
         await AnalyticsService.instance.setProProperty(true);
         ref.read(isProProvider.notifier).state = true;
         if (!mounted) return;
         Navigator.of(context).pop(true);
-      } else {
-        // Timed out waiting for the purchase stream to deliver — surface
-        // as error so we can distinguish from user cancels in analytics.
-        AnalyticsService.instance
-            .logPurchaseError(plan.productId, 'pro_not_granted');
       }
     } catch (e) {
-      AnalyticsService.instance
-          .logPurchaseError(plan.productId, e.toString());
       if (!mounted) return;
       setState(() => _loading = false);
     }

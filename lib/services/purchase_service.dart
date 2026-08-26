@@ -115,17 +115,74 @@ class PurchaseService {
     if (products.isEmpty) return false;
 
     final product = products[planIndex.clamp(0, products.length - 1)];
-    final param = PurchaseParam(productDetails: product);
-
-    return _iap.buyNonConsumable(purchaseParam: param);
+    return _buy(product);
   }
 
   /// Purchase by product ID directly (used by the paywall tile selection).
   Future<bool> purchaseByProductId(String productId) async {
     final product = products.where((p) => p.id == productId).firstOrNull;
-    if (product == null) return false;
+    if (product == null) {
+      // Products never loaded (store unreachable at launch) — the paywall
+      // still renders its fallback prices, so this is invisible without an
+      // event of its own.
+      AnalyticsService.instance
+          .logPurchaseError(productId, 'product_unavailable');
+      return false;
+    }
+    return _buy(product);
+  }
+
+  Future<bool> _buy(ProductDetails product) async {
+    _beginPurchase(product.id);
     final param = PurchaseParam(productDetails: product);
-    return _iap.buyNonConsumable(purchaseParam: param);
+    bool started;
+    try {
+      started = await _iap.buyNonConsumable(purchaseParam: param);
+    } catch (e) {
+      _resolvePurchase(product.id, () => AnalyticsService.instance
+          .logPurchaseError(product.id, 'buy_threw: $e'));
+      rethrow;
+    }
+    if (!started) {
+      _resolvePurchase(product.id, () => AnalyticsService.instance
+          .logPurchaseError(product.id, 'buy_refused'));
+    }
+    return started;
+  }
+
+  // --- Purchase outcome tracking ---
+  //
+  // Terminal events used to be logged by the paywall widget, behind a
+  // `mounted` check. In the week of 2026-08-20 that produced 5 purchase_start
+  // events and exactly one terminal event: the system sheet backgrounds the
+  // app, the screen goes away, and the outcome was never recorded. The store
+  // stream outlives any widget, so the funnel closes here instead.
+
+  /// Product the user is actively buying — lets the stream tell a real
+  /// checkout apart from a silent restore at launch.
+  String? _pendingPurchaseId;
+  Timer? _pendingTimer;
+
+  /// Face ID, a password or an Ask-to-Buy approval can take minutes; this is
+  /// only a backstop so an outcome that never arrives is still visible.
+  static const _pendingBudget = Duration(minutes: 3);
+
+  void _beginPurchase(String productId) {
+    _pendingTimer?.cancel();
+    _pendingPurchaseId = productId;
+    _pendingTimer = Timer(_pendingBudget, () {
+      if (_pendingPurchaseId != productId) return;
+      _pendingPurchaseId = null;
+      AnalyticsService.instance
+          .logPurchaseError(productId, 'no_outcome_in_3min');
+    });
+  }
+
+  void _resolvePurchase(String productId, void Function() log) {
+    if (_pendingPurchaseId != productId) return;
+    _pendingPurchaseId = null;
+    _pendingTimer?.cancel();
+    log();
   }
 
   Future<bool> restore() async {
@@ -154,9 +211,34 @@ class PurchaseService {
           purchase.status == PurchaseStatus.restored) {
         _verifyAndDeliver(purchase);
       }
+      _logOutcome(purchase);
       if (purchase.pendingCompletePurchase) {
         _iap.completePurchase(purchase);
       }
+    }
+  }
+
+  /// Closes the funnel for a checkout this session started. A `restored`
+  /// entitlement arriving from the silent launch restore has no pending id
+  /// and is deliberately not reported as a sale.
+  void _logOutcome(PurchaseDetails purchase) {
+    final id = purchase.productID;
+    if (id != _pendingPurchaseId) return;
+    final analytics = AnalyticsService.instance;
+    switch (purchase.status) {
+      case PurchaseStatus.pending:
+        return; // Ask to Buy / SCA — still in flight.
+      case PurchaseStatus.purchased:
+      case PurchaseStatus.restored:
+        _resolvePurchase(id, () => analytics.logPurchaseSuccess(id));
+      case PurchaseStatus.canceled:
+        _resolvePurchase(id, () => analytics.logPurchaseCancel(id));
+      case PurchaseStatus.error:
+        final err = purchase.error;
+        _resolvePurchase(
+            id,
+            () => analytics.logPurchaseError(
+                id, err == null ? 'unknown' : '${err.code}: ${err.message}'));
     }
   }
 
