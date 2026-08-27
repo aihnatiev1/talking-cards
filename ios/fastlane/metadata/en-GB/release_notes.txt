@@ -1,5 +1,5 @@
-- No more permission pop-ups before the first card — the app opens straight into play
-- Little ones jump into their first word right away
-- Daily reminders are now optional, and we explain them before asking
+- Daily reminders finally work the way they should — including on Android
+- You can turn them on any time in Settings, and we ask only once
+- Steadier purchase handling and a smoother first launch
 
 Thanks for growing with us!
