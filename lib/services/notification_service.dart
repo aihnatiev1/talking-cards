@@ -205,12 +205,38 @@ class NotificationService {
 
   /// False until the parent has answered the in-app pre-prompt.
   ///
-  /// Users upgrading from a build that enabled notifications during startup
-  /// already have `_enabledKey` written — they are treated as asked, so the
-  /// pre-prompt never shows up for them.
+  /// The legacy `_enabledKey` alone is not proof of an answer. Old builds set
+  /// it to true on first launch and fired the OS dialog from the splash
+  /// screen, so a parent who dismissed that dialog — or never saw it, because
+  /// the splash hung — ends up flagged "enabled" with no OS permission. Those
+  /// users got zero reminders: `notification_opened` was 0 across 60 days.
+  /// So a legacy flag counts as answered only if the OS agrees notifications
+  /// are actually allowed; otherwise they get the pre-prompt once.
   Future<bool> get permissionAsked async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_askedKey) ?? prefs.containsKey(_enabledKey);
+    final answered = prefs.getBool(_askedKey);
+    if (answered != null) return answered;
+    if (!prefs.containsKey(_enabledKey)) return false;
+    if (prefs.getBool(_enabledKey) == false) return true; // deliberate opt-out
+    return await _osAllowsNotifications() ?? true;
+  }
+
+  /// Null when the platform cannot answer (no channel in tests, older OS) —
+  /// treated as "leave them alone" by the caller.
+  Future<bool?> _osAllowsNotifications() async {
+    try {
+      final ios = _plugin.resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin>();
+      if (ios != null) {
+        final opts = await ios.checkPermissions();
+        return opts?.isEnabled;
+      }
+      final android = _plugin.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+      return await android?.areNotificationsEnabled();
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Shows the OS permission dialog and schedules the reminders if granted.

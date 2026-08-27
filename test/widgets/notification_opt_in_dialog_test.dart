@@ -46,7 +46,17 @@ void main() {
 
   testWidgets('upgraders who already have the flag are not re-asked',
       (tester) async {
+    // No platform channel in tests, so the OS cannot contradict the flag.
     SharedPreferences.setMockInitialValues({'notifications_enabled': true});
+    await tester.pumpWidget(host());
+
+    await tapAsk(tester);
+
+    expect(find.text('Нагадувати про заняття?'), findsNothing);
+  });
+
+  testWidgets('a deliberate opt-out is never re-asked', (tester) async {
+    SharedPreferences.setMockInitialValues({'notifications_enabled': false});
     await tester.pumpWidget(host());
 
     await tapAsk(tester);

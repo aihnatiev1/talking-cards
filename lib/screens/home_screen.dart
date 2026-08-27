@@ -31,8 +31,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void initState() {
     super.initState();
     _logAppReadyOnce();
-    _showWelcomeIfNeeded();
+    _runFirstFrameFlow();
     _maybeShowPaywallFromReminder();
+  }
+
+  /// Greeting first, then the notification ask — in that order, and for
+  /// returning users too. Reminders are the only thing that brings a parent
+  /// back on day two, and `notification_opened` was 0 across 60 days because
+  /// most of the base never granted permission.
+  Future<void> _runFirstFrameFlow() async {
+    await _showWelcomeIfNeeded();
+    if (!mounted) return;
+    await maybeAskNotificationOptIn(context, ref);
   }
 
   /// Marks the end of cold start: usable UI on screen. Paired with
@@ -71,7 +81,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         await Future.delayed(const Duration(milliseconds: 800));
         if (mounted) {
           final isEn = ref.read(languageProvider) == 'en';
-          WhatsNewService.instance.showIfNeeded(context, isEn: isEn);
+          await WhatsNewService.instance.showIfNeeded(context, isEn: isEn);
         }
       }
       return;
@@ -145,12 +155,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       ),
     );
-
-    // Only now — with the app open and the greeting read — is it fair to ask
-    // about notifications. It used to be the splash screen's job, awaited
-    // before the first frame.
-    if (!mounted) return;
-    await maybeAskNotificationOptIn(context, ref);
   }
 
   @override
