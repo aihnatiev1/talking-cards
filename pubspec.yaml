@@ -23,6 +23,12 @@ dependencies:
   flutter_timezone: ^3.0.1
   url_launcher: ^6.3.1
   in_app_purchase: ^3.3.0 # Billing Library 8 (Play requirement, deadline 2026-08-31)
+  # The facade above deliberately hides the store-specific bits, but the
+  # paywall must not promise a free trial the store will refuse: that needs
+  # StoreKit's real intro-offer eligibility. Direct deps, as the plugin's own
+  # example does — the resolved versions are the ones in_app_purchase pulls.
+  in_app_purchase_platform_interface: ^1.4.0
+  in_app_purchase_storekit: ^0.4.8
   firebase_core: ^4.5.0
   firebase_analytics: ^12.1.3
   firebase_remote_config: ^6.2.0

@@ -2,6 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+// The facade above hides the store-specific APIs, and one of them is not
+// optional here: only StoreKit can say whether *this* Apple ID may still
+// have the introductory offer.
+import 'package:in_app_purchase_platform_interface/in_app_purchase_platform_interface.dart'
+    show InAppPurchasePlatform;
+import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart'
+    show InAppPurchaseStoreKitPlatform;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'analytics_service.dart';
@@ -29,13 +36,30 @@ class PurchaseService {
   static const _revalidateAfter = Duration(hours: 24);
   static const _graceWindow = Duration(days: 3);
 
+  /// Length of the free trial configured in both stores. Verified against
+  /// the ASC and Play APIs on 2026-09-06: FREE_TRIAL, three days, one
+  /// period, on `yearly_premium` and `monthly_premium` in 175 (Apple) and
+  /// 173 (Google) territories. Changing the offer means changing this too.
+  static const kTrialDays = 3;
+
   final ValueNotifier<bool> isPro = ValueNotifier(false);
   bool _initialized = false;
   bool _entitlementSeen = false;
 
   final InAppPurchase _iap = InAppPurchase.instance;
   StreamSubscription<List<PurchaseDetails>>? _sub;
+
+  /// One entry per SKU, priced the way a parent will actually be charged —
+  /// this is the list the paywall renders.
   List<ProductDetails> products = [];
+
+  /// The offer each SKU is charged against. Separate from [products]; see
+  /// [_indexProducts] for why the two can differ.
+  final Map<String, ProductDetails> _offerToBuy = {};
+
+  /// Store-reported trial eligibility per SKU. Absent means "not asked yet
+  /// or the store would not say".
+  final Map<String, bool> _trialAvailable = {};
 
   Future<void> init() async {
     if (_initialized) return;
@@ -60,17 +84,13 @@ class PurchaseService {
     );
 
     final response = await _iap.queryProductDetails(_productIds);
-    products = response.productDetails;
-
-    // Sort: yearly → monthly → lifetime
-    const order = [_yearlyId, _monthlyId, _lifetimeId];
-    products.sort((a, b) {
-      final ai = order.indexOf(a.id);
-      final bi = order.indexOf(b.id);
-      return ai.compareTo(bi);
-    });
+    _indexProducts(response.productDetails);
 
     _initialized = true;
+    // Never awaited: an eligibility round-trip on the launch path is how
+    // the splash starts timing out (`splash_timeout` already names
+    // `purchase` as an offender). The paywall re-asks when it opens.
+    unawaited(refreshTrialAvailability());
 
     // Fresh install: silently restore purchases from store
     final isReinstall = !prefs.containsKey(_installedKey);
@@ -111,6 +131,101 @@ class PurchaseService {
     }
   }
 
+  /// Splits the store response into what the paywall shows and what we
+  /// charge against.
+  ///
+  /// Google Play returns one [ProductDetails] per *offer*, not per product:
+  /// with the 3-day trial live that is two entries sharing the id
+  /// `yearly_premium`, and the trial's entry carries `rawPrice: 0` because
+  /// its first pricing phase is the free one. Two things follow. Play bills
+  /// against the offer token of whichever entry is handed to
+  /// `buyNonConsumable`, so the trial is granted only when that entry is
+  /// picked on purpose — picking "the first match" left it to an unstable
+  /// sort. And the paywall has to render the *other* entry, or the same
+  /// plan appears twice, once priced 0 ₴/рік. Apple returns a single
+  /// product per id, so there both maps hold that one product.
+  void _indexProducts(List<ProductDetails> found) {
+    _offerToBuy.clear();
+    // A fresh store response makes anything we knew about eligibility stale
+    // — on Play the answer is derived from these very offers.
+    _trialAvailable.clear();
+    final display = <String, ProductDetails>{};
+    for (final p in found) {
+      if (!_productIds.contains(p.id)) continue;
+      final leadsWithFreePhase = p.rawPrice == 0;
+      final buying = _offerToBuy[p.id];
+      if (buying == null || (leadsWithFreePhase && buying.rawPrice != 0)) {
+        _offerToBuy[p.id] = p;
+      }
+      final showing = display[p.id];
+      if (showing == null || (showing.rawPrice == 0 && !leadsWithFreePhase)) {
+        display[p.id] = p;
+      }
+    }
+    const order = [_yearlyId, _monthlyId, _lifetimeId];
+    products = display.values.toList()
+      ..sort((a, b) => order.indexOf(a.id).compareTo(order.indexOf(b.id)));
+  }
+
+  /// Test seams. A real store response is the one input [_indexProducts]
+  /// has, and no test can obtain one.
+  @visibleForTesting
+  void debugIndexProducts(List<ProductDetails> found) => _indexProducts(found);
+
+  /// The offer [productId] would be charged against right now.
+  @visibleForTesting
+  ProductDetails? debugOfferToBuy(String productId) => _offerToBuy[productId];
+
+  /// Days of free trial the store will actually honour for [productId], or
+  /// null when there is nothing free to promise.
+  ///
+  /// Both stores grant an introductory offer once per subscription group, so
+  /// a parent who already used the three days meets the full price on the
+  /// native sheet. A paywall that keeps shouting "3 ДНІ БЕЗКОШТОВНО" at them
+  /// recreates the exact mismatch that produced ~40 purchase_start and zero
+  /// sales in August, so the copy asks here first.
+  ///
+  /// An unknown answer keeps promising the trial: it really is configured in
+  /// every territory, and hiding it from a parent who is entitled to it
+  /// costs a sale.
+  int? trialDaysFor(String productId) {
+    if (productId == _lifetimeId) return null; // One-time purchase.
+    return (_trialAvailable[productId] ?? true) ? kTrialDays : null;
+  }
+
+  /// Re-reads trial eligibility from the store. The paywall calls this on
+  /// open, because eligibility flips the moment a trial is taken.
+  Future<void> refreshTrialAvailability() async {
+    final prefs = await SharedPreferences.getInstance();
+    // An entitlement this device has already seen means the subscription
+    // group's one introductory offer is spent. Offline, free, and it covers
+    // the common "took the trial, cancelled, came back" case even when the
+    // store cannot be reached below.
+    final spentOnThisDevice = prefs.getInt(_validatedAtKey) != null;
+
+    for (final id in const [_yearlyId, _monthlyId]) {
+      if (spentOnThisDevice) {
+        _trialAvailable[id] = false;
+        continue;
+      }
+      if (defaultTargetPlatform == TargetPlatform.android) {
+        // Play only returns the offers this user qualifies for, so a
+        // free-phase offer coming back for the SKU *is* the answer.
+        final offer = _offerToBuy[id];
+        if (offer != null) _trialAvailable[id] = offer.rawPrice == 0;
+        continue;
+      }
+      final platform = InAppPurchasePlatform.instance;
+      if (platform is! InAppPurchaseStoreKitPlatform) continue;
+      try {
+        _trialAvailable[id] = await platform.isIntroductoryOfferEligible(id);
+      } catch (_) {
+        // StoreKit 1, no network, product never loaded — leave it unset and
+        // fall back to promising the offer (see [trialDaysFor]).
+      }
+    }
+  }
+
   Future<bool> purchase({int planIndex = 0}) async {
     if (products.isEmpty) return false;
 
@@ -132,7 +247,10 @@ class PurchaseService {
     return _buy(product);
   }
 
-  Future<bool> _buy(ProductDetails product) async {
+  Future<bool> _buy(ProductDetails shown) async {
+    // On Play the entry the paywall displays is not the entry that carries
+    // the trial's offer token — see [_indexProducts].
+    final product = _offerToBuy[shown.id] ?? shown;
     _beginPurchase(product.id);
     final param = PurchaseParam(productDetails: product);
     bool started;

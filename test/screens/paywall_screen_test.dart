@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talking_cards/providers/packs_provider.dart';
 import 'package:talking_cards/screens/paywall_screen.dart';
+import 'package:talking_cards/services/purchase_service.dart';
 
 /// Widget tests for the current paywall. Firebase isn't initialized in the
 /// test environment — RemoteConfigService falls back to its baked-in
@@ -128,6 +131,77 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(popped, true);
+    });
+
+    testWidgets('a spent trial is not advertised', (tester) async {
+      // Both stores grant the introductory offer once per subscription
+      // group. This device has already held an entitlement, so the native
+      // sheet will ask for the full price — the screen must say so rather
+      // than promise days the store will refuse.
+      SharedPreferences.setMockInitialValues({
+        'pro_validated_at': DateTime.now().millisecondsSinceEpoch,
+      });
+      addTearDown(() => PurchaseService.instance.debugIndexProducts([]));
+
+      await pumpPaywall(tester);
+
+      expect(find.text('3 ДНІ БЕЗКОШТОВНО'), findsNothing);
+      expect(find.text('Спробувати 3 дні безкоштовно'), findsNothing);
+      expect(find.textContaining('3 дні безкоштовно, потім'), findsNothing);
+      expect(find.text('ПОВНИЙ ДОСТУП'), findsOneWidget);
+      expect(find.text('Оформити підписку'), findsOneWidget);
+      // The offer itself still has to be sellable.
+      expect(find.textContaining('Скасувати будь-коли'), findsAtLeast(1));
+    });
+
+    testWidgets('a late entitlement closes the paywall and unlocks Pro',
+        (tester) async {
+      // The store can grant Pro long after the purchase sheet closes (Ask to
+      // Buy, a slow verification). The screen must still end successfully —
+      // it used to give up after 10 seconds and leave a paying family here.
+      addTearDown(() => PurchaseService.instance.isPro.value = false);
+
+      bool? result;
+      late WidgetRef capturedRef;
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            home: Consumer(
+              builder: (context, ref, _) {
+                capturedRef = ref;
+                return Scaffold(
+                  body: Builder(
+                    builder: (context) => ElevatedButton(
+                      onPressed: () async {
+                        result = await Navigator.of(context).push<bool>(
+                          MaterialPageRoute(
+                              builder: (_) => const PaywallScreen()),
+                        );
+                      },
+                      child: const Text('Open'),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pumpAndSettle();
+      expect(capturedRef.read(isProProvider), false);
+
+      // Well past the old 10-second window.
+      await tester.pump(const Duration(seconds: 30));
+      PurchaseService.instance.isPro.value = true;
+      await tester.pumpAndSettle();
+
+      expect(result, true);
+      expect(capturedRef.read(isProProvider), true);
+      expect(find.byType(PaywallScreen), findsNothing);
     });
 
     testWidgets('can select monthly plan', (tester) async {

@@ -33,6 +33,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   int _selectedPlan = 0;
   bool _canCloseEarly = false;
 
+  /// Guards the single close-on-entitlement hand-off (the notifier can fire
+  /// more than once — e.g. a restore right behind the purchase).
+  bool _granted = false;
+
   /// Cards the child has actually learned (same threshold as the Treasure
   /// Box): the sunk-cost anchor for returning users.
   static const _learnedThreshold = 2;
@@ -60,6 +64,34 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) setState(() => _canCloseEarly = true);
     });
+    // The entitlement is the only thing that ends this screen successfully,
+    // and it can arrive minutes after the sheet closes (Ask to Buy, a slow
+    // verification, a retried Face ID). Listening for the whole lifetime of
+    // the screen instead of for a fixed window after the tap is what keeps a
+    // paying family from being left staring at the paywall.
+    PurchaseService.instance.isPro.addListener(_onEntitlement);
+    // Eligibility flips the moment a trial is taken, so ask on every open
+    // rather than trusting what launch found — every trial claim on this
+    // screen hangs off the answer.
+    PurchaseService.instance.refreshTrialAvailability().whenComplete(() {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    PurchaseService.instance.isPro.removeListener(_onEntitlement);
+    super.dispose();
+  }
+
+  void _onEntitlement() {
+    if (_granted || !mounted || !PurchaseService.instance.isPro.value) return;
+    _granted = true;
+    AnalyticsService.instance.setProProperty(true);
+    ref.read(isProProvider.notifier).state = true;
+    if (ModalRoute.of(context)?.isCurrent ?? false) {
+      Navigator.of(context).pop(true);
+    }
   }
 
   List<_Plan> _buildPlans(AppS s) {
@@ -175,19 +207,21 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         setState(() => _loading = false);
         return;
       }
+      // Only the spinner is time-boxed here: `_onEntitlement` closes the
+      // screen whenever Pro actually lands, however long the store takes.
       await _waitForPro();
       if (!mounted) return;
       setState(() => _loading = false);
-
-      if (PurchaseService.instance.isPro.value) {
-        await AnalyticsService.instance.setProProperty(true);
-        ref.read(isProProvider.notifier).state = true;
-        if (!mounted) return;
-        Navigator.of(context).pop(true);
-      }
     } catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);
+      // A throwing `buyNonConsumable` used to fail in complete silence: the
+      // spinner stopped and nothing else happened, so parents just tapped
+      // Buy again. Say something instead.
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(s('Не вдалося почати покупку. Спробуйте ще раз',
+            "Couldn't start the purchase. Please try again")),
+      ));
     }
   }
 
@@ -212,7 +246,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     AnalyticsService.instance.logPurchaseRestore();
     setState(() => _loading = true);
     final restored = await PurchaseService.instance.restore();
-    if (!mounted) return;
+    if (!mounted || _granted) return; // `_onEntitlement` already closed us.
     setState(() => _loading = false);
 
     if (restored) {
@@ -232,6 +266,11 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     final isEn = ref.watch(languageProvider) == 'en';
     final s = AppS(isEn);
     final plans = _buildPlans(s);
+    // Every trial claim on this screen hangs off this one value: the store
+    // decides, not us. Null means the selected plan gets no free days —
+    // a spent introductory offer, or the lifetime unlock.
+    final trialDays =
+        PurchaseService.instance.trialDaysFor(plans[_selectedPlan].productId);
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Container(
@@ -278,7 +317,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 28),
                 child: Column(
                   children: [
-                    _trialBanner(context, s),
+                    _trialBanner(context, s, trialDays),
                     const SizedBox(height: 18),
                     Text(
                       _headline(s),
@@ -351,7 +390,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                 ),
               ),
             ),
-            _stickyCta(context, s, plans),
+            _stickyCta(context, s, plans, trialDays),
           ],
         ),
         ),
@@ -363,7 +402,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   /// scrolling column, which put it under the fold on a phone — the offer
   /// asked for a decision the user could not see how to accept. Matters most
   /// for the onboarding variant, where this is a cold first-session sell.
-  Widget _stickyCta(BuildContext context, AppS s, List<_Plan> plans) {
+  Widget _stickyCta(
+      BuildContext context, AppS s, List<_Plan> plans, int? trialDays) {
     return Container(
       padding: const EdgeInsets.fromLTRB(28, 12, 28, 8),
       decoration: BoxDecoration(
@@ -414,16 +454,21 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   : FittedBox(
                       fit: BoxFit.scaleDown,
                       child: Text(
-                        // Lifetime is a one-time purchase — promising
-                        // a free trial here contradicted the native
-                        // payment sheet and users backed out.
-                        plans[_selectedPlan].productId ==
-                                'lifetime_premium'
-                            ? s('Купити назавжди', 'Buy lifetime')
+                        // Anything the native sheet will not honour has
+                        // to stay off this button: the lifetime unlock is
+                        // a one-time purchase, and a spent introductory
+                        // offer means the sheet asks for the full price
+                        // right away. Both used to promise free days, and
+                        // parents backed out of the contradiction.
+                        trialDays == null
+                            ? (plans[_selectedPlan].productId ==
+                                    'lifetime_premium'
+                                ? s('Купити назавжди', 'Buy lifetime')
+                                : s('Оформити підписку', 'Subscribe'))
                             : s(
                                 RemoteConfigService
                                     .instance.paywallCta,
-                                'Start 3-day free trial',
+                                'Start $trialDays-day free trial',
                               ),
                         style: const TextStyle(
                           fontSize: 18,
@@ -441,10 +486,15 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                     'Одна покупка ${plans[_selectedPlan].price} • без підписки, назавжди',
                     'One-time ${plans[_selectedPlan].price} • no subscription, forever',
                   )
-                : s(
-                    '3 дні безкоштовно, потім ${plans[_selectedPlan].price}${plans[_selectedPlan].period} • Скасувати будь-коли',
-                    '3 days free, then ${plans[_selectedPlan].price}${plans[_selectedPlan].period} • Cancel anytime',
-                  ),
+                : trialDays == null
+                    ? s(
+                        '${plans[_selectedPlan].price}${plans[_selectedPlan].period} • Скасувати будь-коли',
+                        '${plans[_selectedPlan].price}${plans[_selectedPlan].period} • Cancel anytime',
+                      )
+                    : s(
+                        '$trialDays ${dayWord(trialDays)} безкоштовно, потім ${plans[_selectedPlan].price}${plans[_selectedPlan].period} • Скасувати будь-коли',
+                        '$trialDays days free, then ${plans[_selectedPlan].price}${plans[_selectedPlan].period} • Cancel anytime',
+                      ),
             textAlign: TextAlign.center,
             style: TextStyle(
                 fontSize: responsiveFont(context, 13),
@@ -627,7 +677,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     );
   }
 
-  Widget _trialBanner(BuildContext context, AppS s) {
+  /// The hero banner. [trialDays] is null when the store will not grant
+  /// free days — the banner then sells the unlock itself instead of a gift
+  /// the native sheet is about to refuse.
+  Widget _trialBanner(BuildContext context, AppS s, int? trialDays) {
     final isOnb = widget.isOnboarding;
     return Container(
       width: double.infinity,
@@ -646,9 +699,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       ),
       child: Column(
         children: [
-          Text(isOnb ? '🎉' : '🎁', style: const TextStyle(fontSize: 48)),
+          Text(trialDays == null ? '🔓' : (isOnb ? '🎉' : '🎁'),
+              style: const TextStyle(fontSize: 48)),
           const SizedBox(height: 6),
-          if (isOnb) ...[
+          if (isOnb && trialDays != null) ...[
             Text(
               s('ВІТАЄМО!', 'WELCOME!'),
               style: TextStyle(
@@ -661,7 +715,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
             const SizedBox(height: 4),
           ],
           Text(
-            s('3 ДНІ БЕЗКОШТОВНО', '3 DAYS FREE'),
+            trialDays == null
+                ? s('ПОВНИЙ ДОСТУП', 'FULL ACCESS')
+                : s('$trialDays ${dayWord(trialDays).toUpperCase()} БЕЗКОШТОВНО',
+                    '$trialDays DAYS FREE'),
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: responsiveFont(context, 24),
@@ -672,11 +729,14 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            isOnb
-                ? s('Подарунок для нових родин — скасуй будь-коли',
-                    'A gift for new families — cancel anytime')
-                : s('Без зобов\'язань — скасуй будь-коли',
-                    'No commitment — cancel anytime'),
+            trialDays == null
+                ? s('Усі 21 пак і всі ігри — скасуй будь-коли',
+                    'All 21 packs and every game — cancel anytime')
+                : isOnb
+                    ? s('Подарунок для нових родин — скасуй будь-коли',
+                        'A gift for new families — cancel anytime')
+                    : s('Без зобов\'язань — скасуй будь-коли',
+                        'No commitment — cancel anytime'),
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: responsiveFont(context, 13),

@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'firebase_options.dart';
 import 'providers/language_provider.dart';
+import 'providers/packs_provider.dart';
 import 'providers/profile_provider.dart';
 import 'providers/streak_provider.dart';
 import 'providers/theme_provider.dart';
@@ -18,6 +19,7 @@ import 'services/analytics_service.dart';
 import 'services/audio_service.dart';
 import 'services/notification_service.dart';
 import 'services/profile_service.dart';
+import 'services/purchase_service.dart';
 import 'utils/app_startup.dart';
 import 'utils/constants.dart';
 import 'screens/splash_screen.dart';
@@ -90,12 +92,25 @@ class _TalkingCardsAppState extends ConsumerState<TalkingCardsApp>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    PurchaseService.instance.isPro.addListener(_syncPro);
   }
 
   @override
   void dispose() {
+    PurchaseService.instance.isPro.removeListener(_syncPro);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  /// `isProProvider` is seeded once, at first read. An entitlement can land
+  /// much later than that — a slow store verification, an Ask to Buy
+  /// approval, the silent restore at launch — and without this bridge a
+  /// family that already paid keeps looking at locked packs until the app
+  /// is restarted.
+  void _syncPro() {
+    final isPro = PurchaseService.instance.isPro.value;
+    if (ref.read(isProProvider) == isPro) return;
+    ref.read(isProProvider.notifier).state = isPro;
   }
 
   @override
