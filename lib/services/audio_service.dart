@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
@@ -549,6 +550,16 @@ class AudioService {
   /// BOTH the Cyrillic map key (legacy) and the Latin filename — JSON cards
   /// may reference either form via their `audio` field. Concurrent requests
   /// for the same key share one load.
+  /// Loads [keys] from disk ahead of the first tap. Everything else stays
+  /// lazy — this is for the three cards of a screen where the very first
+  /// tap has to answer instantly: the onboarding magic moment, which for
+  /// English installs is the first thing the parent sees.
+  void warm(Iterable<String?> keys) {
+    for (final k in keys) {
+      if (k != null) unawaited(_getSource(k));
+    }
+  }
+
   Future<AudioSource?> _getSource(String audioKey) {
     final cached = _sources[audioKey];
     if (cached != null) return Future.value(cached);

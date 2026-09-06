@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -607,6 +608,9 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
         _cards = pack.cards.take(3).toList();
         _ready = true;
       });
+      // The first tap must answer instantly: a cold disk load in front of
+      // the very first word is latency the parent reads as "broken".
+      AudioService.instance.warm(_cards.map((c) => c.audioKey));
       AnalyticsService.instance.logOnboardingMagicMomentStart();
     } catch (_) {
       if (mounted) widget.onComplete();
@@ -633,10 +637,26 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
   }
 
   bool _advancing = false;
+  Completer<void>? _skip;
+
+  /// Longest the card stays put after a tap. Word + phrase run ~2–3 s; past
+  /// this the flip happens with the audio still playing rather than the
+  /// screen appearing frozen.
+  static const _maxWaitPerCard = Duration(milliseconds: 2500);
 
   Future<void> _onCardTap() async {
-    if (_celebrating || _cards.isEmpty || _advancing) return;
+    if (_celebrating || _cards.isEmpty) return;
+    if (_advancing) {
+      // A second tap while the word is still playing means "next". Taps
+      // used to be swallowed here until playback ended — a toddler taps
+      // again within a second, and a parent who sees nothing happen for
+      // three seconds concludes the app is broken. English installs meet
+      // this screen first, and 4 of 11 left it without finishing.
+      if (!(_skip?.isCompleted ?? true)) _skip!.complete();
+      return;
+    }
     _advancing = true;
+    _skip = Completer<void>();
     final card = _cards[_currentIndex];
     HapticFeedback.mediumImpact();
 
@@ -646,9 +666,13 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
     showConfetti();
     final wasLast = _currentIndex >= _cards.length - 1;
 
-    // Wait for the full word+phrase playback to finish before flipping to
-    // the next card so the audio is never cut off mid-word.
-    await AudioService.instance.speakCard(card.audioKey, card.sound, card.text);
+    // Let the word+phrase finish before flipping, but never hold the
+    // screen hostage to it: a second tap or the cap moves on.
+    await Future.any<void>([
+      AudioService.instance.speakCard(card.audioKey, card.sound, card.text),
+      _skip!.future,
+      Future<void>.delayed(_maxWaitPerCard),
+    ]);
     if (!mounted) {
       _advancing = false;
       return;
