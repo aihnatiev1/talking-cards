@@ -1,5 +1,6 @@
-- Daily reminders finally work the way they should — including on Android
-- You can turn them on any time in Settings, and we ask only once
-- Steadier purchase handling and a smoother first launch
+- Purchases are steadier: access unlocks right away, even when the store is slow to answer
+- If the App Store or Google Play can't be reached, we say so instead of going quiet
+- First launch no longer stalls on the first card — a toddler's taps are never lost
+- During the free trial we'll send you a report of what your child has learned
 
 Thanks for growing with us!
