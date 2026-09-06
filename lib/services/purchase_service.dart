@@ -21,6 +21,7 @@ class PurchaseService {
   static const _prefKey = 'is_pro';
   static const _installedKey = 'installed';
   static const _validatedAtKey = 'pro_validated_at';
+  static const _trialStartedAtKey = 'trial_started_at';
   static const _yearlyId = 'yearly_premium';
   static const _monthlyId = 'monthly_premium';
   // One-time unlock; queried alongside the subscriptions and simply absent
@@ -61,11 +62,20 @@ class PurchaseService {
   /// or the store would not say".
   final Map<String, bool> _trialAvailable = {};
 
+  /// When this device started its free trial, if it ever did. The day-5
+  /// progress report hangs off this; a paid-up-front purchase leaves it
+  /// null.
+  DateTime? trialStartedAt;
+
   Future<void> init() async {
     if (_initialized) return;
 
     final prefs = await SharedPreferences.getInstance();
     isPro.value = prefs.getBool(_prefKey) ?? false;
+    final trialMs = prefs.getInt(_trialStartedAtKey);
+    if (trialMs != null) {
+      trialStartedAt = DateTime.fromMillisecondsSinceEpoch(trialMs);
+    }
     AnalyticsService.instance.setProProperty(isPro.value);
     isPro.addListener(() {
       AnalyticsService.instance.setProProperty(isPro.value);
@@ -419,8 +429,9 @@ class PurchaseService {
         return;
       case PurchaseStatus.purchased:
       case PurchaseStatus.restored:
-        _resolvePurchase(
-            id, () => analytics.logPurchaseSuccess(id, trialStateFor(id)));
+        final trial = trialStateFor(id);
+        if (trial == 'offered') unawaited(_recordTrialStart());
+        _resolvePurchase(id, () => analytics.logPurchaseSuccess(id, trial));
       case PurchaseStatus.canceled:
         _resolvePurchase(
             id, () => analytics.logPurchaseCancel(id, trialStateFor(id)));
@@ -433,6 +444,13 @@ class PurchaseService {
     }
   }
 
+  Future<void> _recordTrialStart() async {
+    final now = DateTime.now();
+    trialStartedAt = now;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_trialStartedAtKey, now.millisecondsSinceEpoch);
+  }
+
   Future<void> _verifyAndDeliver(PurchaseDetails purchase) async {
     if (_productIds.contains(purchase.productID)) {
       _entitlementSeen = true;
@@ -441,8 +459,12 @@ class PurchaseService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt(
           _validatedAtKey, DateTime.now().millisecondsSinceEpoch);
-      // No reason to nag a paying user with the day-3 trial reminder.
-      await NotificationService.instance.cancelPaywallReminder();
+      // No reason to nag a paying user with the day-3 trial reminder. Best
+      // effort: a notification plugin hiccup must never surface from the
+      // path that just delivered what the family paid for.
+      try {
+        await NotificationService.instance.cancelPaywallReminder();
+      } catch (_) {}
     }
   }
 

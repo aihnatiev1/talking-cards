@@ -84,6 +84,8 @@ void main() {
 
     tearDown(() {
       service.awaitingApproval.value = false;
+      service.isPro.value = false;
+      service.trialStartedAt = null;
       // Drain the checkout so the 3-minute backstop is not left pending.
       service.debugHandlePurchaseUpdate(
           [update('yearly_premium', PurchaseStatus.canceled)]);
@@ -106,6 +108,33 @@ void main() {
             [update('yearly_premium', PurchaseStatus.canceled)]);
         expect(service.awaitingApproval.value, false);
       });
+    });
+
+    test('a purchase that started the free trial is remembered', () async {
+      service.debugBeginPurchase('yearly_premium');
+      service.debugHandlePurchaseUpdate(
+          [update('yearly_premium', PurchaseStatus.purchased)]);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(service.trialStartedAt, isNotNull);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getInt('trial_started_at'), isNotNull);
+    });
+
+    test('a paid-up-front purchase is not a trial', () async {
+      // This device already held an entitlement: no offer left to start.
+      SharedPreferences.setMockInitialValues({
+        'pro_validated_at': DateTime.now().millisecondsSinceEpoch,
+      });
+      await service.refreshTrialAvailability();
+      service.trialStartedAt = null;
+
+      service.debugBeginPurchase('monthly_premium');
+      service.debugHandlePurchaseUpdate(
+          [update('monthly_premium', PurchaseStatus.purchased)]);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(service.trialStartedAt, isNull);
     });
 
     test('an outcome for a product we did not start is ignored', () {

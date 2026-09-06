@@ -19,7 +19,9 @@ class NotificationService {
   static const _paywallScheduledKey = 'paywall_reminder_scheduled';
   static const _winBackId = 100;
   static const _streakSaveId = 101;
+  static const _trialReportId = 102;
   static const paywallNotificationPayload = 'open_paywall';
+  static const trialReportPayload = 'trial_report';
   // Payload tags consumed by analytics on notification tap.
   static const _payloadDaily = 'daily';
   static const _payloadSeasonal = 'seasonal';
@@ -29,6 +31,10 @@ class NotificationService {
   /// Set true on cold start when the OS launched the app via the paywall
   /// reminder notification. Splash reads this and routes through paywall.
   bool launchedFromPaywallReminder = false;
+
+  /// Set when the app was opened from the trial progress report; home routes
+  /// the parent to the dashboard (through the gate) and clears it.
+  bool launchedFromTrialReport = false;
 
   // (title_emoji, body)
   final _cards = [
@@ -171,6 +177,9 @@ class NotificationService {
         if (resp.payload == paywallNotificationPayload) {
           launchedFromPaywallReminder = true;
         }
+        if (resp.payload == trialReportPayload) {
+          launchedFromTrialReport = true;
+        }
         if (resp.payload != null) {
           AnalyticsService.instance.logNotificationOpened(resp.payload!);
         }
@@ -184,6 +193,10 @@ class NotificationService {
     if ((launchDetails?.didNotificationLaunchApp ?? false) &&
         coldPayload == paywallNotificationPayload) {
       launchedFromPaywallReminder = true;
+    }
+    if ((launchDetails?.didNotificationLaunchApp ?? false) &&
+        coldPayload == trialReportPayload) {
+      launchedFromTrialReport = true;
     }
     if ((launchDetails?.didNotificationLaunchApp ?? false) &&
         coldPayload != null) {
@@ -520,6 +533,92 @@ class NotificationService {
   }
 
   /// Called on every app resume to refresh engagement reminders.
+  // ── Trial progress report ──────────────────────────────────────────────
+  //
+  // Of the first week's trials, the Ukrainian one churned on day 3 — before a
+  // parent has any evidence the child learned something. This report lands on
+  // day 5 of the 7-day trial, two days before the charge, and says what the
+  // child actually learned. Local notifications carry fixed text, so the app
+  // re-schedules it (same id) whenever it has fresher numbers.
+
+  /// Day 5 of the trial at 19:00 local — parents' evening, two days before
+  /// the charge. Null once that moment has passed: a report about a trial
+  /// that is over is noise.
+  static DateTime? trialReportFireTime(DateTime trialStartedAt, DateTime now) {
+    final day5 = trialStartedAt.add(const Duration(days: 5));
+    final at = DateTime(day5.year, day5.month, day5.day, 19);
+    return at.isAfter(now) ? at : null;
+  }
+
+  /// (title, body). [childName] null when the profile has no real name.
+  static (String, String) trialReportCopy({
+    required String lang,
+    required String? childName,
+    required int learnedWords,
+    required String? bestPack,
+  }) {
+    final en = lang == 'en';
+    final who = childName ?? (en ? 'Your little one' : 'Малюк');
+    final title = en ? '📈 5 days with FirstWords' : '📈 5 днів з Картками';
+    if (learnedWords == 0) {
+      return (
+        title,
+        en
+            ? '2 free days left. See what $who has explored so far.'
+            : 'Ще 2 дні безкоштовно. Подивись, що $who уже дослідив(ла).',
+      );
+    }
+    final best = bestPack == null ? '' : (en ? ' Best so far: $bestPack.' : ' Найкраще іде: $bestPack.');
+    return (
+      title,
+      en
+          ? "$who's word chest: $learnedWords words.$best 2 free days left."
+          : 'Скарбничка: $who знає $learnedWords ${wordWord(learnedWords)}.$best Ще 2 дні безкоштовно.',
+    );
+  }
+
+  Future<void> scheduleTrialProgressReport({
+    required DateTime trialStartedAt,
+    required String lang,
+    required String? childName,
+    required int learnedWords,
+    required String? bestPack,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!(prefs.getBool(_enabledKey) ?? false)) return;
+    final at = trialReportFireTime(trialStartedAt, DateTime.now());
+    if (at == null) {
+      await _plugin.cancel(_trialReportId);
+      return;
+    }
+    final (title, body) = trialReportCopy(
+      lang: lang,
+      childName: childName,
+      learnedWords: learnedWords,
+      bestPack: bestPack,
+    );
+    await _plugin.zonedSchedule(
+      _trialReportId,
+      title,
+      body,
+      tz.TZDateTime.from(at, tz.local),
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'trial_report',
+          'Звіт про прогрес',
+          channelDescription: 'Прогрес дитини під час пробного періоду',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
+      payload: trialReportPayload,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+    );
+  }
+
   Future<void> refreshEngagement({
     required String lang,
     required int currentStreak,

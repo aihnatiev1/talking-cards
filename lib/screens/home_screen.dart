@@ -13,6 +13,8 @@ import '../utils/app_startup.dart';
 import '../utils/constants.dart';
 import '../utils/l10n.dart';
 import '../widgets/notification_opt_in_dialog.dart';
+import '../widgets/parental_gate.dart';
+import 'parent_dashboard_screen.dart';
 import '../tabs/packs_tab.dart';
 import '../tabs/games_tab.dart';
 import 'coloring_screen.dart';
@@ -33,6 +35,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     _logAppReadyOnce();
     _runFirstFrameFlow();
     _maybeShowPaywallFromReminder();
+    _maybeOpenTrialReport();
   }
 
   /// Greeting first, then the notification ask — in that order, and for
@@ -71,6 +74,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     await Future.delayed(const Duration(milliseconds: 1200));
     if (!mounted) return;
     await runPaywallFlow(context, ref);
+  }
+
+  /// Opened from the day-5 trial progress notification: take the parent to
+  /// the dashboard that has the numbers the notification quoted — through
+  /// the gate, because the child taps notifications too.
+  Future<void> _maybeOpenTrialReport() async {
+    if (!NotificationService.instance.launchedFromTrialReport) return;
+    NotificationService.instance.launchedFromTrialReport = false;
+    await Future.delayed(const Duration(milliseconds: 1200));
+    if (!mounted) return;
+    final ok = await showParentalGate(
+      context,
+      isEn: ref.read(languageProvider) == 'en',
+    );
+    if (!ok || !mounted) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const ParentDashboardScreen()),
+    );
   }
 
   Future<void> _showWelcomeIfNeeded() async {

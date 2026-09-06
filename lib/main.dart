@@ -13,6 +13,7 @@ import 'firebase_options.dart';
 import 'providers/language_provider.dart';
 import 'providers/packs_provider.dart';
 import 'providers/profile_provider.dart';
+import 'providers/srs_provider.dart';
 import 'providers/streak_provider.dart';
 import 'providers/theme_provider.dart';
 import 'services/analytics_service.dart';
@@ -109,8 +110,42 @@ class _TalkingCardsAppState extends ConsumerState<TalkingCardsApp>
   /// is restarted.
   void _syncPro() {
     final isPro = PurchaseService.instance.isPro.value;
+    if (isPro) _refreshTrialReport(); // A trial may have just started.
     if (ref.read(isProProvider) == isPro) return;
     ref.read(isProProvider.notifier).state = isPro;
+  }
+
+  /// Keeps the day-5 trial report current with what the child has learned.
+  /// Called when the app is put away — the numbers then reflect the session
+  /// that just ended — and when it comes back, so the notification that
+  /// fires carries the latest figures the phone has.
+  void _refreshTrialReport() {
+    final started = PurchaseService.instance.trialStartedAt;
+    if (started == null) return;
+    final learned = ref
+        .read(srsProvider)
+        .cards
+        .values
+        .where((c) => c.repetitions >= 2)
+        .toList();
+    String? bestPack;
+    final packs = ref.read(packsProvider).valueOrNull;
+    if (packs != null && learned.isNotEmpty) {
+      final learnedIds = learned.map((c) => c.cardId).toSet();
+      int best = 0;
+      for (final p in packs) {
+        final n = p.cards.where((c) => learnedIds.contains(c.id)).length;
+        if (n > best) (best, bestPack) = (n, p.title);
+      }
+    }
+    final name = ref.read(profileProvider).active?.name.trim() ?? '';
+    NotificationService.instance.scheduleTrialProgressReport(
+      trialStartedAt: started,
+      lang: ref.read(languageProvider),
+      childName: name.isEmpty || name == 'Малюк' ? null : name,
+      learnedWords: learned.length,
+      bestPack: bestPack,
+    );
   }
 
   @override
@@ -121,6 +156,7 @@ class _TalkingCardsAppState extends ConsumerState<TalkingCardsApp>
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden) {
       AudioService.instance.stop();
+      _refreshTrialReport();
       return;
     }
     if (state != AppLifecycleState.resumed) return;
@@ -129,6 +165,7 @@ class _TalkingCardsAppState extends ConsumerState<TalkingCardsApp>
     final streak = ref.read(streakProvider).currentStreak;
     NotificationService.instance
         .refreshEngagement(lang: lang, currentStreak: streak);
+    _refreshTrialReport();
   }
 
   @override
