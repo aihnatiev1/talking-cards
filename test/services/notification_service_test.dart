@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talking_cards/services/notification_service.dart';
+import 'package:talking_cards/services/purchase_service.dart';
 
 /// The trial progress report is the one notification whose timing and text
 /// decide money: it lands two days before the first charge. Its timing and
@@ -8,17 +9,19 @@ void main() {
   group('trialReportFireTime', () {
     final start = DateTime(2026, 9, 7, 14, 30);
 
-    test('is 19:00 on day 5 of the trial', () {
+    final reportDay = PurchaseService.kTrialDays - 2;
+
+    test('is 19:00 two days before the first charge', () {
       expect(
-        NotificationService.trialReportFireTime(start, DateTime(2026, 9, 8)),
-        DateTime(2026, 9, 12, 19),
+        NotificationService.trialReportFireTime(start, start),
+        DateTime(2026, 9, 7 + reportDay, 19),
       );
     });
 
-    test('is gone once day 5 evening has passed', () {
+    test('is gone once that evening has passed', () {
       expect(
         NotificationService.trialReportFireTime(
-            start, DateTime(2026, 9, 12, 19, 1)),
+            start, DateTime(2026, 9, 7 + reportDay, 19, 1)),
         isNull,
       );
     });
@@ -32,7 +35,7 @@ void main() {
         learnedWords: 23,
         bestPack: 'Звук Р',
       );
-      expect(title, contains('5 днів'));
+      expect(title, contains('з Картками'));
       expect(body, 'Скарбничка: Софійка знає 23 слова. Найкраще іде: Звук Р. '
           'Ще 2 дні безкоштовно.');
     });

@@ -7,6 +7,8 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
 import 'analytics_service.dart';
+import 'purchase_service.dart';
+import '../utils/uk_grammar.dart';
 
 class NotificationService {
   NotificationService._();
@@ -536,17 +538,18 @@ class NotificationService {
   // ── Trial progress report ──────────────────────────────────────────────
   //
   // Of the first week's trials, the Ukrainian one churned on day 3 — before a
-  // parent has any evidence the child learned something. This report lands on
-  // day 5 of the 7-day trial, two days before the charge, and says what the
-  // child actually learned. Local notifications carry fixed text, so the app
+  // parent has any evidence the child learned something. This report lands
+  // two days before the charge and says what the child actually learned. Local notifications carry fixed text, so the app
   // re-schedules it (same id) whenever it has fresher numbers.
 
-  /// Day 5 of the trial at 19:00 local — parents' evening, two days before
-  /// the charge. Null once that moment has passed: a report about a trial
-  /// that is over is noise.
+  /// Two days before the first charge, 19:00 local — parents' evening.
+  /// Derived from the trial length so a store-side change to the offer
+  /// moves this with it. Null once that moment has passed: a report about
+  /// a trial that is over is noise.
   static DateTime? trialReportFireTime(DateTime trialStartedAt, DateTime now) {
-    final day5 = trialStartedAt.add(const Duration(days: 5));
-    final at = DateTime(day5.year, day5.month, day5.day, 19);
+    final day = trialStartedAt
+        .add(const Duration(days: PurchaseService.kTrialDays - 2));
+    final at = DateTime(day.year, day.month, day.day, 19);
     return at.isAfter(now) ? at : null;
   }
 
@@ -559,7 +562,10 @@ class NotificationService {
   }) {
     final en = lang == 'en';
     final who = childName ?? (en ? 'Your little one' : 'Малюк');
-    final title = en ? '📈 5 days with FirstWords' : '📈 5 днів з Картками';
+    const days = PurchaseService.kTrialDays - 2;
+    final title = en
+        ? '📈 $days days with FirstWords'
+        : '📈 $days ${dayWord(days)} з Картками';
     if (learnedWords == 0) {
       return (
         title,
