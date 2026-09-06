@@ -19,7 +19,11 @@ import jwt  # PyJWT — present in /usr/bin/python3 site-packages
 
 PROPERTY = 'properties/528033840'
 SA_KEY = Path.home() / '.private_keys/play-service-account.json'
+# ~/Desktop is TCC-protected: a scheduled run can be denied it without ever
+# showing a prompt, and then the report exists nowhere. Home is not
+# protected, so it is the guaranteed landing spot.
 OUT = Path.home() / 'Desktop/skillar-weekly-report.md'
+OUT_FALLBACK = Path.home() / 'skillar-weekly-report.md'
 
 KEY_EVENTS = [
     'first_open', 'onboarding_start', 'onboarding_age_selected',
@@ -147,6 +151,46 @@ def startup_health(tok):
     return lines
 
 
+def trial_funnel(tok):
+    """Checkouts split by what the paywall promised.
+
+    Both stores grant the introductory offer once per subscription group, so
+    a returning parent can be shown "3 days free" and then asked for the full
+    price by the native sheet. `trial` (registered 2026-09-06, no backfill)
+    says which of the two a checkout was, and this table is how we find out
+    whether the cancels are price resistance or a broken promise.
+    """
+    events = ['paywall_view', 'purchase_start',
+              'purchase_cancel', 'purchase_success']
+    r = run_report(tok, {
+        'dateRanges': [{'startDate': '7daysAgo', 'endDate': 'today'}],
+        'dimensions': [{'name': 'customEvent:trial'}, {'name': 'eventName'}],
+        'metrics': [{'name': 'eventCount'}],
+        'dimensionFilter': {'filter': {
+            'fieldName': 'eventName',
+            'inListFilter': {'values': events}}},
+        'limit': 50,
+    })
+    per_state = {}
+    for row in r.get('rows', []):
+        state = row['dimensionValues'][0]['value']
+        ev = row['dimensionValues'][1]['value']
+        per_state.setdefault(state, {})[ev] = int(row['metricValues'][0]['value'])
+    # (not set) is every event from a build older than the dimension.
+    per_state.pop('(not set)', None)
+    if not per_state:
+        return ['- Тріал-воронка: чекаємо на білд із параметром `trial`']
+    lines = ['', '### Воронка за обіцянкою тріалу (7 дн)',
+             '| trial | пейвол | старти | скасувань | покупок |', '|---|---|---|---|---|']
+    for state in sorted(per_state):
+        v = per_state[state]
+        lines.append(f"| {state} | {v.get('paywall_view', 0)} | "
+                     f"{v.get('purchase_start', 0)} | "
+                     f"{v.get('purchase_cancel', 0)} | "
+                     f"{v.get('purchase_success', 0)} |")
+    return lines
+
+
 def crash_summary(tok):
     """Top Crashlytics issues for the last 7 days from the BigQuery export.
 
@@ -237,17 +281,26 @@ def main():
         lines.append(f'- Конверсія paywall→покупка: {ps}/{pw} ({ps / pw:.0%})')
 
     lines.extend(startup_health(tok))
+    lines.extend(trial_funnel(tok))
     lines.extend(crash_summary(bq_token()))
 
-    OUT.parent.mkdir(exist_ok=True)
-    header = '# Skillar — щотижнева аналітика\n' if not OUT.exists() else ''
-    with open(OUT, 'a') as f:
-        f.write(header + '\n'.join(lines) + '\n')
+    body = '\n'.join(lines) + '\n'
+    out = OUT
+    try:
+        out.parent.mkdir(exist_ok=True)
+        with open(out, 'a') as f:
+            f.write(('# Skillar — щотижнева аналітика\n'
+                     if not out.exists() else '') + body)
+    except OSError:
+        out = OUT_FALLBACK
+        with open(out, 'a') as f:
+            f.write(('# Skillar — щотижнева аналітика\n'
+                     if not out.exists() else '') + body)
 
     subprocess.run(['osascript', '-e',
-                    'display notification "Звіт на Desktop: skillar-weekly-report.md" '
+                    f'display notification "Звіт: {out}" '
                     'with title "Skillar analytics"'], check=False)
-    print(f'written: {OUT}')
+    print(f'written: {out}')
 
 
 if __name__ == '__main__':

@@ -59,6 +59,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     AnalyticsService.instance.logPaywallView(
       widget.isOnboarding ? 'paywall_onboarding' : 'paywall_screen',
       variant: variant,
+      // As known right now, which is what the first frame renders: launch
+      // already refreshed this. The re-check below can correct the screen,
+      // but this event marks the open, so it must not wait on the store.
+      trial: PurchaseService.instance.trialStateFor('yearly_premium'),
     );
     // Industry standard: give the user 3s to read the offer before exposing X.
     Future.delayed(const Duration(seconds: 3), () {
@@ -194,7 +198,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   Future<void> _purchase() async {
     final s = AppS(ref.read(languageProvider) == 'en');
     final plan = _buildPlans(s)[_selectedPlan];
-    AnalyticsService.instance.logPurchaseStart(plan.productId);
+    AnalyticsService.instance.logPurchaseStart(plan.productId,
+        PurchaseService.instance.trialStateFor(plan.productId));
     setState(() => _loading = true);
     try {
       final success =

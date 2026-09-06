@@ -78,8 +78,16 @@ class AnalyticsService {
 
   // --- Paywall ---
 
-  Future<void> logPaywallView(String source, {String variant = 'generic'}) =>
-      _safeLog('paywall_view', {'source': source, 'variant': variant});
+  // `trial` carries what the screen promised at that moment — `offered`,
+  // `spent` (the subscription group's introductory offer is used up) or
+  // `none` (the one-time unlock). Without it the funnel cannot tell a
+  // parent who backed out of a price from one who backed out of a promise
+  // the native sheet refused, which is the whole question behind 1.3.8's
+  // 21 cancels against 4 sales.
+  Future<void> logPaywallView(String source,
+          {String variant = 'generic', required String trial}) =>
+      _safeLog('paywall_view',
+          {'source': source, 'variant': variant, 'trial': trial});
 
   Future<void> logPaywallDismiss(String source) =>
       _safeLog('paywall_dismiss', {'source': source});
@@ -87,14 +95,14 @@ class AnalyticsService {
   Future<void> logPaywallProductSelect(String productId) =>
       _safeLog('paywall_product_select', {'product_id': productId});
 
-  Future<void> logPurchaseStart(String productId) =>
-      _safeLog('purchase_start', {'product_id': productId});
+  Future<void> logPurchaseStart(String productId, String trial) =>
+      _safeLog('purchase_start', {'product_id': productId, 'trial': trial});
 
-  Future<void> logPurchaseSuccess(String productId) =>
-      _safeLog('purchase_success', {'product_id': productId});
+  Future<void> logPurchaseSuccess(String productId, String trial) =>
+      _safeLog('purchase_success', {'product_id': productId, 'trial': trial});
 
-  Future<void> logPurchaseCancel(String productId) =>
-      _safeLog('purchase_cancel', {'product_id': productId});
+  Future<void> logPurchaseCancel(String productId, String trial) =>
+      _safeLog('purchase_cancel', {'product_id': productId, 'trial': trial});
 
   Future<void> logPurchaseError(String productId, String reason) =>
       _safeLog('purchase_error',

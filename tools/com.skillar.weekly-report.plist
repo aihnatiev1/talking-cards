@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Weekly analytics report, Mondays 09:03.
+
+  Replaces the crontab entry: on this machine cron produced no run and no
+  log for the whole of August, and even editing the crontab hangs — macOS
+  gates /var/at behind Full Disk Access. A LaunchAgent is a plain file in
+  ~/Library/LaunchAgents, and it writes its own log where we can read it.
+
+  Install:
+    cp tools/com.skillar.weekly-report.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$UID ~/Library/LaunchAgents/com.skillar.weekly-report.plist
+    crontab -e   # delete the weekly_analytics_report.py line
+  Run it once by hand:
+    launchctl kickstart -p gui/$UID/com.skillar.weekly-report
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.skillar.weekly-report</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/bin/python3</string>
+    <string>/Users/abs/ideaProjects/smartapp/tools/weekly_analytics_report.py</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Weekday</key><integer>1</integer>
+    <key>Hour</key><integer>9</integer>
+    <key>Minute</key><integer>3</integer>
+  </dict>
+  <!-- Fires on the next wake if the Mac was asleep at 09:03 Monday. -->
+  <key>RunAtLoad</key>
+  <false/>
+  <key>StandardOutPath</key>
+  <string>/Users/abs/Library/Logs/skillar-weekly.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/abs/Library/Logs/skillar-weekly.log</string>
+</dict>
+</plist>

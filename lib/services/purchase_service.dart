@@ -193,6 +193,16 @@ class PurchaseService {
     return (_trialAvailable[productId] ?? true) ? kTrialDays : null;
   }
 
+  /// What the paywall is telling this parent about the trial, as an
+  /// analytics dimension: `offered`, `spent`, or `none` for the one-time
+  /// unlock. Derived from the same map as [trialDaysFor] on purpose — the
+  /// value has to be what the screen actually said, not what the store
+  /// would answer on a second look.
+  String trialStateFor(String productId) {
+    if (productId == _lifetimeId) return 'none';
+    return (_trialAvailable[productId] ?? true) ? 'offered' : 'spent';
+  }
+
   /// Re-reads trial eligibility from the store. The paywall calls this on
   /// open, because eligibility flips the moment a trial is taken.
   Future<void> refreshTrialAvailability() async {
@@ -348,9 +358,11 @@ class PurchaseService {
         return; // Ask to Buy / SCA — still in flight.
       case PurchaseStatus.purchased:
       case PurchaseStatus.restored:
-        _resolvePurchase(id, () => analytics.logPurchaseSuccess(id));
+        _resolvePurchase(
+            id, () => analytics.logPurchaseSuccess(id, trialStateFor(id)));
       case PurchaseStatus.canceled:
-        _resolvePurchase(id, () => analytics.logPurchaseCancel(id));
+        _resolvePurchase(
+            id, () => analytics.logPurchaseCancel(id, trialStateFor(id)));
       case PurchaseStatus.error:
         final err = purchase.error;
         _resolvePurchase(
