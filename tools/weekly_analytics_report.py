@@ -163,15 +163,18 @@ def trial_funnel(tok):
     """
     events = ['paywall_view', 'purchase_start',
               'purchase_cancel', 'purchase_success']
-    r = run_report(tok, {
-        'dateRanges': [{'startDate': '7daysAgo', 'endDate': 'today'}],
-        'dimensions': [{'name': 'customEvent:trial'}, {'name': 'eventName'}],
-        'metrics': [{'name': 'eventCount'}],
-        'dimensionFilter': {'filter': {
-            'fieldName': 'eventName',
-            'inListFilter': {'values': events}}},
-        'limit': 50,
-    })
+    try:
+        r = run_report(tok, {
+            'dateRanges': [{'startDate': '7daysAgo', 'endDate': 'today'}],
+            'dimensions': [{'name': 'customEvent:trial'}, {'name': 'eventName'}],
+            'metrics': [{'name': 'eventCount'}],
+            'dimensionFilter': {'filter': {
+                'fieldName': 'eventName',
+                'inListFilter': {'values': events}}},
+            'limit': 50,
+        })
+    except Exception:
+        return ['- Тріал-воронка: запит не вдався (дименшн `trial` не зареєстровано?)']
     per_state = {}
     for row in r.get('rows', []):
         state = row['dimensionValues'][0]['value']
@@ -196,15 +199,18 @@ def default_plan_ab(tok):
     """Paywall A/B: which plan tile starts selected (user property, set on
     every paywall open from Remote Config `paywall_default_plan`)."""
     events = ['paywall_view', 'purchase_start', 'purchase_cancel', 'purchase_success']
-    r = run_report(tok, {
-        'dateRanges': [{'startDate': '7daysAgo', 'endDate': 'today'}],
-        'dimensions': [{'name': 'customUser:paywall_default_plan'},
-                       {'name': 'eventName'}],
-        'metrics': [{'name': 'totalUsers'}],
-        'dimensionFilter': {'filter': {
-            'fieldName': 'eventName', 'inListFilter': {'values': events}}},
-        'limit': 50,
-    })
+    try:
+        r = run_report(tok, {
+            'dateRanges': [{'startDate': '7daysAgo', 'endDate': 'today'}],
+            'dimensions': [{'name': 'customUser:paywall_default_plan'},
+                           {'name': 'eventName'}],
+            'metrics': [{'name': 'totalUsers'}],
+            'dimensionFilter': {'filter': {
+                'fieldName': 'eventName', 'inListFilter': {'values': events}}},
+            'limit': 50,
+        })
+    except Exception:
+        return ['- A/B дефолтного плану: запит не вдався (дименшн не зареєстровано?)']
     per = {}
     for row in r.get('rows', []):
         b = row['dimensionValues'][0]['value']

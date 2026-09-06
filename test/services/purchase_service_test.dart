@@ -111,6 +111,16 @@ void main() {
     });
 
     test('a purchase that started the free trial is remembered', () async {
+      // Only a trial the store has confirmed as offered counts — an
+      // unresolved guess must never schedule a "2 free days left" report
+      // for a parent who was charged on the spot.
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      service.debugIndexProducts([
+        _product('yearly_premium', 0, 'Безкоштовно'),
+        _product('yearly_premium', 649, '649,00 ₴'),
+      ]);
+      await service.refreshTrialAvailability();
+
       service.debugBeginPurchase('yearly_premium');
       service.debugHandlePurchaseUpdate(
           [update('yearly_premium', PurchaseStatus.purchased)]);
@@ -135,6 +145,15 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       expect(service.trialStartedAt, isNull);
+    });
+
+    test('restore never hangs when the store throws', () async {
+      // There is no billing client here, exactly like a tablet offline: the
+      // Restore button used to await this forever, with Buy disabled too.
+      final restored = await service
+          .restore()
+          .timeout(const Duration(seconds: 15), onTimeout: () => throw 'hung');
+      expect(restored, false);
     });
 
     test('an outcome for a product we did not start is ignored', () {

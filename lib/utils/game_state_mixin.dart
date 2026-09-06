@@ -61,21 +61,12 @@ mixin GameStateMixin<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     if (recordToStats) {
       // The first game a family ever finishes is a win worth asking about:
       // English-market users rarely get as far as completing a pack (one US
-      // user in 60 days), so the first-pack ask never reached them.
-      final firstGame = !(ref
-              .read(gameStatsProvider)
-              .valueOrNull
-              ?.any((g) => g.plays > 0) ??
-          true);
+      // user in 60 days), so the first-pack ask never reached them. The ask
+      // itself happens back on the games list, not over the celebration.
+      final firstGame = isFirstGame(ref);
       ref.read(gameStatsProvider.notifier).record(gameId, score);
       if (firstGame) {
-        // After the result screen has had its moment.
-        Future.delayed(const Duration(seconds: 3), () {
-          if (!mounted) return;
-          ref
-              .read(appReviewControllerProvider)
-              .maybeRequestAfterWin('first_game');
-        });
+        ref.read(appReviewControllerProvider).noteFirstGameFinished();
       }
     }
     final task = questTask;

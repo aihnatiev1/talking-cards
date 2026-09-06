@@ -22,6 +22,7 @@ class PurchaseService {
   static const _installedKey = 'installed';
   static const _validatedAtKey = 'pro_validated_at';
   static const _trialStartedAtKey = 'trial_started_at';
+  static const _revalidateMissesKey = 'pro_revalidate_misses';
   static const _yearlyId = 'yearly_premium';
   static const _monthlyId = 'monthly_premium';
   // One-time unlock; queried alongside the subscriptions and simply absent
@@ -71,11 +72,13 @@ class PurchaseService {
     if (_initialized) return;
 
     final prefs = await SharedPreferences.getInstance();
-    isPro.value = prefs.getBool(_prefKey) ?? false;
+    // Trial timestamp first: flipping `isPro` notifies the app root, which
+    // schedules the trial report from this field.
     final trialMs = prefs.getInt(_trialStartedAtKey);
     if (trialMs != null) {
       trialStartedAt = DateTime.fromMillisecondsSinceEpoch(trialMs);
     }
+    isPro.value = prefs.getBool(_prefKey) ?? false;
     AnalyticsService.instance.setProProperty(isPro.value);
     isPro.addListener(() {
       AnalyticsService.instance.setProProperty(isPro.value);
@@ -129,12 +132,21 @@ class PurchaseService {
     }
     // Entitlements arrive via purchaseStream; give them a moment.
     await Future<void>.delayed(const Duration(seconds: 10));
-    if (_entitlementSeen) return;
-    if (now.difference(validatedAt) > _graceWindow) {
-      AnalyticsService.instance.logProRevoked('no_entitlement_after_grace');
-      isPro.value = false;
-      await _persist();
+    if (_entitlementSeen) {
+      await prefs.remove(_revalidateMissesKey);
+      return;
     }
+    if (now.difference(validatedAt) <= _graceWindow) return;
+    // Taking paid content away on the strength of one quiet ten-second
+    // window at cold start is too thin; it takes two launches in a row
+    // with nothing coming back.
+    final misses = (prefs.getInt(_revalidateMissesKey) ?? 0) + 1;
+    await prefs.setInt(_revalidateMissesKey, misses);
+    if (misses < 2) return;
+    AnalyticsService.instance.logProRevoked('no_entitlement_after_grace');
+    isPro.value = false;
+    await _persist();
+    await prefs.remove(_revalidateMissesKey);
   }
 
   Future<bool>? _productsInFlight;
@@ -260,7 +272,12 @@ class PurchaseService {
   /// would answer on a second look.
   String trialStateFor(String productId) {
     if (productId == _lifetimeId) return 'none';
-    return (_trialAvailable[productId] ?? true) ? 'offered' : 'spent';
+    final available = _trialAvailable[productId];
+    // The screen promises the trial while unresolved (see [trialDaysFor]);
+    // the funnel must not record that guess as fact, and a trial start
+    // is only remembered once the store has actually said "offered".
+    if (available == null) return 'unknown';
+    return available ? 'offered' : 'spent';
   }
 
   /// Re-reads trial eligibility from the store. The paywall calls this on
@@ -285,9 +302,9 @@ class PurchaseService {
         if (offer != null) _trialAvailable[id] = offer.rawPrice == 0;
         continue;
       }
-      final platform = InAppPurchasePlatform.instance;
-      if (platform is! InAppPurchaseStoreKitPlatform) continue;
       try {
+        final platform = InAppPurchasePlatform.instance;
+        if (platform is! InAppPurchaseStoreKitPlatform) continue;
         _trialAvailable[id] = await platform.isIntroductoryOfferEligible(id);
       } catch (_) {
         // StoreKit 1, no network, product never loaded — leave it unset and
@@ -327,8 +344,11 @@ class PurchaseService {
     try {
       started = await _iap.buyNonConsumable(purchaseParam: param);
     } catch (e) {
-      _resolvePurchase(product.id, () => AnalyticsService.instance
-          .logPurchaseError(product.id, 'buy_threw: $e'));
+      final text = 'buy_threw: $e';
+      _resolvePurchase(
+          product.id,
+          () => AnalyticsService.instance.logPurchaseError(product.id,
+              text.length <= 100 ? text : text.substring(0, 100)));
       rethrow;
     }
     if (!started) {
@@ -376,7 +396,13 @@ class PurchaseService {
   }
 
   Future<bool> restore() async {
-    await _iap.restorePurchases();
+    try {
+      await _iap.restorePurchases();
+    } catch (_) {
+      // Billing client not connected, no network. The paywall's Restore
+      // button used to hang on this forever — with the CTA disabled too.
+      return isPro.value;
+    }
     // Wait for purchaseStream to deliver result, timeout after 10s
     if (!isPro.value) {
       final completer = Completer<void>();
@@ -397,11 +423,13 @@ class PurchaseService {
 
   void _onPurchaseUpdate(List<PurchaseDetails> purchaseDetailsList) {
     for (final purchase in purchaseDetailsList) {
+      // Outcome first: it records the trial start, and delivering the
+      // entitlement notifies listeners that schedule the trial report.
+      _logOutcome(purchase);
       if (purchase.status == PurchaseStatus.purchased ||
           purchase.status == PurchaseStatus.restored) {
         _verifyAndDeliver(purchase);
       }
-      _logOutcome(purchase);
       if (purchase.pendingCompletePurchase) {
         _iap.completePurchase(purchase);
       }
@@ -439,9 +467,16 @@ class PurchaseService {
         final err = purchase.error;
         _resolvePurchase(
             id,
-            () => analytics.logPurchaseError(
-                id, err == null ? 'unknown' : '${err.code}: ${err.message}'));
+            () => analytics.logPurchaseError(id, _reason(err)));
     }
+  }
+
+  /// GA4 truncates parameter values at 100 characters and every distinct
+  /// string is a dimension value; keep store errors short and code-first.
+  static String _reason(IAPError? err) {
+    if (err == null) return 'unknown';
+    final text = '${err.code}: ${err.message}';
+    return text.length <= 100 ? text : text.substring(0, 100);
   }
 
   Future<void> _recordTrialStart() async {

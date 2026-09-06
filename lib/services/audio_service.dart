@@ -546,10 +546,6 @@ class AudioService {
     } catch (_) {}
   }
 
-  /// Lazily loads (and caches) the source for [audioKey]. Indexes it under
-  /// BOTH the Cyrillic map key (legacy) and the Latin filename — JSON cards
-  /// may reference either form via their `audio` field. Concurrent requests
-  /// for the same key share one load.
   /// Loads [keys] from disk ahead of the first tap. Everything else stays
   /// lazy — this is for the three cards of a screen where the very first
   /// tap has to answer instantly: the onboarding magic moment, which for
@@ -560,6 +556,10 @@ class AudioService {
     }
   }
 
+  /// Lazily loads (and caches) the source for [audioKey]. Indexes it under
+  /// BOTH the Cyrillic map key (legacy) and the Latin filename — JSON cards
+  /// may reference either form via their `audio` field. Concurrent requests
+  /// for the same key share one load.
   Future<AudioSource?> _getSource(String audioKey) {
     final cached = _sources[audioKey];
     if (cached != null) return Future.value(cached);

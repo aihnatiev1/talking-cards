@@ -183,19 +183,10 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen>
             .completeTask(QuestTask.playQuiz);
         // See GameStateMixin._complete: the first finished game is the one
         // automatic review ask that English-market families actually reach.
-        final firstGame = !(ref
-                .read(gameStatsProvider)
-                .valueOrNull
-                ?.any((g) => g.plays > 0) ??
-            true);
+        final firstGame = isFirstGame(ref);
         ref.read(gameStatsProvider.notifier).record('memory', _matched);
         if (firstGame) {
-          Future.delayed(const Duration(seconds: 4), () {
-            if (!mounted) return;
-            ref
-                .read(appReviewControllerProvider)
-                .maybeRequestAfterWin('first_game');
-          });
+          ref.read(appReviewControllerProvider).noteFirstGameFinished();
         }
         // Any completion is a full win — no attempts, no stars, no time.
         showGameCelebration(

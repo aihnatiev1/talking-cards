@@ -157,10 +157,15 @@ class NotificationService {
         ('🏅', 'Don\'t break your $currentStreak-day streak — one card saves the day.'),
       ];
 
+  /// `tz.local` throws until [init] has run; every scheduler below checks
+  /// this instead of racing the splash.
+  bool _tzReady = false;
+
   Future<void> init({String lang = 'uk'}) async {
     tz.initializeTimeZones();
     final timeZoneName = await FlutterTimezone.getLocalTimezone();
     tz.setLocalLocation(tz.getLocation(timeZoneName));
+    _tzReady = true;
 
     const androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -179,9 +184,11 @@ class NotificationService {
         if (resp.payload == paywallNotificationPayload) {
           launchedFromPaywallReminder = true;
         }
-        if (resp.payload == trialReportPayload) {
-          launchedFromTrialReport = true;
-        }
+        // A foreground tap on the trial report deliberately sets nothing:
+        // Home consumes the flag only in initState, so a flag set while the
+        // app is already up would surface a parental gate on some later
+        // launch, out of nowhere. The parent is in the app; the dashboard
+        // is one tap away.
         if (resp.payload != null) {
           AnalyticsService.instance.logNotificationOpened(resp.payload!);
         }
@@ -539,8 +546,9 @@ class NotificationService {
   //
   // Of the first week's trials, the Ukrainian one churned on day 3 — before a
   // parent has any evidence the child learned something. This report lands
-  // two days before the charge and says what the child actually learned. Local notifications carry fixed text, so the app
-  // re-schedules it (same id) whenever it has fresher numbers.
+  // two days before the charge and says what the child actually learned.
+  // Local notifications carry fixed text, so the app re-schedules it (same
+  // id) whenever it has fresher numbers.
 
   /// Two days before the first charge, 19:00 local — parents' evening.
   /// Derived from the trial length so a store-side change to the offer
@@ -564,7 +572,7 @@ class NotificationService {
     final who = childName ?? (en ? 'Your little one' : 'Малюк');
     const days = PurchaseService.kTrialDays - 2;
     final title = en
-        ? '📈 $days days with FirstWords'
+        ? '📈 $days ${days == 1 ? 'day' : 'days'} with FirstWords'
         : '📈 $days ${dayWord(days)} з Картками';
     if (learnedWords == 0) {
       return (
@@ -590,6 +598,7 @@ class NotificationService {
     required int learnedWords,
     required String? bestPack,
   }) async {
+    if (!_tzReady) return;
     final prefs = await SharedPreferences.getInstance();
     if (!(prefs.getBool(_enabledKey) ?? false)) return;
     final at = trialReportFireTime(trialStartedAt, DateTime.now());
@@ -629,6 +638,7 @@ class NotificationService {
     required String lang,
     required int currentStreak,
   }) async {
+    if (!_tzReady) return;
     await scheduleWinBack(lang: lang);
     await scheduleStreakSave(currentStreak: currentStreak, lang: lang);
   }

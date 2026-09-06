@@ -2,16 +2,37 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/analytics_service.dart';
+import 'game_stats_provider.dart';
 import '../services/app_review_service.dart';
 
 /// Single entry point for triggering the app-store review flow. Exposed as a
 /// plain [Provider] (matching the repo's manual Riverpod style).
 final appReviewControllerProvider = Provider<AppReviewController>(
-  (ref) => const AppReviewController(),
+  (ref) => AppReviewController(),
 );
 
+/// True when the family has never finished a game before. Read it BEFORE
+/// `gameStatsProvider.record` — afterwards the answer is always false. While
+/// stats are still loading this says false: no prompt is the safe default.
+bool isFirstGame(WidgetRef ref) =>
+    !(ref.read(gameStatsProvider).valueOrNull?.any((g) => g.plays > 0) ??
+        true);
+
 class AppReviewController {
-  const AppReviewController();
+  AppReviewController();
+
+  /// Set when a first game finishes; spent when the game screen is gone.
+  /// The ask must not land on the celebration dialog with a toddler holding
+  /// the device — games_tab asks once the parent is back on the games list.
+  bool _firstGameAskPending = false;
+
+  void noteFirstGameFinished() => _firstGameAskPending = true;
+
+  Future<void> askIfFirstGamePending() async {
+    if (!_firstGameAskPending) return;
+    _firstGameAskPending = false;
+    await maybeRequestAfterWin('first_game');
+  }
 
   /// At most one automatic ask per this window, whatever the trigger.
   static const _autoCooldown = Duration(days: 45);
@@ -46,15 +67,19 @@ class AppReviewController {
       final last = DateTime.fromMillisecondsSinceEpoch(lastMs);
       if (DateTime.now().difference(last) < _autoCooldown) return;
     }
-    await prefs.setInt(_lastAutoKey, DateTime.now().millisecondsSinceEpoch);
-    await _ask(trigger);
+    // Spend the cooldown only on an ask the OS actually dispatched — an
+    // unavailable sheet must not block the next real moment for 45 days.
+    if (await _ask(trigger)) {
+      await prefs.setInt(_lastAutoKey, DateTime.now().millisecondsSinceEpoch);
+    }
   }
 
-  Future<void> _ask(String trigger) async {
+  Future<bool> _ask(String trigger) async {
     final requested = await AppReviewService.instance.requestReview();
     if (requested) {
       AnalyticsService.instance.logEvent('review_prompt_requested',
           parameters: {'trigger': trigger});
     }
+    return requested;
   }
 }

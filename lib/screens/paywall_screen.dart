@@ -30,7 +30,17 @@ class PaywallScreen extends ConsumerStatefulWidget {
 
 class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   bool _loading = false;
-  int _selectedPlan = 0;
+
+  /// Selection is by product, never by position: the catalogue can come
+  /// back without a SKU (lifetime until it exists in a console, yearly in an
+  /// odd territory), and an index that meant "monthly" then points at the
+  /// one-time unlock.
+  String _selectedProductId = 'yearly_premium';
+
+  int _selectedIndex(List<_Plan> plans) {
+    final i = plans.indexWhere((p) => p.productId == _selectedProductId);
+    return i < 0 ? 0 : i;
+  }
   bool _canCloseEarly = false;
 
   /// Guards the single close-on-entitlement hand-off (the notifier can fire
@@ -59,8 +69,15 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     // Plans render yearly → monthly → lifetime; the bucket decides which
     // tile starts selected. Recorded as a user property so purchases made
     // minutes later still carry it.
-    final defaultPlan = RemoteConfigService.instance.paywallDefaultPlan;
-    _selectedPlan = defaultPlan == 'monthly' ? 1 : 0;
+    // Normalised before it becomes the A/B key: a stray capital or space
+    // in the console must not create a third bucket that saw yearly.
+    final defaultPlan =
+        RemoteConfigService.instance.paywallDefaultPlan.trim().toLowerCase() ==
+                'monthly'
+            ? 'monthly'
+            : 'yearly';
+    _selectedProductId =
+        defaultPlan == 'monthly' ? 'monthly_premium' : 'yearly_premium';
     AnalyticsService.instance.setPaywallDefaultPlanProperty(defaultPlan);
     final name = ref.read(profileProvider).active?.name.trim() ?? '';
     final variant = _learnedCount >= _minLearnedForAnchor
@@ -110,7 +127,16 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   /// state this screen used to hide behind a Buy button that did nothing.
   Future<void> _loadStore() async {
     setState(() => _storeReady = null);
-    final ready = await PurchaseService.instance.ensureProducts();
+    var ready = false;
+    try {
+      ready = await PurchaseService.instance.ensureProducts();
+      // A fresh catalogue resets what we knew about trial eligibility;
+      // settle it before the first paint so the retry path can never show
+      // "days free" to a parent the sheet is about to charge.
+      await PurchaseService.instance.refreshTrialAvailability();
+    } catch (_) {
+      ready = false;
+    }
     if (!mounted) return;
     if (!ready) AnalyticsService.instance.logStoreUnavailable('paywall');
     setState(() => _storeReady = ready);
@@ -118,10 +144,12 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
   void _onEntitlement() {
     if (_granted || !mounted || !PurchaseService.instance.isPro.value) return;
-    _granted = true;
     AnalyticsService.instance.setProProperty(true);
     ref.read(isProProvider.notifier).state = true;
+    // Latch only when this screen really hands off; if something sits on
+    // top of it right now, the parent closes it with the X — unlocked.
     if (ModalRoute.of(context)?.isCurrent ?? false) {
+      _granted = true;
       Navigator.of(context).pop(true);
     }
   }
@@ -226,7 +254,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   Future<void> _purchase() async {
     final s = AppS(ref.read(languageProvider) == 'en');
     final plans = _buildPlans(s);
-    final plan = plans[_selectedPlan.clamp(0, plans.length - 1)];
+    final plan = plans[_selectedIndex(plans)];
     AnalyticsService.instance.logPurchaseStart(plan.productId,
         PurchaseService.instance.trialStateFor(plan.productId));
     setState(() => _loading = true);
@@ -279,9 +307,15 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   Future<void> _restore() async {
     AnalyticsService.instance.logPurchaseRestore();
     setState(() => _loading = true);
-    final restored = await PurchaseService.instance.restore();
+    bool restored;
+    try {
+      restored = await PurchaseService.instance.restore();
+    } finally {
+      // Whatever the store did, the buttons come back: a stuck `_loading`
+      // disables both Buy and Restore for the life of the screen.
+      if (mounted) setState(() => _loading = false);
+    }
     if (!mounted || _granted) return; // `_onEntitlement` already closed us.
-    setState(() => _loading = false);
 
     if (restored) {
       ref.read(isProProvider.notifier).state = true;
@@ -300,12 +334,11 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     final isEn = ref.watch(languageProvider) == 'en';
     final s = AppS(isEn);
     final plans = _buildPlans(s);
-    if (_selectedPlan >= plans.length) _selectedPlan = 0;
     // Every trial claim on this screen hangs off this one value: the store
     // decides, not us. Null means the selected plan gets no free days —
     // a spent introductory offer, or the lifetime unlock.
     final trialDays =
-        PurchaseService.instance.trialDaysFor(plans[_selectedPlan].productId);
+        PurchaseService.instance.trialDaysFor(plans[_selectedIndex(plans)].productId);
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Container(
@@ -501,13 +534,16 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                             ? s('Стор недоступний — спробувати ще',
                                 'Store unavailable — try again')
                             : trialDays == null
-                            ? (plans[_selectedPlan].productId ==
+                            ? (plans[_selectedIndex(plans)].productId ==
                                     'lifetime_premium'
                                 ? s('Купити назавжди', 'Buy lifetime')
                                 : s('Оформити підписку', 'Subscribe'))
+                            // Composed here, not read from Remote Config:
+                            // the number has to be the one the native
+                            // sheet will show, and a remote string cannot
+                            // promise that.
                             : s(
-                                RemoteConfigService
-                                    .instance.paywallCta,
+                                'Спробувати $trialDays ${dayWord(trialDays)} безкоштовно',
                                 'Start $trialDays-day free trial',
                               ),
                         style: const TextStyle(
@@ -527,19 +563,19 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                 : _storeReady == false
                 ? s('Немає зв\'язку з App Store / Google Play. Перевірте інтернет',
                     'Can\'t reach the App Store / Google Play. Check your connection')
-                : plans[_selectedPlan].productId == 'lifetime_premium'
+                : plans[_selectedIndex(plans)].productId == 'lifetime_premium'
                 ? s(
-                    'Одна покупка ${plans[_selectedPlan].price} • без підписки, назавжди',
-                    'One-time ${plans[_selectedPlan].price} • no subscription, forever',
+                    'Одна покупка ${plans[_selectedIndex(plans)].price} • без підписки, назавжди',
+                    'One-time ${plans[_selectedIndex(plans)].price} • no subscription, forever',
                   )
                 : trialDays == null
                     ? s(
-                        '${plans[_selectedPlan].price}${plans[_selectedPlan].period} • Скасувати будь-коли',
-                        '${plans[_selectedPlan].price}${plans[_selectedPlan].period} • Cancel anytime',
+                        '${plans[_selectedIndex(plans)].price}${plans[_selectedIndex(plans)].period} • Скасувати будь-коли',
+                        '${plans[_selectedIndex(plans)].price}${plans[_selectedIndex(plans)].period} • Cancel anytime',
                       )
                     : s(
-                        '$trialDays ${dayWord(trialDays)} безкоштовно, потім ${plans[_selectedPlan].price}${plans[_selectedPlan].period} • Скасувати будь-коли',
-                        '$trialDays days free, then ${plans[_selectedPlan].price}${plans[_selectedPlan].period} • Cancel anytime',
+                        '$trialDays ${dayWord(trialDays)} безкоштовно, потім ${plans[_selectedIndex(plans)].price}${plans[_selectedIndex(plans)].period} • Скасувати будь-коли',
+                        '$trialDays days free, then ${plans[_selectedIndex(plans)].price}${plans[_selectedIndex(plans)].period} • Cancel anytime',
                       ),
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -592,17 +628,20 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
   Widget _planTile(int index, List<_Plan> plans) {
     final plan = plans[index];
-    final selected = _selectedPlan == index;
+    final selected = plan.productId == _selectedProductId;
     const tileColor = kAccent;
 
     return GestureDetector(
       onTap: () {
-        if (_selectedPlan != index) {
+        if (!selected) {
           AnalyticsService.instance.logPaywallProductSelect(plan.productId);
         }
-        setState(() => _selectedPlan = index);
+        setState(() => _selectedProductId = plan.productId);
       },
-      child: AnimatedContainer(
+      child: Semantics(
+        selected: selected,
+        button: true,
+        child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
@@ -719,6 +758,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

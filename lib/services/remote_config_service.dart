@@ -6,8 +6,9 @@ class RemoteConfigService {
 
   static const Map<String, Object> _defaults = {
     'paywall_title': 'Розблокуй всі картки!',
-    'paywall_cta': 'Спробувати 3 дні безкоштовно',
-    'paywall_show_trial': true,
+    // No `paywall_cta` any more, on purpose: a remote string saying "3 days"
+    // while the store grants 7 (or none) is the mismatch that emptied
+    // August. The trial CTA is composed from PurchaseService.kTrialDays.
     // Which plan tile is pre-selected: 'yearly' or 'monthly'. 20 of the 21
     // sheet cancels on 1.3.8 were the yearly plan — the A/B asks whether the
     // monthly price is a better door, with yearly as the upsell later.
@@ -84,8 +85,6 @@ class RemoteConfigService {
   }
 
   String get paywallTitle => _getString('paywall_title');
-  String get paywallCta => _getString('paywall_cta');
-  bool get paywallShowTrial => _getBool('paywall_show_trial');
   String get paywallDefaultPlan => _getString('paywall_default_plan');
   int get freePreviewCount => _getInt('free_preview_count');
   int get dailyNotificationHour => _getInt('daily_notification_hour');

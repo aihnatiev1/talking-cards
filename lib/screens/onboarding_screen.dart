@@ -666,25 +666,25 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
     showConfetti();
     final wasLast = _currentIndex >= _cards.length - 1;
 
-    // Let the word+phrase finish before flipping, but never hold the
-    // screen hostage to it: a second tap or the cap moves on.
-    await Future.any<void>([
-      AudioService.instance.speakCard(card.audioKey, card.sound, card.text),
-      _skip!.future,
-      Future<void>.delayed(_maxWaitPerCard),
-    ]);
-    if (!mounted) {
+    try {
+      // Let the word+phrase finish before flipping, but never hold the
+      // screen hostage to it: a second tap or the cap moves on.
+      await Future.any<void>([
+        AudioService.instance.speakCard(card.audioKey, card.sound, card.text),
+        _skip!.future,
+        Future<void>.delayed(_maxWaitPerCard),
+      ]);
+      if (!mounted) return;
+      if (wasLast) {
+        AnalyticsService.instance.logOnboardingMagicMomentComplete();
+        setState(() => _celebrating = true);
+      } else {
+        setState(() => _currentIndex += 1);
+      }
+    } finally {
+      // A frozen onboarding is the one outcome this screen may never have.
       _advancing = false;
-      return;
     }
-
-    if (wasLast) {
-      AnalyticsService.instance.logOnboardingMagicMomentComplete();
-      setState(() => _celebrating = true);
-    } else {
-      setState(() => _currentIndex += 1);
-    }
-    _advancing = false;
   }
 
   @override

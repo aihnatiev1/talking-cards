@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
+import '../providers/app_review_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../screens/articulation_screen.dart';
@@ -54,7 +55,16 @@ class _GamesTabState extends ConsumerState<GamesTab> {
           .toList();
     }
     if (cards.length < 4) return;
-    Navigator.of(context).push(_gameRoute(GuessScreen(cards: cards)));
+    _openGame(_gameRoute(GuessScreen(cards: cards)));
+  }
+
+  /// Every game goes through here so the one automatic review ask a
+  /// first-time family gets lands on the games list, after the screen and
+  /// its celebration are gone — never over a dialog a toddler is tapping.
+  Future<void> _openGame(Route<void> route) async {
+    await Navigator.of(context).push(route);
+    if (!mounted) return;
+    await ref.read(appReviewControllerProvider).askIfFirstGamePending();
   }
 
   void _openMemoryMatch(List<CardModel> allCards) {
@@ -67,7 +77,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
     );
     // Toddler entry: start with 3 pairs (2×3 grid); the screen escalates to
     // 4 pairs by itself after 2 wins in the same session.
-    Navigator.of(context).push(_gameRoute(
+    _openGame(_gameRoute(
         MemoryMatchScreen(pack: pack, cards: playable, pairCount: 3)));
   }
 
@@ -89,8 +99,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
             (lang == 'en' ? p.cards.any((c) => c.image != null) : true))
         .toList();
     if (playablePacks.length < 2) return;
-    Navigator.of(context).push(
-        _gameRoute(OddOneOutScreen(packs: playablePacks)));
+    _openGame(_gameRoute(OddOneOutScreen(packs: playablePacks)));
   }
 
   void _openRepeatGame(List<PackModel> packs) {
@@ -105,11 +114,11 @@ class _GamesTabState extends ConsumerState<GamesTab> {
         .where((c) => c.image != null)
         .toList();
     if (cards.length < 4) return;
-    Navigator.of(context).push(_gameRoute(RepeatGameScreen(cards: cards)));
+    _openGame(_gameRoute(RepeatGameScreen(cards: cards)));
   }
 
   void _openArticulation() {
-    Navigator.of(context).push(_gameRoute(const ArticulationScreen()));
+    _openGame(_gameRoute(const ArticulationScreen()));
   }
 
   void _openOppositeGame(List<PackModel> packs) {

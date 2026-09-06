@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
@@ -43,12 +44,19 @@ void main() {
   /// environment has no billing client, so the screen correctly shows its
   /// "store unavailable" state instead of a Buy button.
   void seedStore() {
+    // Shaped like Google Play's answer for a family still entitled to the
+    // trial: a free-phase offer next to each paid base plan.
     PurchaseService.instance.debugIndexProducts([
       product('yearly_premium', 649, '649 грн'),
+      product('yearly_premium', 0, 'Безкоштовно'),
       product('monthly_premium', 149, '149 грн'),
+      product('monthly_premium', 0, 'Безкоштовно'),
     ]);
   }
 
+  // Without a mock store SharedPreferences.getInstance() never completes in
+  // a widget test — and the paywall now waits on it before its first paint.
+  setUp(() => SharedPreferences.setMockInitialValues({}));
   tearDown(() => PurchaseService.instance.debugIndexProducts([]));
 
   group('PaywallScreen', () {
@@ -257,13 +265,30 @@ void main() {
       expect(find.byType(PaywallScreen), findsNothing);
     });
 
-    testWidgets('can select monthly plan', (tester) async {
+    testWidgets('tapping a plan tile selects it', (tester) async {
+      seedStore();
+      // Disposed at the end of the body: the tester checks handles before
+      // tearDowns run.
+      final semantics = tester.ensureSemantics();
       await pumpPaywall(tester);
 
-      await tester.tap(find.text('Місячна'));
+      // The tile can sit below the fold of the 800×600 test surface; a tap
+      // that misses would still leave '/місяць' on screen, so assert the
+      // selection itself.
+      final monthly = find.text('Місячна');
+      await tester.ensureVisible(monthly);
+      await tester.tap(monthly);
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('/місяць'), findsAtLeast(1));
+      SemanticsNode tileOf(Finder label) => tester.getSemantics(find
+          .ancestor(of: label, matching: find.byType(Semantics))
+          .first);
+      expect(tileOf(monthly).hasFlag(SemanticsFlag.isSelected), isTrue);
+      expect(tileOf(find.text('Річна')).hasFlag(SemanticsFlag.isSelected),
+          isFalse);
+      // And the CTA sub-line now quotes the monthly price.
+      expect(find.textContaining('149 грн/місяць'), findsOneWidget);
+      semantics.dispose();
     });
   });
 }
