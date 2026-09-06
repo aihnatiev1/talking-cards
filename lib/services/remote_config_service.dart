@@ -8,6 +8,10 @@ class RemoteConfigService {
     'paywall_title': 'Розблокуй всі картки!',
     'paywall_cta': 'Спробувати 3 дні безкоштовно',
     'paywall_show_trial': true,
+    // Which plan tile is pre-selected: 'yearly' or 'monthly'. 20 of the 21
+    // sheet cancels on 1.3.8 were the yearly plan — the A/B asks whether the
+    // monthly price is a better door, with yearly as the upsell later.
+    'paywall_default_plan': 'yearly',
     'free_preview_count': 5,
     'daily_notification_hour': 10,
     'show_card_of_day': true,
@@ -82,6 +86,7 @@ class RemoteConfigService {
   String get paywallTitle => _getString('paywall_title');
   String get paywallCta => _getString('paywall_cta');
   bool get paywallShowTrial => _getBool('paywall_show_trial');
+  String get paywallDefaultPlan => _getString('paywall_default_plan');
   int get freePreviewCount => _getInt('free_preview_count');
   int get dailyNotificationHour => _getInt('daily_notification_hour');
   bool get showCardOfDay => _getBool('show_card_of_day');

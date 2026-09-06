@@ -192,6 +192,37 @@ def trial_funnel(tok):
     return lines
 
 
+def default_plan_ab(tok):
+    """Paywall A/B: which plan tile starts selected (user property, set on
+    every paywall open from Remote Config `paywall_default_plan`)."""
+    events = ['paywall_view', 'purchase_start', 'purchase_cancel', 'purchase_success']
+    r = run_report(tok, {
+        'dateRanges': [{'startDate': '7daysAgo', 'endDate': 'today'}],
+        'dimensions': [{'name': 'customUser:paywall_default_plan'},
+                       {'name': 'eventName'}],
+        'metrics': [{'name': 'totalUsers'}],
+        'dimensionFilter': {'filter': {
+            'fieldName': 'eventName', 'inListFilter': {'values': events}}},
+        'limit': 50,
+    })
+    per = {}
+    for row in r.get('rows', []):
+        b = row['dimensionValues'][0]['value']
+        if b == '(not set)':
+            continue
+        per.setdefault(b, {})[row['dimensionValues'][1]['value']] = \
+            int(row['metricValues'][0]['value'])
+    if not per:
+        return ['- A/B дефолтного плану: ще без даних']
+    lines = ['', '### A/B: який план обраний за замовчуванням (7 дн, users)',
+             '| bucket | пейвол | старти | скасувань | покупок |', '|---|---|---|---|---|']
+    for b in sorted(per):
+        v = per[b]
+        lines.append(f"| {b} | {v.get('paywall_view', 0)} | {v.get('purchase_start', 0)} | "
+                     f"{v.get('purchase_cancel', 0)} | {v.get('purchase_success', 0)} |")
+    return lines
+
+
 def crash_summary(tok):
     """Top Crashlytics issues for the last 7 days from the BigQuery export.
 
@@ -283,6 +314,7 @@ def main():
 
     lines.extend(startup_health(tok))
     lines.extend(trial_funnel(tok))
+    lines.extend(default_plan_ab(tok))
     lines.extend(crash_summary(bq_token()))
 
     body = '\n'.join(lines) + '\n'

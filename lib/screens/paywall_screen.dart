@@ -56,6 +56,12 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   @override
   void initState() {
     super.initState();
+    // Plans render yearly → monthly → lifetime; the bucket decides which
+    // tile starts selected. Recorded as a user property so purchases made
+    // minutes later still carry it.
+    final defaultPlan = RemoteConfigService.instance.paywallDefaultPlan;
+    _selectedPlan = defaultPlan == 'monthly' ? 1 : 0;
+    AnalyticsService.instance.setPaywallDefaultPlanProperty(defaultPlan);
     final name = ref.read(profileProvider).active?.name.trim() ?? '';
     final variant = _learnedCount >= _minLearnedForAnchor
         ? 'progress'
@@ -219,7 +225,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
   Future<void> _purchase() async {
     final s = AppS(ref.read(languageProvider) == 'en');
-    final plan = _buildPlans(s)[_selectedPlan];
+    final plans = _buildPlans(s);
+    final plan = plans[_selectedPlan.clamp(0, plans.length - 1)];
     AnalyticsService.instance.logPurchaseStart(plan.productId,
         PurchaseService.instance.trialStateFor(plan.productId));
     setState(() => _loading = true);
@@ -293,6 +300,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     final isEn = ref.watch(languageProvider) == 'en';
     final s = AppS(isEn);
     final plans = _buildPlans(s);
+    if (_selectedPlan >= plans.length) _selectedPlan = 0;
     // Every trial claim on this screen hangs off this one value: the store
     // decides, not us. Null means the selected plan gets no free days —
     // a spent introductory offer, or the lifetime unlock.

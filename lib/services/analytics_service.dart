@@ -242,6 +242,12 @@ class AnalyticsService {
   Future<void> setProProperty(bool isPro) =>
       _safeSetUserProperty('is_pro', isPro.toString());
 
+  /// The paywall A/B bucket as a user property, so every event of that user
+  /// — views, checkouts, sales — segments by it without threading the value
+  /// through each call.
+  Future<void> setPaywallDefaultPlanProperty(String plan) =>
+      _safeSetUserProperty('paywall_default_plan', plan);
+
   // --- Games ---
 
   Future<void> logGameStart(String gameId) =>
