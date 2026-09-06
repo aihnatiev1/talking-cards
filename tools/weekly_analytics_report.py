@@ -30,7 +30,7 @@ KEY_EVENTS = [
     'card_view', 'card_listen', 'pack_open', 'pack_complete',
     'game_start', 'game_complete',
     'paywall_view', 'paywall_product_select',
-    'purchase_start', 'purchase_success', 'purchase_error',
+    'purchase_start', 'purchase_success', 'purchase_cancel', 'purchase_error',
     'app_exception', 'app_remove',
 ]
 
