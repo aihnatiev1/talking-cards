@@ -1,3 +1,4 @@
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
@@ -67,6 +68,51 @@ void main() {
     test('an unknown SKU from the store is ignored', () {
       service.debugIndexProducts([_product('gold_bars', 99, '99 ₴')]);
       expect(service.products, isEmpty);
+    });
+  });
+
+  group('purchase outcomes', () {
+    PurchaseDetails update(String id, PurchaseStatus status) => PurchaseDetails(
+          productID: id,
+          verificationData: PurchaseVerificationData(
+              localVerificationData: '',
+              serverVerificationData: '',
+              source: 'test'),
+          transactionDate: null,
+          status: status,
+        );
+
+    tearDown(() {
+      service.awaitingApproval.value = false;
+      // Drain the checkout so the 3-minute backstop is not left pending.
+      service.debugHandlePurchaseUpdate(
+          [update('yearly_premium', PurchaseStatus.canceled)]);
+    });
+
+    test('Ask to Buy leaves the checkout visibly waiting, not failed',
+        () async {
+      FakeAsync().run((async) {
+        service.debugBeginPurchase('yearly_premium');
+        service.debugHandlePurchaseUpdate(
+            [update('yearly_premium', PurchaseStatus.pending)]);
+
+        expect(service.awaitingApproval.value, true);
+        // The backstop used to fire here and file the family's wait as
+        // `no_outcome_in_3min`; a pending outcome cancels it instead.
+        async.elapse(const Duration(minutes: 4));
+        expect(service.awaitingApproval.value, true);
+
+        service.debugHandlePurchaseUpdate(
+            [update('yearly_premium', PurchaseStatus.canceled)]);
+        expect(service.awaitingApproval.value, false);
+      });
+    });
+
+    test('an outcome for a product we did not start is ignored', () {
+      service.debugBeginPurchase('yearly_premium');
+      service.debugHandlePurchaseUpdate(
+          [update('monthly_premium', PurchaseStatus.pending)]);
+      expect(service.awaitingApproval.value, false);
     });
   });
 

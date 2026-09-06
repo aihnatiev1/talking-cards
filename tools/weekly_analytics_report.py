@@ -35,6 +35,7 @@ KEY_EVENTS = [
     'game_start', 'game_complete',
     'paywall_view', 'paywall_product_select',
     'purchase_start', 'purchase_success', 'purchase_cancel', 'purchase_error',
+    'purchase_pending', 'store_unavailable', 'pro_revoked',
     'app_exception', 'app_remove',
 ]
 

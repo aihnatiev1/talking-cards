@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talking_cards/providers/packs_provider.dart';
 import 'package:talking_cards/screens/paywall_screen.dart';
@@ -23,8 +24,32 @@ void main() {
   Future<void> pumpPaywall(WidgetTester tester) async {
     await tester.pumpWidget(createPaywallApp());
     await tester.pump(const Duration(seconds: 3));
+    // Let the catalogue load give up: there is no billing client here, and
+    // the CTA spins until the store answers or the budget runs out.
+    await tester.pump(PurchaseService.storeBudget);
     await tester.pumpAndSettle();
   }
+
+  ProductDetails product(String id, double raw, String price) => ProductDetails(
+        id: id,
+        title: id,
+        description: id,
+        price: price,
+        rawPrice: raw,
+        currencyCode: 'UAH',
+      );
+
+  /// A store that has answered: the CTA can sell. Without this the test
+  /// environment has no billing client, so the screen correctly shows its
+  /// "store unavailable" state instead of a Buy button.
+  void seedStore() {
+    PurchaseService.instance.debugIndexProducts([
+      product('yearly_premium', 649, '649 грн'),
+      product('monthly_premium', 149, '149 грн'),
+    ]);
+  }
+
+  tearDown(() => PurchaseService.instance.debugIndexProducts([]));
 
   group('PaywallScreen', () {
     testWidgets('renders headline and benefits', (tester) async {
@@ -53,6 +78,7 @@ void main() {
     });
 
     testWidgets('shows trial CTA and cancel-anytime note', (tester) async {
+      seedStore();
       await pumpPaywall(tester);
 
       expect(find.text('Спробувати 3 дні безкоштовно'), findsOneWidget);
@@ -141,7 +167,7 @@ void main() {
       SharedPreferences.setMockInitialValues({
         'pro_validated_at': DateTime.now().millisecondsSinceEpoch,
       });
-      addTearDown(() => PurchaseService.instance.debugIndexProducts([]));
+      seedStore();
 
       await pumpPaywall(tester);
 
@@ -152,6 +178,33 @@ void main() {
       expect(find.text('Оформити підписку'), findsOneWidget);
       // The offer itself still has to be sellable.
       expect(find.textContaining('Скасувати будь-коли'), findsAtLeast(1));
+    });
+
+    testWidgets('an unreachable store is said out loud, with a retry',
+        (tester) async {
+      // No billing client here, exactly like a tablet with no Wi-Fi. The
+      // old screen kept its Buy button, which then did nothing at all.
+      await pumpPaywall(tester);
+
+      expect(find.text('Стор недоступний — спробувати ще'), findsOneWidget);
+      expect(find.textContaining('Перевірте інтернет'), findsOneWidget);
+      expect(find.text('Спробувати 3 дні безкоштовно'), findsNothing);
+      // The button is live — it retries rather than buying.
+      final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
+      expect(button.onPressed, isNotNull);
+    });
+
+    testWidgets('a purchase waiting on Ask to Buy is shown as such',
+        (tester) async {
+      seedStore();
+      addTearDown(
+          () => PurchaseService.instance.awaitingApproval.value = false);
+      await pumpPaywall(tester);
+
+      PurchaseService.instance.awaitingApproval.value = true;
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Ask to Buy'), findsOneWidget);
     });
 
     testWidgets('a late entitlement closes the paywall and unlocks Pro',

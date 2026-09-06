@@ -108,6 +108,23 @@ class AnalyticsService {
       _safeLog('purchase_error',
           {'product_id': productId, 'reason': reason});
 
+  /// Ask to Buy / SCA: the sheet closed with neither a sale nor a cancel.
+  /// Its own event, so a family waiting on a parent's approval no longer
+  /// shows up as an error (or vanishes from the funnel altogether).
+  Future<void> logPurchasePending(String productId) =>
+      _safeLog('purchase_pending', {'product_id': productId});
+
+  /// The store could not be reached from a screen that sells — the paywall
+  /// then shows a retry instead of a Buy button that does nothing.
+  Future<void> logStoreUnavailable(String where) =>
+      _safeLog('store_unavailable', {'source': where});
+
+  /// A locally-Pro device lost the entitlement on revalidation. Silent
+  /// until now, and a family locked out of what they paid for is the most
+  /// expensive bug this app can have.
+  Future<void> logProRevoked(String reason) =>
+      _safeLog('pro_revoked', {'reason': reason});
+
   Future<void> logPurchaseRestore() => _safeLog('purchase_restore');
 
   // --- Streak ---

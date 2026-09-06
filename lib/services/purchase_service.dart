@@ -71,32 +71,27 @@ class PurchaseService {
       AnalyticsService.instance.setProProperty(isPro.value);
     });
 
-    final available = await _iap.isAvailable();
-    if (!available) {
-      _initialized = true;
-      return;
-    }
-
+    // Subscribe before anything can be bought or restored — and regardless
+    // of whether the store answers right now: a purchase approved through
+    // Ask to Buy, or finished while we were offline, is delivered on this
+    // stream at the next launch and must not be missed.
     _sub = _iap.purchaseStream.listen(
       _onPurchaseUpdate,
       onDone: () => _sub?.cancel(),
       onError: (_) {},
     );
 
-    final response = await _iap.queryProductDetails(_productIds);
-    _indexProducts(response.productDetails);
-
     _initialized = true;
-    // Never awaited: an eligibility round-trip on the launch path is how
-    // the splash starts timing out (`splash_timeout` already names
-    // `purchase` as an offender). The paywall re-asks when it opens.
-    unawaited(refreshTrialAvailability());
+    // A failed load is retried from the paywall, see [ensureProducts]; the
+    // entitlement work below does not depend on it — restore and
+    // revalidation are local queries on both platforms.
+    await ensureProducts();
 
     // Fresh install: silently restore purchases from store
     final isReinstall = !prefs.containsKey(_installedKey);
     await prefs.setBool(_installedKey, true);
     if (isReinstall && !isPro.value) {
-      _iap.restorePurchases();
+      unawaited(_iap.restorePurchases().catchError((_) {}));
     } else if (isPro.value) {
       unawaited(_revalidateEntitlement(prefs));
     }
@@ -126,10 +121,65 @@ class PurchaseService {
     await Future<void>.delayed(const Duration(seconds: 10));
     if (_entitlementSeen) return;
     if (now.difference(validatedAt) > _graceWindow) {
+      AnalyticsService.instance.logProRevoked('no_entitlement_after_grace');
       isPro.value = false;
       await _persist();
     }
   }
+
+  Future<bool>? _productsInFlight;
+
+  /// Loads the catalogue if it is not loaded yet; true when [products] is
+  /// usable afterwards. Safe to call repeatedly and concurrently.
+  ///
+  /// `init` used to give up for the whole session the moment the store was
+  /// unreachable at launch — one bad second of Wi-Fi on a child's tablet and
+  /// every Buy tap that day quietly did nothing (`product_unavailable`,
+  /// nothing on screen). Now the paywall retries on open and offers a retry
+  /// button, and the unavailable state is one the parent can see.
+  Future<bool> ensureProducts() {
+    if (products.isNotEmpty) return Future.value(true);
+    return _productsInFlight ??= _loadProducts().whenComplete(() {
+      _productsInFlight = null;
+    });
+  }
+
+  /// How long a catalogue load may take before the paywall calls the store
+  /// unavailable. The billing client can sit in "connecting" indefinitely
+  /// on a bad network, and a spinner with no end is the Buy-button-that-
+  /// does-nothing in a different costume.
+  static const storeBudget = Duration(seconds: 8);
+
+  Future<bool> _loadProducts() async {
+    try {
+      final response = await () async {
+        if (!await _iap.isAvailable()) return null;
+        return _iap.queryProductDetails(_productIds);
+      }()
+          .timeout(storeBudget);
+      if (response == null) return false;
+      _indexProducts(response.productDetails);
+    } catch (_) {
+      return false; // Timed out, billing client not connected, no network.
+    }
+    if (products.isEmpty) return false;
+    unawaited(refreshTrialAvailability());
+    return true;
+  }
+
+  /// True while a checkout this session started is waiting on someone
+  /// else — a parent approving an Ask to Buy request, or the bank's SCA.
+  /// The paywall says so instead of going quiet.
+  final ValueNotifier<bool> awaitingApproval = ValueNotifier(false);
+
+  /// Test seam: the store stream is the only way outcomes reach this
+  /// service, and no test has a store.
+  @visibleForTesting
+  void debugHandlePurchaseUpdate(List<PurchaseDetails> updates) =>
+      _onPurchaseUpdate(updates);
+
+  @visibleForTesting
+  void debugBeginPurchase(String productId) => _beginPurchase(productId);
 
   /// Splits the store response into what the paywall shows and what we
   /// charge against.
@@ -297,6 +347,7 @@ class PurchaseService {
 
   void _beginPurchase(String productId) {
     _pendingTimer?.cancel();
+    awaitingApproval.value = false;
     _pendingPurchaseId = productId;
     _pendingTimer = Timer(_pendingBudget, () {
       if (_pendingPurchaseId != productId) return;
@@ -310,6 +361,7 @@ class PurchaseService {
     if (_pendingPurchaseId != productId) return;
     _pendingPurchaseId = null;
     _pendingTimer?.cancel();
+    awaitingApproval.value = false;
     log();
   }
 
@@ -355,7 +407,16 @@ class PurchaseService {
     final analytics = AnalyticsService.instance;
     switch (purchase.status) {
       case PurchaseStatus.pending:
-        return; // Ask to Buy / SCA — still in flight.
+        // Ask to Buy / SCA: the sheet is gone but nothing is decided. The
+        // three-minute backstop would have filed this as `no_outcome_in_3min`
+        // — a purchase_error for a family that is simply waiting on a
+        // parent. The approval, when it comes, arrives on this same stream,
+        // possibly in a later session, and `_verifyAndDeliver` handles it
+        // without a pending id.
+        _pendingTimer?.cancel();
+        awaitingApproval.value = true;
+        analytics.logPurchasePending(id);
+        return;
       case PurchaseStatus.purchased:
       case PurchaseStatus.restored:
         _resolvePurchase(

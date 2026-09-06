@@ -37,6 +37,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   /// more than once — e.g. a restore right behind the purchase).
   bool _granted = false;
 
+  /// Null while the catalogue is loading, then whether the store answered.
+  /// Drives the CTA: a Buy button that cannot buy is replaced by a retry.
+  bool? _storeReady;
+
   /// Cards the child has actually learned (same threshold as the Treasure
   /// Box): the sunk-cost anchor for returning users.
   static const _learnedThreshold = 2;
@@ -74,6 +78,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     // the screen instead of for a fixed window after the tap is what keeps a
     // paying family from being left staring at the paywall.
     PurchaseService.instance.isPro.addListener(_onEntitlement);
+    PurchaseService.instance.awaitingApproval.addListener(_rebuild);
+    _loadStore();
     // Eligibility flips the moment a trial is taken, so ask on every open
     // rather than trusting what launch found — every trial claim on this
     // screen hangs off the answer.
@@ -85,7 +91,23 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   @override
   void dispose() {
     PurchaseService.instance.isPro.removeListener(_onEntitlement);
+    PurchaseService.instance.awaitingApproval.removeListener(_rebuild);
     super.dispose();
+  }
+
+  void _rebuild() {
+    if (mounted) setState(() {});
+  }
+
+  /// Loads (or re-loads) the catalogue. Until this settles the CTA shows a
+  /// spinner; if the store never answers it becomes a retry — the one
+  /// state this screen used to hide behind a Buy button that did nothing.
+  Future<void> _loadStore() async {
+    setState(() => _storeReady = null);
+    final ready = await PurchaseService.instance.ensureProducts();
+    if (!mounted) return;
+    if (!ready) AnalyticsService.instance.logStoreUnavailable('paywall');
+    setState(() => _storeReady = ready);
   }
 
   void _onEntitlement() {
@@ -437,7 +459,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               ],
             ),
             child: ElevatedButton(
-              onPressed: _loading ? null : _purchase,
+              onPressed: _loading || _storeReady == null
+                  ? null
+                  : (_storeReady! ? _purchase : _loadStore),
               style: ElevatedButton.styleFrom(
                 backgroundColor: kAccent,
                 foregroundColor: Colors.white,
@@ -447,7 +471,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                 ),
                 elevation: 0,
               ),
-              child: _loading
+              child: _loading || _storeReady == null
                   ? const SizedBox(
                       height: 22,
                       width: 22,
@@ -465,7 +489,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                         // offer means the sheet asks for the full price
                         // right away. Both used to promise free days, and
                         // parents backed out of the contradiction.
-                        trialDays == null
+                        _storeReady == false
+                            ? s('Стор недоступний — спробувати ще',
+                                'Store unavailable — try again')
+                            : trialDays == null
                             ? (plans[_selectedPlan].productId ==
                                     'lifetime_premium'
                                 ? s('Купити назавжди', 'Buy lifetime')
@@ -486,7 +513,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            plans[_selectedPlan].productId == 'lifetime_premium'
+            PurchaseService.instance.awaitingApproval.value
+                ? s('Очікуємо підтвердження покупки (Ask to Buy)',
+                    'Waiting for purchase approval (Ask to Buy)')
+                : _storeReady == false
+                ? s('Немає зв\'язку з App Store / Google Play. Перевірте інтернет',
+                    'Can\'t reach the App Store / Google Play. Check your connection')
+                : plans[_selectedPlan].productId == 'lifetime_premium'
                 ? s(
                     'Одна покупка ${plans[_selectedPlan].price} • без підписки, назавжди',
                     'One-time ${plans[_selectedPlan].price} • no subscription, forever',
