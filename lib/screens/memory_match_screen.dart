@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
+import '../providers/app_review_provider.dart';
 import '../providers/daily_quest_provider.dart';
 import '../providers/game_stats_provider.dart';
 import '../providers/language_provider.dart';
@@ -180,7 +181,22 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen>
         ref
             .read(dailyQuestProvider.notifier)
             .completeTask(QuestTask.playQuiz);
+        // See GameStateMixin._complete: the first finished game is the one
+        // automatic review ask that English-market families actually reach.
+        final firstGame = !(ref
+                .read(gameStatsProvider)
+                .valueOrNull
+                ?.any((g) => g.plays > 0) ??
+            true);
         ref.read(gameStatsProvider.notifier).record('memory', _matched);
+        if (firstGame) {
+          Future.delayed(const Duration(seconds: 4), () {
+            if (!mounted) return;
+            ref
+                .read(appReviewControllerProvider)
+                .maybeRequestAfterWin('first_game');
+          });
+        }
         // Any completion is a full win — no attempts, no stars, no time.
         showGameCelebration(
           context,

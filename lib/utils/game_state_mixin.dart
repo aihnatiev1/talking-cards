@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../providers/app_review_provider.dart';
 import '../providers/daily_quest_provider.dart';
 import '../providers/game_stats_provider.dart';
 import '../services/analytics_service.dart';
@@ -58,7 +59,24 @@ mixin GameStateMixin<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   void _complete() {
     AnalyticsService.instance.logGameComplete(gameId, score);
     if (recordToStats) {
+      // The first game a family ever finishes is a win worth asking about:
+      // English-market users rarely get as far as completing a pack (one US
+      // user in 60 days), so the first-pack ask never reached them.
+      final firstGame = !(ref
+              .read(gameStatsProvider)
+              .valueOrNull
+              ?.any((g) => g.plays > 0) ??
+          true);
       ref.read(gameStatsProvider.notifier).record(gameId, score);
+      if (firstGame) {
+        // After the result screen has had its moment.
+        Future.delayed(const Duration(seconds: 3), () {
+          if (!mounted) return;
+          ref
+              .read(appReviewControllerProvider)
+              .maybeRequestAfterWin('first_game');
+        });
+      }
     }
     final task = questTask;
     if (task != null) {

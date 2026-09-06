@@ -35,6 +35,10 @@ class AppReviewController {
   /// repeat (3/7/14/30 days) and land on a moment a parent is watching, so
   /// they carry the same "we're proud" tone without nagging: the local
   /// cooldown keeps it to one ask per 45 days on top of the OS quota.
+  ///
+  /// The first finished *game* joined the triggers on 2026-09-06: in 60 days
+  /// no US user had ever seen a prompt — one completed a pack, none hit a
+  /// streak — while a few do finish a game.
   Future<void> maybeRequestAfterWin(String trigger) async {
     final prefs = await SharedPreferences.getInstance();
     final lastMs = prefs.getInt(_lastAutoKey);
