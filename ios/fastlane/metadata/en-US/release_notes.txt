@@ -1,6 +1,7 @@
-- Purchases are steadier: access unlocks right away, even when the store is slow to answer
-- If the App Store or Google Play can't be reached, we say so instead of going quiet
-- First launch no longer stalls on the first card — a toddler's taps are never lost
-- During the free trial we'll send you a report of what your child has learned
+- A lighter app: the first download on Android is half the size, the rest of the cards arrive in the background
+- A first session without extra pop-ups — straight to the cards after saying hello
+- Cards keep the same order and open where you left off
+- Every tap is felt: sound and a gentle buzz on buttons, bigger buttons for little fingers
+- Coloring: a "new picture" button and only friendly pictures
 
 Thanks for growing with us!
