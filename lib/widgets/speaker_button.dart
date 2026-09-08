@@ -84,8 +84,9 @@ class _SpeakerButtonState extends State<SpeakerButton>
               child: ScaleTransition(
                 scale: _pulseAnimation,
                 child: Container(
-                  width: 44,
-                  height: 44,
+                  // Paired with the 56dp heart on the card (audit #20).
+                  width: 56,
+                  height: 56,
                   decoration: BoxDecoration(
                     color: autoOn ? _onColor : _offColor,
                     shape: BoxShape.circle,

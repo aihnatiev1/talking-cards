@@ -18,6 +18,7 @@ import 'parent_dashboard_screen.dart';
 import '../tabs/packs_tab.dart';
 import '../tabs/games_tab.dart';
 import 'coloring_screen.dart';
+import '../widgets/kid_tap.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -214,27 +215,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ],
         ),
-        child: BottomNavigationBar(
-        currentIndex: _tab,
-        onTap: (i) => setState(() => _tab = i),
-        selectedItemColor: const Color(0xFF6C63FF),
-        unselectedItemColor: Colors.grey,
-        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
-        unselectedLabelStyle: const TextStyle(fontSize: 12),
-        items: [
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.grid_view_rounded),
-            label: s('Картки', 'Cards'),
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.sports_esports_rounded),
-            label: s('Ігри', 'Games'),
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.palette_rounded),
-            label: s('Малюємо', 'Coloring'),
-          ),
-        ],
+        // 72dp tall with 30dp icons: the 56dp Material bar with grey
+        // 24dp glyphs was below the child's minimum target and did not read
+        // as buttons (audit #27). Every switch is felt and heard.
+        child: NavigationBar(
+          height: 72,
+          selectedIndex: _tab,
+          onDestinationSelected: (i) {
+            if (i != _tab) KidTap.feedback();
+            setState(() => _tab = i);
+          },
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          indicatorColor: const Color(0xFF6C63FF).withValues(alpha: 0.16),
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+          destinations: [
+            NavigationDestination(
+              icon: const Icon(Icons.grid_view_rounded, size: 30),
+              selectedIcon: const Icon(Icons.grid_view_rounded,
+                  size: 30, color: Color(0xFF6C63FF)),
+              label: s('Картки', 'Cards'),
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.sports_esports_rounded, size: 30),
+              selectedIcon: const Icon(Icons.sports_esports_rounded,
+                  size: 30, color: Color(0xFF6C63FF)),
+              label: s('Ігри', 'Games'),
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.palette_rounded, size: 30),
+              selectedIcon: const Icon(Icons.palette_rounded,
+                  size: 30, color: Color(0xFF6C63FF)),
+              label: s('Малюємо', 'Coloring'),
+            ),
+          ],
         ),
       ),
     );

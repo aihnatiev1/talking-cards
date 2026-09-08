@@ -31,6 +31,7 @@ import '../widgets/speaker_button.dart';
 import '../widgets/swipe_hint.dart';
 import 'memory_match_screen.dart';
 import '../utils/image_cache_size.dart';
+import '../widgets/kid_tap.dart';
 
 class CardsScreen extends ConsumerStatefulWidget {
   final PackModel pack;
@@ -531,10 +532,9 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios, color: widget.pack.color),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
+          toolbarHeight: 72,
+          leadingWidth: 80,
+          leading: _BackButton(color: widget.pack.color),
         ),
         body: ContentDownloadView(
           state: content,
@@ -548,10 +548,9 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios, color: widget.pack.color),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+        toolbarHeight: 72,
+        leadingWidth: 80,
+        leading: _BackButton(color: widget.pack.color),
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -615,7 +614,8 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
             child: GestureDetector(
             onTap: _toggleAutoPlayTimer,
             child: Container(
-              padding: const EdgeInsets.all(6),
+              // 36dp was the smallest target in the app (audit #18).
+              padding: const EdgeInsets.all(12),
               child: Stack(
                 alignment: Alignment.center,
                 children: [
@@ -882,3 +882,29 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   }
 }
 
+/// Back is the one control a child hits constantly, and it sat in a 48dp
+/// IconButton at the very edge (audit #18). 64dp on a tinted disc, with the
+/// same felt-and-heard answer as every other child target.
+class _BackButton extends StatelessWidget {
+  final Color color;
+  const _BackButton({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: KidTap(
+        onTap: () => Navigator.of(context).maybePop(),
+        child: Container(
+          width: 64,
+          height: 64,
+          margin: const EdgeInsets.only(left: 8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(Icons.arrow_back_ios_new_rounded, color: color, size: 28),
+        ),
+      ),
+    );
+  }
+}

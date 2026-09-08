@@ -18,6 +18,7 @@ import '../services/paywall_flow.dart';
 import '../utils/design_tokens.dart';
 import '../services/asset_pack_service.dart';
 import '../providers/content_pack_provider.dart';
+import '../widgets/kid_tap.dart';
 
 /// Smooth fade+scale transition for games.
 Route<T> _gameRoute<T>(Widget page) => PageRouteBuilder<T>(
@@ -457,6 +458,8 @@ class _BigGameTileState extends State<_BigGameTile> {
       onTapUp: (_) => setState(() => _pressed = false),
       onTapCancel: () => setState(() => _pressed = false),
       onTap: () {
+        // Locked or not, the tap itself is answered (audit #13, #23).
+        KidTap.feedback();
         if (disabled) {
           if (g.onLockedTap != null) {
             g.onLockedTap!();

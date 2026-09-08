@@ -46,6 +46,7 @@ import '../widgets/profile_avatar_chip.dart';
 import '../widgets/streak_chip.dart';
 import '../widgets/streak_milestone_overlay.dart';
 import '../services/asset_pack_service.dart';
+import '../widgets/kid_tap.dart';
 
 class PacksTab extends ConsumerStatefulWidget {
   const PacksTab({super.key});
@@ -866,7 +867,16 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                         tooltip: s('Про додаток', 'About'),
                         icon: Icon(Icons.info_outline_rounded,
                             color: Colors.grey[400], size: 26),
-                        onPressed: () => _showAbout(context),
+                        // About opens the privacy policy and a mail
+                        // client — outside the app, so behind the gate
+                        // like every other parent action (audit #14).
+                        onPressed: () async {
+                          final ok = await showParentalGate(
+                            context,
+                            isEn: ref.read(languageProvider) == 'en',
+                          );
+                          if (ok && context.mounted) _showAbout(context);
+                        },
                       ),
                     ),
                   ],
@@ -1136,33 +1146,48 @@ class _CategoryChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final icon = _categoryIcons[label];
-    final display = icon != null ? '$icon $label' : label;
     final dark = Theme.of(context).brightness == Brightness.dark;
-    return FilterChip(
-      label: Center(
-        child: Text(
-          display,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-            // Explicit unselected color: the M3 default lands on a dim
-            // grey-on-dark that fails contrast in dark mode.
-            color: selected
-                ? Colors.white
-                : (dark ? Colors.white.withValues(alpha: 0.85) : null),
-          ),
+    // A 40dp FilterChip was half the child's minimum target and chose by
+    // word; a child chooses by the icon (audit #11). 56dp, icon first,
+    // haptic + pop on tap.
+    return KidTap(
+      onTap: onSelected,
+      child: AnimatedContainer(
+        duration: DT.pressMs,
+        height: 56,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        decoration: BoxDecoration(
+          color: selected
+              ? kAccent
+              : dark
+                  ? Colors.white.withValues(alpha: 0.10)
+                  : Colors.grey.withValues(alpha: 0.18),
+          borderRadius: BorderRadius.circular(28),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Text(icon, style: const TextStyle(fontSize: 22)),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                // Explicit unselected color: the M3 default lands on a dim
+                // grey-on-dark that fails contrast in dark mode.
+                color: selected
+                    ? Colors.white
+                    : (dark
+                        ? Colors.white.withValues(alpha: 0.85)
+                        : DT.textPrimary),
+              ),
+            ),
+          ],
         ),
       ),
-      selected: selected,
-      selectedColor: kAccent,
-      backgroundColor: dark
-          ? Colors.white.withValues(alpha: 0.10)
-          : Colors.grey.withValues(alpha: 0.18),
-      showCheckmark: false,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
-      onSelected: (_) => onSelected(),
     );
   }
 }

@@ -10,6 +10,7 @@ import '../providers/content_pack_provider.dart';
 import '../utils/design_tokens.dart';
 import '../utils/image_cache_size.dart';
 import '../services/asset_pack_service.dart';
+import 'kid_tap.dart';
 
 class PackGridCard extends ConsumerStatefulWidget {
   final PackModel pack;
@@ -117,7 +118,10 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
       onTapDown: (_) => setState(() => _pressed = true),
       onTapUp: (_) => setState(() => _pressed = false),
       onTapCancel: () => setState(() => _pressed = false),
-      onTap: widget.onTap,
+      onTap: () {
+        KidTap.feedback();
+        widget.onTap();
+      },
       onLongPress: _triggerWobble,
       child: AnimatedScale(
         scale: _pressed ? DT.pressScale : 1.0,

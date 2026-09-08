@@ -10,6 +10,7 @@ import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../utils/image_cache_size.dart';
 import '../services/asset_pack_service.dart';
+import 'kid_tap.dart';
 
 class FlashCard extends ConsumerStatefulWidget {
   final CardModel card;
@@ -312,14 +313,17 @@ class _FlashCardState extends ConsumerState<FlashCard>
           top: 10,
           left: 10,
           child: GestureDetector(
-            onTap: () => ref
-                .read(favoritesProvider.notifier)
-                .toggle(widget.card.id),
-            // Same 44dp footprint as the SpeakerButton on the opposite
+            onTap: () {
+              // A silent 44dp heart added favourites nobody noticed
+              // (audit #20): now it is felt, heard and 56dp.
+              KidTap.feedback();
+              ref.read(favoritesProvider.notifier).toggle(widget.card.id);
+            },
+            // Same 56dp footprint as the SpeakerButton on the opposite
             // corner — the two card controls read as one visual pair.
             child: Container(
-              width: 44,
-              height: 44,
+              width: 56,
+              height: 56,
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.8),
                 shape: BoxShape.circle,
