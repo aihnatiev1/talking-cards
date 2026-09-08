@@ -143,10 +143,22 @@ def main(argv):
         'relationships': {
             'reviewSubmission': {'data': {'type': 'reviewSubmissions', 'id': sub}},
             'appStoreVersion': {'data': {'type': 'appStoreVersions', 'id': vid}}}}})
-    r = call('PATCH', f'/v1/reviewSubmissions/{sub}', {'data': {
-        'type': 'reviewSubmissions', 'id': sub, 'attributes': {'submitted': True}}})
-    print('submitted:', r['data']['attributes']['state'])
-    return 0
+    # The final PATCH is where Apple's transient 500s land (1.3.10 hit one
+    # after every other step succeeded). Retrying the same call is safe: the
+    # submission is idempotent once it is WAITING_FOR_REVIEW.
+    for attempt in range(1, 5):
+        try:
+            r = call('PATCH', f'/v1/reviewSubmissions/{sub}', {'data': {
+                'type': 'reviewSubmissions', 'id': sub,
+                'attributes': {'submitted': True}}})
+            print('submitted:', r['data']['attributes']['state'])
+            return 0
+        except SystemExit as e:
+            if '-> 5' not in str(e) or attempt == 4:
+                raise
+            print(f'submit attempt {attempt} got a server error, retrying in 20s')
+            time.sleep(20)
+    return 1
 
 
 if __name__ == '__main__':
