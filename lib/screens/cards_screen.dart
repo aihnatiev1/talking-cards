@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -38,6 +37,20 @@ class CardsScreen extends ConsumerStatefulWidget {
 
   const CardsScreen({super.key, required this.pack});
 
+  /// Where a re-opened pack should start (design audit 2026-09-08, #22).
+  ///
+  /// [progress] is the stored value from [PackProgressNotifier]: the highest
+  /// index reached + 1, or null when the pack was never opened. We resume on
+  /// the first card the child has not reached yet, so the "Continue" card on
+  /// the home hero actually continues. A fully seen pack, a virtual pack
+  /// (favourites/review — ids start with '_') or an empty deck start over.
+  static int resumeIndex(int? progress, int length, String packId) {
+    if (length <= 0 || packId.startsWith('_')) return 0;
+    final next = progress ?? 0;
+    if (next <= 0 || next >= length) return 0;
+    return next;
+  }
+
   @override
   ConsumerState<CardsScreen> createState() => _CardsScreenState();
 }
@@ -69,19 +82,28 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(viewportFraction: 0.92);
-
     final allCards = widget.pack.cards;
     final bonus = ref.read(bonusCardsProvider)[widget.pack.id] ?? 0;
-    final visibleCards = widget.pack.isLocked
+    // JSON order is curated (opposites pairs A→B, alphabet А→Я, phrases in
+    // difficulty order) and children aged 1–4 want the SAME order 20–30
+    // times — the old per-open shuffle broke both (design audit #22).
+    _cards = widget.pack.isLocked
         ? allCards.take(widget.pack.effectiveFreePreviewCount + bonus).toList()
         : allCards.toList();
-    // Keep meaningful orders: opposites pairs (A→B) and the alphabet (А→Я).
-    if (!widget.pack.id.contains('opposites') &&
-        !widget.pack.id.startsWith('alphabet')) {
-      visibleCards.shuffle(Random());
-    }
-    _cards = visibleCards;
+
+    // Resume where the child left off; the controller and _currentIndex
+    // must agree or the first auto-speak/precache would target card 0 while
+    // the viewport shows the resumed card.
+    final startIndex = CardsScreen.resumeIndex(
+      ref.read(packProgressProvider)[widget.pack.id],
+      _cards.length,
+      widget.pack.id,
+    );
+    _currentIndex = startIndex;
+    _pageController = PageController(
+      viewportFraction: 0.92,
+      initialPage: startIndex,
+    );
     _needsContent = _cards
         .any((c) => AssetPackService.instance.needsDownload(c.image));
     if (_needsContent) unawaited(AssetPackService.instance.fetch());
@@ -96,10 +118,19 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     EngageService.instance.saveLastPack(widget.pack.id, widget.pack.title);
     _loadPrefs();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // updateProgress only ever raises, so re-recording the resumed index
+      // is a no-op for progress and just seeds first-open packs with 1.
       ref
           .read(packProgressProvider.notifier)
-          .updateProgress(widget.pack.id, 0);
-      ref.read(reviewProvider.notifier).markSeen(_cards[0].id);
+          .updateProgress(widget.pack.id, startIndex);
+      if (_cards.isNotEmpty) {
+        ref.read(reviewProvider.notifier).markSeen(_cards[startIndex].id);
+      }
+      // Resumed straight onto the final card: mirror onPageChanged so the
+      // pack can still be finished without swiping back and forth.
+      if (_cards.isNotEmpty && startIndex == _cards.length - 1) {
+        _showCelebrationAfterSound();
+      }
       // Wait for Hero animation + prefs load, then play if not muted
       Future.delayed(const Duration(milliseconds: 400), () {
         if (mounted && AudioService.instance.autoSpeak.value) {
@@ -759,7 +790,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                     right: 28,
                     child: SpeakerButton(onActivated: _speakCurrentCard),
                   ),
-                SwipeHint(key: _swipeHintKey),
+                SwipeHint(key: _swipeHintKey, accent: widget.pack.color),
                 // Auto-play countdown — visible on the card so toddlers see
                 // "next card coming". Single tap pauses (toggles auto-play off).
                 if (_autoPlayTimer && _countdownSeconds > 0)

@@ -31,6 +31,23 @@ class CardModel {
     this.letter,
   });
 
+  /// Image names of negative-mood cards excluded from the colouring book.
+  ///
+  /// The colouring pool used to be every word card, so the very first
+  /// picture a child revealed could be a crying boy (design audit
+  /// 2026-09-08, #25). Keyed by [image] because the same illustration is
+  /// shared across languages while ids/sounds differ.
+  static const Set<String> calmingExcludedImages = {
+    'sad',
+    'angry',
+    'afraid',
+    'scared',
+    'shy',
+    'tired',
+    'bored',
+    'en_it_hurts',
+  };
+
   static String? _nonEmpty(String? s) => (s == null || s.isEmpty) ? null : s;
 
   factory CardModel.fromJson(Map<String, dynamic> json) {

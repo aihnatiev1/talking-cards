@@ -1,11 +1,18 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Stylish swipe hint — frosted glass pill with animated chevrons and hand icon.
-/// Shows only once ever, then never again.
+/// Swipe hint — a solid pill in the pack colour with animated chevrons and
+/// a hand icon. Shows only once ever, then never again.
+///
+/// The pill used to be frosted white (α 0.12) over a white card and was
+/// invisible on screenshots — the one "swipe" cue of the first session lost
+/// (design audit 2026-09-08, #21). [accent] is the pack colour so the pill
+/// reads on any card while still belonging to the screen.
 class SwipeHint extends StatefulWidget {
-  const SwipeHint({super.key});
+  /// Pill background; callers pass `pack.color`.
+  final Color accent;
+
+  const SwipeHint({super.key, required this.accent});
 
   @override
   State<SwipeHint> createState() => SwipeHintState();
@@ -114,52 +121,49 @@ class SwipeHintState extends State<SwipeHint>
       child: Transform.scale(
         scale: scale,
         child: Center(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(28),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(28),
-                  color: Colors.white.withValues(alpha: 0.12),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    width: 0.5,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 24,
-                      spreadRadius: 0,
-                    ),
-                  ],
+          child: Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(28),
+              // Near-opaque pack colour: the BackdropFilter blur it replaced
+              // cost a saveLayer per frame and still read as white-on-white.
+              color: widget.accent.withValues(alpha: 0.9),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.35),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: widget.accent.withValues(alpha: 0.35),
+                  blurRadius: 20,
+                  offset: const Offset(0, 6),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Hand icon that slides left
-                    Transform.translate(
-                      offset: Offset(handX, 0),
-                      child: Opacity(
-                        opacity: handOpacity,
-                        child: Transform(
-                          alignment: Alignment.center,
-                          transform: Matrix4.rotationZ(-0.15),
-                          child: Icon(
-                            Icons.back_hand_rounded,
-                            size: 26,
-                            color: Colors.white.withValues(alpha: 0.9),
-                          ),
-                        ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Hand icon that slides left
+                Transform.translate(
+                  offset: Offset(handX, 0),
+                  child: Opacity(
+                    opacity: handOpacity,
+                    child: Transform(
+                      alignment: Alignment.center,
+                      transform: Matrix4.rotationZ(-0.15),
+                      child: const Icon(
+                        Icons.back_hand_rounded,
+                        size: 26,
+                        color: Colors.white,
                       ),
                     ),
-                    const SizedBox(width: 14),
-                    // Three chevrons with staggered animation
-                    ..._buildChevrons(t),
-                  ],
+                  ),
                 ),
-              ),
+                const SizedBox(width: 14),
+                // Three chevrons with staggered animation
+                ..._buildChevrons(t),
+              ],
             ),
           ),
         ),
@@ -178,10 +182,10 @@ class SwipeHintState extends State<SwipeHint>
         offset: Offset(slideX, 0),
         child: Opacity(
           opacity: chevronOpacity,
-          child: Icon(
+          child: const Icon(
             Icons.chevron_left_rounded,
             size: 22,
-            color: Colors.white.withValues(alpha: 0.7),
+            color: Colors.white,
           ),
         ),
       );

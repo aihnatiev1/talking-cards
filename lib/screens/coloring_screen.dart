@@ -15,6 +15,7 @@ import '../services/audio_service.dart';
 import '../services/paywall_flow.dart';
 import '../utils/confetti_overlay_mixin.dart';
 import '../utils/constants.dart';
+import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../services/asset_pack_service.dart';
 
@@ -33,6 +34,38 @@ import '../services/asset_pack_service.dart';
 class ColoringScreen extends ConsumerStatefulWidget {
   const ColoringScreen({super.key});
 
+  /// Every illustrated word card that is safe to colour: real packs only,
+  /// no verse packs, no negative-mood images (design audit 2026-09-08, #25 —
+  /// the first picture a child saw could be a crying boy).
+  static List<CardModel> coloringPool(Iterable<PackModel> packs) => packs
+      .where((p) =>
+          !p.id.startsWith('_') && !PackModel.nonWordPackIds.contains(p.id))
+      .expand((p) => p.cards)
+      .where((c) {
+        final image = c.image;
+        return image != null &&
+            !CardModel.calmingExcludedImages.contains(image);
+      })
+      .toList();
+
+  /// Picks the next picture; never the same card twice in a row when the
+  /// pool offers a choice. Draws from `pool.length - 1` slots and skips over
+  /// [current] so the exclusion is exact rather than a lucky re-roll.
+  static CardModel pickNext(
+    List<CardModel> pool,
+    CardModel? current,
+    math.Random rng,
+  ) {
+    assert(pool.isNotEmpty);
+    final currentIndex =
+        current == null ? -1 : pool.indexWhere((c) => c.id == current.id);
+    if (currentIndex < 0 || pool.length == 1) {
+      return pool[rng.nextInt(pool.length)];
+    }
+    final slot = rng.nextInt(pool.length - 1);
+    return pool[slot >= currentIndex ? slot + 1 : slot];
+  }
+
   @override
   ConsumerState<ColoringScreen> createState() => _ColoringScreenState();
 }
@@ -44,6 +77,8 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
   static const double _completionRatio = 0.85;
 
   static const _completedCountKey = 'coloring_completed_count';
+  // 72dp button + the done bar's vertical margins.
+  static const double _bottomBarHeight = 96;
   // 3 free drawings before the paywall gate — one felt exhausted too fast
   // for the value this tab demonstrates.
   static const _freeAllowance = 3;
@@ -152,18 +187,9 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
 
   void _pickCardAndLoad() {
     final packs = ref.read(packsProvider).valueOrNull ?? [];
-    final pool = packs
-        .where((p) =>
-            !p.id.startsWith('_') && !PackModel.nonWordPackIds.contains(p.id))
-        .expand((p) => p.cards)
-        .where((c) => c.image != null)
-        .toList();
+    final pool = ColoringScreen.coloringPool(packs);
     if (pool.isEmpty) return;
-    final next = pool[_rng.nextInt(pool.length)];
-    // Avoid immediate repeat.
-    final chosen = (_card != null && pool.length > 1 && next.id == _card!.id)
-        ? pool[(_rng.nextInt(pool.length - 1) + 1) % pool.length]
-        : next;
+    final chosen = ColoringScreen.pickNext(pool, _card, _rng);
     _card = chosen;
     _loadImage(chosen);
   }
@@ -270,8 +296,12 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
     });
   }
 
+  /// "New picture": reachable at any time, not only from the done bar, so a
+  /// child can leave a picture they dislike (design audit #25). Haptic +
+  /// pop SFX because 1–2-year-olds need audio feedback on every action.
   void _next() {
-    HapticFeedback.selectionClick();
+    HapticFeedback.lightImpact();
+    AudioService.instance.playSfx('pop');
     if (_isGated()) {
       // Free quota exhausted — prompt paywall instead of loading another drawing.
       runPaywallFlow(context, ref);
@@ -370,25 +400,34 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
                       ),
                     ),
                   ),
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 250),
-                    switchInCurve: Curves.easeOutBack,
-                    transitionBuilder: (w, a) => SlideTransition(
-                      position: Tween<Offset>(
-                              begin: const Offset(0, 0.4), end: Offset.zero)
-                          .animate(a),
-                      child: FadeTransition(opacity: a, child: w),
+                  // Both states share one height so the canvas (and the
+                  // strokes' local coordinates) never resize mid-drawing.
+                  SizedBox(
+                    height: _bottomBarHeight,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      switchInCurve: Curves.easeOutBack,
+                      transitionBuilder: (w, a) => SlideTransition(
+                        position: Tween<Offset>(
+                                begin: const Offset(0, 0.4),
+                                end: Offset.zero)
+                            .animate(a),
+                        child: FadeTransition(opacity: a, child: w),
+                      ),
+                      child: _done
+                          ? _DoneBar(
+                              key: ValueKey(card.id),
+                              word: card.sound,
+                              accent: card.colorAccent,
+                              onNext: _next,
+                              label: s('Нова картинка', 'New picture'),
+                            )
+                          : _IdleBar(
+                              key: const ValueKey('idle'),
+                              onNext: _next,
+                              label: s('Нова картинка', 'New picture'),
+                            ),
                     ),
-                    child: _done
-                        ? _DoneBar(
-                            key: ValueKey(card.id),
-                            word: card.sound,
-                            accent: card.colorAccent,
-                            onNext: _next,
-                            label: s('Наступна', 'Next'),
-                          )
-                        : const SizedBox(
-                            key: ValueKey('empty'), height: 76),
                   ),
                 ],
               ),
@@ -573,6 +612,73 @@ class _ColoringPainter extends CustomPainter {
 }
 
 // ─────────────────────────────────────────────
+//  "New picture" button + bottom bars
+// ─────────────────────────────────────────────
+
+/// Permanent 72×72dp round "new picture" button (design audit #25). Lives
+/// in the same bottom-right spot before and after completion so the child
+/// learns a single control; [_DoneBar] reuses it instead of a text button.
+class _NewPictureButton extends StatelessWidget {
+  final VoidCallback onTap;
+  final String label;
+
+  const _NewPictureButton({required this.onTap, required this.label});
+
+  static const double size = 72;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: label,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: DT.violet,
+          shape: BoxShape.circle,
+          boxShadow: DT.shadowSoft(DT.violet),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          shape: const CircleBorder(),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: const Center(
+              child: Icon(
+                Icons.shuffle_rounded,
+                size: 34,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Bottom bar while the child is still revealing: just the new-picture
+/// button, right-aligned to match its place in [_DoneBar].
+class _IdleBar extends StatelessWidget {
+  final VoidCallback onNext;
+  final String label;
+
+  const _IdleBar({super.key, required this.onNext, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: _NewPictureButton(onTap: onNext, label: label),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
 //  Done bar (word + next)
 // ─────────────────────────────────────────────
 
@@ -594,7 +700,7 @@ class _DoneBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      padding: const EdgeInsets.fromLTRB(20, 14, 14, 14),
+      padding: const EdgeInsets.fromLTRB(20, 0, 0, 0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -624,24 +730,7 @@ class _DoneBar extends StatelessWidget {
               ),
             ),
           ),
-          ElevatedButton.icon(
-            onPressed: onNext,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: accent,
-              foregroundColor: Colors.white,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-            ),
-            icon: const Icon(Icons.arrow_forward_rounded),
-            label: Text(
-              label,
-              style:
-                  const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-            ),
-          ),
+          _NewPictureButton(onTap: onNext, label: label),
         ],
       ),
     );
@@ -655,16 +744,11 @@ class _PaywallGate extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final s = AppS(ref.watch(languageProvider) == 'en');
-    // Real coloring pool size (every word-pack card with an illustration),
-    // rounded down to hundreds so the claim stays honest as content grows.
-    // "20+" undersold a 400+ library by a factor of 20.
+    // Real coloring pool size (same filter the picker uses), rounded down to
+    // hundreds so the claim stays honest as content grows. "20+" undersold
+    // a 400+ library by a factor of 20.
     final packs = ref.watch(packsProvider).valueOrNull ?? const <PackModel>[];
-    final poolSize = packs
-        .where((p) =>
-            !p.id.startsWith('_') && !PackModel.nonWordPackIds.contains(p.id))
-        .expand((p) => p.cards)
-        .where((c) => c.image != null)
-        .length;
+    final poolSize = ColoringScreen.coloringPool(packs).length;
     final hundreds = math.max(1, poolSize ~/ 100) * 100;
     return Center(
       child: Padding(
