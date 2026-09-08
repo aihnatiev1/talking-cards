@@ -74,6 +74,9 @@ class _PacksTabState extends ConsumerState<PacksTab> {
   }
 
   Future<void> _maybeShowTodayPlanIntro() async {
+    // The reward is a bonus card from a locked pack — nothing to a Pro
+    // family, so the promise would be noise for them (audit #16).
+    if (ref.read(isProProvider)) return;
     final prefs = await SharedPreferences.getInstance();
     final seen = prefs.getBool(_todayPlanIntroKey) ?? false;
     if (!seen && mounted) {
@@ -842,7 +845,10 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                         ),
                       ),
                     ),
-                    if (streak.currentStreak > 0) ...[
+                    // A "🔥 1" on the very first open is noise in the
+                    // header (audit #16); a streak becomes a thing to keep
+                    // on day two.
+                    if (streak.currentStreak >= 2) ...[
                       StreakChip(
                         streak: streak.currentStreak,
                         onTap: () => Navigator.of(context).push(

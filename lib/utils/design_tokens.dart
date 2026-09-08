@@ -58,6 +58,14 @@ class DT {
   static const rXl = 28.0; // heroes
 
   // ── Shadows ─────────────────────────────────
+  /// Text-on-tint colour for a pack/card accent. Accents are picked for
+  /// backgrounds and borders; as *text* on their own tint they land at
+  /// 2.3–3:1 (audit 2026-09-08, #3), below AA. Darkening by a third keeps
+  /// the hue and clears AAA for the 26sp+ words a toddler's parent reads
+  /// from arm's length.
+  static Color onTint(Color accent) =>
+      Color.lerp(accent, textPrimary, 0.35) ?? accent;
+
   static List<BoxShadow> shadowSoft(Color color) => [
         BoxShadow(
           color: color.withValues(alpha: 0.18),

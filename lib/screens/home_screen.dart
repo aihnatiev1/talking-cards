@@ -45,6 +45,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Future<void> _runFirstFrameFlow() async {
     await _showWelcomeIfNeeded();
     if (!mounted) return;
+    // Not in the first session: the child has just tapped three cards and
+    // the parent has just closed the paywall — a permission ask here was the
+    // fifth modal before the first real card (audit #5). The next launch is
+    // a parent who came back on purpose; that is when to ask.
+    if (AppStartup.viaOnboarding) return;
     await maybeAskNotificationOptIn(context, ref);
   }
 
@@ -109,6 +114,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
     await prefs.setBool('welcome_shown', true);
     if (!mounted) return;
+    // A fresh install always arrives here through onboarding, whose magic
+    // moment has just had the child tap three cards and hear three words.
+    // Re-explaining "tap a card — hear the word" in a six-line dialog was
+    // pure corridor (audit #5). Kept only for the no-onboarding path.
+    if (AppStartup.viaOnboarding) return;
 
     final isEn = ref.read(languageProvider) == 'en';
     final s = AppS(isEn);

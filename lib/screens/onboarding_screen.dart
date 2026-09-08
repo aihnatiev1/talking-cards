@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -200,8 +202,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Progress dots
-            Padding(
+            // Progress dots — not on the magic moment, which has its own
+            // three card dots; two rows of dots read as two progress bars
+            // (audit #4).
+            if (!hideCta) Padding(
               padding: const EdgeInsets.symmetric(vertical: 20),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -561,6 +565,7 @@ class _MagicMomentPage extends ConsumerStatefulWidget {
 class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
     with TickerProviderStateMixin, ConfettiOverlayMixin {
   late final AnimationController _bounceCtrl;
+  Timer? _settleTimer;
   List<CardModel> _cards = const [];
   int _currentIndex = 0;
   bool _ready = false;
@@ -575,11 +580,19 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
       vsync: this,
       duration: const Duration(milliseconds: 800),
     )..repeat(reverse: true);
+    // Two bobs to say hello, then hold still: the only thing moving on this
+    // screen must be the card the child is meant to tap (audit #1).
+    _settleTimer = Timer(const Duration(seconds: 2), () {
+      if (!mounted) return;
+      _bounceCtrl.animateTo(0,
+          duration: const Duration(milliseconds: 400), curve: Curves.easeOut);
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadStarterCards());
   }
 
   @override
   void dispose() {
+    _settleTimer?.cancel();
     _bounceCtrl.dispose();
     disposeConfetti();
     super.dispose();
@@ -678,7 +691,16 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
       if (!mounted) return;
       if (wasLast) {
         AnalyticsService.instance.logOnboardingMagicMomentComplete();
+        // No "You did it" modal: the mascot says it, confetti and a recorded
+        // praise clip land it, and the flow moves on by itself. A dialog here
+        // was the first of five adult modals between the child's third tap
+        // and the first real card (audit #5).
         setState(() => _celebrating = true);
+        showConfetti(linger: const Duration(milliseconds: 1800));
+        unawaited(
+            AudioService.instance.playPraise(isEn: _isEn, always: true));
+        await Future<void>.delayed(const Duration(milliseconds: 1600));
+        if (mounted) widget.onComplete();
       } else {
         setState(() => _currentIndex += 1);
       }
@@ -694,16 +716,7 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
       return const Center(child: CircularProgressIndicator(color: kAccent));
     }
 
-    return Stack(
-      children: [
-        _buildContent(),
-        if (_celebrating) _CelebrationOverlay(
-          isEn: _isEn,
-          childName: widget.childName,
-          onContinue: widget.onComplete,
-        ),
-      ],
-    );
+    return _buildContent();
   }
 
   Widget _buildContent() {
@@ -735,6 +748,7 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
                 child: _MagicCard(
                   key: ValueKey(card.id),
                   card: card,
+                  speaking: AudioService.instance.isSpeaking,
                   onTap: _onCardTap,
                 ),
               ),
@@ -748,7 +762,11 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
                 ? 'Tap the card to hear the word!'
                 : 'Натисни на картку, щоб почути слово!',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+            style: TextStyle(
+              fontSize: responsiveFont(context, 16),
+              fontWeight: FontWeight.w600,
+              color: DT.textSecondary,
+            ),
           ),
           const SizedBox(height: 10),
         ],
@@ -758,6 +776,10 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
 
   String _bubbleText() {
     final name = widget.childName;
+    if (_celebrating) {
+      if (_isEn) return name.isEmpty ? 'You did it! 🎉' : 'You did it, $name! 🎉';
+      return name.isEmpty ? 'Молодець! 🎉' : 'Молодець, $name! 🎉';
+    }
     if (_isEn) {
       final greeting = name.isEmpty ? 'Hi, friend!' : 'Hi, $name!';
       return "$greeting I'm Bloom. Tap the card!";
@@ -823,68 +845,133 @@ class _SpeechBubble extends StatelessWidget {
   }
 }
 
-class _MagicCard extends StatelessWidget {
+class _MagicCard extends StatefulWidget {
   final CardModel card;
+  final ValueListenable<bool> speaking;
   final VoidCallback onTap;
 
-  const _MagicCard({super.key, required this.card, required this.onTap});
+  const _MagicCard({
+    super.key,
+    required this.card,
+    required this.speaking,
+    required this.onTap,
+  });
+
+  @override
+  State<_MagicCard> createState() => _MagicCardState();
+}
+
+/// The one tappable thing on the screen has to look tappable: a slow
+/// breathing pulse invites the tap, a press-scale answers it, and the word
+/// pulses while the clip plays so a muted phone still shows "it worked".
+/// Before this the mascot moved and the card sat still (audit #1).
+class _MagicCardState extends State<_MagicCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _breath;
+  bool _pressed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _breath = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _breath.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final card = widget.card;
+    final wordColor = DT.onTint(card.colorAccent);
     return GestureDetector(
-      onTap: onTap,
+      onTap: widget.onTap,
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final w = (constraints.maxWidth * 0.85).clamp(220.0, 280.0);
+          // Fill the space it is given: ~85% of the width, but never so
+          // tall that the tap target loses the centre of the screen.
+          final byWidth = constraints.maxWidth * 0.85;
+          final byHeight = constraints.maxHeight * 0.92 * (280 / 320);
+          final w = math.min(byWidth, byHeight).clamp(220.0, 340.0);
           final h = w * (320 / 280);
-          return SizedBox(
-            width: w,
-            height: h,
-            child: Container(
-              decoration: BoxDecoration(
-                color: card.colorBg,
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(color: card.colorAccent, width: 3),
-                boxShadow: DT.shadowSoft(card.colorAccent),
-              ),
-              child: Column(
-                children: [
-                  Expanded(
-                    flex: 4,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: card.image != null
-                          ? Image(
-                              image: AssetPackService.instance
-                                  .cardImage(card.image),
-                              fit: BoxFit.contain,
-                              errorBuilder: (_, __, ___) => Center(
+          return AnimatedBuilder(
+            animation: _breath,
+            builder: (context, child) {
+              final breath = 1.0 + 0.04 * Curves.easeInOut.transform(_breath.value);
+              final scale = _pressed ? DT.pressScale : breath;
+              return AnimatedScale(
+                scale: scale,
+                duration: DT.pressMs,
+                curve: Curves.easeOut,
+                child: child,
+              );
+            },
+            child: SizedBox(
+              width: w,
+              height: h,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: card.colorBg,
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(color: card.colorAccent, width: 3),
+                  boxShadow: DT.shadowSoft(card.colorAccent),
+                ),
+                child: Column(
+                  children: [
+                    Expanded(
+                      flex: 4,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: card.image != null
+                            ? Image(
+                                image: AssetPackService.instance
+                                    .cardImage(card.image),
+                                fit: BoxFit.contain,
+                                errorBuilder: (_, __, ___) => Center(
+                                  child: Text(card.emoji,
+                                      style: const TextStyle(fontSize: 120)),
+                                ),
+                              )
+                            : Center(
                                 child: Text(card.emoji,
                                     style: const TextStyle(fontSize: 120)),
                               ),
-                            )
-                          : Center(
-                              child: Text(card.emoji,
-                                  style: const TextStyle(fontSize: 120)),
-                            ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
-                    child: Text(
-                      card.sound,
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: responsiveFont(context, 32),
-                        fontWeight: FontWeight.w900,
-                        color: card.colorAccent,
-                        letterSpacing: 0.5,
                       ),
                     ),
-                  ),
-                ],
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
+                      child: ValueListenableBuilder<bool>(
+                        valueListenable: widget.speaking,
+                        builder: (context, speaking, child) => AnimatedScale(
+                          scale: speaking ? 1.08 : 1.0,
+                          duration: const Duration(milliseconds: 220),
+                          curve: Curves.easeOut,
+                          child: child,
+                        ),
+                        child: Text(
+                          card.sound,
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: responsiveFont(context, 32),
+                            fontWeight: FontWeight.w900,
+                            color: wordColor,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
@@ -920,120 +1007,6 @@ class _ProgressDots extends StatelessWidget {
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         );
       }),
-    );
-  }
-}
-
-class _CelebrationOverlay extends ConsumerStatefulWidget {
-  final bool isEn;
-  final String childName;
-  final VoidCallback onContinue;
-
-  const _CelebrationOverlay({
-    required this.isEn,
-    required this.childName,
-    required this.onContinue,
-  });
-
-  @override
-  ConsumerState<_CelebrationOverlay> createState() =>
-      _CelebrationOverlayState();
-}
-
-class _CelebrationOverlayState extends ConsumerState<_CelebrationOverlay>
-    with ConfettiOverlayMixin {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      showConfetti(linger: const Duration(milliseconds: 2200));
-    });
-  }
-
-  @override
-  void dispose() {
-    disposeConfetti();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final name = widget.childName;
-    final title = widget.isEn
-        ? (name.isEmpty ? 'You did it! 🎉' : 'You did it, $name! 🎉')
-        : (name.isEmpty ? 'Молодець! 🎉' : 'Молодець, $name! 🎉');
-    final subtitle = widget.isEn
-        ? 'You learned 3 new words!'
-        : 'Ти вивчив 3 нових слова!';
-
-    return Positioned.fill(
-      child: ColoredBox(
-        color: Colors.black.withValues(alpha: 0.45),
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
-            child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(28),
-                boxShadow: DT.shadowLift(kAccent),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const BloomMascot(size: 96, emotion: BloomEmotion.waving),
-                  const SizedBox(height: 16),
-                  Text(
-                    title,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: responsiveFont(context, 24),
-                      fontWeight: FontWeight.w900,
-                      color: DT.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    subtitle,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: responsiveFont(context, 15),
-                      color: Colors.grey[700],
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        HapticFeedback.mediumImpact();
-                        widget.onContinue();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: kAccent,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18)),
-                        elevation: 0,
-                      ),
-                      child: Text(
-                        widget.isEn ? 'Continue →' : 'Далі →',
-                        style: TextStyle(
-                            fontSize: responsiveFont(context, 17),
-                            fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
