@@ -202,10 +202,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Progress dots — not on the magic moment, which has its own
-            // three card dots; two rows of dots read as two progress bars
-            // (audit #4).
-            if (!hideCta) Padding(
+            // Progress dots — faded out on the magic moment, which has its
+            // own three card dots; two rows of dots read as two progress bars
+            // (audit #4). Faded, not removed: dropping this child shifts the
+            // PageView's slot in the Column and Flutter rebuilds it from page
+            // zero, right as the flow advances.
+            AnimatedOpacity(
+              opacity: hideCta ? 0 : 1,
+              duration: const Duration(milliseconds: 200),
+              child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 20),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -222,6 +227,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   ),
                 )),
               ),
+            ),
             ),
 
             // Pages
