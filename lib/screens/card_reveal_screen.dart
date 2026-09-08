@@ -9,6 +9,7 @@ import '../models/pack_model.dart';
 import '../providers/language_provider.dart';
 import '../services/audio_service.dart';
 import '../utils/l10n.dart';
+import '../services/asset_pack_service.dart';
 
 /// Full-screen card reveal with celebration effects.
 class CardRevealScreen extends ConsumerStatefulWidget {
@@ -430,8 +431,8 @@ class _CardRevealScreenState extends ConsumerState<CardRevealScreen>
           if (card.image != null)
             SizedBox(
               height: 120,
-              child: Image.asset(
-                'assets/images/webp/${card.image}.webp',
+              child: Image(
+                image: AssetPackService.instance.cardImage(card.image),
                 fit: BoxFit.contain,
                 errorBuilder: (_, __, ___) =>
                     Text(card.emoji, style: const TextStyle(fontSize: 72)),

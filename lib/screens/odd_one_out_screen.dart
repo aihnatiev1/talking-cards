@@ -14,6 +14,7 @@ import '../utils/game_state_mixin.dart';
 import '../utils/l10n.dart';
 import '../utils/shake_animation_mixin.dart';
 import '../widgets/game_celebration_overlay.dart';
+import '../services/asset_pack_service.dart';
 
 class OddOneOutScreen extends ConsumerStatefulWidget {
   final List<PackModel> packs;
@@ -270,8 +271,8 @@ class _HintThumb extends StatelessWidget {
         ),
       ),
       child: card.image != null
-          ? Image.asset(
-              'assets/images/webp/${card.image}.webp',
+          ? Image(
+              image: AssetPackService.instance.cardImage(card.image),
               fit: BoxFit.contain,
             )
           : DecoratedBox(
@@ -337,8 +338,8 @@ class _CardChip extends StatelessWidget {
                 if (card.image != null)
                   SizedBox(
                     height: 70,
-                    child: Image.asset(
-                      'assets/images/webp/${card.image}.webp',
+                    child: Image(
+                      image: AssetPackService.instance.cardImage(card.image),
                       fit: BoxFit.contain,
                     ),
                   )

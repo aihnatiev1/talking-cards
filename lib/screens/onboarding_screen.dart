@@ -19,6 +19,7 @@ import '../utils/constants.dart';
 import '../utils/design_tokens.dart';
 import '../widgets/bloom_mascot.dart';
 import 'home_screen.dart';
+import '../services/asset_pack_service.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -853,8 +854,9 @@ class _MagicCard extends StatelessWidget {
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: card.image != null
-                          ? Image.asset(
-                              'assets/images/webp/${card.image}.webp',
+                          ? Image(
+                              image: AssetPackService.instance
+                                  .cardImage(card.image),
                               fit: BoxFit.contain,
                               errorBuilder: (_, __, ___) => Center(
                                 child: Text(card.emoji,

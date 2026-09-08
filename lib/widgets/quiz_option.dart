@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/card_model.dart';
 import '../utils/constants.dart';
 import '../utils/image_cache_size.dart';
+import '../services/asset_pack_service.dart';
 
 class QuizOption extends StatefulWidget {
   final CardModel card;
@@ -129,10 +130,12 @@ class _QuizOptionState extends State<QuizOption>
                   child: widget.card.image != null
                       ? Padding(
                           padding: const EdgeInsets.all(4),
-                          child: Image.asset(
-                            'assets/images/webp/${widget.card.image}.webp',
+                          child: Image(
+                            image: AssetPackService.instance.cardImage(
+                              widget.card.image,
+                              cacheWidth: tileCacheWidth(context),
+                            ),
                             fit: BoxFit.contain,
-                            cacheWidth: tileCacheWidth(context),
                           ),
                         )
                       : Container(

@@ -16,6 +16,7 @@ import '../services/paywall_flow.dart';
 import '../utils/confetti_overlay_mixin.dart';
 import '../utils/constants.dart';
 import '../utils/l10n.dart';
+import '../services/asset_pack_service.dart';
 
 /// Water-reveal coloring screen.
 ///
@@ -169,8 +170,7 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
 
   Future<void> _loadImage(CardModel card) async {
     final gen = ++_loadGen;
-    final data =
-        await rootBundle.load('assets/images/webp/${card.image}.webp');
+    final data = await AssetPackService.instance.cardImageBytes(card.image);
     final codec = await ui.instantiateImageCodec(
       data.buffer.asUint8List(),
     );

@@ -16,6 +16,7 @@ import '../services/audio_service.dart';
 import '../utils/confetti_overlay_mixin.dart';
 import '../utils/l10n.dart';
 import '../widgets/game_celebration_overlay.dart';
+import '../services/asset_pack_service.dart';
 
 // ─────────────────────────────────────────────
 //  Data
@@ -565,8 +566,8 @@ class _FrontFace extends StatelessWidget {
           if (tile.card.image != null)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Image.asset(
-                'assets/images/webp/${tile.card.image}.webp',
+              child: Image(
+                image: AssetPackService.instance.cardImage(tile.card.image),
                 height: 58,
                 fit: BoxFit.contain,
               ),

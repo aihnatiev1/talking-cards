@@ -16,6 +16,8 @@ import '../screens/repeat_game_screen.dart';
 import '../services/audio_service.dart';
 import '../services/paywall_flow.dart';
 import '../utils/design_tokens.dart';
+import '../services/asset_pack_service.dart';
+import '../providers/content_pack_provider.dart';
 
 /// Smooth fade+scale transition for games.
 Route<T> _gameRoute<T>(Widget page) => PageRouteBuilder<T>(
@@ -179,8 +181,13 @@ class _GamesTabState extends ConsumerState<GamesTab> {
         data: (packs) {
           // Word-based games (Guess, Memory, thumbnails) must not pull cards
           // from phrase/verse/babble packs, or a poem plays instead of a word.
+          // …nor from paid packs whose illustrations are still arriving via
+          // the Play asset pack — a game with blank tiles is worse than a
+          // game with fewer cards.
+          final contentReady = ref.watch(contentPackProvider).isReady;
           final allCards = packs
               .where((p) => !PackModel.nonWordPackIds.contains(p.id))
+              .where((p) => contentReady || p.isFree)
               .expand((p) => p.cards)
               .toList();
           final playableCount = isEn
@@ -510,8 +517,9 @@ class _BigGameTileState extends State<_BigGameTile> {
                               child: g.thumb?.image != null
                                   ? Padding(
                                       padding: const EdgeInsets.all(14),
-                                      child: Image.asset(
-                                        'assets/images/webp/${g.thumb!.image}.webp',
+                                      child: Image(
+                                        image: AssetPackService.instance
+                                            .cardImage(g.thumb!.image),
                                         fit: BoxFit.contain,
                                       ),
                                     )

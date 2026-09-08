@@ -7,6 +7,8 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:audio_session/audio_session.dart';
 
+import 'asset_pack_service.dart';
+
 /// Maps card image key (kirilic) to latin wav filename
 const _audioMap = {
   // Розмовлялки
@@ -568,10 +570,13 @@ class AudioService {
     final file = _audioMap[audioKey] ?? audioKey;
     return _pendingLoads.putIfAbsent(file, () async {
       try {
-        final source = await _soloud.loadAsset(
-          'assets/audio_mp3/$file.mp3',
-          mode: LoadMode.disk,
-        );
+        // Paid-pack clips may live in the Play asset pack rather than the
+        // bundle; the service says which. Either way the decode stays on
+        // disk — see the class comment on why nothing is held in RAM.
+        final where = AssetPackService.instance.audioSource(file);
+        final source = where.isFile
+            ? await _soloud.loadFile(where.path, mode: LoadMode.disk)
+            : await _soloud.loadAsset(where.path, mode: LoadMode.disk);
         _sources[file] = source;
         // Also cache under every Cyrillic alias pointing at this file.
         for (final entry in _audioMap.entries) {

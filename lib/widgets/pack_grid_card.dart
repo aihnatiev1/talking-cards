@@ -6,8 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
+import '../providers/content_pack_provider.dart';
 import '../utils/design_tokens.dart';
 import '../utils/image_cache_size.dart';
+import '../services/asset_pack_service.dart';
 
 class PackGridCard extends ConsumerStatefulWidget {
   final PackModel pack;
@@ -106,6 +108,10 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
     final hasProgress = widget.progress > 0 && !widget.isCompleted;
     final thumb = _thumb();
     final accent = pack.color;
+    // An owned paid pack whose illustrations are still arriving from Play.
+    final downloading = !pack.isLocked &&
+        !pack.isFree &&
+        !ref.watch(contentPackProvider).isReady;
 
     Widget tile = GestureDetector(
       onTapDown: (_) => setState(() => _pressed = true),
@@ -152,16 +158,21 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
                       children: [
                         Positioned.fill(
                           child: pack.cover != null
-                              ? Image.asset(
-                                  'assets/images/webp/${pack.cover}.webp',
+                              ? Image(
+                                  image: AssetPackService.instance.cardImage(
+                                    pack.cover,
+                                    cacheWidth: tileCacheWidth(context),
+                                  ),
                                   fit: BoxFit.contain,
-                                  cacheWidth: tileCacheWidth(context),
                                 )
                               : thumb?.image != null
-                                  ? Image.asset(
-                                      'assets/images/webp/${thumb!.image}.webp',
+                                  ? Image(
+                                      image: AssetPackService.instance
+                                          .cardImage(
+                                        thumb!.image,
+                                        cacheWidth: tileCacheWidth(context),
+                                      ),
                                       fit: BoxFit.contain,
-                                      cacheWidth: tileCacheWidth(context),
                                     )
                                   : Center(
                                       child: FittedBox(
@@ -177,7 +188,8 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
                         // Status badge (top-right)
                         if (widget.isCompleted ||
                             pack.isLocked ||
-                            widget.isSeasonal)
+                            widget.isSeasonal ||
+                            downloading)
                           Positioned(
                             top: 6,
                             right: 6,
@@ -185,6 +197,7 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
                               completed: widget.isCompleted,
                               locked: pack.isLocked,
                               seasonal: widget.isSeasonal,
+                              downloading: downloading,
                               accent: accent,
                             ),
                           ),
@@ -277,12 +290,15 @@ class _StatusBadge extends StatelessWidget {
   final bool completed;
   final bool locked;
   final bool seasonal;
+  /// Unlocked paid pack whose content is still arriving from Play.
+  final bool downloading;
   final Color accent;
 
   const _StatusBadge({
     required this.completed,
     required this.locked,
     required this.seasonal,
+    this.downloading = false,
     required this.accent,
   });
 
@@ -301,6 +317,13 @@ class _StatusBadge extends StatelessWidget {
       bg = const Color(0xFF22C55E); // clean kid-friendly green
     } else if (locked) {
       child = Icon(Icons.lock_rounded, size: 15, color: accent);
+      bg = DT.surfaceWhite;
+    } else if (downloading) {
+      child = SizedBox(
+        width: 15,
+        height: 15,
+        child: CircularProgressIndicator(strokeWidth: 2.5, color: accent),
+      );
       bg = DT.surfaceWhite;
     } else {
       child = const Text('✨', style: TextStyle(fontSize: 14));

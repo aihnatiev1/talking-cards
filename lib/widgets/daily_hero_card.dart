@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../utils/constants.dart';
 import '../utils/design_tokens.dart';
+import '../services/asset_pack_service.dart';
 
 /// One secondary step of today's plan, rendered as a compact button under the
 /// hero. Replaces the old free-standing "stone" in Today's Plan strip.
@@ -154,10 +155,21 @@ class _DailyHeroCardState extends State<DailyHeroCard>
                   child: widget.image != null
                       ? Padding(
                           padding: const EdgeInsets.all(6),
-                          child: Image.asset(
-                            'assets/images/webp/${widget.image}.webp',
+                          child: Image(
+                            image: AssetPackService.instance.cardImage(
+                              widget.image,
+                            ),
                             height: heroHeight - 12,
                             fit: BoxFit.contain,
+                            // Card-of-the-day may be paid content that the
+                            // asset pack has not delivered yet.
+                            errorBuilder: (_, __, ___) => FittedBox(
+                              fit: BoxFit.contain,
+                              child: Text(
+                                widget.fallbackEmoji,
+                                style: const TextStyle(fontSize: 44),
+                              ),
+                            ),
                           ),
                         )
                       : FittedBox(
@@ -438,9 +450,7 @@ class _TaskButtonState extends State<_TaskButton>
                         fontWeight: FontWeight.w700,
                         color: t.isDone
                             ? DT.success
-                            : (active || next
-                                ? DT.textPrimary
-                                : DT.textMuted),
+                            : (active || next ? DT.textPrimary : DT.textMuted),
                       ),
                     ),
                   ),

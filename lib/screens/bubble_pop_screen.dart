@@ -20,6 +20,7 @@ import '../utils/constants.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../widgets/bloom_mascot.dart';
+import '../services/asset_pack_service.dart';
 
 /// Pop-It-style sensory toy:
 /// bubbles drift up from the bottom, child taps to pop, the card image inside
@@ -629,8 +630,9 @@ class _LiveBubbleVisual extends StatelessWidget {
               child: Padding(
                 padding: EdgeInsets.all(size * 0.18),
                 child: bubble.card.image != null
-                    ? Image.asset(
-                        'assets/images/webp/${bubble.card.image}.webp',
+                    ? Image(
+                        image: AssetPackService.instance
+                            .cardImage(bubble.card.image),
                         fit: BoxFit.contain,
                       )
                     : const SizedBox.shrink(),
@@ -878,8 +880,8 @@ class _CardInside extends StatelessWidget {
                 child: SizedBox(
                   width: boxSize * 0.64,
                   height: boxSize * 0.64,
-                  child: Image.asset(
-                    'assets/images/webp/${card.image}.webp',
+                  child: Image(
+                    image: AssetPackService.instance.cardImage(card.image),
                     fit: BoxFit.contain,
                   ),
                 ),

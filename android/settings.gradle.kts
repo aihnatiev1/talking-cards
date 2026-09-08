@@ -20,6 +20,8 @@ pluginManagement {
 plugins {
     id("dev.flutter.flutter-plugin-loader") version "1.0.0"
     id("com.android.application") version "8.11.1" apply false
+    // Play Asset Delivery pack module (android/content_pack); same version as AGP.
+    id("com.android.asset-pack") version "8.11.1" apply false
     // START: FlutterFire Configuration
     id("com.google.gms.google-services") version("4.4.2") apply false
     id("com.google.firebase.crashlytics") version("3.0.2") apply false
@@ -28,3 +30,4 @@ plugins {
 }
 
 include(":app")
+include(":content_pack")

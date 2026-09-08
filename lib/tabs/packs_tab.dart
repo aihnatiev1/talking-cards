@@ -45,6 +45,7 @@ import '../widgets/parental_gate.dart';
 import '../widgets/profile_avatar_chip.dart';
 import '../widgets/streak_chip.dart';
 import '../widgets/streak_milestone_overlay.dart';
+import '../services/asset_pack_service.dart';
 
 class PacksTab extends ConsumerStatefulWidget {
   const PacksTab({super.key});
@@ -275,8 +276,8 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                   if (card.image != null)
                     SizedBox(
                       height: 140,
-                      child: Image.asset(
-                        'assets/images/webp/${card.image}.webp',
+                      child: Image(
+                        image: AssetPackService.instance.cardImage(card.image),
                         fit: BoxFit.contain,
                       ),
                     )

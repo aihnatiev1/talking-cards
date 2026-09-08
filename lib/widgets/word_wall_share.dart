@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import '../models/card_model.dart';
 import '../utils/constants.dart';
 import 'share_progress_card.dart' show renderWidgetToImage;
+import '../services/asset_pack_service.dart';
 
 /// Direct store link for the sender's platform (see share_progress_card.dart).
 final String _storeUrl = Platform.isIOS
@@ -182,8 +183,8 @@ class _PreviewTile extends StatelessWidget {
         child: card.image != null
             ? ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.asset(
-                  'assets/images/webp/${card.image}.webp',
+                child: Image(
+                  image: AssetPackService.instance.cardImage(card.image),
                   width: 56,
                   height: 56,
                   fit: BoxFit.cover,

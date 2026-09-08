@@ -61,3 +61,9 @@ flutter:
     - assets/images/webp/
     - assets/audio_mp3/
     - assets/audio_sfx/
+    # Paid-pack content. Bundled on iOS/debug; the Android app bundle strips
+    # it from base and ships it as the `content_pack` Play asset pack — see
+    # tools/pad_split.py and lib/services/asset_pack_service.dart.
+    - assets/pad_content/
+    - assets/pad_content/images/webp/
+    - assets/pad_content/audio_mp3/

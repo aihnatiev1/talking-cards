@@ -9,6 +9,7 @@ import '../providers/favorites_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../utils/image_cache_size.dart';
+import '../services/asset_pack_service.dart';
 
 class FlashCard extends ConsumerStatefulWidget {
   final CardModel card;
@@ -236,12 +237,14 @@ class _FlashCardState extends ConsumerState<FlashCard>
                     : widget.card.image != null
                         ? Padding(
                             padding: const EdgeInsets.all(12),
-                            child: Image.asset(
-                              'assets/images/webp/${widget.card.image}.webp',
+                            child: Image(
+                              image: AssetPackService.instance.cardImage(
+                                widget.card.image,
+                                cacheWidth: cardCacheWidth(context),
+                              ),
                               fit: BoxFit.contain,
                               width: double.infinity,
                               height: double.infinity,
-                              cacheWidth: cardCacheWidth(context),
                             ),
                           )
                         : Center(
@@ -370,12 +373,14 @@ class _FlashCardState extends ConsumerState<FlashCard>
             child: widget.card.image != null
                 ? Padding(
                     padding: const EdgeInsets.all(20),
-                    child: Image.asset(
-                      'assets/images/webp/${widget.card.image}.webp',
+                    child: Image(
+                      image: AssetPackService.instance.cardImage(
+                        widget.card.image,
+                        cacheWidth: cardCacheWidth(context),
+                      ),
                       fit: BoxFit.contain,
                       width: double.infinity,
                       height: double.infinity,
-                      cacheWidth: cardCacheWidth(context),
                     ),
                   )
                 : Center(

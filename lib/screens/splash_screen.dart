@@ -16,6 +16,7 @@ import '../services/notification_service.dart';
 import '../services/purchase_service.dart';
 import 'home_screen.dart';
 import 'onboarding_screen.dart';
+import '../services/asset_pack_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -132,6 +133,9 @@ class _SplashScreenState extends State<SplashScreen>
       _guard('purchase', () => PurchaseService.instance.init()),
       _guard('audio', () => AudioService.instance.precache()),
       _guard('notifications', () => NotificationService.instance.init()),
+      // Learns whether paid-pack content is bundled or arriving via Play;
+      // a slow answer must not hold the splash, hence the same guard.
+      _guard('assetPack', () => AssetPackService.instance.init()),
     ]);
 
     // Schedule day-3 soft paywall reminder for non-pro users; cancel for pro.

@@ -16,6 +16,7 @@ import '../utils/game_state_mixin.dart';
 import '../utils/l10n.dart';
 import '../utils/shake_animation_mixin.dart';
 import '../widgets/game_celebration_overlay.dart';
+import '../services/asset_pack_service.dart';
 
 class RepeatGameScreen extends ConsumerStatefulWidget {
   final List<CardModel> cards;
@@ -264,8 +265,9 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
                               child: Padding(
                                 padding:
                                     const EdgeInsets.symmetric(horizontal: 8),
-                                child: Image.asset(
-                                  'assets/images/webp/${card.image}.webp',
+                                child: Image(
+                                  image: AssetPackService.instance
+                                      .cardImage(card.image),
                                   fit: BoxFit.contain,
                                 ),
                               ),

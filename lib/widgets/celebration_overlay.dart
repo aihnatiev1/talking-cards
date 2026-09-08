@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../utils/constants.dart';
 import '../utils/l10n.dart';
+import '../services/asset_pack_service.dart';
 
 /// Full-screen celebration overlay with falling stars and confetti.
 ///
@@ -119,8 +120,9 @@ class _CelebrationOverlayState extends State<CelebrationOverlay>
                         SizedBox(
                           height: 96,
                           width: 96,
-                          child: Image.asset(
-                            'assets/images/webp/${widget.packCover}.webp',
+                          child: Image(
+                            image: AssetPackService.instance
+                                .cardImage(widget.packCover),
                             fit: BoxFit.contain,
                             errorBuilder: (_, __, ___) => Text(
                               widget.packIcon,

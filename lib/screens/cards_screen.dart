@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
 import '../providers/bonus_cards_provider.dart';
+import '../providers/content_pack_provider.dart';
 import '../providers/app_review_provider.dart';
 import '../providers/daily_quest_provider.dart';
 import '../providers/daily_stats_provider.dart';
@@ -18,11 +19,13 @@ import '../providers/review_provider.dart';
 import '../providers/streak_provider.dart';
 import '../providers/language_provider.dart';
 import '../services/analytics_service.dart';
+import '../services/asset_pack_service.dart';
 import '../services/audio_service.dart';
 import '../services/engage_service.dart';
 import '../utils/l10n.dart';
 import '../services/paywall_flow.dart';
 import '../widgets/celebration_overlay.dart';
+import '../widgets/content_download_view.dart';
 import '../widgets/flash_card.dart';
 import '../widgets/share_progress_card.dart';
 import '../widgets/speaker_button.dart';
@@ -45,6 +48,8 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   Timer? _speakDebounce;
   bool _imagesPrecached = false;
   late final List<CardModel> _cards;
+  /// Whether any card on this screen lives in the Play asset pack.
+  late final bool _needsContent;
   final GlobalKey<SwipeHintState> _swipeHintKey = GlobalKey();
 
   // Prevents dispose() from killing audio when navigating to "Play again"
@@ -77,6 +82,9 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
       visibleCards.shuffle(Random());
     }
     _cards = visibleCards;
+    _needsContent = _cards
+        .any((c) => AssetPackService.instance.needsDownload(c.image));
+    if (_needsContent) unawaited(AssetPackService.instance.fetch());
 
     // Restart auto-play countdown when mute is toggled
     _muteListener = () {
@@ -124,10 +132,8 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
         // ResizeImage params must match FlashCard's cacheWidth so both hit
         // the same image-cache entry instead of decoding twice.
         precacheImage(
-          ResizeImage(
-            AssetImage('assets/images/webp/$image.webp'),
-            width: cardCacheWidth(context),
-          ),
+          AssetPackService.instance
+              .cardImage(image, cacheWidth: cardCacheWidth(context)),
           context,
         );
       }
@@ -478,6 +484,34 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     final allCards = widget.pack.cards;
     final progress = (_currentIndex + 1) / cards.length;
     final s = AppS(ref.read(languageProvider) == 'en');
+
+    // Paid-pack content may still be arriving from Play (fast-follow asset
+    // pack). Gating here, not at the tap, covers every way into a pack —
+    // grid, hero, quest, deep link — and swaps to the cards the moment the
+    // download lands.
+    final content = ref.watch(contentPackProvider);
+    if (!content.isReady && _needsContent) {
+      ref.listen<ContentPackState>(contentPackProvider, (_, next) {
+        if (next.isReady && mounted && AudioService.instance.autoSpeak.value) {
+          _speakCurrentCard();
+        }
+      });
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back_ios, color: widget.pack.color),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ),
+        body: ContentDownloadView(
+          state: content,
+          accent: widget.pack.color,
+          isEn: s.isEn,
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
