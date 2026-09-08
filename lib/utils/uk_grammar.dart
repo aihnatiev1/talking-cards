@@ -15,3 +15,14 @@ String dayWord(int n) {
   if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'дні';
   return 'днів';
 }
+
+/// Ukrainian grammar helper for «розділ» — the UI's word for a pack.
+String packWord(int n) {
+  final mod10 = n % 10;
+  final mod100 = n % 100;
+  if (mod10 == 1 && mod100 != 11) return 'розділ';
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
+    return 'розділи';
+  }
+  return 'розділів';
+}

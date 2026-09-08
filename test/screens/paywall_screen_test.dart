@@ -1,29 +1,76 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talking_cards/models/pack_model.dart';
+import 'package:talking_cards/models/profile_model.dart';
 import 'package:talking_cards/providers/packs_provider.dart';
+import 'package:talking_cards/providers/profile_provider.dart';
 import 'package:talking_cards/screens/paywall_screen.dart';
+import 'package:talking_cards/services/profile_service.dart';
 import 'package:talking_cards/services/purchase_service.dart';
 
 /// Widget tests for the current paywall. Firebase isn't initialized in the
 /// test environment — RemoteConfigService falls back to its baked-in
 /// defaults, so RC-driven strings assert the default copy.
 void main() {
-  Widget createPaywallApp() {
+  Widget createPaywallApp({
+    List<Override> overrides = const [],
+    bool isOnboarding = false,
+  }) {
     return ProviderScope(
+      overrides: overrides,
       child: MaterialApp(
-        home: const PaywallScreen(),
+        home: PaywallScreen(isOnboarding: isOnboarding),
       ),
     );
   }
 
+  /// A catalogue of [n] packs, so the copy's number is under the test's
+  /// control rather than whatever the bundled JSON happens to hold today.
+  Override packsOf(int n) => packsProvider.overrideWith(
+        (ref) async => List.generate(
+          n,
+          (i) => PackModel(
+            id: 'p$i',
+            title: 'Pack $i',
+            icon: '🐶',
+            color: const Color(0xFF000000),
+            isLocked: true,
+            isFree: false,
+            cards: const [],
+          ),
+        ),
+      );
+
+  /// An active profile as onboarding would have saved it; [language] also
+  /// drives [languageProvider], so 'en' renders the English paywall.
+  Override profileNamed(String name, {String language = 'uk'}) =>
+      profileProvider.overrideWith(
+        (ref) => ProfileNotifier(ref, [
+          ProfileModel(
+            id: ProfileService.activeId,
+            name: name,
+            avatarEmoji: '👶',
+            createdAt: DateTime(2026),
+            language: language,
+          ),
+        ]),
+      );
+
   /// Pumps the paywall and advances past its 3-second close-button delay
   /// so no timer is left pending at teardown.
-  Future<void> pumpPaywall(WidgetTester tester) async {
-    await tester.pumpWidget(createPaywallApp());
+  Future<void> pumpPaywall(
+    WidgetTester tester, {
+    List<Override> overrides = const [],
+    bool isOnboarding = false,
+  }) async {
+    await tester.pumpWidget(
+        createPaywallApp(overrides: overrides, isOnboarding: isOnboarding));
     await tester.pump(const Duration(seconds: 3));
     // Let the catalogue load give up: there is no billing client here, and
     // the CTA spins until the store answers or the budget runs out.
@@ -61,13 +108,91 @@ void main() {
 
   group('PaywallScreen', () {
     testWidgets('renders headline and benefits', (tester) async {
-      await pumpPaywall(tester);
+      await pumpPaywall(tester, overrides: [packsOf(3)]);
 
       // RC-default headline (no child profile in tests → non-personalized)
       expect(find.text('Розблокуй всі картки!'), findsOneWidget);
-      expect(find.textContaining('19 розділів'), findsOneWidget);
+      expect(find.text('3 розділи для розвитку'), findsOneWidget);
       expect(find.textContaining('400+ яскравих карток'), findsOneWidget);
       expect(find.textContaining('Нові розділи'), findsOneWidget);
+    });
+
+    testWidgets('the pack count is the catalogue\'s, correctly declined',
+        (tester) async {
+      // Two literals on this screen used to disagree (19 vs 21) while the
+      // app shipped neither. 21 is also the awkward Ukrainian case: a
+      // numeral ending in 1 takes the singular.
+      await pumpPaywall(tester, overrides: [packsOf(21)]);
+
+      expect(find.text('21 розділ для розвитку'), findsOneWidget);
+      expect(find.textContaining('19'), findsNothing);
+    });
+
+    testWidgets('no catalogue yet means no number, not a stale one',
+        (tester) async {
+      // A load that never settles: the first frame on a cold start, or an
+      // asset failure. Either way the copy must not invent a count.
+      await pumpPaywall(tester, overrides: [
+        packsProvider
+            .overrideWith((ref) => Completer<List<PackModel>>().future),
+      ]);
+
+      expect(find.text('Розділи на кожну тему'), findsOneWidget);
+      expect(find.textContaining('розділів для розвитку'), findsNothing);
+    });
+
+    testWidgets('the EN placeholder name "Kid" is not personalised',
+        (tester) async {
+      // Onboarding saves 'Kid' when the EN parent skips the name field —
+      // the same placeholder as «Малюк», and it used to open the paywall
+      // with "Kid's learning plan (age 2–3)".
+      await pumpPaywall(tester,
+          overrides: [profileNamed('Kid', language: 'en'), packsOf(21)]);
+
+      expect(find.text('Unlock full potential'), findsOneWidget);
+      expect(find.textContaining("Kid's"), findsNothing);
+    });
+
+    testWidgets('a real EN name still personalises the headline',
+        (tester) async {
+      await pumpPaywall(tester,
+          overrides: [profileNamed('Mia', language: 'en'), packsOf(21)]);
+
+      // Prefix only: the age suffix is glued with an NBSP by design.
+      expect(find.textContaining("Mia's learning plan"), findsOneWidget);
+    });
+
+    testWidgets('EN social proof names no storefront', (tester) async {
+      // "5.0 on the Ukrainian App Store" made a US parent read the offer
+      // as someone else's. The number and the review stay real.
+      await pumpPaywall(tester,
+          isOnboarding: true,
+          overrides: [profileNamed('Kid', language: 'en'), packsOf(21)]);
+
+      expect(find.text('Rated 5.0 by parents'), findsOneWidget);
+      expect(find.textContaining('App Store review (translated)'),
+          findsOneWidget);
+      expect(find.textContaining('Ukrain'), findsNothing);
+    });
+
+    testWidgets('the onboarding skip link reads as a real choice',
+        (tester) async {
+      // 13sp grey under the CTA looked like fine print; with the X hidden
+      // for 3s a parent saw no way out and killed the app.
+      await pumpPaywall(tester, isOnboarding: true, overrides: [packsOf(21)]);
+
+      final label = find.text('Продовжити з безкоштовними розділами');
+      expect(label, findsOneWidget);
+      final style = tester.widget<Text>(label).style;
+      expect(style?.fontSize, greaterThanOrEqualTo(16));
+      expect(style?.fontWeight, FontWeight.w700);
+
+      final button =
+          find.ancestor(of: label, matching: find.byType(TextButton));
+      final size = tester.getSize(button);
+      expect(size.height, greaterThanOrEqualTo(56));
+      // Full width inside the CTA column's 28dp side padding (800dp surface).
+      expect(size.width, greaterThanOrEqualTo(700));
     });
 
     testWidgets('shows two fallback plan options', (tester) async {

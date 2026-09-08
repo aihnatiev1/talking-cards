@@ -82,7 +82,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     final name = ref.read(profileProvider).active?.name.trim() ?? '';
     final variant = _learnedCount >= _minLearnedForAnchor
         ? 'progress'
-        : (name.isNotEmpty && name != 'Малюк' ? 'personal' : 'generic');
+        : (_isRealName(name) ? 'personal' : 'generic');
     AnalyticsService.instance.logPaywallView(
       widget.isOnboarding ? 'paywall_onboarding' : 'paywall_screen',
       variant: variant,
@@ -214,13 +214,21 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     }).toList();
   }
 
+  /// Onboarding never blocks on the name field; an empty one is saved as
+  /// «Малюк» (UA) or 'Kid' (EN). Both are placeholders, and personalising
+  /// on either reads as a bug at the moment of payment — the EN paywall
+  /// used to open with "Kid's learning plan" and log variant='personal'
+  /// for an unnamed profile (audit #6). Same rule as the home greeting.
+  static bool _isRealName(String name) =>
+      name.isNotEmpty && name != 'Малюк' && name != 'Kid';
+
   /// "План для Софійки (2–3 р.)" beats a generic headline: the onboarding
   /// already collected the child's name and age — use them at the moment of
   /// highest intent. Falls back to the remote-config title when unnamed.
   String _headline(AppS s) {
     final profile = ref.watch(profileProvider).active;
     final name = profile?.name.trim() ?? '';
-    final hasName = name.isNotEmpty && name != 'Малюк';
+    final hasName = _isRealName(name);
 
     // Progress anchor for returning users: what the child already achieved
     // beats any generic promise. Nominative-only phrasing — no declension.
@@ -233,8 +241,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       );
     }
 
-    // 'Малюк' is the unnamed-profile placeholder, not a real name. The
-    // colon phrasing keeps the name in nominative case — no Ukrainian
+    // The colon phrasing keeps the name in nominative case — no Ukrainian
     // declension needed for arbitrary names.
     if (!hasName) {
       return s(RemoteConfigService.instance.paywallTitle,
@@ -339,6 +346,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     // a spent introductory offer, or the lifetime unlock.
     final trialDays =
         PurchaseService.instance.trialDaysFor(plans[_selectedIndex(plans)].productId);
+    // Null until the catalogue for the active language has loaded (or when
+    // it failed): the copy then names no number rather than a stale one.
+    final packCount = ref.watch(packsProvider).asData?.value.length;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Container(
@@ -385,7 +395,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 28),
                 child: Column(
                   children: [
-                    _trialBanner(context, s, trialDays),
+                    _trialBanner(context, s, trialDays, packCount),
                     const SizedBox(height: 18),
                     Text(
                       _headline(s),
@@ -399,10 +409,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    _benefit(
-                        Icons.grid_view_rounded,
-                        s('19 розділів для розвитку',
-                            '19 learning packs')),
+                    _benefit(Icons.grid_view_rounded,
+                        _packsBenefit(s, packCount)),
                     const SizedBox(height: 10),
                     _benefit(
                         Icons.volume_up_rounded,
@@ -583,24 +591,35 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                 color: Colors.grey[600],
                 fontWeight: FontWeight.w500),
           ),
-          // The escape hatch stays next to the CTA: a first-session offer must
-          // show both choices, not bury one below the fold.
+          // The escape hatch stays next to the CTA and has to read as a
+          // real choice, not fine print: at 13sp grey a parent holding a
+          // child saw no way out for the 3s the X is hidden and killed the
+          // app (audit #8). A parent control, so 56dp is enough; the X
+          // keeps its delay.
           if (widget.isOnboarding)
-            TextButton(
-              onPressed: _loading
-                  ? null
-                  : () {
-                      AnalyticsService.instance
-                          .logPaywallDismiss('paywall_onboarding_skip');
-                      Navigator.of(context).pop(false);
-                    },
-              child: Text(
-                s('Продовжити з безкоштовними розділами',
-                    'Continue with free packs'),
-                style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: responsiveFont(context, 13),
-                    fontWeight: FontWeight.w600),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: _loading
+                    ? null
+                    : () {
+                        AnalyticsService.instance
+                            .logPaywallDismiss('paywall_onboarding_skip');
+                        Navigator.of(context).pop(false);
+                      },
+                style: TextButton.styleFrom(
+                  foregroundColor: DT.textSecondary,
+                  minimumSize: const Size.fromHeight(56),
+                ),
+                child: Text(
+                  s('Продовжити з безкоштовними розділами',
+                      'Continue with free packs'),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      color: DT.textSecondary,
+                      fontSize: responsiveFont(context, 16),
+                      fontWeight: FontWeight.w700),
+                ),
               ),
             ),
         ],
@@ -765,9 +784,16 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
   /// The hero banner. [trialDays] is null when the store will not grant
   /// free days — the banner then sells the unlock itself instead of a gift
-  /// the native sheet is about to refuse.
-  Widget _trialBanner(BuildContext context, AppS s, int? trialDays) {
+  /// the native sheet is about to refuse. [packCount] follows the same rule
+  /// as the benefit list, so the screen quotes one number, not two.
+  Widget _trialBanner(
+      BuildContext context, AppS s, int? trialDays, int? packCount) {
     final isOnb = widget.isOnboarding;
+    final allPacks = packCount == null || packCount == 0
+        ? s('Усі розділи і всі ігри — скасуй будь-коли',
+            'Every pack and every game — cancel anytime')
+        : s('Усі $packCount ${packWord(packCount)} і всі ігри — скасуй будь-коли',
+            'All $packCount packs and every game — cancel anytime');
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
@@ -816,8 +842,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           const SizedBox(height: 4),
           Text(
             trialDays == null
-                ? s('Усі 21 пак і всі ігри — скасуй будь-коли',
-                    'All 21 packs and every game — cancel anytime')
+                ? allPacks
                 : isOnb
                     ? s('Подарунок для нових родин — скасуй будь-коли',
                         'A gift for new families — cancel anytime')
@@ -835,9 +860,12 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     );
   }
 
-  // Social proof must stay honest: only the verifiable Ukrainian App Store
-  // rating and a real review (translated for EN) — fabricated quotes or
-  // ratings are an App Review rejection risk and kill trust on inspection.
+  // Social proof must stay honest: the rating and the quote are the real
+  // Ukrainian App Store ones (the review translated for EN) — fabricated
+  // quotes or ratings are an App Review rejection risk and kill trust on
+  // inspection. The EN copy names no storefront, though: to a US parent
+  // "the Ukrainian App Store" read as someone else's market and made the
+  // offer look second-hand (audit #7). The number stays the verifiable one.
   Widget _testimonial(AppS s) {
     final card = _testimonialCard(
       s(
@@ -845,7 +873,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         '“Love this app, thank you!\nMy kid is obsessed 😍”',
       ),
       s('Оксана — App Store (Україна)',
-          'Oksana — App Store Ukraine, translated'),
+          'Oksana, App Store review (translated)'),
     );
     if (!widget.isOnboarding) return card;
     // Onboarding variant: rating line + quote
@@ -864,8 +892,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         ),
         const SizedBox(height: 4),
         Text(
-          s('5.0 із 5 — App Store (Україна)',
-              '5.0 on the Ukrainian App Store'),
+          s('5.0 із 5 — App Store (Україна)', 'Rated 5.0 by parents'),
           style: TextStyle(
             fontSize: responsiveFont(context, 13),
             color: Colors.grey[600],
@@ -926,6 +953,18 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         ],
       ),
     );
+  }
+
+  /// The pack count comes from the catalogue, not a literal: this screen
+  /// said "19 packs" here and "All 21 packs" in the banner while the app
+  /// shipped neither number (audit #7). With no catalogue yet (loading, an
+  /// asset failure) the line stays true by naming no number at all.
+  String _packsBenefit(AppS s, int? count) {
+    if (count == null || count == 0) {
+      return s('Розділи на кожну тему', 'Learning packs for every topic');
+    }
+    return s('$count ${packWord(count)} для розвитку',
+        '$count learning ${count == 1 ? 'pack' : 'packs'}');
   }
 
   Widget _benefit(IconData icon, String text) {
