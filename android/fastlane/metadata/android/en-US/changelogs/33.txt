@@ -1,0 +1,6 @@
+- A lighter app: the first download is half the size, the rest of the cards arrive in the background
+- Locked packs open right away: five cards free, and the offer only when you want more
+- A first session without extra pop-ups, cards in a steady order, bigger buttons with sound
+- Coloring: a "new picture" button and only friendly pictures
+
+Thanks for growing with us!
