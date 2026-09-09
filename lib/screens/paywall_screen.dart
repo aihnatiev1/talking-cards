@@ -22,7 +22,14 @@ class PaywallScreen extends ConsumerStatefulWidget {
   /// instead of relying on the close X (more honest UX for first-time users).
   final bool isOnboarding;
 
-  const PaywallScreen({super.key, this.isOnboarding = false});
+  /// Entry point, for `paywall_view.source` — see runPaywallFlow.
+  final String source;
+
+  const PaywallScreen({
+    super.key,
+    this.isOnboarding = false,
+    this.source = 'paywall_screen',
+  });
 
   @override
   ConsumerState<PaywallScreen> createState() => _PaywallScreenState();
@@ -84,7 +91,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         ? 'progress'
         : (_isRealName(name) ? 'personal' : 'generic');
     AnalyticsService.instance.logPaywallView(
-      widget.isOnboarding ? 'paywall_onboarding' : 'paywall_screen',
+      widget.isOnboarding ? 'paywall_onboarding' : widget.source,
       variant: variant,
       // As known right now, which is what the first frame renders: launch
       // already refreshed this. The re-check below can correct the screen,

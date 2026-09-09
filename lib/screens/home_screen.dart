@@ -79,7 +79,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // natural and avoids stacking dialogs.
     await Future.delayed(const Duration(milliseconds: 1200));
     if (!mounted) return;
-    await runPaywallFlow(context, ref);
+    await runPaywallFlow(context, ref, source: 'reminder');
   }
 
   /// Opened from the day-5 trial progress notification: take the parent to

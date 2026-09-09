@@ -314,7 +314,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                       ? 'Розблокуй пак «Протилежності»'
                       : 'Пак «Протилежності» порожній'),
               onLockedTap: oppLocked
-                  ? () => runPaywallFlow(context, ref)
+                  ? () => runPaywallFlow(context, ref, source: 'games_lock')
                   : null,
             ),
           ];

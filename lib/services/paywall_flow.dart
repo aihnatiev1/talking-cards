@@ -12,14 +12,23 @@ import '../screens/paywall_screen.dart';
 ///
 /// Set [isOnboarding] when invoked right after onboarding to render the
 /// welcome variant (extra social proof + explicit "continue free" button).
+///
+/// [source] names the door the parent came through — 'locked_tile',
+/// 'preview_end', 'games_lock', 'coloring_gate', 'reminder' — and lands in
+/// `paywall_view.source`, so the funnel can say which entry point converts
+/// and which only collects cancels.
 Future<bool> runPaywallFlow(
   BuildContext context,
   WidgetRef ref, {
   bool isOnboarding = false,
+  String source = 'paywall_screen',
 }) async {
   final purchased = await Navigator.of(context).push<bool>(
     MaterialPageRoute(
-      builder: (_) => PaywallScreen(isOnboarding: isOnboarding),
+      builder: (_) => PaywallScreen(
+        isOnboarding: isOnboarding,
+        source: isOnboarding ? 'paywall_onboarding' : source,
+      ),
     ),
   );
 

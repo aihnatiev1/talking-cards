@@ -205,6 +205,19 @@ class AnalyticsService {
   Future<void> logSplashTimeout(String service) =>
       _safeLog('splash_timeout', {'service': service});
 
+  // --- Play Asset Delivery ---
+
+  /// The paid-content pack changed state on Android: 'ready' (download
+  /// landed), 'failed', 'waiting_for_wifi'. Without this the first PAD
+  /// release would be unmeasurable — the emulator's fake Play never fails.
+  Future<void> logContentPack(String status) =>
+      _safeLog('content_pack', {'status': status});
+
+  /// A paid pack was opened before its content arrived, so the child saw
+  /// the "downloading cards" screen instead of cards.
+  Future<void> logContentWait(String packId, String status) =>
+      _safeLog('content_wait', {'pack_id': packId, 'status': status});
+
   static String _msBucket(int ms) {
     if (ms < 1500) return 'lt_1_5s';
     if (ms < 3000) return 'lt_3s';

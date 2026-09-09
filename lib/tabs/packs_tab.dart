@@ -47,6 +47,7 @@ import '../widgets/streak_chip.dart';
 import '../widgets/streak_milestone_overlay.dart';
 import '../services/asset_pack_service.dart';
 import '../widgets/kid_tap.dart';
+import '../services/remote_config_service.dart';
 
 class PacksTab extends ConsumerStatefulWidget {
   const PacksTab({super.key});
@@ -223,10 +224,21 @@ class _PacksTabState extends ConsumerState<PacksTab> {
           .read(dailyQuestProvider.notifier)
           .completeTask(QuestTask.reviewOldCard);
     }
-    // Locked packs: show paywall first (high-intent moment).
-    // If user dismisses, still let them preview the free cards.
+    // Locked packs. Default: open the free preview — the cards themselves
+    // are the demo, and the end-of-preview dialog asks for the purchase
+    // once the child has wanted more (audit #15). Remote Config
+    // `locked_pack_tap = paywall` restores the offer-first flow for an A/B.
+    if (pack.isLocked &&
+        RemoteConfigService.instance.lockedPackTapOpensPreview) {
+      ref.read(lastOpenedPackProvider.notifier).record(pack.id);
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => CardsScreen(pack: pack)),
+      );
+      return;
+    }
     if (pack.isLocked) {
-      final purchased = await runPaywallFlow(context, ref);
+      final purchased =
+          await runPaywallFlow(context, ref, source: 'locked_tile');
       if (!context.mounted) return;
       if (purchased) {
         // After purchase, packsProvider rebuilds with isLocked=false.

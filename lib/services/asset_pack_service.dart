@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'analytics_service.dart';
 
 /// Where the paid-pack illustrations and voice clips are right now.
 enum ContentPackStatus {
@@ -172,6 +173,23 @@ class AssetPackService {
     } catch (_) {}
   }
 
+  ContentPackStatus? _lastLogged;
+
+  /// One analytics event per *change* into a state worth knowing about;
+  /// progress ticks are not it.
+  void _logStatus(ContentPackStatus status) {
+    if (_lastLogged == status) return;
+    const named = {
+      ContentPackStatus.ready: 'ready',
+      ContentPackStatus.failed: 'failed',
+      ContentPackStatus.waitingForWifi: 'waiting_for_wifi',
+    };
+    final name = named[status];
+    if (name == null) return;
+    _lastLogged = status;
+    unawaited(AnalyticsService.instance.logContentPack(name));
+  }
+
   Future<dynamic> _onNativeCall(MethodCall call) async {
     if (call.method != 'state') return null;
     final map = (call.arguments as Map?)?.cast<String, Object?>() ?? const {};
@@ -184,6 +202,7 @@ class AssetPackService {
         if (path != null) {
           _packPath = path;
           state.value = ContentPackState.ready;
+          _logStatus(ContentPackStatus.ready);
         }
       case 'downloading':
       case 'transferring':
@@ -207,9 +226,11 @@ class AssetPackService {
           bytesDownloaded: downloaded,
           totalBytes: total,
         );
+        _logStatus(ContentPackStatus.waitingForWifi);
       case 'failed':
       case 'canceled':
         state.value = const ContentPackState(ContentPackStatus.failed);
+        _logStatus(ContentPackStatus.failed);
     }
     return null;
   }

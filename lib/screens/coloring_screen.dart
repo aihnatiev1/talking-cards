@@ -304,7 +304,7 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
     AudioService.instance.playSfx('pop');
     if (_isGated()) {
       // Free quota exhausted — prompt paywall instead of loading another drawing.
-      runPaywallFlow(context, ref);
+      runPaywallFlow(context, ref, source: 'coloring_gate');
       setState(() => _paywallGated = true);
       return;
     }
@@ -337,7 +337,9 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
         title: Text(s('Розмальовки водою', 'Water coloring')),
       ),
       body: _paywallGated
-          ? _PaywallGate(onUnlock: () => runPaywallFlow(context, ref))
+          ? _PaywallGate(
+              onUnlock: () =>
+                  runPaywallFlow(context, ref, source: 'coloring_gate'))
           : card == null
           ? Center(
               child: Text(

@@ -64,6 +64,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   late final List<CardModel> _cards;
   /// Whether any card on this screen lives in the Play asset pack.
   late final bool _needsContent;
+  bool _waitLogged = false;
   final GlobalKey<SwipeHintState> _swipeHintKey = GlobalKey();
 
   // Prevents dispose() from killing audio when navigating to "Play again"
@@ -292,7 +293,8 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   }
 
   Future<void> _handleUnlock() async {
-    final purchased = await runPaywallFlow(context, ref);
+    final purchased =
+        await runPaywallFlow(context, ref, source: 'preview_end');
     if (purchased && mounted) Navigator.of(context).pop();
   }
 
@@ -523,6 +525,11 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     // download lands.
     final content = ref.watch(contentPackProvider);
     if (!content.isReady && _needsContent) {
+      if (!_waitLogged) {
+        _waitLogged = true;
+        AnalyticsService.instance
+            .logContentWait(widget.pack.id, content.status.name);
+      }
       ref.listen<ContentPackState>(contentPackProvider, (_, next) {
         if (next.isReady && mounted && AudioService.instance.autoSpeak.value) {
           _speakCurrentCard();

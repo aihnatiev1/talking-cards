@@ -28,6 +28,14 @@ class RemoteConfigService {
     // offer is the only offer they will get. Separate key so it can be killed
     // per locale from the console without shipping a release.
     'show_onboarding_paywall_en': true,
+    // What a tap on a locked pack tile does: 'preview' opens the pack's free
+    // cards and lets the end-of-preview dialog ask for the purchase, once
+    // the child has actually wanted more; 'paywall' is the old behaviour —
+    // the full-screen offer straight away. The audit (2026-09-08, #15)
+    // found that a toddler's tap on a lock landing on a purchase sheet is
+    // the worst moment in the app; the preview *is* the demo. Console
+    // switch so this can be A/B'd without a release.
+    'locked_pack_tap': 'preview',
   };
 
   FirebaseRemoteConfig? _cached;
@@ -91,6 +99,10 @@ class RemoteConfigService {
   bool get showCardOfDay => _getBool('show_card_of_day');
   int get onboardingVersion => _getInt('onboarding_version');
   bool get showOnboardingPaywall => _getBool('show_onboarding_paywall');
+
+  /// 'preview' (default) or 'paywall' — see [_defaults].
+  bool get lockedPackTapOpensPreview =>
+      _getString('locked_pack_tap').trim().toLowerCase() != 'paywall';
 
   bool get showOnboardingPaywallEn =>
       _getBool('show_onboarding_paywall_en');
