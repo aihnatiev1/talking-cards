@@ -7,6 +7,7 @@ macOS notification. Run from cron (Mondays) or manually:
 
     /usr/bin/python3 tools/weekly_analytics_report.py
 """
+import gzip
 import json
 import subprocess
 import time
@@ -366,6 +367,146 @@ def default_plan_ab(tok, reviewers):
     return lines
 
 
+def asc_token():
+    now = int(time.time())
+    return jwt.encode(
+        {'iss': ASC_ISSUER, 'iat': now, 'exp': now + 1100,
+         'aud': 'appstoreconnect-v1'},
+        ASC_KEY.read_text(), algorithm='ES256', headers={'kid': ASC_KEY_ID})
+
+
+def asc_get(tok, path):
+    return json.load(urllib.request.urlopen(urllib.request.Request(
+        'https://api.appstoreconnect.apple.com' + path,
+        headers={'Authorization': f'Bearer {tok}'})))
+
+
+def asc_report_rows(tok, name, days):
+    """Deduplicated rows of an ONGOING analytics report for the last N
+    event days. The Standard reports repeat a row per extra dimension
+    (device, source type…), so rows are keyed on the dimensions that make a
+    row unique for our purposes and counted once."""
+    reqs = asc_get(tok, f'/v1/apps/{ASC_APP}/analyticsReportRequests'
+                        '?filter[accessType]=ONGOING')['data']
+    if not reqs:
+        return []
+    reports = asc_get(tok, f"/v1/analyticsReportRequests/{reqs[0]['id']}/reports"
+                           '?filter[category]=COMMERCE&limit=50')['data']
+    report = next((r for r in reports if r['attributes']['name'] == name), None)
+    if report is None:
+        return []
+    inst = asc_get(tok, f"/v1/analyticsReports/{report['id']}/instances"
+                        '?filter[granularity]=DAILY&limit=200')['data']
+    inst = sorted(inst, key=lambda i: i['attributes']['processingDate'])[-(days + 2):]
+    since = (date.today() - timedelta(days=days)).isoformat()
+    rows, seen = [], set()
+    for i in inst:
+        for seg in asc_get(tok, f"/v1/analyticsReportInstances/{i['id']}/segments")['data']:
+            raw = urllib.request.urlopen(seg['attributes']['url']).read()
+            lines = gzip.decompress(raw).decode().strip().split('\n')
+            hdr = lines[0].split('\t')
+            for ln in lines[1:]:
+                row = dict(zip(hdr, ln.split('\t')))
+                day = row.get('Date') or row.get('Event Date') or ''
+                if day < since:
+                    continue
+                key = (day, row.get('Event Name'), row.get('Subscription Name'),
+                       row.get('Content Name'), row.get('Territory'),
+                       row.get('Sales in USD'), row.get('Offer Type'))
+                if key in seen:
+                    continue
+                seen.add(key)
+                rows.append(row)
+    return rows
+
+
+def money(days=7):
+    """Real money, from App Store Connect rather than GA4: GA4's
+    purchase_success is a trial *start* and worth $0 until day three.
+    Subscription events give trial starts / conversions / churn; the
+    purchases report gives sales and proceeds in USD."""
+    try:
+        tok = asc_token()
+        events = asc_report_rows(tok, 'App Store Subscription Event Report Standard', days)
+        buys = asc_report_rows(tok, 'App Store Purchases Standard', days)
+    except Exception as e:
+        return [f'- Гроші (ASC): звіт недоступний ({type(e).__name__})']
+    counts = {}
+    for r in events:
+        counts[r.get('Event Name', '?')] = counts.get(r.get('Event Name', '?'), 0) + int(r.get('Counts', 0) or 0)
+    sales = sum(float(r.get('Sales in USD', 0) or 0) for r in buys)
+    proceeds = sum(float(r.get('Proceeds in USD', 0) or 0) for r in buys)
+    paid = [r for r in buys if float(r.get('Sales in USD', 0) or 0) > 0]
+    lines = ['', f'### Гроші за {days} дн (App Store Connect, iOS)',
+             f'- Sales **${sales:.2f}**, proceeds **${proceeds:.2f}**, платних транзакцій {len(paid)}']
+    if paid:
+        lines.append('- ' + ', '.join(
+            f"{r.get('Date')} {r.get('Territory')} {r.get('Content Name')} ${float(r.get('Sales in USD', 0)):.2f}"
+            for r in sorted(paid, key=lambda r: r.get('Date', ''))))
+    wanted = [('Free trial start activation', 'тріалів почато'),
+              ('Full price from free trial', 'тріалів → оплата'),
+              ('Voluntary churn from free trial', 'тріалів → відмова'),
+              ('Renew', 'продовжень'), ('Refund', 'рефандів')]
+    parts = [f'{label} {counts[k]}' for k, label in wanted if counts.get(k)]
+    lines.append('- Підписки: ' + (', '.join(parts) if parts else 'подій немає'))
+    return lines
+
+
+def paywall_doors(tok, reviewers):
+    """paywall_view → purchase_start → purchase_success by entry point
+    (`source`: locked_tile, preview_end, games_lock, coloring_gate, reminder,
+    paywall_onboarding). Which door converts and which only collects
+    cancels — the question behind the preview-first switch (Remote Config
+    `locked_pack_tap`, 1.3.11)."""
+    r = run_report(tok, {
+        'dateRanges': [{'startDate': '7daysAgo', 'endDate': 'today'}],
+        'dimensions': [{'name': 'customEvent:source'}, {'name': 'appVersion'},
+                       {'name': 'date'}, {'name': 'platform'}],
+        'metrics': [{'name': 'totalUsers'}],
+        'dimensionFilter': {'filter': {'fieldName': 'eventName',
+                                       'stringFilter': {'value': 'paywall_view'}}},
+        'limit': 1000,
+    })
+    per = {}
+    for row in reviewers.drop_rows(r.get('rows', []), 1, 2, 3):
+        src = row['dimensionValues'][0]['value']
+        if src in ('(not set)', ''):
+            continue
+        per[src] = per.get(src, 0) + int(row['metricValues'][0]['value'])
+    if not per:
+        return []
+    lines = ['', '### Пейвол за входом (7 дн, users)',
+             '| source | users |', '|---|---|']
+    for src, n in sorted(per.items(), key=lambda kv: -kv[1]):
+        lines.append(f'| {src} | {n} |')
+    return lines
+
+
+def content_pack(tok, reviewers):
+    """Play Asset Delivery health (Android only, from 1.3.11): how often a
+    paid pack was opened before its content arrived, and how the pack's
+    download ended. Silence here after the rollout is the good outcome."""
+    r = run_report(tok, {
+        'dateRanges': [{'startDate': '7daysAgo', 'endDate': 'today'}],
+        'dimensions': [{'name': 'eventName'}, {'name': 'customEvent:status'},
+                       {'name': 'appVersion'}, {'name': 'date'}, {'name': 'platform'}],
+        'metrics': [{'name': 'totalUsers'}],
+        'dimensionFilter': {'filter': {'fieldName': 'eventName',
+                                       'inListFilter': {'values': ['content_pack', 'content_wait']}}},
+        'limit': 1000,
+    })
+    per = {}
+    for row in reviewers.drop_rows(r.get('rows', []), 2, 3, 4):
+        ev, status = (d['value'] for d in row['dimensionValues'][:2])
+        per[(ev, status)] = per.get((ev, status), 0) + int(row['metricValues'][0]['value'])
+    if not per:
+        return []
+    lines = ['', '### Asset pack (Android, 7 дн, users)']
+    for (ev, status), n in sorted(per.items()):
+        lines.append(f'- {ev} / {status}: {n}')
+    return lines
+
+
 def crash_summary(tok):
     """Top Crashlytics issues for the last 7 days from the BigQuery export.
 
@@ -491,7 +632,10 @@ def main():
 
     lines.extend(startup_health(tok, reviewers))
     lines.extend(trial_funnel(tok, reviewers))
+    lines.extend(paywall_doors(tok, reviewers))
     lines.extend(default_plan_ab(tok, reviewers))
+    lines.extend(money())
+    lines.extend(content_pack(tok, reviewers))
     lines.extend(crash_summary(bq_token()))
 
     body = '\n'.join(lines) + '\n'
