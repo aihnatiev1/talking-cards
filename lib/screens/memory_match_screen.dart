@@ -308,23 +308,56 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen>
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
-                  child: GridView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  // SliverGridDelegateWithFixedCrossAxisCount derives a
+                  // tile's HEIGHT from its width, so on a wide screen the
+                  // rows grow past the box — and with
+                  // NeverScrollableScrollPhysics they are then simply
+                  // clipped. On an 11" iPad the bottom row was cut in half
+                  // and its two cards could not be tapped at all.
+                  //
+                  // Size the board from the box instead: keep the designed
+                  // tile proportions, take the largest board that fits both
+                  // dimensions, and centre it. Correct on a phone, a
+                  // tablet, and either rotation.
+                  child: LayoutBuilder(
+                    builder: (context, box) {
+                      const gap = 12.0;
                       // 3 pairs → 2×3 grid with big toddler tiles; bigger
                       // boards keep the classic 3-column layout.
-                      crossAxisCount: _activePairs <= 3 ? 2 : 3,
-                      mainAxisSpacing: 12,
-                      crossAxisSpacing: 12,
-                      childAspectRatio: _activePairs <= 3 ? 0.9 : 0.82,
-                    ),
-                    itemCount: _tiles.length,
-                    itemBuilder: (context, i) => _TileWidget(
-                      tile: _tiles[i],
-                      packColor: color,
-                      packIcon: widget.pack.icon,
-                      onTap: () => _onTap(i),
-                    ),
+                      final cols = _activePairs <= 3 ? 2 : 3;
+                      final rows = (_tiles.length / cols).ceil();
+                      final ratio = _activePairs <= 3 ? 0.9 : 0.82;
+
+                      final tileW = min(
+                        (box.maxWidth - gap * (cols - 1)) / cols,
+                        (box.maxHeight - gap * (rows - 1)) / rows * ratio,
+                      );
+                      if (tileW <= 0) return const SizedBox.shrink();
+
+                      return Center(
+                        child: SizedBox(
+                          width: tileW * cols + gap * (cols - 1),
+                          height: tileW / ratio * rows + gap * (rows - 1),
+                          child: GridView.builder(
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: cols,
+                              mainAxisSpacing: gap,
+                              crossAxisSpacing: gap,
+                              childAspectRatio: ratio,
+                            ),
+                            itemCount: _tiles.length,
+                            itemBuilder: (context, i) => _TileWidget(
+                              tile: _tiles[i],
+                              packColor: color,
+                              packIcon: widget.pack.icon,
+                              onTap: () => _onTap(i),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),

@@ -278,6 +278,17 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                   p.cards.length >= 4 &&
                   (isEn ? p.cards.any((c) => c.image != null) : true))
               .toList();
+          // Whether buying would actually help: a locked pack that would
+          // qualify if it were open. Without this the hint can send a
+          // parent to the paywall for something a purchase cannot fix.
+          final oddUnlockable = packs.any((p) =>
+              !p.id.startsWith('_') &&
+              p.isLocked &&
+              !_oddOneOutExclude.contains(p.id) &&
+              p.cards.length >= 4 &&
+              (isEn ? p.cards.any((c) => c.image != null) : true));
+          final oddShort = 2 - advancedPacks.length;
+
           final oppPackId = isEn ? 'en_opposites' : 'opposites';
           final oppPack = packs.where((p) => p.id == oppPackId).firstOrNull;
           final oppLocked = oppPack?.isLocked ?? false;
@@ -294,9 +305,22 @@ class _GamesTabState extends ConsumerState<GamesTab> {
               onTap: advancedPacks.length >= 2
                   ? () => _openOddOneOut(packs)
                   : null,
+              // "Open at least 2 packs" said nothing a parent could act
+              // on: which packs, opened how, and why two. Name the number
+              // still missing, say that unlocking is what does it, and
+              // make the tap go there.
               lockedHint: isEn
-                  ? 'Open at least 2 packs to play'
-                  : 'Відкрій хоча б 2 паки щоб грати',
+                  ? (oddUnlockable
+                      ? 'This game needs 2 open packs — '
+                          '${oddShort == 1 ? "unlock one more" : "unlock two"}'
+                      : 'This game needs 2 packs with pictures')
+                  : (oddUnlockable
+                      ? 'Грі потрібні 2 відкриті паки — '
+                          'розблокуй ще ${oddShort == 1 ? "один" : "два"}'
+                      : 'Грі потрібні 2 паки з картинками'),
+              onLockedTap: oddUnlockable
+                  ? () => runPaywallFlow(context, ref, source: 'games_lock')
+                  : null,
             ),
             _BigGame(
               title: isEn ? 'Opposites' : 'Протилежності',

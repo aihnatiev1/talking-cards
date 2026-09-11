@@ -162,6 +162,16 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
 
   int _nextBubbleId = 1;
   int _popped = 0;
+
+  /// Praise currently on screen, and a sequence number so two cheers in a
+  /// row restart the animation instead of reusing the same element.
+  String? _praise;
+  int _praiseSeq = 0;
+  int _lastPraiseIndex = -1;
+
+  /// Every fifth pop. Often enough that a child connects it to what they
+  /// did, rare enough that it stays a reward and not wallpaper.
+  static const _praiseEvery = 5;
   int _elapsedMs = 0;
   int _msSinceSpawn = 0;
   int _spawnIntervalMs = 900;
@@ -444,6 +454,11 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
         posY: b.posY,
       ));
       _popped++;
+      // The last pop hands over to the celebration overlay; cheering
+      // underneath it would just be two rewards fighting for the screen.
+      if (_popped % _praiseEvery == 0 && _popped < _kRoundTargetPops) {
+        _showPraise();
+      }
     });
 
     // End-of-round check on tap (don't wait for the next ticker frame —
@@ -451,6 +466,19 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     if (_popped >= _kRoundTargetPops) {
       _endRound();
     }
+  }
+
+  /// Picks a cheer, never the same one twice running.
+  void _showPraise() {
+    final s = AppS(ref.read(languageProvider) == 'en');
+    final words = s.isEn
+        ? const ['Yay!', 'Great!', 'Nice!', 'Cool!', 'Wow!', 'More!']
+        : const ['Молодець!', 'Ура!', 'Клас!', 'Круто!', 'Вау!', 'Ще!'];
+    var i = _rng.nextInt(words.length);
+    if (i == _lastPraiseIndex) i = (i + 1) % words.length;
+    _lastPraiseIndex = i;
+    _praise = words[i];
+    _praiseSeq++;
   }
 
   void _onPopComplete(int id) {
@@ -549,9 +577,26 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
                 top: _topPadding,
                 child: _TopBar(
                   progress: _popped / _kRoundTargetPops,
+                  popped: _popped,
+                  target: _kRoundTargetPops,
                   onClose: () => Navigator.of(context).pop(),
                 ),
               ),
+
+              // Praise flash. Above the bubbles so it reads, below the
+              // celebration overlay, and IgnorePointer inside so it can
+              // never swallow a tap meant for a bubble.
+              if (_praise != null && !_ended)
+                Positioned.fill(
+                  child: _PraiseFlash(
+                    key: ValueKey(_praiseSeq),
+                    text: _praise!,
+                    color: kAccent,
+                    onDone: () {
+                      if (mounted) setState(() => _praise = null);
+                    },
+                  ),
+                ),
 
               // Celebration overlay.
               if (_ended && !_earlyExit)
@@ -894,10 +939,14 @@ class _CardInside extends StatelessWidget {
 class _TopBar extends StatelessWidget {
   /// 0..1 fraction of the round target already popped.
   final double progress;
+  final int popped;
+  final int target;
   final VoidCallback onClose;
 
   const _TopBar({
     required this.progress,
+    required this.popped,
+    required this.target,
     required this.onClose,
   });
 
@@ -944,7 +993,109 @@ class _TopBar extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
+          // The bar alone said "something is loading" on a big screen —
+          // a mostly empty play area with a strip across the top. The
+          // count is the same pill the other games use, and a number is
+          // the one piece of text a three-year-old can already read.
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: kAccent,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: DT.shadowSoft(kAccent),
+            ),
+            child: Text(
+              '$popped/$target',
+              style: const TextStyle(
+                fontFamily: DT.kidFont,
+                fontVariations: [FontVariation('wght', 900)],
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
         ],
+      ),
+    );
+  }
+}
+
+/// A word of praise that flashes over the play area and leaves.
+///
+/// The round deliberately has no scoreboard, but on a tablet that left a
+/// near-empty screen with a strip of progress across the top, which reads
+/// as "nothing is happening" rather than as play. This is the reward the
+/// child can see, next to the one they hear — brief, huge, and gone before
+/// it becomes chrome.
+class _PraiseFlash extends StatefulWidget {
+  final String text;
+  final Color color;
+  final VoidCallback onDone;
+
+  const _PraiseFlash({
+    super.key,
+    required this.text,
+    required this.color,
+    required this.onDone,
+  });
+
+  @override
+  State<_PraiseFlash> createState() => _PraiseFlashState();
+}
+
+class _PraiseFlashState extends State<_PraiseFlash>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  )..forward().whenComplete(widget.onDone);
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Center(
+        child: AnimatedBuilder(
+          animation: _ctrl,
+          builder: (context, child) {
+            final t = _ctrl.value;
+            // Pops in with a bounce, holds, then lifts away — the shape of
+            // a cheer rather than of a notification.
+            final scale = t < 0.3
+                ? Curves.easeOutBack.transform(t / 0.3)
+                : 1.0;
+            final fade = t < 0.7 ? 1.0 : 1.0 - (t - 0.7) / 0.3;
+            return Opacity(
+              opacity: fade.clamp(0.0, 1.0),
+              child: Transform.translate(
+                offset: Offset(0, -30 * (t < 0.7 ? 0 : (t - 0.7) / 0.3)),
+                child: Transform.scale(scale: scale, child: child),
+              ),
+            );
+          },
+          child: Text(
+            widget.text,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: DT.kidFont,
+              fontVariations: const [FontVariation('wght', 900)],
+              fontSize: 52,
+              fontWeight: FontWeight.w900,
+              color: widget.color,
+              shadows: const [
+                Shadow(color: Colors.white, blurRadius: 12),
+                Shadow(color: Colors.white, blurRadius: 24),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
