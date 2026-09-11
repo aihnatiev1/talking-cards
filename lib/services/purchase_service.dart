@@ -194,6 +194,17 @@ class PurchaseService {
   /// The paywall says so instead of going quiet.
   final ValueNotifier<bool> awaitingApproval = ValueNotifier(false);
 
+  /// True while a checkout this session started is still open: the system
+  /// sheet is up, or the store has not yet said what happened.
+  ///
+  /// The paywall keeps its CTA busy off this rather than off a wall clock.
+  /// A fixed ten-second spinner was wrong in both directions — it kept
+  /// spinning for seconds after a parent had already dismissed the sheet,
+  /// and it went idle while a checkout was still running. September's
+  /// funnel is what that costs: 10 parents produced 44 purchase_start and
+  /// 33 purchase_cancel events, roughly four rounds each.
+  final ValueNotifier<bool> purchaseInFlight = ValueNotifier(false);
+
   /// Test seam: the store stream is the only way outcomes reach this
   /// service, and no test has a store.
   @visibleForTesting
@@ -201,7 +212,7 @@ class PurchaseService {
       _onPurchaseUpdate(updates);
 
   @visibleForTesting
-  void debugBeginPurchase(String productId) => _beginPurchase(productId);
+  bool debugBeginPurchase(String productId) => _beginPurchase(productId);
 
   /// Splits the store response into what the paywall shows and what we
   /// charge against.
@@ -338,7 +349,7 @@ class PurchaseService {
     // On Play the entry the paywall displays is not the entry that carries
     // the trial's offer token — see [_indexProducts].
     final product = _offerToBuy[shown.id] ?? shown;
-    _beginPurchase(product.id);
+    if (!_beginPurchase(product.id)) return false;
     final param = PurchaseParam(productDetails: product);
     bool started;
     try {
@@ -375,16 +386,27 @@ class PurchaseService {
   /// only a backstop so an outcome that never arrives is still visible.
   static const _pendingBudget = Duration(minutes: 3);
 
-  void _beginPurchase(String productId) {
+  /// Opens the outcome window for [productId]; false when another checkout
+  /// already owns it. One at a time: a second payment started over the
+  /// first moves [_pendingPurchaseId] out from under it, and the first
+  /// one's outcome is then dropped by the id comparison in [_logOutcome].
+  /// The CTA is disabled while [purchaseInFlight] is true, so in practice
+  /// this only catches a race.
+  bool _beginPurchase(String productId) {
+    if (_pendingPurchaseId != null) return false;
     _pendingTimer?.cancel();
     awaitingApproval.value = false;
     _pendingPurchaseId = productId;
+    purchaseInFlight.value = true;
     _pendingTimer = Timer(_pendingBudget, () {
       if (_pendingPurchaseId != productId) return;
       _pendingPurchaseId = null;
+      // Give the button back with the event: the checkout is not coming.
+      purchaseInFlight.value = false;
       AnalyticsService.instance
           .logPurchaseError(productId, 'no_outcome_in_3min');
     });
+    return true;
   }
 
   void _resolvePurchase(String productId, void Function() log) {
@@ -392,6 +414,7 @@ class PurchaseService {
     _pendingPurchaseId = null;
     _pendingTimer?.cancel();
     awaitingApproval.value = false;
+    purchaseInFlight.value = false;
     log();
   }
 
@@ -453,6 +476,13 @@ class PurchaseService {
         // without a pending id.
         _pendingTimer?.cancel();
         awaitingApproval.value = true;
+        // The checkout has left our hands: no sheet is up and nothing here
+        // is going to move it. Holding the CTA past this point is how a
+        // paywall dies — `pending` clears no pending id, so an approval
+        // that never comes would leave every later open of this screen
+        // with a dead Buy button until the app is restarted. The line
+        // above says what is happening; the button does not have to.
+        purchaseInFlight.value = false;
         analytics.logPurchasePending(id);
         return;
       case PurchaseStatus.purchased:

@@ -15,8 +15,8 @@ import '../utils/constants.dart';
 import '../utils/game_state_mixin.dart';
 import '../utils/l10n.dart';
 import '../utils/shake_animation_mixin.dart';
+import '../widgets/card_image.dart';
 import '../widgets/game_celebration_overlay.dart';
-import '../services/asset_pack_service.dart';
 
 class RepeatGameScreen extends ConsumerStatefulWidget {
   final List<CardModel> cards;
@@ -262,13 +262,10 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
                           // unsanitized card ever slips through (never emoji).
                           if (card.image != null)
                             Expanded(
-                              child: Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 8),
-                                child: Image(
-                                  image: AssetPackService.instance
-                                      .cardImage(card.image),
-                                  fit: BoxFit.contain,
+                              child: CardImage.forCard(
+                                card,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
                                 ),
                               ),
                             )

@@ -13,8 +13,8 @@ import '../utils/confetti_overlay_mixin.dart';
 import '../utils/game_state_mixin.dart';
 import '../utils/l10n.dart';
 import '../utils/shake_animation_mixin.dart';
+import '../widgets/card_image.dart';
 import '../widgets/game_celebration_overlay.dart';
-import '../services/asset_pack_service.dart';
 
 class OddOneOutScreen extends ConsumerStatefulWidget {
   final List<PackModel> packs;
@@ -271,10 +271,7 @@ class _HintThumb extends StatelessWidget {
         ),
       ),
       child: card.image != null
-          ? Image(
-              image: AssetPackService.instance.cardImage(card.image),
-              fit: BoxFit.contain,
-            )
+          ? CardImage.forCard(card, padding: EdgeInsets.zero)
           : DecoratedBox(
               decoration: BoxDecoration(
                 color: card.colorBg,
@@ -338,10 +335,7 @@ class _CardChip extends StatelessWidget {
                 if (card.image != null)
                   SizedBox(
                     height: 70,
-                    child: Image(
-                      image: AssetPackService.instance.cardImage(card.image),
-                      fit: BoxFit.contain,
-                    ),
+                    child: CardImage.forCard(card, padding: EdgeInsets.zero),
                   )
                 else
                   Container(

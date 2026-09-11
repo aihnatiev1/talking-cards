@@ -38,6 +38,7 @@ import '../utils/l10n.dart';
 import '../utils/pack_categories.dart';
 import '../widgets/bloom_mascot.dart';
 import '../widgets/bubble_pop.dart';
+import '../widgets/card_image.dart';
 import '../widgets/daily_hero_card.dart';
 import '../widgets/notification_toggle_tile.dart';
 import '../widgets/pack_grid_card.dart';
@@ -45,7 +46,6 @@ import '../widgets/parental_gate.dart';
 import '../widgets/profile_avatar_chip.dart';
 import '../widgets/streak_chip.dart';
 import '../widgets/streak_milestone_overlay.dart';
-import '../services/asset_pack_service.dart';
 import '../widgets/kid_tap.dart';
 import '../services/remote_config_service.dart';
 
@@ -289,16 +289,10 @@ class _PacksTabState extends ConsumerState<PacksTab> {
               ),
               child: Column(
                 children: [
-                  if (card.image != null)
-                    SizedBox(
-                      height: 140,
-                      child: Image(
-                        image: AssetPackService.instance.cardImage(card.image),
-                        fit: BoxFit.contain,
-                      ),
-                    )
-                  else
-                    Text(card.emoji, style: const TextStyle(fontSize: 80)),
+                  SizedBox(
+                    height: 140,
+                    child: CardImage.forCard(card, padding: EdgeInsets.zero),
+                  ),
                   const SizedBox(height: 12),
                   Text(
                     card.sound,

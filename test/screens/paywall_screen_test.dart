@@ -415,5 +415,44 @@ void main() {
       expect(find.textContaining('149 грн/місяць'), findsOneWidget);
       semantics.dispose();
     });
+
+    testWidgets('an open checkout holds the CTA until the store answers',
+        (tester) async {
+      // The CTA used to come back on a flat ten-second timer that ignored
+      // the store: it kept spinning after a parent had already dismissed
+      // the sheet, then went live again with nothing behind it. That is
+      // what September's funnel looks like — 10 parents, 44 purchase_start
+      // and 33 purchase_cancel events, about four rounds each.
+      seedStore();
+      addTearDown(
+          () => PurchaseService.instance.purchaseInFlight.value = false);
+      await pumpPaywall(tester);
+
+      ElevatedButton cta() =>
+          tester.widget<ElevatedButton>(find.byType(ElevatedButton));
+      expect(cta().onPressed, isNotNull);
+
+      PurchaseService.instance.debugBeginPurchase('yearly_premium');
+      // A single frame, deliberately: `pumpAndSettle` walks the clock far
+      // enough to trip the service's own three-minute backstop, which
+      // would end the checkout this test is trying to observe.
+      await tester.pump();
+      expect(cta().onPressed, isNull, reason: 'the sheet is up');
+
+      PurchaseService.instance.debugHandlePurchaseUpdate([
+        PurchaseDetails(
+          productID: 'yearly_premium',
+          verificationData: PurchaseVerificationData(
+              localVerificationData: '',
+              serverVerificationData: '',
+              source: 'test'),
+          transactionDate: null,
+          status: PurchaseStatus.canceled,
+        ),
+      ]);
+      await tester.pump();
+      expect(cta().onPressed, isNotNull,
+          reason: 'the store said cancel — nothing left to wait out');
+    });
   });
 }

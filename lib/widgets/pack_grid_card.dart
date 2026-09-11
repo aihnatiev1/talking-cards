@@ -8,8 +8,7 @@ import '../models/card_model.dart';
 import '../models/pack_model.dart';
 import '../providers/content_pack_provider.dart';
 import '../utils/design_tokens.dart';
-import '../utils/image_cache_size.dart';
-import '../services/asset_pack_service.dart';
+import 'card_image.dart';
 import 'kid_tap.dart';
 
 class PackGridCard extends ConsumerStatefulWidget {
@@ -161,33 +160,15 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
                     child: Stack(
                       children: [
                         Positioned.fill(
-                          child: pack.cover != null
-                              ? Image(
-                                  image: AssetPackService.instance.cardImage(
-                                    pack.cover,
-                                    cacheWidth: tileCacheWidth(context),
-                                  ),
-                                  fit: BoxFit.contain,
-                                )
-                              : thumb?.image != null
-                                  ? Image(
-                                      image: AssetPackService.instance
-                                          .cardImage(
-                                        thumb!.image,
-                                        cacheWidth: tileCacheWidth(context),
-                                      ),
-                                      fit: BoxFit.contain,
-                                    )
-                                  : Center(
-                                      child: FittedBox(
-                                        fit: BoxFit.contain,
-                                        child: Text(
-                                          pack.icon,
-                                          style:
-                                              const TextStyle(fontSize: 52),
-                                        ),
-                                      ),
-                                    ),
+                          // Cover, else a card thumb, else the pack icon —
+                          // and the icon also stands in while the artwork
+                          // is still downloading, which this tile used to
+                          // render as an empty pane (and a fatal report).
+                          child: CardImage(
+                            name: pack.cover ?? thumb?.image,
+                            fallbackEmoji: pack.icon,
+                            padding: EdgeInsets.zero,
+                          ),
                         ),
                         // Status badge (top-right)
                         if (widget.isCompleted ||

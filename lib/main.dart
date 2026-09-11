@@ -61,7 +61,15 @@ void main() async {
       AnalyticsService.instance.setAgeLevelProperty(active.level);
     }
 
-    await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    // Phones stay portrait; tablets may lie flat "like the TV" — many
+    // families hand the child an old tablet in landscape (audit #29). The
+    // 600dp shortest side is Android's own tablet threshold.
+    final view = WidgetsBinding.instance.platformDispatcher.views.first;
+    final shortestDp =
+        view.physicalSize.shortestSide / view.devicePixelRatio;
+    await SystemChrome.setPreferredOrientations(shortestDp >= 600
+        ? DeviceOrientation.values
+        : const [DeviceOrientation.portraitUp]);
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarBrightness: Brightness.light,

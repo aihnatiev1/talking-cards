@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../utils/constants.dart';
 import '../utils/l10n.dart';
-import '../services/asset_pack_service.dart';
+import 'card_image.dart';
 
 /// Full-screen celebration overlay with falling stars and confetti.
 ///
@@ -116,23 +116,15 @@ class _CelebrationOverlayState extends State<CelebrationOverlay>
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (widget.packCover != null)
-                        SizedBox(
-                          height: 96,
-                          width: 96,
-                          child: Image(
-                            image: AssetPackService.instance
-                                .cardImage(widget.packCover),
-                            fit: BoxFit.contain,
-                            errorBuilder: (_, __, ___) => Text(
-                              widget.packIcon,
-                              style: const TextStyle(fontSize: 64),
-                            ),
-                          ),
-                        )
-                      else
-                        Text(widget.packIcon,
-                            style: const TextStyle(fontSize: 64)),
+                      SizedBox(
+                        height: 96,
+                        width: 96,
+                        child: CardImage(
+                          name: widget.packCover,
+                          fallbackEmoji: widget.packIcon,
+                          padding: EdgeInsets.zero,
+                        ),
+                      ),
                       const SizedBox(height: 12),
                       const Text('⭐', style: TextStyle(fontSize: 48)),
                       const SizedBox(height: 12),

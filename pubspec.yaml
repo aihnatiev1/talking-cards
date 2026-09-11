@@ -55,6 +55,14 @@ flutter_launcher_icons:
 
 flutter:
   uses-material-design: true
+  # Nunito (OFL, assets/fonts/OFL-Nunito.txt): the rounded face for the
+  # child-facing zone — words on cards, headings, tile titles. Body copy for
+  # parents stays Roboto. Variable font: weight comes from FontVariation
+  # (see DT.kidWeight), not from fontWeight alone.
+  fonts:
+    - family: Nunito
+      fonts:
+        - asset: assets/fonts/Nunito-Variable.ttf
   assets:
     - assets/data/
     - assets/images/

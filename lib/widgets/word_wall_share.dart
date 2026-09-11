@@ -6,8 +6,8 @@ import 'package:share_plus/share_plus.dart';
 
 import '../models/card_model.dart';
 import '../utils/constants.dart';
+import 'card_image.dart';
 import 'share_progress_card.dart' show renderWidgetToImage;
-import '../services/asset_pack_service.dart';
 
 /// Direct store link for the sender's platform (see share_progress_card.dart).
 final String _storeUrl = Platform.isIOS
@@ -179,20 +179,20 @@ class _PreviewTile extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Center(
-        child: card.image != null
-            ? ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image(
-                  image: AssetPackService.instance.cardImage(card.image),
-                  width: 56,
-                  height: 56,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) =>
-                      Text(card.emoji, style: const TextStyle(fontSize: 28)),
-                ),
-              )
-            : Text(card.emoji, style: const TextStyle(fontSize: 28)),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        // Rendered offscreen into a PNG, so whatever this draws is what
+        // the parent shares. CardImage handles "no picture" and "pack not
+        // downloaded" identically — the emoji — which is the right answer
+        // for a share card either way.
+        child: SizedBox.square(
+          dimension: 56,
+          child: CardImage.forCard(
+            card,
+            fit: BoxFit.cover,
+            padding: EdgeInsets.zero,
+          ),
+        ),
       ),
     );
   }

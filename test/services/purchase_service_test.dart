@@ -89,6 +89,59 @@ void main() {
       // Drain the checkout so the 3-minute backstop is not left pending.
       service.debugHandlePurchaseUpdate(
           [update('yearly_premium', PurchaseStatus.canceled)]);
+      service.purchaseInFlight.value = false;
+    });
+
+    test('an open checkout stays in flight until the store answers', () {
+      expect(service.purchaseInFlight.value, false);
+      service.debugBeginPurchase('yearly_premium');
+      expect(service.purchaseInFlight.value, true);
+
+      service.debugHandlePurchaseUpdate(
+          [update('yearly_premium', PurchaseStatus.canceled)]);
+      // The outcome releases the CTA, not a wall clock on the paywall: a
+      // flat ten-second wait kept the button dead for whatever was left of
+      // it after the parent had already dismissed the sheet.
+      expect(service.purchaseInFlight.value, false);
+    });
+
+    test('the backstop releases the checkout it gives up on', () {
+      FakeAsync().run((async) {
+        service.debugBeginPurchase('yearly_premium');
+        async.elapse(const Duration(minutes: 4));
+        // `no_outcome_in_3min` is filed and the button comes back with it —
+        // holding it any longer strands a parent on a screen that cannot
+        // sell and cannot explain itself.
+        expect(service.purchaseInFlight.value, false);
+      });
+    });
+
+    test('an Ask to Buy wait gives the CTA back, and says why', () {
+      FakeAsync().run((async) {
+        service.debugBeginPurchase('yearly_premium');
+        service.debugHandlePurchaseUpdate(
+            [update('yearly_premium', PurchaseStatus.pending)]);
+        async.elapse(const Duration(minutes: 4));
+
+        // The wait is real and the paywall says so, but it must not hold
+        // the button: `pending` keeps the pending id, so an approval that
+        // never arrives would otherwise leave every later open of the
+        // paywall unable to sell until the app restarts.
+        expect(service.awaitingApproval.value, true);
+        expect(service.purchaseInFlight.value, false);
+      });
+    });
+
+    test('a second checkout cannot start over an open one', () {
+      FakeAsync().run((async) {
+        service.debugBeginPurchase('yearly_premium');
+        service.debugBeginPurchase('monthly_premium');
+        // The first checkout still owns the window; its outcome must not
+        // be orphaned by an id that moved under it.
+        service.debugHandlePurchaseUpdate(
+            [update('yearly_premium', PurchaseStatus.canceled)]);
+        expect(service.purchaseInFlight.value, false);
+      });
     });
 
     test('Ask to Buy leaves the checkout visibly waiting, not failed',

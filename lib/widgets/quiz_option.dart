@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/card_model.dart';
 import '../utils/constants.dart';
-import '../utils/image_cache_size.dart';
-import '../services/asset_pack_service.dart';
+import 'card_image.dart';
 
 class QuizOption extends StatefulWidget {
   final CardModel card;
@@ -128,15 +127,10 @@ class _QuizOptionState extends State<QuizOption>
                   // Pools are sanitized upstream (image required), so the
                   // null branch is a defensive placeholder — never emoji.
                   child: widget.card.image != null
-                      ? Padding(
+                      ? CardImage.forCard(
+                          widget.card,
+                          size: CardArtSize.tile,
                           padding: const EdgeInsets.all(4),
-                          child: Image(
-                            image: AssetPackService.instance.cardImage(
-                              widget.card.image,
-                              cacheWidth: tileCacheWidth(context),
-                            ),
-                            fit: BoxFit.contain,
-                          ),
                         )
                       : Container(
                           margin: const EdgeInsets.all(4),

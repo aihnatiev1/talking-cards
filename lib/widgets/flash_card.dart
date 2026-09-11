@@ -8,9 +8,9 @@ import '../models/card_model.dart';
 import '../providers/favorites_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
-import '../utils/image_cache_size.dart';
-import '../services/asset_pack_service.dart';
+import 'card_image.dart';
 import 'kid_tap.dart';
+import '../utils/design_tokens.dart';
 
 class FlashCard extends ConsumerStatefulWidget {
   final CardModel card;
@@ -178,6 +178,16 @@ class _FlashCardState extends ConsumerState<FlashCard>
           }
         },
         onTapCancel: () => _pressCtrl.reverse(),
+        // Favourite = long-press on the card itself. The 56dp heart in the
+        // corner collected accidental taps and silent favourites (audit
+        // #20); a hold is a deliberate parent gesture, and the badge that
+        // appears says what happened.
+        onLongPress: () {
+          _pressCtrl.reverse();
+          HapticFeedback.mediumImpact();
+          KidTap.feedback();
+          ref.read(favoritesProvider.notifier).toggle(widget.card.id);
+        },
         child: ScaleTransition(
           scale: _pressAnim,
           child: AnimatedBuilder(
@@ -223,126 +233,48 @@ class _FlashCardState extends ConsumerState<FlashCard>
   Widget _buildFront(Color cardBg, ThemeData theme, bool isFav) {
     return Stack(
       children: [
-        Column(
-          children: [
-            Expanded(
-              flex: 68,
-              child: Container(
-                width: double.infinity,
-                color: widget.card.colorBg,
-                child: widget.card.letter != null
-                    ? _LetterArt(
-                        letter: widget.card.letter!,
-                        accent: widget.card.colorAccent,
-                      )
-                    : widget.card.image != null
-                        ? Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Image(
-                              image: AssetPackService.instance.cardImage(
-                                widget.card.image,
-                                cacheWidth: cardCacheWidth(context),
-                              ),
-                              fit: BoxFit.contain,
-                              width: double.infinity,
-                              height: double.infinity,
-                            ),
-                          )
-                        : Center(
-                            child: Text(
-                              widget.card.emoji,
-                              style: const TextStyle(fontSize: 120),
-                            ),
-                          ),
-              ),
-            ),
-            Expanded(
-              flex: 32,
-              child: ClipRect(
-                child: Container(
-                  width: double.infinity,
-                  color: cardBg,
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ScaleTransition(
-                          scale: _pulseAnim,
-                          child: Text(
-                            widget.card.sound,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              // Letter cards («Аа») carry 2-3 chars — let
-                              // them fill the space instead of floating
-                              // small in a bare white block.
-                              fontSize:
-                                  widget.card.sound.length <= 3 ? 72 : 32,
-                              fontWeight: FontWeight.w900,
-                              color: const Color(0xFFD63031),
-                              letterSpacing: 1.0,
-                              height: 1.1,
-                            ),
-                          ),
-                        ),
-                        if (widget.card.text.isNotEmpty) ...[
-                          const SizedBox(height: 3),
-                          Text(
-                            widget.card.text,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: theme.brightness == Brightness.dark
-                                  ? Colors.grey[300]
-                                  : const Color(0xFF4A4A4A),
-                              height: 1.3,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
+        LayoutBuilder(
+          builder: (context, constraints) {
+            // Tablets in landscape (allowed from 1.3.12, audit #29): the
+            // picture sits left and the word right, instead of a squat
+            // picture over a strip of text.
+            final wide = constraints.maxWidth > constraints.maxHeight * 1.15;
+            final art = _artPane();
+            final word = _wordPane(cardBg, theme);
+            return wide
+                ? Row(children: [
+                    Expanded(flex: 58, child: art),
+                    Expanded(flex: 42, child: word),
+                  ])
+                : Column(children: [
+                    Expanded(flex: 68, child: art),
+                    Expanded(flex: 32, child: word),
+                  ]);
+          },
         ),
-        Positioned(
-          top: 10,
-          left: 10,
-          child: GestureDetector(
-            onTap: () {
-              // A silent 44dp heart added favourites nobody noticed
-              // (audit #20): now it is felt, heard and 56dp.
-              KidTap.feedback();
-              ref.read(favoritesProvider.notifier).toggle(widget.card.id);
-            },
-            // Same 56dp footprint as the SpeakerButton on the opposite
-            // corner — the two card controls read as one visual pair.
-            child: Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.8),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Icon(
-                isFav ? Icons.favorite : Icons.favorite_border,
-                color: isFav ? Colors.red : Colors.grey[400],
-                size: 26,
+        if (isFav)
+          Positioned(
+            top: 10,
+            left: 10,
+            child: IgnorePointer(
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.85),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.favorite, color: Colors.red, size: 22),
               ),
             ),
           ),
-        ),
         if (_hasEnglish)
           Positioned(
             bottom: 6,
@@ -366,6 +298,80 @@ class _FlashCardState extends ConsumerState<FlashCard>
     );
   }
 
+  Widget _artPane() {
+    return Container(
+                width: double.infinity,
+                height: double.infinity,
+                color: widget.card.colorBg,
+                child: widget.card.letter != null
+                    ? _LetterArt(
+                        letter: widget.card.letter!,
+                        accent: widget.card.colorAccent,
+                      )
+                    // Picture or emoji is CardImage's call now: it also
+                    // knows when the illustration is still downloading,
+                    // which this branch could not tell from "no image".
+                    : CardImage.forCard(
+                        widget.card,
+                        size: CardArtSize.hero,
+                      ),
+    );
+  }
+
+  Widget _wordPane(Color cardBg, ThemeData theme) {
+    return ClipRect(
+      child: Container(
+        width: double.infinity,
+        height: double.infinity,
+        color: cardBg,
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ScaleTransition(
+                scale: _pulseAnim,
+                child: Text(
+                  widget.card.sound,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: DT.kidFont,
+                    fontVariations: DT.kidWeight(900),
+                    // Letter cards («Аа») carry 2-3 chars — let them fill
+                    // the space instead of floating small in a bare block.
+                    fontSize: widget.card.sound.length <= 3 ? 72 : 32,
+                    fontWeight: FontWeight.w900,
+                    // The pack's own accent, darkened for text, instead of
+                    // one red for every pack (audit #19).
+                    color: DT.onTint(widget.card.colorAccent),
+                    letterSpacing: 1.0,
+                    height: 1.1,
+                  ),
+                ),
+              ),
+              if (widget.card.text.isNotEmpty) ...[
+                const SizedBox(height: 3),
+                Text(
+                  widget.card.text,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.grey[300]
+                        : const Color(0xFF4A4A4A),
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildBack(Color cardBg, ThemeData theme) {
     return Column(
       children: [
@@ -374,25 +380,11 @@ class _FlashCardState extends ConsumerState<FlashCard>
           child: Container(
             width: double.infinity,
             color: widget.card.colorBg,
-            child: widget.card.image != null
-                ? Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Image(
-                      image: AssetPackService.instance.cardImage(
-                        widget.card.image,
-                        cacheWidth: cardCacheWidth(context),
-                      ),
-                      fit: BoxFit.contain,
-                      width: double.infinity,
-                      height: double.infinity,
-                    ),
-                  )
-                : Center(
-                    child: Text(
-                      widget.card.emoji,
-                      style: const TextStyle(fontSize: 90),
-                    ),
-                  ),
+            child: CardImage.forCard(
+              widget.card,
+              size: CardArtSize.hero,
+              padding: const EdgeInsets.all(20),
+            ),
           ),
         ),
         Expanded(

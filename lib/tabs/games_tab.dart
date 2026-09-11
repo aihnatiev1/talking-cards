@@ -16,8 +16,8 @@ import '../screens/repeat_game_screen.dart';
 import '../services/audio_service.dart';
 import '../services/paywall_flow.dart';
 import '../utils/design_tokens.dart';
-import '../services/asset_pack_service.dart';
 import '../providers/content_pack_provider.dart';
+import '../widgets/card_image.dart';
 import '../widgets/kid_tap.dart';
 
 /// Smooth fade+scale transition for games.
@@ -516,20 +516,10 @@ class _BigGameTileState extends State<_BigGameTile> {
                           ),
                           child: Container(
                             color: Colors.white.withValues(alpha: 0.5),
-                            child: Center(
-                              child: g.thumb?.image != null
-                                  ? Padding(
-                                      padding: const EdgeInsets.all(14),
-                                      child: Image(
-                                        image: AssetPackService.instance
-                                            .cardImage(g.thumb!.image),
-                                        fit: BoxFit.contain,
-                                      ),
-                                    )
-                                  : Text(
-                                      g.badge,
-                                      style: const TextStyle(fontSize: 72),
-                                    ),
+                            child: CardImage(
+                              name: g.thumb?.image,
+                              fallbackEmoji: g.badge,
+                              padding: const EdgeInsets.all(14),
                             ),
                           ),
                         ),

@@ -9,7 +9,7 @@ import '../models/pack_model.dart';
 import '../providers/language_provider.dart';
 import '../services/audio_service.dart';
 import '../utils/l10n.dart';
-import '../services/asset_pack_service.dart';
+import '../widgets/card_image.dart';
 
 /// Full-screen card reveal with celebration effects.
 class CardRevealScreen extends ConsumerStatefulWidget {
@@ -428,18 +428,10 @@ class _CardRevealScreenState extends ConsumerState<CardRevealScreen>
           const SizedBox(height: 18),
 
           // Card image / emoji
-          if (card.image != null)
-            SizedBox(
-              height: 120,
-              child: Image(
-                image: AssetPackService.instance.cardImage(card.image),
-                fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) =>
-                    Text(card.emoji, style: const TextStyle(fontSize: 72)),
-              ),
-            )
-          else
-            Text(card.emoji, style: const TextStyle(fontSize: 72)),
+          SizedBox(
+            height: 120,
+            child: CardImage.forCard(card, padding: EdgeInsets.zero),
+          ),
           const SizedBox(height: 16),
 
           // Sound

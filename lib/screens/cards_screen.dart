@@ -32,6 +32,7 @@ import '../widgets/swipe_hint.dart';
 import 'memory_match_screen.dart';
 import '../utils/image_cache_size.dart';
 import '../widgets/kid_tap.dart';
+import '../utils/design_tokens.dart';
 
 class CardsScreen extends ConsumerStatefulWidget {
   final PackModel pack;
@@ -148,7 +149,10 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_imagesPrecached) {
+    // Not latched while the pack is still arriving: the first frames of a
+    // gated pack must not consume the one precache pass, or the cards get
+    // none once the download lands.
+    if (!_imagesPrecached && _contentOnDevice) {
       _imagesPrecached = true;
       _precacheAround(_currentIndex);
     }
@@ -157,19 +161,34 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   /// Precaching the whole pack at once pumped ~100MB of full-res decodes
   /// through the image cache on open; the swiper only ever needs the
   /// immediate neighbours.
+  /// True when every image in this pack can actually be read right now.
+  /// [build] gates the pack behind [ContentDownloadView] until then, but
+  /// [didChangeDependencies] and [onPageChanged] run outside that gate.
+  bool get _contentOnDevice =>
+      !_needsContent || AssetPackService.instance.contentReady;
+
   void _precacheAround(int index) {
     for (var i = index - 1; i <= index + 2; i++) {
       if (i < 0 || i >= _cards.length) continue;
-      final image = _cards[i].image;
-      if (image != null) {
-        // ResizeImage params must match FlashCard's cacheWidth so both hit
-        // the same image-cache entry instead of decoding twice.
-        precacheImage(
-          AssetPackService.instance
-              .cardImage(image, cacheWidth: cardCacheWidth(context)),
-          context,
-        );
-      }
+      // Only warm what is actually on the device. Precaching an asset
+      // still inside an undelivered Play pack throws, and `precacheImage`
+      // without `onError` hands that straight to FlutterError.onError —
+      // which main.dart files as a FATAL crash. Two of the three fatals of
+      // 2026-09-08 came from here, with no screen frame in the stack to
+      // say so. `cardArt` answers the question instead of guessing.
+      //
+      // The cacheWidth must match FlashCard's, or the same picture decodes
+      // twice under two different ResizeImage keys.
+      final art = AssetPackService.instance
+          .cardArt(_cards[i].image, cacheWidth: cardCacheWidth(context));
+      if (art is! ArtReady) continue;
+      precacheImage(
+        art.provider,
+        context,
+        // Play can still evict the pack between the two lines. A warm
+        // cache is an optimisation, never a reason to report a crash.
+        onError: (_, __) {},
+      );
     }
   }
 
@@ -296,6 +315,65 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     final purchased =
         await runPaywallFlow(context, ref, source: 'preview_end');
     if (purchased && mounted) Navigator.of(context).pop();
+  }
+
+  /// Parent controls that used to sit in the child's header: autoplay and
+  /// the Memory shortcut. Reached by a long-press on the title — a hold is
+  /// not a gesture a toddler makes by accident.
+  bool get _memoryEligible =>
+      widget.pack.id != 'poems' &&
+      _cards.where((c) => c.audioKey != null).length >= 6;
+
+  void _showParentTools() {
+    HapticFeedback.mediumImpact();
+    final s = AppS(ref.read(languageProvider) == 'en');
+    showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8, 12, 8, 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(s('Для батьків', 'For parents'),
+                    style: DT.h2.copyWith(color: DT.textSecondary)),
+              ),
+              SwitchListTile(
+                value: _autoPlayTimer,
+                secondary: Icon(Icons.timer_outlined, color: widget.pack.color),
+                title: Text(s('Автогортання', 'Auto-advance')),
+                subtitle: Text(s('Картки перегортаються самі',
+                    'Cards turn on their own')),
+                onChanged: (_) {
+                  Navigator.of(ctx).pop();
+                  _toggleAutoPlayTimer();
+                },
+              ),
+              if (_memoryEligible)
+                ListTile(
+                  leading: const Text('🧠', style: TextStyle(fontSize: 24)),
+                  title: Text(s('Memory з цим розділом',
+                      'Memory with this pack')),
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => MemoryMatchScreen(
+                        pack: widget.pack,
+                        cards: _cards,
+                      ),
+                    ));
+                  },
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _shareProgress() async {
@@ -558,7 +636,15 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
         toolbarHeight: 72,
         leadingWidth: 80,
         leading: _BackButton(color: widget.pack.color),
-        title: Row(
+        // The child's header holds only what a child needs: back, the
+        // pack, the counter. Autoplay and the Memory shortcut moved into a
+        // parent sheet on a long-press of the title (audit #18) — a
+        // 36dp timer toggle and a third-level game link were the two
+        // controls a toddler hit by accident most.
+        title: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onLongPress: _showParentTools,
+          child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(widget.pack.icon, style: const TextStyle(fontSize: 24)),
@@ -596,70 +682,10 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
               ),
             ),
           ],
+          ),
         ),
         centerTitle: true,
         actions: [
-          if (widget.pack.id != 'poems' &&
-              _cards.where((c) => c.audioKey != null).length >= 6)
-            IconButton(
-              icon: const Text('🧠', style: TextStyle(fontSize: 20)),
-              tooltip: 'Грати Memory',
-              onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => MemoryMatchScreen(
-                    pack: widget.pack,
-                    cards: _cards,
-                  ),
-                ));
-              },
-            ),
-          Semantics(
-            label: _autoPlayTimer
-                ? 'Автогортання увімкнено'
-                : 'Автогортання вимкнено',
-            button: true,
-            child: GestureDetector(
-            onTap: _toggleAutoPlayTimer,
-            child: Container(
-              // 36dp was the smallest target in the app (audit #18).
-              padding: const EdgeInsets.all(12),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Icon(
-                    _autoPlayTimer
-                        ? Icons.timer
-                        : Icons.timer_off_outlined,
-                    color: _autoPlayTimer
-                        ? widget.pack.color
-                        : widget.pack.color.withValues(alpha: 0.4),
-                    size: 24,
-                  ),
-                  if (_autoPlayTimer && _countdownSeconds > 0)
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          color: widget.pack.color,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Text(
-                          '$_countdownSeconds',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-          ),
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: Center(

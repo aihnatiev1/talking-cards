@@ -43,6 +43,7 @@ lib/
 **Правила:**
 - Синглтон-сервіси зі `instance`, UI читає providers
 - Новий код має відповідати цьому плоскому стилю — НЕ запроваджуй features/-структуру, codegen чи go_router
+- **Ілюстрації карток — тільки через `CardImage`** (`lib/widgets/card_image.dart`). Ніколи не будуй `Image`/`AssetImage` для картки напряму і не пиши шлях `assets/images/webp/...` руками: на Android платний контент приїжджає з Play asset pack ПІСЛЯ інсталу, і провайдер над недоставленим файлом кидає — а `main.dart` віддає `FlutterError.onError` у `recordFlutterFatalError`, тобто це фатальний краш. `AssetPackService.cardArt/cardBytes/cardVoice` повертають sealed-результат (`ArtReady`/`ArtPending`/`ArtMissing`) і ніколи не кидають. Правило стереже `test/architecture/asset_access_test.dart`
 
 ## Code Style
 

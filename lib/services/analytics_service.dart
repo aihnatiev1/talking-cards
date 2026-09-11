@@ -218,6 +218,19 @@ class AnalyticsService {
   Future<void> logContentWait(String packId, String status) =>
       _safeLog('content_wait', {'pack_id': packId, 'status': status});
 
+  /// A card was rendered without its illustration. [reason] is one of
+  /// `pending` (the Play pack has not landed), `not_in_build` (named in
+  /// the JSON, absent from the manifest — a content bug) or `decode_failed`
+  /// (the bytes were there and would not decode, or the pack was evicted
+  /// mid-read).
+  ///
+  /// Deliberately an ordinary event, not a Crashlytics report: this used
+  /// to reach `FlutterError.onError`, which main.dart files as FATAL, so a
+  /// missing picture counted against crash-free users. The signal is worth
+  /// keeping; the fatal is not.
+  Future<void> logAssetUnavailable(String kind, String reason) =>
+      _safeLog('asset_unavailable', {'kind': kind, 'reason': reason});
+
   static String _msBucket(int ms) {
     if (ms < 1500) return 'lt_1_5s';
     if (ms < 3000) return 'lt_3s';

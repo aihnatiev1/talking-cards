@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -37,6 +35,12 @@ class PaywallScreen extends ConsumerStatefulWidget {
 
 class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   bool _loading = false;
+
+  /// Whether the buying controls are occupied. [_loading] covers the local
+  /// awaits; the store covers the part that outlives them — while a
+  /// checkout is open the CTA must not offer to start a second one.
+  bool get _busy =>
+      _loading || PurchaseService.instance.purchaseInFlight.value;
 
   /// Selection is by product, never by position: the catalogue can come
   /// back without a SKU (lifetime until it exists in a console, yearly in an
@@ -109,6 +113,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     // paying family from being left staring at the paywall.
     PurchaseService.instance.isPro.addListener(_onEntitlement);
     PurchaseService.instance.awaitingApproval.addListener(_rebuild);
+    PurchaseService.instance.purchaseInFlight.addListener(_rebuild);
     _loadStore();
     // Eligibility flips the moment a trial is taken, so ask on every open
     // rather than trusting what launch found — every trial claim on this
@@ -122,6 +127,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   void dispose() {
     PurchaseService.instance.isPro.removeListener(_onEntitlement);
     PurchaseService.instance.awaitingApproval.removeListener(_rebuild);
+    PurchaseService.instance.purchaseInFlight.removeListener(_rebuild);
     super.dispose();
   }
 
@@ -279,43 +285,39 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       // Outcome events (success / cancel / error) are logged by
       // PurchaseService off the store stream — it outlives this screen,
       // which the system purchase sheet regularly tears down.
-      if (!success) {
-        setState(() => _loading = false);
-        return;
-      }
-      // Only the spinner is time-boxed here: `_onEntitlement` closes the
-      // screen whenever Pro actually lands, however long the store takes.
-      await _waitForPro();
-      if (!mounted) return;
+      //
+      // The CTA stays busy on `purchaseInFlight` from here, not on a timer.
+      // Waiting a flat ten seconds for Pro ignored the outcome that had
+      // already arrived: a parent who dismissed the sheet after five
+      // seconds got five more of a spinning, dead Buy button, and tapped
+      // it again the moment it came back. `_onEntitlement` closes the
+      // screen whenever Pro lands, however long the store takes.
       setState(() => _loading = false);
+      // A checkout that never started has no sheet for the parent to act
+      // on and nothing for the store stream to report later — the same
+      // silent dead end as a throwing `buyNonConsumable`, and it reads to
+      // a parent as a button that did nothing. `product_unavailable` and
+      // `buy_refused` both land here.
+      if (!success &&
+          !PurchaseService.instance.purchaseInFlight.value &&
+          !PurchaseService.instance.isPro.value) {
+        _sayCouldNotStart(s);
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);
       // A throwing `buyNonConsumable` used to fail in complete silence: the
       // spinner stopped and nothing else happened, so parents just tapped
       // Buy again. Say something instead.
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(s('Не вдалося почати покупку. Спробуйте ще раз',
-            "Couldn't start the purchase. Please try again")),
-      ));
+      _sayCouldNotStart(s);
     }
   }
 
-  /// Waits for isPro to become true, or times out after 10 seconds.
-  Future<void> _waitForPro() async {
-    if (PurchaseService.instance.isPro.value) return;
-    final completer = Completer<void>();
-    void listener() {
-      if (PurchaseService.instance.isPro.value && !completer.isCompleted) {
-        completer.complete();
-      }
-    }
-    PurchaseService.instance.isPro.addListener(listener);
-    await completer.future.timeout(
-      const Duration(seconds: 10),
-      onTimeout: () {},
-    );
-    PurchaseService.instance.isPro.removeListener(listener);
+  void _sayCouldNotStart(AppS s) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(s('Не вдалося почати покупку. Спробуйте ще раз',
+          "Couldn't start the purchase. Please try again")),
+    ));
   }
 
   Future<void> _restore() async {
@@ -437,7 +439,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                     }),
                     const SizedBox(height: 16),
                     TextButton(
-                      onPressed: _loading ? null : _restore,
+                      onPressed: _busy ? null : _restore,
                       child: Text(
                         s('Відновити покупки', 'Restore purchases'),
                         style: TextStyle(
@@ -515,7 +517,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               ],
             ),
             child: ElevatedButton(
-              onPressed: _loading || _storeReady == null
+              onPressed: _busy || _storeReady == null
                   ? null
                   : (_storeReady! ? _purchase : _loadStore),
               style: ElevatedButton.styleFrom(
@@ -527,7 +529,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                 ),
                 elevation: 0,
               ),
-              child: _loading || _storeReady == null
+              child: _busy || _storeReady == null
                   ? const SizedBox(
                       height: 22,
                       width: 22,

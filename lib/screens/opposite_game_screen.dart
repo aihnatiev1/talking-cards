@@ -13,8 +13,8 @@ import '../utils/confetti_overlay_mixin.dart';
 import '../utils/game_state_mixin.dart';
 import '../utils/l10n.dart';
 import '../utils/shake_animation_mixin.dart';
+import '../widgets/card_image.dart';
 import '../widgets/game_celebration_overlay.dart';
-import '../services/asset_pack_service.dart';
 
 /// Game: show one card, pick its opposite from 3 options.
 ///
@@ -303,10 +303,7 @@ class _QuestionCard extends StatelessWidget {
           if (card.image != null)
             SizedBox(
               height: 110,
-              child: Image(
-                image: AssetPackService.instance.cardImage(card.image),
-                fit: BoxFit.contain,
-              ),
+              child: CardImage.forCard(card, padding: EdgeInsets.zero),
             )
           else
             Container(
@@ -406,10 +403,7 @@ class _OptionTile extends StatelessWidget {
                 SizedBox(
                   width: 80,
                   height: 80,
-                  child: Image(
-                    image: AssetPackService.instance.cardImage(card.image),
-                    fit: BoxFit.contain,
-                  ),
+                  child: CardImage.forCard(card, padding: EdgeInsets.zero),
                 )
               else
                 Container(

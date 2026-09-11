@@ -15,8 +15,8 @@ import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../utils/confetti_overlay_mixin.dart';
 import '../utils/l10n.dart';
+import '../widgets/card_image.dart';
 import '../widgets/game_celebration_overlay.dart';
-import '../services/asset_pack_service.dart';
 
 // ─────────────────────────────────────────────
 //  Data
@@ -564,12 +564,13 @@ class _FrontFace extends StatelessWidget {
           // Real webp illustration — pools are sanitized upstream, the null
           // branch is only a defensive plain placeholder (never emoji).
           if (tile.card.image != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Image(
-                image: AssetPackService.instance.cardImage(tile.card.image),
-                height: 58,
-                fit: BoxFit.contain,
+            // The height moves to the box: CardImage fills whatever it is
+            // given, and this Column hands out unbounded height.
+            SizedBox(
+              height: 58,
+              child: CardImage.forCard(
+                tile.card,
+                padding: const EdgeInsets.symmetric(horizontal: 4),
               ),
             )
           else

@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../utils/constants.dart';
 import '../utils/design_tokens.dart';
-import '../services/asset_pack_service.dart';
+import 'card_image.dart';
 
 /// One secondary step of today's plan, rendered as a compact button under the
 /// hero. Replaces the old free-standing "stone" in Today's Plan strip.
@@ -152,33 +152,14 @@ class _DailyHeroCardState extends State<DailyHeroCard>
                 child: Container(
                   color: accent.withValues(alpha: 0.10),
                   alignment: Alignment.center,
-                  child: widget.image != null
-                      ? Padding(
-                          padding: const EdgeInsets.all(6),
-                          child: Image(
-                            image: AssetPackService.instance.cardImage(
-                              widget.image,
-                            ),
-                            height: heroHeight - 12,
-                            fit: BoxFit.contain,
-                            // Card-of-the-day may be paid content that the
-                            // asset pack has not delivered yet.
-                            errorBuilder: (_, __, ___) => FittedBox(
-                              fit: BoxFit.contain,
-                              child: Text(
-                                widget.fallbackEmoji,
-                                style: const TextStyle(fontSize: 44),
-                              ),
-                            ),
-                          ),
-                        )
-                      : FittedBox(
-                          fit: BoxFit.contain,
-                          child: Text(
-                            widget.fallbackEmoji,
-                            style: const TextStyle(fontSize: 44),
-                          ),
-                        ),
+                  // Card-of-the-day may be paid content the asset pack has
+                  // not delivered yet; CardImage shows the emoji until it
+                  // lands, then swaps itself for the picture.
+                  child: CardImage(
+                    name: widget.image,
+                    fallbackEmoji: widget.fallbackEmoji,
+                    padding: const EdgeInsets.all(6),
+                  ),
                 ),
               ),
               Expanded(

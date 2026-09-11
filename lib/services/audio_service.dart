@@ -7,6 +7,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:audio_session/audio_session.dart';
 
+import 'analytics_service.dart';
 import 'asset_pack_service.dart';
 
 /// Maps card image key (kirilic) to latin wav filename
@@ -492,6 +493,19 @@ class AudioService {
     ..._audioMap.keys,
     ..._audioMap.values,
   };
+
+  /// Test seam: the clip filename [audioKey] resolves to, mirroring the
+  /// lookup in [loadClip]. A card's `audio` field may be a Cyrillic alias
+  /// ('серце_к') rather than the Latin filename it plays.
+  @visibleForTesting
+  static String debugAudioFile(String audioKey) =>
+      _audioMap[audioKey] ?? audioKey;
+
+  /// Test seam: whether [audioKey] is a key the player will even try.
+  /// An unknown key is dropped silently, which for a child is a card that
+  /// stopped talking.
+  @visibleForTesting
+  static bool debugKnownKey(String audioKey) => _knownKeys.contains(audioKey);
   /// Pre-computed millisecond offset for the end of the WORD portion of each
   /// recording (everything after this is the example sentence). Loaded at
   /// init from `assets/data/audio_word_lengths.json`. Files not in this map
@@ -568,15 +582,34 @@ class AudioService {
     if (!_knownKeys.contains(audioKey)) return Future.value(null);
 
     final file = _audioMap[audioKey] ?? audioKey;
+
+    // Paid-pack clips may live in the Play asset pack rather than the
+    // bundle. Ask before loading: a clip that is not on the device yet is
+    // an ordinary state here, and the old `audioSource` could not say so —
+    // it returned a bundle path that simply failed to load, and the card
+    // went quiet with nothing recorded anywhere. Silence is this app's
+    // worst failure mode (the audience does not read), so it must at least
+    // be visible in analytics. There is no TTS to fall back on: it was
+    // removed deliberately — see [playWordOnly].
+    final voice = AssetPackService.instance.cardVoice(file);
+    switch (voice) {
+      case VoicePending():
+        _reportSilence(file, 'pending');
+        return Future.value(null);
+      case VoiceMissing(:final reason):
+        _reportSilence(file, reason);
+        return Future.value(null);
+      case VoiceReady():
+        break;
+    }
+
     return _pendingLoads.putIfAbsent(file, () async {
       try {
-        // Paid-pack clips may live in the Play asset pack rather than the
-        // bundle; the service says which. Either way the decode stays on
-        // disk — see the class comment on why nothing is held in RAM.
-        final where = AssetPackService.instance.audioSource(file);
-        final source = where.isFile
-            ? await _soloud.loadFile(where.path, mode: LoadMode.disk)
-            : await _soloud.loadAsset(where.path, mode: LoadMode.disk);
+        // The decode stays on disk either way — see the class comment on
+        // why nothing is held in RAM.
+        final source = voice.isFile
+            ? await _soloud.loadFile(voice.path, mode: LoadMode.disk)
+            : await _soloud.loadAsset(voice.path, mode: LoadMode.disk);
         _sources[file] = source;
         // Also cache under every Cyrillic alias pointing at this file.
         for (final entry in _audioMap.entries) {
@@ -584,12 +617,24 @@ class AudioService {
         }
         return source;
       } catch (e) {
+        // Reachable despite the check above: the pack can be evicted in
+        // between, and a bundled file can be corrupt.
         if (kDebugMode) debugPrint('AudioService: failed to load $file: $e');
+        _reportSilence(file, 'load_failed');
         return null;
       } finally {
         _pendingLoads.remove(file);
       }
     });
+  }
+
+  /// Clips already reported this session. A child tapping the same silent
+  /// card ten times is one problem, not ten events.
+  final Set<String> _silenceReported = {};
+
+  void _reportSilence(String file, String reason) {
+    if (!_silenceReported.add('$file/$reason')) return;
+    AnalyticsService.instance.logAssetUnavailable('audio', reason);
   }
 
   Future<void> speakCard(String? audioKey, String sound, String fullText) async {

@@ -12,7 +12,7 @@ import '../utils/constants.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../widgets/bloom_mascot.dart';
-import '../services/asset_pack_service.dart';
+import '../widgets/card_image.dart';
 
 /// Kid-facing version of the Word Wall — lives outside Parent Dashboard so
 /// the child can browse their own collection without a parental gate.
@@ -333,24 +333,10 @@ class _LearnedTileState extends State<_LearnedTile>
                       flex: 5,
                       child: Container(
                         color: card.colorBg,
-                        child: card.image != null
-                            ? Image(
-                                image: AssetPackService.instance
-                                    .cardImage(card.image),
-                                fit: BoxFit.contain,
-                                errorBuilder: (_, __, ___) => Center(
-                                  child: Text(
-                                    card.emoji,
-                                    style: const TextStyle(fontSize: 36),
-                                  ),
-                                ),
-                              )
-                            : Center(
-                                child: Text(
-                                  card.emoji,
-                                  style: const TextStyle(fontSize: 36),
-                                ),
-                              ),
+                        child: CardImage.forCard(
+                          card,
+                          padding: EdgeInsets.zero,
+                        ),
                       ),
                     ),
                     Padding(

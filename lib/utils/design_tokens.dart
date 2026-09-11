@@ -87,8 +87,22 @@ class DT {
   static const pressMs = Duration(milliseconds: 140);
   static const enterMs = Duration(milliseconds: 260);
 
+  // ── Type ────────────────────────────────────
+  /// Rounded face for everything a child looks at (audit 2026-09-08, #28):
+  /// words on cards, headings, tile titles. Parents' body copy stays on the
+  /// system Roboto. Nunito is a variable font, so the weight has to travel
+  /// as a variation axis — [kidWeight] — or the engine renders the default
+  /// instance whatever fontWeight says.
+  static const kidFont = 'Nunito';
+  static List<FontVariation> kidWeight(double wght) =>
+      [FontVariation('wght', wght)];
+  static const _kid800 = [FontVariation('wght', 800)];
+  static const _kid900 = [FontVariation('wght', 900)];
+
   // ── Text styles (use these, not inline) ─────
   static const display = TextStyle(
+    fontFamily: kidFont,
+    fontVariations: _kid900,
     fontSize: 28,
     fontWeight: FontWeight.w800,
     color: textPrimary,
@@ -97,6 +111,8 @@ class DT {
   );
 
   static const h1 = TextStyle(
+    fontFamily: kidFont,
+    fontVariations: _kid800,
     fontSize: 22,
     fontWeight: FontWeight.w800,
     color: textPrimary,
@@ -104,6 +120,8 @@ class DT {
   );
 
   static const h2 = TextStyle(
+    fontFamily: kidFont,
+    fontVariations: _kid800,
     fontSize: 18,
     fontWeight: FontWeight.w800,
     color: textPrimary,
@@ -111,6 +129,8 @@ class DT {
   );
 
   static const tileTitle = TextStyle(
+    fontFamily: kidFont,
+    fontVariations: _kid800,
     fontSize: 17,
     fontWeight: FontWeight.w800,
     height: 1.15,

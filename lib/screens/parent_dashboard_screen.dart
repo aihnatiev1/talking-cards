@@ -18,8 +18,8 @@ import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../widgets/activity_chart.dart';
 import '../widgets/bloom_mascot.dart';
+import '../widgets/card_image.dart';
 import '../widgets/word_wall_share.dart';
-import '../services/asset_pack_service.dart';
 
 class ParentDashboardScreen extends ConsumerWidget {
   const ParentDashboardScreen({super.key});
@@ -614,23 +614,11 @@ class _LearnedTile extends StatelessWidget {
             aspectRatio: 1,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(11),
-              child: card.image != null
-                  ? Image(
-                      image: AssetPackService.instance.cardImage(card.image),
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Center(
-                        child: Text(
-                          card.emoji,
-                          style: const TextStyle(fontSize: 26),
-                        ),
-                      ),
-                    )
-                  : Center(
-                      child: Text(
-                        card.emoji,
-                        style: const TextStyle(fontSize: 26),
-                      ),
-                    ),
+              child: CardImage.forCard(
+                card,
+                fit: BoxFit.cover,
+                padding: EdgeInsets.zero,
+              ),
             ),
           ),
         ),

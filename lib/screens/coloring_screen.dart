@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
+import '../providers/content_pack_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../services/analytics_service.dart';
@@ -18,6 +19,7 @@ import '../utils/constants.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../services/asset_pack_service.dart';
+import '../widgets/content_download_view.dart';
 
 /// Water-reveal coloring screen.
 ///
@@ -44,7 +46,12 @@ class ColoringScreen extends ConsumerStatefulWidget {
       .where((c) {
         final image = c.image;
         return image != null &&
-            !CardModel.calmingExcludedImages.contains(image);
+            !CardModel.calmingExcludedImages.contains(image) &&
+            // A picture still inside the undelivered Play asset pack cannot
+            // be coloured — there are no bytes to decode. Unfiltered, it
+            // threw out of a fire-and-forget load and left the canvas on
+            // its spinner forever. games_tab filters its pool the same way.
+            !AssetPackService.instance.needsDownload(image);
       })
       .toList();
 
@@ -97,6 +104,11 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
   bool _done = false;
   int _completedCount = 0;
   bool _paywallGated = false;
+
+  /// The colourable pool is empty, or its bytes cannot be read, because the
+  /// Play asset pack has not landed. Renders [ContentDownloadView] — the
+  /// one screen in the app that explains a download to a parent.
+  bool _contentUnavailable = false;
 
   /// 1.0 = overlay fully visible (not revealed), 0.0 = fully revealed.
   /// Once the child reaches 85%, we animate this to 0 so the remaining
@@ -167,6 +179,8 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
       _done = false;
       _image = null;
       _card = null;
+      _contentUnavailable = false;
+      _loadFailures = 0;
       _paywallGated = _isGated();
     });
     _revealCtrl.value = 1.0;
@@ -188,21 +202,78 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
   void _pickCardAndLoad() {
     final packs = ref.read(packsProvider).valueOrNull ?? [];
     final pool = ColoringScreen.coloringPool(packs);
-    if (pool.isEmpty) return;
+    if (pool.isEmpty) {
+      // Everything colourable is still in the Play pack: say so with the
+      // download screen rather than leaving the canvas spinning.
+      if (packs.isNotEmpty && !AssetPackService.instance.contentReady) {
+        setState(() => _contentUnavailable = true);
+      }
+      return;
+    }
     final chosen = ColoringScreen.pickNext(pool, _card, _rng);
     _card = chosen;
     _loadImage(chosen);
   }
 
+  /// A read can fail even after the pool filter — Play may evict the pack
+  /// in between. Bounded so a wholly unreadable pool cannot loop.
+  int _loadFailures = 0;
+  static const _maxLoadFailures = 3;
+
   Future<void> _loadImage(CardModel card) async {
     final gen = ++_loadGen;
-    final data = await AssetPackService.instance.cardImageBytes(card.image);
-    final codec = await ui.instantiateImageCodec(
-      data.buffer.asUint8List(),
-    );
-    final frame = await codec.getNextFrame();
+    // The colouring book is the one place that needs raw bytes — the
+    // painter wants a ui.Image — so it consumes CardBytes directly
+    // instead of going through CardImage like every other screen.
+    final bytes = await AssetPackService.instance.cardBytes(card.image);
     if (!mounted || gen != _loadGen) return;
-    setState(() => _image = frame.image);
+
+    switch (bytes) {
+      case BytesUnavailable(:final reason):
+        // The pool filter should have kept this card out; getting here
+        // means Play evicted the pack in between, or the card names an
+        // asset this build does not have. Either way it is a value now —
+        // it used to be a throw out of a fire-and-forget future, which
+        // Crashlytics filed as fatal while the canvas span forever.
+        AnalyticsService.instance.logAssetUnavailable(
+          'coloring',
+          switch (reason) {
+            ArtPending() => 'pending',
+            ArtMissing(:final reason) => reason,
+            ArtReady() => 'unknown',
+          },
+        );
+        _afterFailedLoad();
+      case BytesReady(:final data):
+        final ui.Image decoded;
+        try {
+          final codec = await ui.instantiateImageCodec(
+            data.buffer.asUint8List(),
+          );
+          decoded = (await codec.getNextFrame()).image;
+        } catch (_) {
+          // Bytes present but undecodable: a corrupt file rather than a
+          // missing one. Same dead end for the child, so same exit.
+          if (!mounted || gen != _loadGen) return;
+          AnalyticsService.instance
+              .logAssetUnavailable('coloring', 'decode_failed');
+          _afterFailedLoad();
+          return;
+        }
+        if (!mounted || gen != _loadGen) return;
+        _loadFailures = 0;
+        setState(() => _image = decoded);
+    }
+  }
+
+  /// Try another picture, but not forever: a pool that is wholly
+  /// unreadable has to end on the download screen, not on a retry loop.
+  void _afterFailedLoad() {
+    if (++_loadFailures > _maxLoadFailures) {
+      setState(() => _contentUnavailable = true);
+      return;
+    }
+    _pickCardAndLoad();
   }
 
   // ─────────────────────────────────────────────
@@ -283,9 +354,10 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
       if (!mounted) return;
       showConfetti();
       if (card != null) {
-        // playWordOnly uses the recorded mp3 when available (UA and EN
-        // voiceovers are both bundled), falling back to TTS in the given
-        // locale when a card has no audio asset.
+        // Recorded mp3 only — there is no TTS fallback in this app (see
+        // AudioService.playWordOnly). A card with no clip stays silent,
+        // which AudioService now reports as asset_unavailable rather than
+        // swallowing.
         AudioService.instance.playWordOnly(
           card.audioKey,
           card.sound,
@@ -314,6 +386,8 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
       _revealedCells.clear();
       _done = false;
       _image = null;
+      _contentUnavailable = false;
+      _loadFailures = 0;
     });
     _revealCtrl.value = 1.0;
     _pickCardAndLoad();
@@ -340,6 +414,12 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
           ? _PaywallGate(
               onUnlock: () =>
                   runPaywallFlow(context, ref, source: 'coloring_gate'))
+          : _contentUnavailable
+          ? ContentDownloadView(
+              state: ref.watch(contentPackProvider),
+              accent: kAccent,
+              isEn: isEn,
+            )
           : card == null
           ? Center(
               child: Text(

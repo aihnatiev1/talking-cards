@@ -20,8 +20,8 @@ import '../utils/confetti_overlay_mixin.dart';
 import '../utils/constants.dart';
 import '../utils/design_tokens.dart';
 import '../widgets/bloom_mascot.dart';
+import '../widgets/card_image.dart';
 import 'home_screen.dart';
-import '../services/asset_pack_service.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -934,22 +934,9 @@ class _MagicCardState extends State<_MagicCard>
                   children: [
                     Expanded(
                       flex: 4,
-                      child: Padding(
+                      child: CardImage.forCard(
+                        card,
                         padding: const EdgeInsets.all(16),
-                        child: card.image != null
-                            ? Image(
-                                image: AssetPackService.instance
-                                    .cardImage(card.image),
-                                fit: BoxFit.contain,
-                                errorBuilder: (_, __, ___) => Center(
-                                  child: Text(card.emoji,
-                                      style: const TextStyle(fontSize: 120)),
-                                ),
-                              )
-                            : Center(
-                                child: Text(card.emoji,
-                                    style: const TextStyle(fontSize: 120)),
-                              ),
                       ),
                     ),
                     Padding(
@@ -968,6 +955,8 @@ class _MagicCardState extends State<_MagicCard>
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
+                            fontFamily: DT.kidFont,
+                            fontVariations: DT.kidWeight(900),
                             fontSize: responsiveFont(context, 32),
                             fontWeight: FontWeight.w900,
                             color: wordColor,
