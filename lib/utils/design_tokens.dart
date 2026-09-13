@@ -445,6 +445,45 @@ class DTMotion {
   /// Between the last pair landing and the celebration card.
   final Duration memoryRoundEnd = const Duration(milliseconds: 1200);
 
+  /// The deal — the one "show" of a round (§4). A card flies out of
+  /// Bloom's lap into its slot; the stagger keeps even sixteen cards
+  /// inside 720 ms, and a card is tappable the moment it lands.
+  final Duration memoryDeal = const Duration(milliseconds: 280);
+
+  /// `min(40 ms, 440 / tiles)` — the whole deal stays an accent, never a
+  /// wait, however big the board is.
+  Duration memoryDealStagger(int tiles) => Duration(
+        microseconds: tiles <= 0
+            ? 0
+            : (440000 ~/ tiles).clamp(0, 40000),
+      );
+
+  /// A nudge: one card stirs — the invitation (scale 1.03 + a 1.5° tilt)
+  /// and the shake of the actual twin are the same beat.
+  final Duration memoryNudge = const Duration(milliseconds: 320);
+
+  /// Level 1's nudge instead of a shake: the twin turns up to ~110°, so
+  /// its face is visible at an angle, and lies back down.
+  final Duration memoryPeek = const Duration(milliseconds: 500);
+
+  /// Nothing touched for this long: one closed card stirs, silently —
+  /// "there is something to do here" (§6). Wave 1's board was still.
+  Duration memoryNudgeInvite(int level) => switch (level) {
+        <= 1 => const Duration(seconds: 4),
+        2 => const Duration(seconds: 5),
+        3 => const Duration(seconds: 8),
+        _ => const Duration(seconds: 10),
+      };
+
+  /// Still nothing: the card that *is* the pair stirs, with a sound. Only
+  /// this step counts as a hint towards the confidence of the round.
+  Duration memoryNudgeHint(int level) => switch (level) {
+        <= 1 => const Duration(seconds: 7),
+        2 => const Duration(seconds: 9),
+        3 => const Duration(seconds: 12),
+        _ => const Duration(seconds: 15),
+      };
+
   /// How long a mismatched pair stays visible, by profile level — the
   /// younger the child, the longer they get to look (§6).
   Duration memoryHold(int level) => switch (level) {
@@ -537,6 +576,24 @@ class DTMotion {
 
   /// Ripple of a tap into empty sky (20 → 72 dp).
   final Duration bubbleRipple = const Duration(milliseconds: 320);
+
+  /// A bubble being born: scale 0.6 → 1.08 → 1.0 with a fade, so a
+  /// one-year-old sees where it came from instead of finding it there.
+  final Duration bubbleSpawn = const Duration(milliseconds: 420);
+
+  /// How long a revealed card waits for its queued word before it gives
+  /// up and finishes silently (§3: the picture waits for *its* word).
+  final Duration bubbleWordWait = const Duration(milliseconds: 1200);
+
+  /// Gap between two pops of the closing cascade (§6).
+  final Duration bubbleCascade = const Duration(milliseconds: 70);
+
+  /// A tap on Bloom blows at most one bubble out of the wand per this
+  /// (§2) — the same beat as his giggle, so the two never disagree.
+  final Duration bubbleWand = const Duration(milliseconds: 1500);
+
+  /// Between two idle hints inside one round (§2: repeat every 8 s).
+  final Duration bubbleHintRepeat = const Duration(seconds: 8);
 
   // Quest map (ux-gap-audit G13). Bloom walks the trail from the stop he
   // has just finished to the next one; the paw prints in the header fill

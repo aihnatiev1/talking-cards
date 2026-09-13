@@ -320,6 +320,23 @@ class BloomReactions extends StateNotifier<BloomState> {
     if (_oneShot != BloomEmotion.happy) _playSound(sound);
   }
 
+  /// A host-timed nudge: point at [target] now.
+  ///
+  /// The idle clock of a game is not Bloom's — «Лопай бульбашки» hints
+  /// after 4 / 5 / 6 s from its own tuning table, while [_armIdleTimers]
+  /// counts the cards-screen 6 / 8 / 10. The host that owns the clock asks
+  /// for the gesture; everything else (priority, the pose's own length)
+  /// still belongs here. Silent: in a game the object makes the sound.
+  void pointAt(Alignment target) {
+    _hintTarget = target;
+    _startOneShot(
+      BloomEmotion.point,
+      DT.motion.bloomPoint,
+      hintDirection: target,
+      lookAt: target,
+    );
+  }
+
   void hintTargetChanged(Alignment? target) {
     _hintTarget = target;
     if (target != null && state.emotion == BloomEmotion.idle) {

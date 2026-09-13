@@ -99,6 +99,39 @@ void main() {
       expect(d.pairs, 3);
     });
 
+    test('two hints keep the board where it is, however clean the round', () {
+      // The confidence rule finally has something to read: until the
+      // two-step nudge existed, `hints` was a constant zero and a child
+      // who needed the board to show them the pair still climbed.
+      final d = MemoryDifficulty(level: 2);
+      expect(d.applyRound(misses: 0, hints: 2), TierChange.stay);
+      expect(d.applyRound(misses: 0, hints: 2), TierChange.stay);
+      expect(d.pairs, 3);
+    });
+
+    test('the session opens on the remembered comfortable board', () {
+      expect(MemoryTiers.openingFor(2, 4), 4);
+      // Never below where the level starts, never above its ceiling, and
+      // a profile with nothing remembered simply starts.
+      expect(MemoryTiers.openingFor(2, 2), 3);
+      expect(MemoryTiers.openingFor(1, 6), 3);
+      expect(MemoryTiers.openingFor(3, null), 4);
+
+      final d = MemoryDifficulty(level: 2, comfort: 4);
+      expect(d.pairs, 4);
+      expect(d.isFixed, isFalse);
+    });
+
+    test('a comfortable board may still be handed back, but not below the '
+        'level start', () {
+      final d = MemoryDifficulty(level: 2, comfort: 4);
+      // Four pairs were not raised to *in this session*, so two hard
+      // rounds leave the board alone rather than undoing yesterday.
+      expect(d.applyRound(misses: 20, hints: 0), TierChange.stay);
+      expect(d.applyRound(misses: 20, hints: 0), TierChange.stay);
+      expect(d.pairs, 4);
+    });
+
     test('an explicit pair count pins the board for the session', () {
       final d = MemoryDifficulty(level: 3, fixedPairs: 6);
       expect(d.isFixed, isTrue);

@@ -38,6 +38,11 @@ class BoardTheme {
   /// The mat the cards lie on — about 14 %.
   final Color mat;
 
+  /// The dashed stitches around the mat. Ink on a lit table; in the
+  /// evening room the same thread is cream, because ink on a dark mat is
+  /// not a stitch, it is a hole.
+  final Color stitch;
+
   /// The room behind the mat.
   final Color bg;
 
@@ -48,6 +53,7 @@ class BoardTheme {
     required this.paper,
     required this.wash,
     required this.mat,
+    required this.stitch,
     required this.bg,
   });
 
@@ -68,32 +74,50 @@ class BoardTheme {
         .toColor();
   }
 
+  /// How far the mat is pulled towards the room: on a lit table it all
+  /// but disappears into it, in the dark room it keeps more of the seal so
+  /// the cards still lie on *something*.
+  static const matBlend = 0.86;
+  static const matBlendDark = 0.80;
+
   /// The theme of a board built from [cards] that were offered as [pack]'s.
+  ///
+  /// [dark] dims the *room*, never the objects: the cards, their backs and
+  /// Bloom are physical things and physical things do not darken at
+  /// bedtime (§2).
   factory BoardTheme.of(
     PackModel pack,
     List<CardModel> cards, {
     Color background = DT.bgWarm,
+    bool dark = false,
   }) {
     final own = pack.cards.map((c) => c.id).toSet();
     final singlePack =
         cards.isNotEmpty && cards.every((c) => own.contains(c.id));
     return BoardTheme.from(
       singlePack ? pack.color : DT.mint,
-      background: background,
+      background: dark ? DT.bgDark : background,
+      dark: dark,
     );
   }
 
   /// The theme of one colour — the seam tests and goldens use.
-  factory BoardTheme.from(Color base, {Color background = DT.bgWarm}) {
+  factory BoardTheme.from(
+    Color base, {
+    Color background = DT.bgWarm,
+    bool dark = false,
+  }) {
     final seal = normalize(base);
     const paper = DT.paper;
+    final ink = DT.onTint(seal);
     return BoardTheme._(
       base: base,
       seal: seal,
-      ink: DT.onTint(seal),
+      ink: ink,
       paper: paper,
       wash: Color.lerp(seal, paper, 0.80)!,
-      mat: Color.lerp(seal, background, 0.86)!,
+      mat: Color.lerp(seal, background, dark ? matBlendDark : matBlend)!,
+      stitch: (dark ? paper : ink).withValues(alpha: 0.25),
       bg: background,
     );
   }

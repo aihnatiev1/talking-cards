@@ -1,6 +1,8 @@
 import 'dart:math';
 
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,6 +15,7 @@ import 'package:talking_cards/screens/bubble_pop_screen.dart';
 import 'package:talking_cards/services/asset_pack_service.dart';
 import 'package:talking_cards/services/feedback_service.dart';
 import 'package:talking_cards/services/profile_service.dart';
+import 'package:talking_cards/widgets/bloom_mascot.dart';
 import 'package:talking_cards/widgets/kid_screen.dart';
 
 import '../helpers/motion.dart';
@@ -77,6 +80,113 @@ void main() {
       expect(BubbleDeviceClass.of(599), BubbleDeviceClass.phone);
       expect(BubbleDeviceClass.of(600), BubbleDeviceClass.tabletS);
       expect(BubbleDeviceClass.of(834), BubbleDeviceClass.tabletL);
+    });
+  });
+
+  group('BubbleWordQueue — a child hears whole words (§3)', () {
+    /// A queue over a fake narrator: [speaking] is the flag the real
+    /// `AudioService` raises, [said] is what came out of the speaker.
+    ({
+      BubbleWordQueue queue,
+      ValueNotifier<bool> speaking,
+      List<String> said,
+    }) make() {
+      final speaking = ValueNotifier(false);
+      final said = <String>[];
+      final queue = BubbleWordQueue(
+        speaking: speaking,
+        play: (card) {
+          said.add(card.id);
+          speaking.value = true; // the narrator starts on the next line
+        },
+        cue: const Duration(milliseconds: 80),
+        maxWait: const Duration(milliseconds: 1200),
+      );
+      return (queue: queue, speaking: speaking, said: said);
+    }
+
+    CardModel word(String id) => CardModel(
+          id: id,
+          sound: id,
+          text: id,
+          emoji: '🐱',
+          colorBg: const Color(0xFFFFFFFF),
+          colorAccent: const Color(0xFF000000),
+        );
+
+    test('the pop waits 80 ms so the transient is off the first consonant',
+        () {
+      fakeAsync((async) {
+        final q = make();
+        q.queue.say(word('cat'));
+        async.elapse(const Duration(milliseconds: 60));
+        expect(q.said, isEmpty);
+        async.elapse(const Duration(milliseconds: 40));
+        expect(q.said, ['cat']);
+        q.queue.dispose();
+      });
+    });
+
+    test('a second pop during the first word does not cut it off', () {
+      fakeAsync((async) {
+        final q = make();
+        final first = q.queue.say(word('cat'));
+        async.elapse(const Duration(milliseconds: 100));
+        expect(q.said, ['cat']);
+
+        // Second pop 100 ms later, while "cat" is still being said.
+        final second = q.queue.say(word('apple'));
+        async.elapse(const Duration(milliseconds: 300));
+        expect(q.said, ['cat'], reason: 'the narrator was not interrupted');
+        expect(first.started.value, isTrue);
+        expect(second.started.value, isFalse,
+            reason: 'the second card holds until its own word starts');
+
+        // The narrator falls quiet → the queued word takes the channel.
+        q.speaking.value = false;
+        async.elapse(const Duration(milliseconds: 100));
+        expect(q.said, ['cat', 'apple']);
+        expect(second.started.value, isTrue);
+        q.queue.dispose();
+      });
+    });
+
+    test('a third pop replaces the pending one, which finishes silently', () {
+      fakeAsync((async) {
+        final q = make();
+        q.queue.say(word('cat'));
+        async.elapse(const Duration(milliseconds: 100));
+        final second = q.queue.say(word('apple'));
+        final third = q.queue.say(word('bath'));
+        expect(second.dropped.value, isTrue);
+        expect(q.queue.pending, third);
+
+        q.speaking.value = false;
+        async.elapse(const Duration(milliseconds: 100));
+        expect(q.said, ['cat', 'bath']);
+        expect(second.started.value, isFalse);
+        q.queue.dispose();
+      });
+    });
+
+    test('a card with no recording never jams the queue', () {
+      fakeAsync((async) {
+        final speaking = ValueNotifier(false);
+        final said = <String>[];
+        final queue = BubbleWordQueue(
+          speaking: speaking,
+          play: (card) => said.add(card.id),
+          cue: const Duration(milliseconds: 80),
+          maxWait: const Duration(milliseconds: 1200),
+        );
+        queue.say(word('cat')); // plays, but `speaking` never goes true
+        async.elapse(const Duration(milliseconds: 100));
+        final second = queue.say(word('apple'));
+        async.elapse(const Duration(milliseconds: 1400));
+        expect(said, ['cat', 'apple']);
+        expect(second.started.value, isTrue);
+        queue.dispose();
+      });
     });
   });
 
@@ -213,6 +323,18 @@ void main() {
         expect(FeedbackService.debugLog, isNot(contains(FeedbackEvent.bubblePop)));
       });
 
+      testWidgets('the revealed card settles — the hold is not a hang',
+          (tester) async {
+        await open(tester, level: 1);
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('bubble_1')));
+        // Reduced motion skips the wait-for-the-word hold entirely, so
+        // every screen test that pops a bubble still terminates.
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        expect(find.text('1/8'), findsOneWidget);
+      });
+
       testWidgets('a pop on pointer-down counts once', (tester) async {
         await open(tester, level: 1);
         await tester.pumpAndSettle();
@@ -230,6 +352,93 @@ void main() {
           hasLength(1),
         );
       });
+    });
+
+    testWidgets('a tap on Bloom blows one bubble, then asks for patience',
+        (tester) async {
+      await open(tester, level: 1); // L1 phone: two alive at a time
+      expect(find.byKey(const ValueKey('bubble_1')), findsOneWidget);
+      expect(find.byKey(const ValueKey('bubble_2')), findsOneWidget);
+
+      // His lower right corner: the bubbles leave the wand at his top-left
+      // and rise, and they are above him in the stack (they are the
+      // lesson, he is the friend), so the corner is the part of him that
+      // stays his.
+      final bloom = tester.getRect(find.byType(BloomMascot));
+      final paw = bloom.bottomRight - const Offset(8, 8);
+
+      // One bubble out of the wand — one over the level's limit, which is
+      // the whole point: the child made it happen.
+      await tester.tapAt(paw);
+      await tester.pump();
+      expect(find.byKey(const ValueKey('bubble_3')), findsOneWidget);
+
+      // A second tap right away is only a hop: no fourth bubble.
+      await tester.tapAt(paw);
+      await tester.pump();
+      expect(find.byKey(const ValueKey('bubble_4')), findsNothing);
+
+      // Past the 1.5 s rate limit the sky is still full (3 = maxAlive + 1),
+      // so now the cap is what keeps it at three.
+      await tester.pump(const Duration(seconds: 2));
+      await tester.tapAt(paw);
+      await tester.pump();
+      expect(find.byKey(const ValueKey('bubble_4')), findsNothing);
+      expect(find.text('0/8'), findsOneWidget, reason: 'Bloom is not a pop');
+
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('a tablet locks the orientation for the round and gives it '
+        'back on the way out', (tester) async {
+      final locks = <List<String>>[];
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'SystemChrome.setPreferredOrientations') {
+            locks.add(List<String>.from(call.arguments as List));
+          }
+          return null;
+        },
+      );
+      addTearDown(() => tester.binding.defaultBinaryMessenger
+          .setMockMethodCallHandler(SystemChannels.platform, null));
+
+      tester.view.physicalSize = const Size(1194, 834); // iPad, landscape
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(host());
+      await tester.pump();
+
+      expect(locks.single, [
+        'DeviceOrientation.landscapeLeft',
+        'DeviceOrientation.landscapeRight',
+      ], reason: 'a device that flips mid-round throws every bubble '
+          'somewhere else');
+
+      await tester.pumpWidget(const SizedBox());
+      expect(locks.last, hasLength(4),
+          reason: 'the rest of the app decides its own orientations again');
+    });
+
+    testWidgets('a phone is left alone — main.dart owns portrait',
+        (tester) async {
+      final locks = <List<String>>[];
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'SystemChrome.setPreferredOrientations') {
+            locks.add(List<String>.from(call.arguments as List));
+          }
+          return null;
+        },
+      );
+      addTearDown(() => tester.binding.defaultBinaryMessenger
+          .setMockMethodCallHandler(SystemChannels.platform, null));
+
+      await open(tester, level: 2);
+      await tester.pumpWidget(const SizedBox());
+      expect(locks, isEmpty);
     });
 
     testWidgets('a bubble past the top edge changes nothing', (tester) async {

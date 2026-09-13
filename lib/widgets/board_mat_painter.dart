@@ -37,7 +37,7 @@ class BoardMatPainter extends CustomPainter {
     // Stitches around the edge: a dashed line, extracted from the rounded
     // rectangle's own metric so the corners stay even.
     final stitch = Paint()
-      ..color = theme.ink.withValues(alpha: 0.25)
+      ..color = theme.stitch
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2
       ..strokeCap = StrokeCap.round;

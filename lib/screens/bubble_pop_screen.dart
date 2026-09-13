@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
@@ -23,6 +25,7 @@ import '../utils/motion.dart';
 import '../widgets/bloom_mascot.dart';
 import '../widgets/card_image.dart';
 import '../widgets/celebration.dart';
+import '../widgets/confetti_burst.dart';
 import '../widgets/kid_screen.dart';
 
 /// «Лопай бульбашки» — a sensory toy (docs/design/bubble_pop_redesign.md).
@@ -272,17 +275,29 @@ abstract final class BubbleStage {
     );
   }
 
+  /// How far apart two anchors are kept while both bubbles are still low
+  /// on the screen (spec §3: `size/2 + 24 dp`), and how many tries that
+  /// gets before the spawn happens anyway — a round must never stall
+  /// because the sky is crowded.
+  static const double spreadMargin = DT.sp24;
+  static const int spreadAttempts = 4;
+
   /// Anchor X for a new bubble of [size] swinging ±[amplitude]: the whole
   /// swing stays inside the width and left of Bloom's column. When the
   /// screen is too narrow for that (a 320 dp phone with an L1 bubble),
   /// the width wins — the bubble may pass over Bloom rather than not
   /// exist; he is under the bubbles anyway.
+  ///
+  /// [avoid] are the anchors of bubbles still in the lower part of the
+  /// screen: two bubbles born on top of each other read as one object and
+  /// a toddler's finger cannot choose between them.
   static double spawnAnchorX({
     required Random rng,
     required double width,
     required double size,
     required double amplitude,
     required Rect bloom,
+    List<double> avoid = const [],
   }) {
     final half = size / 2 + amplitude;
     final minX = half;
@@ -290,7 +305,13 @@ abstract final class BubbleStage {
     final leftOfBloom = bloom.left - bloomMargin - half;
     if (leftOfBloom > minX) maxX = min(maxX, leftOfBloom);
     if (maxX <= minX) return width / 2;
-    return minX + rng.nextDouble() * (maxX - minX);
+    final keep = size / 2 + spreadMargin;
+    var x = minX + rng.nextDouble() * (maxX - minX);
+    for (var i = 0; i < spreadAttempts && avoid.isNotEmpty; i++) {
+      if (avoid.every((other) => (other - x).abs() >= keep)) break;
+      x = minX + rng.nextDouble() * (maxX - minX);
+    }
+    return x;
   }
 }
 
@@ -315,6 +336,142 @@ const _kRims = <Color>[
 ];
 
 // ─────────────────────────────────────────────
+//  The narrator's queue (spec §3)
+// ─────────────────────────────────────────────
+
+/// One card's turn to be said, and whether it has come yet.
+///
+/// The revealed card holds until [started] flips, so the picture a child
+/// is looking at is always the picture they are hearing. [dropped] means a
+/// newer pop replaced this one in the queue — its card finishes the
+/// animation silently rather than waiting for a word that will never come.
+class BubbleWord {
+  BubbleWord(this.card);
+
+  final CardModel card;
+  final ValueNotifier<bool> started = ValueNotifier(false);
+  final ValueNotifier<bool> dropped = ValueNotifier(false);
+
+  void dispose() {
+    started.dispose();
+    dropped.dispose();
+  }
+}
+
+/// A queue of depth one over the narrator.
+///
+/// `playWordOnly` calls `stop()`, so before this a second pop inside a
+/// second cut the first word in half and the child heard two beginnings
+/// (spec §3). The rule instead:
+///
+///  * the channel is free → the word plays after [cue], the 80 ms that
+///    keep the pop transient off the first consonant (this is a speech
+///    therapy app);
+///  * the channel is busy → the card becomes *the* pending one; a third
+///    pop replaces it, and the replaced card finishes silently;
+///  * when the narrator falls quiet, the pending word starts.
+///
+/// [maxWait] is the safety net: a card with no recording never makes
+/// `isSpeaking` true at all, and the queue must not hang on it.
+class BubbleWordQueue {
+  BubbleWordQueue({
+    required this.speaking,
+    required this.play,
+    required this.cue,
+    required this.maxWait,
+  }) {
+    speaking.addListener(_onSpeaking);
+  }
+
+  final ValueListenable<bool> speaking;
+  final void Function(CardModel card) play;
+  final Duration cue;
+  final Duration maxWait;
+
+  Timer? _cueTimer;
+  Timer? _guard;
+  BubbleWord? _current;
+  BubbleWord? _pending;
+  bool _disposed = false;
+
+  /// Whether a word is on its way to the speaker or coming out of it.
+  bool get busy => _current != null;
+
+  /// Test seam: the word waiting for the channel, if any.
+  @visibleForTesting
+  BubbleWord? get pending => _pending;
+
+  /// Ask for [card]'s word. The returned ticket tells the reveal when the
+  /// picture and the voice are together.
+  BubbleWord say(CardModel card) {
+    final word = BubbleWord(card);
+    if (_disposed) {
+      word.dropped.value = true;
+      return word;
+    }
+    if (busy) {
+      _pending?.dropped.value = true;
+      _pending = word;
+      return word;
+    }
+    _start(word);
+    return word;
+  }
+
+  void _start(BubbleWord word) {
+    _current = word;
+    _cueTimer?.cancel();
+    _cueTimer = Timer(cue, () {
+      _cueTimer = null;
+      if (_disposed || _current != word) return;
+      play(word.card);
+      word.started.value = true;
+      // The narrator may take a moment to report itself speaking (and a
+      // card without a recording never will) — hold the channel for the
+      // grace of one cue, then let [maxWait] end it if nothing speaks.
+      _guard?.cancel();
+      _guard = Timer(maxWait, () => _finish(word));
+    });
+  }
+
+  void _onSpeaking() {
+    if (_disposed || speaking.value) return;
+    final word = _current;
+    // Only a word that has actually started can be finished by silence;
+    // before that, `speaking == false` is just the channel being free.
+    if (word != null && word.started.value) _finish(word);
+  }
+
+  void _finish(BubbleWord word) {
+    if (_current != word) return;
+    _guard?.cancel();
+    _guard = null;
+    _current = null;
+    final next = _pending;
+    _pending = null;
+    if (next != null && !_disposed) _start(next);
+  }
+
+  /// Forget everything without playing it — a new round, or the screen
+  /// going away mid-word.
+  void clear() {
+    _cueTimer?.cancel();
+    _cueTimer = null;
+    _guard?.cancel();
+    _guard = null;
+    _pending?.dropped.value = true;
+    _pending = null;
+    _current = null;
+  }
+
+  void dispose() {
+    _disposed = true;
+    clear();
+    speaking.removeListener(_onSpeaking);
+  }
+}
+
+// ─────────────────────────────────────────────
 //  Models
 // ─────────────────────────────────────────────
 
@@ -332,6 +489,16 @@ class _LiveBubble {
   double posX;
   double posY;
 
+  /// Spawn settle, 0 → 1 over [DTMotion.bubbleSpawn]; 1 from the first
+  /// frame when the level (L3+) or reduced motion skips the arrival.
+  double spawnT;
+
+  /// Idle-hint wiggle-glow, 0 → 1 over [DTMotion.bloomPoint]; `null` when
+  /// this bubble is not the one Bloom is pointing at.
+  double? hintT;
+
+  bool get isHinted => hintT != null;
+
   _LiveBubble({
     required this.id,
     required this.card,
@@ -345,6 +512,7 @@ class _LiveBubble {
     required this.bornAtMs,
     required this.posX,
     required this.posY,
+    required this.spawnT,
   });
 }
 
@@ -356,6 +524,15 @@ class _PopRequest {
   final double posX;
   final double posY;
 
+  /// Where the revealed card sits relative to the burst: the card is
+  /// bigger than the bubble, so its centre is nudged back inside the play
+  /// area when the bubble popped near an edge or under the top bar (§3).
+  final Offset cardShift;
+
+  /// This pop's place in the narrator's queue; `null` for a cascade pop
+  /// at the end of a round, which is a sound and not a lesson.
+  final BubbleWord? word;
+
   const _PopRequest({
     required this.id,
     required this.card,
@@ -363,6 +540,8 @@ class _PopRequest {
     required this.tint,
     required this.posX,
     required this.posY,
+    this.cardShift = Offset.zero,
+    this.word,
   });
 }
 
@@ -380,8 +559,15 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     with SingleTickerProviderStateMixin {
   late final Ticker _ticker;
 
-  /// Bumped once per ticker frame; only the bubble layer listens.
+  /// Bumped once per ticker frame. Nothing *rebuilds* on it: the bubble
+  /// layer is a [Flow] whose delegate repaints from it, so a frame costs
+  /// one paint of one layer instead of a Stack rebuilt 60 times a second.
   final ValueNotifier<int> _frame = ValueNotifier(0);
+
+  /// Bumped when the cast changes — a bubble born, popped or gone over
+  /// the top edge, or the hint moving to another one. This is the only
+  /// thing that rebuilds the bubble layer's children (~1/s).
+  final ValueNotifier<int> _population = ValueNotifier(0);
   Duration _lastTick = Duration.zero;
 
   final Random _rng = Random();
@@ -414,9 +600,43 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
   int _lastPraiseIndex = -1;
 
   int _elapsedMs = 0;
+
+  /// The ticker's own clock — the time base of the sideways drift.
+  int _nowMs = 0;
   int _msSinceSpawn = 0;
   int _spawnIntervalMs = 900;
   bool _ended = false;
+
+  /// Idle clock for Bloom's hint (spec §2): milliseconds since the last
+  /// touch of any kind, how many hints this round has had, and whether
+  /// the spoken instruction has already been repeated (once per round).
+  int _msSinceTouch = 0;
+  int _hints = 0;
+  bool _instructionRepeated = false;
+
+  /// Elapsed ticker time of the last bubble blown out of Bloom's wand —
+  /// the 1.5 s rate limit of §2.
+  int? _lastWandMs;
+
+  /// The closing cascade: every live bubble pops left to right, then the
+  /// shared celebration card comes up.
+  Timer? _cascadeTimer;
+  bool _finale = false;
+
+  /// The narrator's queue (§3). Depth one: the child hears whole words.
+  late final BubbleWordQueue _words = BubbleWordQueue(
+    speaking: AudioService.instance.isSpeaking,
+    play: (card) =>
+        AudioService.instance.playWordOnly(card.audioKey, card.sound),
+    cue: DT.motion.instant,
+    maxWait: DT.motion.bubbleWordWait,
+  );
+
+  /// Tablets lock the orientation for the round (spec §9): a device that
+  /// flips mid-round throws every bubble to a new place. Phones are
+  /// portrait-only from `main.dart` and must stay that way, so the lock —
+  /// and the restore — only ever happen on a tablet.
+  bool _orientationLocked = false;
 
   /// The shared overlay is up; the in-scene Bloom fades so there is one
   /// Bloom on screen (bloom_character.md §4.2).
@@ -464,12 +684,46 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _lockOrientation();
+  }
+
+  /// Freeze the orientation the round started in. Only on tablets: on a
+  /// phone the app is portrait-only already, and restoring
+  /// [DeviceOrientation.values] there would hand a toddler a landscape
+  /// layout no phone screen of this app is built for.
+  void _lockOrientation() {
+    if (_orientationLocked) return;
+    final size = MediaQuery.sizeOf(context);
+    if (size.shortestSide < 600) return;
+    _orientationLocked = true;
+    SystemChrome.setPreferredOrientations(
+      size.width >= size.height
+          ? const [
+              DeviceOrientation.landscapeLeft,
+              DeviceOrientation.landscapeRight,
+            ]
+          : const [
+              DeviceOrientation.portraitUp,
+              DeviceOrientation.portraitDown,
+            ],
+    );
+  }
+
+  @override
   void dispose() {
+    if (_orientationLocked) {
+      SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+    }
     _celebrationTimer?.cancel();
+    _cascadeTimer?.cancel();
+    _words.dispose();
     _bloom.sceneLeft(_bloomScene);
     _ticker.stop();
     _ticker.dispose();
     _frame.dispose();
+    _population.dispose();
     super.dispose();
   }
 
@@ -505,6 +759,8 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
       });
     }
 
+    _cascadeTimer?.cancel();
+    _words.clear();
     _live.clear();
     _popping.clear();
     _ripples.clear();
@@ -513,11 +769,17 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     _praise = null;
     _elapsedMs = 0;
     _msSinceSpawn = 0;
+    _msSinceTouch = 0;
+    _hints = 0;
+    _instructionRepeated = false;
+    _lastWandMs = null;
     _ended = false;
+    _finale = false;
     _celebrating = false;
     _lastPopPitch = null;
     _spawnIntervalMs = _randomSpawnInterval();
     _lastTick = Duration.zero;
+    _population.value++;
 
     if (!silent) {
       AnalyticsService.instance.logGameStart('bubble_pop_${_mode.name}');
@@ -535,31 +797,69 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     if (_physics && !_ticker.isActive) _ticker.start();
   }
 
-  /// Stops physics; on a natural finish Bloom cheers in the scene, then the
-  /// shared round celebration takes over (unless [earlyExit]).
+  /// Stops physics; on a natural finish the sky empties in a cascade while
+  /// Bloom cheers on the grass, and only then does the shared celebration
+  /// card come up (spec §6). [earlyExit] — the X — takes none of it.
   void _endRound({bool earlyExit = false}) {
     if (_ended) return;
     _ended = true;
     _ticker.stop();
-    _live.clear();
+    _words.clear();
     _praise = null;
 
-    if (!earlyExit) {
-      // Quest + analytics only on natural completion.
-      ref.read(dailyQuestProvider.notifier).completeTask(QuestTask.playQuiz);
-      AnalyticsService.instance
-          .logGameComplete('bubble_pop_${_mode.name}', _popped);
-      // Bloom's three hops on the grass first; the shared card (tada +
-      // praise, "again" pill) follows once the cheer has landed.
-      _bloom.success(BloomSuccessTier.round);
-      _celebrationTimer?.cancel();
-      _celebrationTimer = Timer(
-        _reduce ? Duration.zero : DT.motion.bloomCheer + DT.motion.base,
-        _showCelebration,
-      );
+    if (earlyExit) {
+      _live.clear();
+      setState(() {});
+      return;
     }
 
+    // Quest + analytics only on natural completion.
+    ref.read(dailyQuestProvider.notifier).completeTask(QuestTask.playQuiz);
+    AnalyticsService.instance
+        .logGameComplete('bubble_pop_${_mode.name}', _popped);
+    // Bloom's three hops on the grass and the confetti from his corner;
+    // the shared card (tada + praise, "again" pill) follows once the
+    // cheer has landed.
+    _bloom.success(BloomSuccessTier.round);
+    _finale = true;
+    final cascade = _startCascade();
+    _celebrationTimer?.cancel();
+    _celebrationTimer = Timer(
+      _reduce ? Duration.zero : cascade + DT.motion.bloomCheer,
+      _showCelebration,
+    );
     setState(() {});
+  }
+
+  /// Pops every bubble still in the sky, left to right, pitch falling
+  /// 1.35 → 0.85 — no words, no droplets, just the sky emptying. Returns
+  /// how long the cascade will take.
+  Duration _startCascade() {
+    final left = List.of(_live)..sort((a, b) => a.posX.compareTo(b.posX));
+    _live.clear();
+    _population.value++;
+    if (left.isEmpty) return Duration.zero;
+    final step = _reduce ? Duration.zero : DT.motion.bubbleCascade;
+
+    void burst(int i) {
+      if (!mounted || i >= left.length) return;
+      final b = left[i];
+      final k = left.length == 1 ? 0.0 : i / (left.length - 1);
+      FeedbackService.instance.event(
+        FeedbackEvent.bubblePop,
+        pitch: 1.35 - 0.5 * k,
+        haptic: false, // one hand-felt bump per finger, not per bubble
+      );
+      setState(() => _popping.add(_popRequestFor(b)));
+      if (i + 1 < left.length) {
+        _cascadeTimer = Timer(step, () => burst(i + 1));
+      } else {
+        _cascadeTimer = null;
+      }
+    }
+
+    burst(0);
+    return step * left.length;
   }
 
   void _showCelebration() {
@@ -624,17 +924,21 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
 
     _elapsedMs += dtMs.round();
     _msSinceSpawn += dtMs.round();
+    _msSinceTouch += dtMs.round();
 
     final size = _screenSize;
     if (size == null) return;
 
     final nowMs = elapsed.inMilliseconds;
+    _nowMs = nowMs;
+    var cast = false; // whether the bubble layer needs new children
 
     // Spawn?
     if (_live.length < _tuning.maxAlive && _msSinceSpawn >= _spawnIntervalMs) {
       _msSinceSpawn = 0;
       _spawnIntervalMs = _randomSpawnInterval();
       _spawnBubble(nowMs, size);
+      cast = true;
     }
 
     // Update positions, cull off-top. A bubble that escapes has no
@@ -655,10 +959,36 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
       if (b.posX < minX) b.posX = minX;
       if (b.posX > maxX) b.posX = maxX;
 
+      // Arrival (spec §2.7) and the hint's wiggle-glow: both are plain
+      // 0 → 1 clocks the Flow delegate reads, so nothing rebuilds.
+      if (b.spawnT < 1) {
+        b.spawnT =
+            min(1.0, b.spawnT + dtMs / DT.motion.bubbleSpawn.inMilliseconds);
+      }
+      final hint = b.hintT;
+      if (hint != null) {
+        final next = hint + dtMs / DT.motion.bloomPoint.inMilliseconds;
+        if (next >= 1) {
+          b.hintT = null;
+          cast = true;
+        } else {
+          b.hintT = next;
+        }
+      }
+
       if (b.posY + b.size < 0) {
         _live.removeAt(i);
+        cast = true;
       }
     }
+
+    // Idle: Bloom points at the biggest bubble and it wiggles (spec §2).
+    if (_msSinceTouch >= _idleHintGapMs) {
+      _msSinceTouch = 0;
+      if (_giveHint()) cast = true;
+    }
+
+    if (cast) _population.value++;
 
     // End conditions.
     if (_popped >= _tuning.targetPops) {
@@ -685,6 +1015,69 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
   int _randomSpawnInterval() => _tuning.spawnMinMs +
       _rng.nextInt(_tuning.spawnMaxMs - _tuning.spawnMinMs);
 
+  /// Time without a touch before the (first / next) hint: the tuning
+  /// table for the first one, then every 8 s (spec §2).
+  int get _idleHintGapMs => _hints == 0
+      ? _tuning.idleHintSec * 1000
+      : DT.motion.bubbleHintRepeat.inMilliseconds;
+
+  /// Bloom waves a paw towards the biggest bubble in the sky and that
+  /// bubble wiggles and glows. The second hint of a round also repeats
+  /// the spoken instruction — once per round, never again.
+  ///
+  /// Returns whether the cast of the bubble layer changed.
+  bool _giveHint() {
+    if (_ended || _live.isEmpty) return false;
+    final target = _live.reduce((a, b) => b.size > a.size ? b : a);
+    _hints++;
+    for (final b in _live) {
+      b.hintT = b.id == target.id ? 0.0 : null;
+    }
+    final body = _screenSize;
+    if (body != null) {
+      final bloom = BubbleStage.bloomRect(body, _device).center;
+      // From Bloom towards the bubble, in his own -1..1 space.
+      _bloom.pointAt(Alignment(
+        ((target.posX - bloom.dx) / (body.width / 2)).clamp(-1.0, 1.0),
+        ((target.posY - bloom.dy) / (body.height / 2)).clamp(-1.0, 1.0),
+      ));
+    }
+    if (_hints >= 2 && !_instructionRepeated) {
+      _instructionRepeated = true;
+      AudioService.instance.playInstruction(
+        'bubbles',
+        isEn: ref.read(languageProvider) == 'en',
+      );
+    }
+    return true;
+  }
+
+  /// A tap on Bloom: one bubble leaves the wand (spec §2). The hop and
+  /// the giggle are his own — `BloomMascot` reports the tap to his brain —
+  /// so this adds only the thing the child made happen in the sky.
+  /// One per [DTMotion.bubbleWand], and never more than one bubble over
+  /// the level's limit.
+  void _blowFromWand() {
+    _msSinceTouch = 0;
+    if (_ended) return;
+    final body = _screenSize;
+    if (body == null || _pool.isEmpty) return;
+    if (_live.length >= _tuning.maxAlive + 1) return;
+    final now = _elapsedMs;
+    final last = _lastWandMs;
+    if (last != null && now - last < DT.motion.bubbleWand.inMilliseconds) {
+      return;
+    }
+    _lastWandMs = now;
+    final bloom = BubbleStage.bloomRect(body, _device);
+    _spawnBubble(
+      _nowMs,
+      body,
+      at: Offset(bloom.left + bloom.width * 0.1, bloom.top),
+    );
+    _population.value++;
+  }
+
   /// Next card from the shuffle-bag: no repeats until [_pool] is exhausted.
   CardModel _drawCard() {
     if (_deck.isEmpty) {
@@ -709,7 +1102,13 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
 
   /// [startYFactor] places the bubble at a fraction of screen height instead
   /// of just below the bottom edge — used to pre-seed the round start.
-  void _spawnBubble(int nowMs, Size screen, {double? startYFactor}) {
+  /// [at] puts it at an exact point: the ring of Bloom's wand.
+  void _spawnBubble(
+    int nowMs,
+    Size screen, {
+    double? startYFactor,
+    Offset? at,
+  }) {
     if (_pool.isEmpty) return;
     final t = _tuning;
     final card = _drawCard();
@@ -727,18 +1126,28 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     final amplitude = t.swayMin + _rng.nextDouble() * (t.swayMax - t.swayMin);
     final periodMs = 2400.0 + _rng.nextDouble() * 1200.0;
 
-    final anchor = BubbleStage.spawnAnchorX(
-      rng: _rng,
-      width: screen.width,
-      size: size,
-      amplitude: amplitude,
-      bloom: BubbleStage.bloomRect(screen, _device),
-    );
+    final anchor = at?.dx ??
+        BubbleStage.spawnAnchorX(
+          rng: _rng,
+          width: screen.width,
+          size: size,
+          amplitude: amplitude,
+          bloom: BubbleStage.bloomRect(screen, _device),
+          // Only the bubbles still low on the screen crowd a newborn.
+          avoid: [
+            for (final b in _live)
+              if (b.posY > screen.height * 0.7) b.anchorX,
+          ],
+        );
     // Default: start just below the visible area.
-    final posY = startYFactor != null
-        ? screen.height * startYFactor
-        : screen.height + size;
+    final posY = at?.dy ??
+        (startYFactor != null
+            ? screen.height * startYFactor
+            : screen.height + size);
 
+    // The arrival is worth seeing for the youngest two levels; L3+ play
+    // fast enough that a bubble growing in would be one more thing to
+    // wait for. Reduced motion keeps the fade only (handled in paint).
     _live.add(_LiveBubble(
       id: _nextBubbleId++,
       card: card,
@@ -752,7 +1161,21 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
       bornAtMs: nowMs,
       posX: anchor,
       posY: posY,
+      spawnT: t.level >= 3 ? 1.0 : 0.0,
     ));
+    _precacheDeck();
+  }
+
+  /// Warm the next two cards of the deck so a new bubble never shows the
+  /// emoji stand-in for a frame. Only what is actually on the device:
+  /// precaching an asset still inside an undelivered Play pack throws,
+  /// and `precacheImage` hands that to `FlutterError.onError` — which
+  /// `main.dart` files as a fatal crash.
+  void _precacheDeck() {
+    if (!mounted) return;
+    for (var i = 0; i < 2 && i < _deck.length; i++) {
+      CardImage.precache(context, _deck[_deck.length - 1 - i]);
+    }
   }
 
   // ── Pop interaction ───────────────────────────
@@ -774,28 +1197,55 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     return p;
   }
 
-  void _popBubble(_LiveBubble b) {
-    if (_ended) return;
-    if (!_live.any((x) => x.id == b.id)) return; // two fingers, one bubble
+  /// The revealed card is bigger than the bubble it came out of: nudge it
+  /// back inside the play area so its top never hides under the top bar
+  /// and its sides stay 16 dp in (spec §3).
+  Offset _cardShift(double size, double posX, double posY) {
+    final body = _screenSize;
+    if (body == null) return Offset.zero;
+    final w = size * _CardInside.widthFactor * _CardInside.peakScale;
+    final h = w * _CardInside.cardAspect;
+    final minX = w / 2 + DT.sp16;
+    final maxX = body.width - w / 2 - DT.sp16;
+    final minY = h / 2 + DT.sp8;
+    final maxY = body.height - h / 2 - DT.sp8;
+    final cx = maxX >= minX ? posX.clamp(minX, maxX) : body.width / 2;
+    final cy = maxY >= minY ? posY.clamp(minY, maxY) : body.height / 2;
+    return Offset(cx - posX, cy - posY);
+  }
 
-    // Pop + medium bump on pointer-down, then the word — the pop never
-    // cuts the narrator off (FeedbackService plays over, not through).
-    FeedbackService.instance.event(
-      FeedbackEvent.bubblePop,
-      pitch: _pitchFor(b.size),
-    );
-    AudioService.instance.playWordOnly(b.card.audioKey, b.card.sound);
-
-    setState(() {
-      _live.removeWhere((x) => x.id == b.id);
-      _popping.add(_PopRequest(
+  _PopRequest _popRequestFor(_LiveBubble b, {BubbleWord? word}) => _PopRequest(
         id: b.id,
         card: b.card,
         size: b.size,
         tint: b.tint,
         posX: b.posX,
         posY: b.posY,
-      ));
+        cardShift: _cardShift(b.size, b.posX, b.posY),
+        word: word,
+      );
+
+  void _popBubble(_LiveBubble b) {
+    if (_ended) return;
+    if (!_live.any((x) => x.id == b.id)) return; // two fingers, one bubble
+
+    // Pop + medium bump on pointer-down, then the word — through the
+    // queue, so a fast run of pops is whole words and not beginnings.
+    FeedbackService.instance.event(
+      FeedbackEvent.bubblePop,
+      pitch: _pitchFor(b.size),
+    );
+    final word = _words.say(b.card);
+    _msSinceTouch = 0;
+    // Bloom hops with the child (spec §2). His own debounce keeps a hop
+    // already in the air from restarting, so three pops a second on L3
+    // read as one happy rabbit and not a shiver.
+    _bloom.success(BloomSuccessTier.micro);
+
+    setState(() {
+      _live.removeWhere((x) => x.id == b.id);
+      _population.value++;
+      _popping.add(_popRequestFor(b, word: word));
       _popped++;
       // The last pop hands over to the celebration; cheering underneath
       // it would just be two rewards fighting for the screen.
@@ -840,6 +1290,8 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     if (_ended) return;
     // Bloom's own hit zone sits above this layer; belt and braces.
     if (bloom.contains(at)) return;
+    // A miss is still the child being here: it resets the idle clock.
+    _msSinceTouch = 0;
     FeedbackService.instance.event(FeedbackEvent.emptyTap);
     if (_reduce) return;
     setState(() {
@@ -873,12 +1325,17 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     _physics = policy.mode != MotionMode.test;
     _device = BubbleDeviceClass.of(MediaQuery.sizeOf(context).shortestSide);
 
-    // Shell: close top-left, wordless fill-up pill under the header, the
-    // count as the one piece of text a three-year-old can already read.
+    // Shell: close top-left (the shell's drawn X, not a Material glyph),
+    // the water tube in the title slot, the count on the right as the one
+    // piece of text a three-year-old can already read. The shell's own
+    // 8 dp pill is off: a tube in the header keeps all three controls on
+    // one line and off the sky (spec §8, 2.9).
     return KidScreen.game(
       accent: DT.brand,
       background: DT.sceneSkyTop,
-      progress: (_popped / _tuning.targetPops).clamp(0.0, 1.0),
+      title: _ProgressTube(
+        value: (_popped / _tuning.targetPops).clamp(0.0, 1.0),
+      ),
       trailing: _CountPill(popped: _popped, target: _tuning.targetPops),
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -915,52 +1372,65 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
                   ),
                 ),
 
-              // Bloom on the grass, under the bubbles. Interactive: a tap
-              // hops and giggles (through his brain), never navigates.
+              // Bloom on the grass, under the bubbles. Interactive: the
+              // tap hops and giggles (through his brain) and blows one
+              // more bubble out of the wand — it never navigates. The
+              // Listener sits outside the mascot's own gesture, so both
+              // answers happen on the same touch.
               Positioned.fromRect(
                 rect: bloomRect,
                 child: AnimatedOpacity(
                   opacity: _celebrating ? 0 : 1,
                   duration: policy.dur(DT.motion.bloomFade),
-                  child: BloomMascot(
-                    size: bloomRect.width,
-                    semanticsLabel: 'Bloom',
+                  child: Listener(
+                    onPointerDown: (_) => _blowFromWand(),
+                    child: BloomMascot(
+                      size: bloomRect.width,
+                      semanticsLabel: 'Bloom',
+                    ),
                   ),
                 ),
               ),
 
-              // Live bubbles — isolated in their own subtree that rebuilds
-              // per ticker frame; the rest of the screen stays untouched.
+              // Live bubbles. The children change when the cast does
+              // (~1/s); the positions are a repaint of one Flow layer per
+              // frame, and each bubble is its own RepaintBoundary, so the
+              // glass rasterises once and the compositor only moves it.
               // Hit zone = diameter + 2·slop; the glass is drawn centred.
               Positioned.fill(
                 child: ListenableBuilder(
-                  listenable: _frame,
-                  builder: (_, _) => Stack(
-                    children: [
-                      for (final b in _live)
-                        Positioned(
-                          key: ValueKey('bubble_${b.id}'),
-                          left: b.posX - b.size / 2 - slop,
-                          top: b.posY - b.size / 2 - slop,
-                          width: b.size + 2 * slop,
-                          height: b.size + 2 * slop,
-                          child: Listener(
-                            behavior: HitTestBehavior.opaque,
-                            onPointerDown: (_) => _popBubble(b),
-                            child: Padding(
-                              padding: EdgeInsets.all(slop),
-                              child: RepaintBoundary(
+                  listenable: _population,
+                  builder: (_, _) {
+                    final cast = List.of(_live);
+                    if (cast.isEmpty) return const SizedBox.shrink();
+                    return Flow(
+                      delegate: _BubbleFlowDelegate(
+                        bubbles: cast,
+                        slop: slop,
+                        reduce: _reduce,
+                        repaint: _frame,
+                      ),
+                      children: [
+                        for (final b in cast)
+                          RepaintBoundary(
+                            key: ValueKey('bubble_${b.id}'),
+                            child: Listener(
+                              behavior: HitTestBehavior.opaque,
+                              onPointerDown: (_) => _popBubble(b),
+                              child: Padding(
+                                padding: EdgeInsets.all(slop),
                                 child: _BubbleGlass(
                                   card: b.card,
                                   tint: b.tint,
                                   rimWidth: _device.rimWidth,
+                                  highlight: b.isHinted,
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                    ],
-                  ),
+                      ],
+                    );
+                  },
                 ),
               ),
 
@@ -980,6 +1450,13 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
                       onComplete: () => _onPopComplete(p.id),
                     ),
                   ),
+                ),
+
+              // The round's last beat: confetti out of Bloom's corner
+              // while he cheers, before the shared card arrives.
+              if (_finale && !_celebrating)
+                Positioned.fill(
+                  child: ConfettiBurst(origin: bloomRect.center),
                 ),
 
               // Praise: Bloom's line, rising from over his head. Above the
@@ -1183,6 +1660,78 @@ class _MeadowPainter extends CustomPainter {
 }
 
 // ─────────────────────────────────────────────
+//  The bubble layer (spec §3, "performance")
+// ─────────────────────────────────────────────
+
+/// Places every live bubble by matrix instead of by `Positioned`.
+///
+/// The list is the round's own [_LiveBubble] objects: the ticker mutates
+/// their `posX/posY/spawnT/hintT` and bumps `repaint`, so a frame is one
+/// paint of one layer — no build, no layout, no 60-per-second Stack. The
+/// children only change when a bubble is born or leaves.
+class _BubbleFlowDelegate extends FlowDelegate {
+  _BubbleFlowDelegate({
+    required this.bubbles,
+    required this.slop,
+    required this.reduce,
+    required Listenable repaint,
+  }) : super(repaint: repaint);
+
+  final List<_LiveBubble> bubbles;
+  final double slop;
+  final bool reduce;
+
+  /// Turns of the hint wiggle, and how far it leans.
+  static const double _wiggleTurns = 3;
+  static const double _wiggleAngle = 0.06;
+
+  @override
+  BoxConstraints getConstraintsForChild(int i, BoxConstraints constraints) =>
+      BoxConstraints.tight(Size.square(bubbles[i].size + 2 * slop));
+
+  @override
+  void paintChildren(FlowPaintingContext context) {
+    for (var i = 0; i < context.childCount && i < bubbles.length; i++) {
+      final b = bubbles[i];
+      final box = context.getChildSize(i) ?? Size.square(b.size + 2 * slop);
+      final t = b.spawnT;
+
+      // Arrival: 0.6 → 1.08 → 1.0 with a fade (spec §3). Reduced motion
+      // keeps the fade only — the bubble still has to be seen arriving,
+      // it just does not spring.
+      final scale = (reduce || t >= 1)
+          ? 1.0
+          : 0.6 + 0.4 * Curves.elasticOut.transform(t);
+      final fade = t >= 1
+          ? 1.0
+          : (reduce ? t : min(1.0, t / 0.4));
+
+      final hint = b.hintT;
+      final wiggle = (hint == null || reduce)
+          ? 0.0
+          : sin(hint * _wiggleTurns * 2 * pi) * _wiggleAngle * (1 - hint);
+
+      final m = Matrix4.identity()
+        ..translateByDouble(
+          b.posX - box.width / 2,
+          b.posY - box.height / 2,
+          0,
+          1,
+        )
+        ..translateByDouble(box.width / 2, box.height / 2, 0, 1)
+        ..rotateZ(wiggle)
+        ..scaleByDouble(scale, scale, 1, 1)
+        ..translateByDouble(-box.width / 2, -box.height / 2, 0, 1);
+      context.paintChild(i, transform: m, opacity: fade);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _BubbleFlowDelegate old) =>
+      old.bubbles != bubbles || old.slop != slop || old.reduce != reduce;
+}
+
+// ─────────────────────────────────────────────
 //  Bubble glass (spec §3)
 // ─────────────────────────────────────────────
 
@@ -1194,10 +1743,16 @@ class _BubbleGlass extends StatelessWidget {
   final Color tint;
   final double rimWidth;
 
+  /// Bloom is pointing at this one (idle hint, spec §2): the rim thickens
+  /// and the glass glows. The wiggle is the layer's job; the glow is the
+  /// whole hint under reduced motion.
+  final bool highlight;
+
   const _BubbleGlass({
     required this.card,
     required this.tint,
     required this.rimWidth,
+    this.highlight = false,
   });
 
   /// The subjects of the cards sit a little above centre.
@@ -1214,6 +1769,12 @@ class _BubbleGlass extends StatelessWidget {
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
+          if (highlight)
+            BoxShadow(
+              color: DT.surfaceWhite.withValues(alpha: 0.9),
+              blurRadius: 18,
+              spreadRadius: 2,
+            ),
         ],
       ),
       child: ClipOval(
@@ -1243,7 +1804,12 @@ class _BubbleGlass extends StatelessWidget {
                 ),
               ),
             ),
-            CustomPaint(painter: _GlassPainter(tint: tint, rimWidth: rimWidth)),
+            CustomPaint(
+              painter: _GlassPainter(
+                tint: tint,
+                rimWidth: highlight ? rimWidth * 1.6 : rimWidth,
+              ),
+            ),
           ],
         ),
       ),
@@ -1355,6 +1921,12 @@ class _PoppingBubbleState extends State<_PoppingBubble>
   static const _burstEnd = 0.20;
   static const _ringEnd = 0.30;
 
+  /// Which of the two holds has already been taken.
+  bool _waitedForWord = false;
+  bool _waitedMinHold = false;
+  Timer? _holdCap;
+  VoidCallback? _resume;
+
   @override
   void initState() {
     super.initState();
@@ -1371,11 +1943,68 @@ class _PoppingBubbleState extends State<_PoppingBubble>
       ..addStatusListener((s) {
         if (s == AnimationStatus.completed) widget.onComplete();
       })
+      ..addListener(_hold)
       ..forward();
+  }
+
+  /// The picture waits for its word (spec §3): when the reveal has landed
+  /// and the queue has not reached this card yet, the card simply stays —
+  /// a child never sees one card while hearing another. The cap is
+  /// [DTMotion.bubbleWordWait]; a card whose word was replaced in the
+  /// queue finishes silently and on time.
+  ///
+  /// The second hold is [BubbleTuning.minHold]: the youngest children get
+  /// the picture for longer than the animation alone would give it.
+  void _hold() {
+    if (widget.reduce || _resume != null) return;
+    final t = _ctrl.value;
+    if (!_waitedForWord && t >= _CardInside.holdStart) {
+      _waitedForWord = true;
+      final word = widget.request.word;
+      if (word != null && !word.started.value && !word.dropped.value) {
+        _pause(DT.motion.bubbleWordWait, until: [word.started, word.dropped]);
+        return;
+      }
+    }
+    if (!_waitedMinHold && t >= _CardInside.exitStart) {
+      _waitedMinHold = true;
+      final shown = widget.tuning.popDuration *
+          (_CardInside.exitStart - _CardInside.holdStart);
+      final owed = widget.tuning.minHold - shown;
+      if (owed > Duration.zero) _pause(owed);
+    }
+  }
+
+  void _pause(Duration cap, {List<ValueListenable<bool>> until = const []}) {
+    _ctrl.stop();
+    late final VoidCallback resume;
+    resume = () {
+      if (_resume == null) return;
+      _resume = null;
+      for (final l in until) {
+        l.removeListener(resume);
+      }
+      _holdCap?.cancel();
+      _holdCap = null;
+      if (mounted) _ctrl.forward();
+    };
+
+    _resume = resume;
+    for (final l in until) {
+      l.addListener(resume);
+    }
+    _holdCap = Timer(cap, resume);
   }
 
   @override
   void dispose() {
+    _holdCap?.cancel();
+    final word = widget.request.word;
+    final resume = _resume;
+    if (word != null && resume != null) {
+      word.started.removeListener(resume);
+      word.dropped.removeListener(resume);
+    }
     _ctrl.dispose();
     super.dispose();
   }
@@ -1399,7 +2028,13 @@ class _PoppingBubbleState extends State<_PoppingBubble>
                     child: _BubbleGlass(card: req.card, tint: req.tint, rimWidth: rim),
                   ),
                 ),
-              _CardInside(card: req.card, boxSize: req.size, t: t, reduce: true),
+              _CardInside(
+                card: req.card,
+                boxSize: req.size,
+                t: t,
+                shift: req.cardShift,
+                reduce: true,
+              ),
             ],
           );
         }
@@ -1428,7 +2063,13 @@ class _PoppingBubbleState extends State<_PoppingBubble>
                 req: req,
                 dropT: (t - _squashEnd) / (_burstEnd - _squashEnd),
               ),
-            _CardInside(card: req.card, boxSize: req.size, t: t, reduce: false),
+            _CardInside(
+              card: req.card,
+              boxSize: req.size,
+              t: t,
+              shift: req.cardShift,
+              reduce: false,
+            ),
           ],
         );
       },
@@ -1528,71 +2169,139 @@ class _WhiteRing extends StatelessWidget {
   }
 }
 
-/// The card, whole (`contain`), for the child to see while the word plays.
-///   0.00..0.40 → scale 0.7 → 1.25 (elasticOut) + tiny wobble
-///   0.40..0.80 → hold at 1.25, lift −8 px and settle
+/// The card the bubble was carrying, revealed (spec §3).
+///
+/// The circle does not cross-fade into a rectangle — it *becomes* one:
+/// the clip is `ShapeBorder.lerp(CircleBorder, RoundedRectangleBorder)`
+/// over a box whose aspect goes 1:1 → 3:4, and the illustration hands
+/// over from `cover` (the crop that made a recognisable target in flight)
+/// to `contain` (the whole picture, which is the lesson). Then it holds
+/// with a soft lift while the word plays, and leaves in place.
+///
+///   0.00..0.40 → morph + scale 1.0 → 1.25 (elasticOut)
+///   0.40..0.80 → hold, lift −8 px and settle (the hold is stretched by
+///                [_PoppingBubble] until the word has actually started)
 ///   0.80..1.00 → scale → 0.85 (easeIn) + fade, in place
+///
+/// Reduced motion: no morph and no spring — the whole card is simply
+/// there at full size, holds, and fades.
 class _CardInside extends StatelessWidget {
   final CardModel card;
   final double boxSize;
   final double t; // 0..1
+
+  /// Keeps the card inside the play area when the bubble popped near an
+  /// edge or just under the top bar.
+  final Offset shift;
   final bool reduce;
 
   const _CardInside({
     required this.card,
     required this.boxSize,
     required this.t,
+    required this.shift,
     required this.reduce,
   });
 
+  /// Card width as a share of the bubble's diameter, its 3:4 shape, and
+  /// how much bigger than the bubble it grows. [_BubblePopScreenState]
+  /// reads these to clamp the reveal against the edges.
+  static const double widthFactor = 0.95;
+  static const double cardAspect = 4 / 3;
+  static const double peakScale = 1.25;
+
+  /// Corner radius as a share of the card's width.
+  static const double _radiusFactor = 0.14;
+
+  /// Beats of the pop, as fractions of [BubbleTuning.popDuration].
+  static const double revealEnd = 0.4;
+  static const double holdStart = 0.4;
+  static const double exitStart = 0.8;
+
   @override
   Widget build(BuildContext context) {
+    // How far the circle has turned into a card, 0..1.
+    final morph = reduce
+        ? 1.0
+        : Curves.easeOut.transform((t / revealEnd).clamp(0.0, 1.0));
+
     double scale;
     double translateY;
     double opacity;
-    double rotation;
 
     if (reduce) {
-      scale = 1.25;
+      scale = peakScale;
       translateY = 0;
-      rotation = 0;
-      opacity = t < 0.8 ? 1.0 : (1 - (t - 0.8) / 0.2).clamp(0.0, 1.0);
-    } else if (t < 0.4) {
-      final p = (t / 0.4).clamp(0.0, 1.0);
-      final eased = Curves.elasticOut.transform(p);
-      scale = 0.7 + (1.25 - 0.7) * eased;
+      opacity = t < exitStart
+          ? 1.0
+          : (1 - (t - exitStart) / (1 - exitStart)).clamp(0.0, 1.0);
+    } else if (t < holdStart) {
+      final p = (t / holdStart).clamp(0.0, 1.0);
+      scale = 1.0 + (peakScale - 1.0) * Curves.elasticOut.transform(p);
       translateY = 0;
       opacity = 1;
-      rotation = sin(p * 2 * pi) * 0.05;
-    } else if (t < 0.8) {
-      scale = 1.25;
-      final p = ((t - 0.4) / 0.4).clamp(0.0, 1.0);
+    } else if (t < exitStart) {
+      scale = peakScale;
+      final p = ((t - holdStart) / (exitStart - holdStart)).clamp(0.0, 1.0);
       translateY = -8 * sin(p * pi);
       opacity = 1;
-      rotation = 0;
     } else {
-      final p = ((t - 0.8) / 0.2).clamp(0.0, 1.0);
+      final p = ((t - exitStart) / (1 - exitStart)).clamp(0.0, 1.0);
       final eased = Curves.easeIn.transform(p);
-      scale = 1.25 - (1.25 - 0.85) * eased;
+      scale = peakScale - (peakScale - 0.85) * eased;
       translateY = 0;
       opacity = (1 - eased).clamp(0.0, 1.0);
-      rotation = 0;
     }
+
+    // The box: a circle of the bubble's own diameter at 0, a 3:4 card at 1.
+    final width = boxSize * (1 - morph * (1 - widthFactor));
+    final height = boxSize * (1 + morph * (widthFactor * cardAspect - 1));
 
     return Positioned.fill(
       child: Center(
-        child: Opacity(
-          opacity: opacity,
-          child: Transform.translate(
-            offset: Offset(0, translateY),
-            child: Transform.rotate(
-              angle: rotation,
-              child: Transform.scale(
-                scale: scale,
-                child: SizedBox(
-                  width: boxSize * 0.76,
-                  height: boxSize * 0.76,
-                  child: CardImage.forCard(card, padding: EdgeInsets.zero),
+        child: Transform.translate(
+          offset: shift + Offset(0, translateY),
+          child: Opacity(
+            opacity: opacity,
+            child: Transform.scale(
+              scale: scale,
+              child: SizedBox(
+                width: width,
+                height: height,
+                child: ClipPath(
+                  clipper: ShapeBorderClipper(
+                    shape: ShapeBorder.lerp(
+                      const CircleBorder(),
+                      RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(width * _radiusFactor),
+                      ),
+                      morph,
+                    )!, // lerp of two non-null ShapeBorders is never null
+                  ),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      // The flight crop hands over to the whole picture.
+                      if (morph < 1)
+                        Opacity(
+                          opacity: 1 - morph,
+                          child: CardImage.forCard(
+                            card,
+                            fit: BoxFit.cover,
+                            alignment: _BubbleGlass.artAlignment,
+                            padding: EdgeInsets.zero,
+                          ),
+                        ),
+                      Opacity(
+                        opacity: morph,
+                        child: CardImage.forCard(
+                          card,
+                          padding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -1675,6 +2384,114 @@ class _RipplePainter extends CustomPainter {
 // ─────────────────────────────────────────────
 //  Top bar: count pill
 // ─────────────────────────────────────────────
+
+/// The round's progress as a tube of water (spec §8, 2.9).
+///
+/// A flat bar reads as "loading" — and on an 11" tablet a full-width one
+/// read as *nothing at all*. This is 12 dp of glass with water rising
+/// through it and a droplet at the front of the fill, capped at 360 dp so
+/// it stays an object on the shelf rather than a stripe across the sky.
+/// The count pill keeps its place to the right of it.
+class _ProgressTube extends StatelessWidget {
+  const _ProgressTube({required this.value});
+
+  /// 0..1.
+  final double value;
+
+  static const double height = 12;
+  static const double maxWidth = 360;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = value.isNaN ? 0.0 : value.clamp(0.0, 1.0);
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: maxWidth),
+        child: Semantics(
+          value: '${(t * 100).round()}%',
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: t),
+            duration: MotionPolicy.of(context).dur(DT.motion.base),
+            curve: DT.motion.standard,
+            builder: (context, filled, _) => CustomPaint(
+              painter: _TubePainter(filled),
+              size: const Size(double.infinity, height),
+              child: const SizedBox(height: height, width: double.infinity),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TubePainter extends CustomPainter {
+  const _TubePainter(this.t);
+
+  final double t;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final r = size.height / 2;
+    final tube = RRect.fromRectAndRadius(
+      Offset.zero & size,
+      Radius.circular(r),
+    );
+    // Glass.
+    canvas.drawRRect(tube, Paint()..color = DT.sceneSkyMid);
+    canvas.drawRRect(
+      tube,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5
+        ..color = DT.surfaceWhite.withValues(alpha: 0.8),
+    );
+    if (t <= 0) return;
+
+    // Water: the two blues of the scene, lit along the top edge.
+    final w = size.width * t;
+    final fill = Rect.fromLTWH(0, 0, w, size.height);
+    canvas.save();
+    canvas.clipRRect(tube);
+    canvas.drawRect(
+      fill,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [DT.sky, DT.brand],
+        ).createShader(Offset.zero & size),
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(2, 2, max(0, w - 4), size.height * 0.28),
+        Radius.circular(size.height * 0.14),
+      ),
+      Paint()..color = DT.surfaceWhite.withValues(alpha: 0.35),
+    );
+    canvas.restore();
+
+    // The droplet riding the front of the water.
+    final c = Offset(w.clamp(r, size.width - r), r);
+    canvas.drawCircle(c, r * 1.25, Paint()..color = DT.sky);
+    canvas.drawCircle(
+      c,
+      r * 1.25,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..color = DT.surfaceWhite,
+    );
+    canvas.drawCircle(
+      c + Offset(-r * 0.3, -r * 0.35),
+      r * 0.28,
+      Paint()..color = DT.surfaceWhite.withValues(alpha: 0.85),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _TubePainter old) => old.t != t;
+}
 
 class _CountPill extends StatelessWidget {
   final int popped;

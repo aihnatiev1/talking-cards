@@ -62,6 +62,14 @@ abstract final class MemoryTiers {
     return RoundConfidence.neutral;
   }
 
+  /// Where a session opens: the level's start, raised to the board the
+  /// child last found calm and never past the level's ceiling.
+  static int openingFor(int level, int? comfort) {
+    final start = startFor(level);
+    if (comfort == null) return start;
+    return comfort.clamp(start, ceilingFor(level));
+  }
+
   /// The next size up from [pairs], never past [ceiling].
   static int up(int pairs, int ceiling) {
     for (final s in steps) {
@@ -82,14 +90,19 @@ abstract final class MemoryTiers {
 /// One session's worth of board sizing. Pure Dart, no clock, no storage —
 /// the screen feeds it rounds and asks it how many pairs to deal.
 class MemoryDifficulty {
-  MemoryDifficulty({required this.level, int? fixedPairs})
+  /// [comfort] is the biggest board this child last played calmly
+  /// (remembered per profile, §6): the session opens there instead of at
+  /// the level's start, so nobody begins every day from nothing. It never
+  /// lowers the start and never passes the ceiling, and an explicit
+  /// [fixedPairs] ignores it altogether.
+  MemoryDifficulty({required this.level, int? fixedPairs, int? comfort})
     : _ladder = ConfidenceLadder(
         steps: MemoryTiers.steps,
         floor: MemoryTiers.startFor(level),
         ceiling: MemoryTiers.ceilingFor(level),
         calmNeeded: MemoryTiers.calmNeeded(level),
         struggleForStepBack: MemoryTiers.struggleForStepBack,
-        value: fixedPairs,
+        value: fixedPairs ?? MemoryTiers.openingFor(level, comfort),
         fixed: fixedPairs != null,
       );
 

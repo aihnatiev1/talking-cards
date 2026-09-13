@@ -95,6 +95,34 @@ class CardImage extends StatelessWidget {
         fallbackEmoji = card.emoji,
         fallback = null;
 
+  /// Warm the image cache for [card] at the size it will be drawn.
+  ///
+  /// The owner of card rendering is also the owner of card *pre*-rendering:
+  /// a precache is the one other place an `ImageProvider` is resolved, and
+  /// doing it by hand is how art still inside an undelivered Play pack
+  /// becomes a fatal crash — `precacheImage` hands the throw to
+  /// `FlutterError.onError`, which `main.dart` files as fatal. Asking
+  /// [AssetPackService.cardArt] answers "is it here?" instead of guessing,
+  /// and the `onError` covers the pack being evicted in between.
+  ///
+  /// The [size] must match the display site, or the same picture decodes
+  /// twice under two different [ResizeImage] keys.
+  static void precache(
+    BuildContext context,
+    CardModel card, {
+    CardArtSize size = CardArtSize.tile,
+  }) {
+    final art = AssetPackService.instance.cardArt(
+      card.image,
+      cacheWidth: switch (size) {
+        CardArtSize.hero => cardCacheWidth(context),
+        CardArtSize.tile => tileCacheWidth(context),
+      },
+    );
+    if (art is! ArtReady) return;
+    precacheImage(art.provider, context, onError: (_, _) {});
+  }
+
   /// Reported at most once per asset per session: a grid of twenty tiles
   /// waiting on the same pack is one problem, not twenty events.
   static final Set<String> _reported = {};

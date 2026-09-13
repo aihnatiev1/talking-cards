@@ -8,6 +8,8 @@ import 'package:talking_cards/screens/memory_match_screen.dart';
 import 'package:talking_cards/services/asset_pack_service.dart';
 import 'package:talking_cards/services/audio_service.dart';
 import 'package:talking_cards/services/feedback_service.dart';
+import 'package:talking_cards/services/memory_comfort_service.dart';
+import 'package:talking_cards/utils/memory_tiers.dart';
 import 'package:talking_cards/utils/motion.dart';
 import 'package:talking_cards/widgets/kid_tap.dart';
 
@@ -28,8 +30,15 @@ void main() {
 
   final words = <String?>[];
 
+  final nudges = <List<int>>[];
+
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+    nudges.clear();
+    MemoryMatchScreen.debugNudgeSink = (step, hints) =>
+        nudges.add([step, hints]);
+    MemoryComfortService.debugValue = null;
+    FeedbackService.debugSounds.clear();
     AssetPackService.instance.debugConfigure(
       padAssets: const {},
       bundled: true,
@@ -42,6 +51,9 @@ void main() {
   tearDown(() {
     AudioService.debugWordSink = null;
     FeedbackService.debugMute = false;
+    FeedbackService.debugSounds.clear();
+    MemoryMatchScreen.debugNudgeSink = null;
+    MemoryComfortService.debugValue = null;
   });
 
   CardModel card(String id) => CardModel(
@@ -168,5 +180,133 @@ void main() {
     // goes back down together, and a finished round previews the next one
     // face up. An odd count means a card was left hanging mid-flip.
     expect(faces.evaluate().length.isEven, isTrue);
+  });
+
+  group('the two-step nudge', () {
+    // Nothing has been touched for a while: the board asks once without a
+    // sound ("there is something here"), then once with one, pointing at
+    // the card that actually is the pair. Only the second step counts as
+    // a hint — which is the number the confidence of the round reads, and
+    // which was hard-wired to zero until this existed (§6).
+
+    testWidgets('the invitation comes first and says nothing', (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await open(tester, packOf(2), 2);
+
+      // Level 2 (the default profile): 5 s to the invitation.
+      await tester.pump(const Duration(seconds: 5));
+      expect(nudges, [
+        [1, 0],
+      ], reason: 'step 1 is silent and costs no hint');
+      expect(FeedbackService.debugSounds, isNot(contains(KidSound.tick)));
+    });
+
+    testWidgets('the hint follows, sounds, and counts', (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await open(tester, packOf(2), 2);
+
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pump(const Duration(seconds: 4));
+      expect(nudges.last, [2, 1], reason: 'step 2 is the hint of §6');
+      expect(
+        FeedbackService.debugSounds,
+        contains(KidSound.tick),
+        reason: 'the hint asks out loud — the quietest tick in the palette',
+      );
+      // And the number the ladder reads is no longer a constant zero.
+      expect(
+        MemoryTiers.confidenceOf(pairs: 2, misses: 0, hints: 2),
+        RoundConfidence.struggle,
+      );
+    });
+
+    testWidgets('a touch answers the board and restarts the clock', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await open(tester, packOf(2), 2);
+
+      await tester.pump(const Duration(seconds: 4));
+      await tester.tap(tiles().at(0));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(nudges, isEmpty, reason: 'a child who is playing is not nudged');
+
+      await tester.pump(const Duration(seconds: 5));
+      expect(nudges.first, [1, 0]);
+    });
+
+    testWidgets('after three unanswered hints the board stops asking', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await open(tester, packOf(2), 2);
+
+      for (var i = 0; i < 8; i++) {
+        await tester.pump(const Duration(seconds: 9));
+      }
+      final hints = nudges.where((n) => n.first == 2).length;
+      expect(hints, 3, reason: 'a mascot that keeps poking is ignored');
+    });
+
+    testWidgets('the board settles under test motion', (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await open(tester, packOf(2), 2);
+      await tester.pump(const Duration(seconds: 9));
+      // No nudge ticker is left running: under reduced motion the board
+      // asks (the hint is information) but never moves.
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  testWidgets('a parent may pin the board from the progress strip', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await open(tester, packOf(6), null);
+    // The default profile is level 2: three pairs.
+    expect(find.text('0/3'), findsOneWidget);
+
+    await tester.longPress(find.byKey(MemoryMatchScreen.parentStripKey));
+    await tester.pumpAndSettle();
+    expect(find.text('Для батьків'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(ChoiceChip, '4'));
+    await tester.pumpAndSettle();
+    expect(find.text('0/4'), findsOneWidget);
+    expect(tiles(), findsNWidgets(8));
+  });
+
+  testWidgets('the session opens on the board that was calm last time', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    MemoryComfortService.debugValue = 4;
+    await open(tester, packOf(6), null);
+    // The remembered tier arrives from storage a beat after the first
+    // deal; an untouched board takes it.
+    await tester.pumpAndSettle();
+    expect(find.text('0/4'), findsOneWidget);
   });
 }
