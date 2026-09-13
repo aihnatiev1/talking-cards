@@ -136,13 +136,19 @@ class KidScreen extends StatelessWidget {
         body: SafeArea(
           child: Column(
             children: [
-              _Header(
-                leading: showLeading
-                    ? control
-                    : const SizedBox.square(dimension: 72),
-                title: title,
-                trailing: trailing,
-              ),
+              // An empty band is not a header. `showLeading: false` keeps
+              // the control's space so a title does not jump between a
+              // screen that can go back and one that cannot — but with no
+              // title and no trailing there is nothing to hold in place,
+              // and 88 dp of nothing above the content is just a gap.
+              if (showLeading || title != null || trailing != null)
+                _Header(
+                  leading: showLeading
+                      ? control
+                      : const SizedBox.square(dimension: 72),
+                  title: title,
+                  trailing: trailing,
+                ),
               if (progressValue != null)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(

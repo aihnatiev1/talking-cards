@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -371,6 +372,9 @@ class _OptionsBoard extends StatelessWidget {
   static const double _gap = 12;
   static const double _aspect = 0.85; // width / height
 
+  /// The tallest a single-row tile may stretch to (width / height).
+  static const double _tallAspect = 0.62;
+
   @override
   Widget build(BuildContext context) {
     final rows = <List<CardModel>>[
@@ -382,6 +386,15 @@ class _OptionsBoard extends StatelessWidget {
       builder: (context, box) {
         var tileW = (box.maxWidth - _gap) / 2;
         var tileH = tileW / _aspect;
+        if (rows.length == 1) {
+          // Two options never fill a phone: the tile can only be half the
+          // width, so at 0.85 the board floated in the middle of a screen
+          // of nothing. A single row grows downwards into the space it
+          // has instead — up to [_tallAspect], past which a picture is a
+          // stripe. This is the youngest child's board; it should be the
+          // biggest one in the app, and now it is.
+          tileH = math.max(tileH, math.min(box.maxHeight, tileW / _tallAspect));
+        }
         final stack = tileH * rows.length + _gap * (rows.length - 1);
         if (stack > box.maxHeight && stack > 0) {
           final k = (box.maxHeight - _gap * (rows.length - 1)) /
@@ -410,7 +423,12 @@ class _OptionsBoard extends StatelessWidget {
           );
         }
 
-        return Center(
+        // Low, not centred: a two-picture board that floats in the middle
+        // leaves its dead space under the tiles, which is exactly the part
+        // of a phone a small hand can reach. A four-picture board fills
+        // the space anyway, so this only moves the small boards down.
+        return Align(
+          alignment: const Alignment(0, 0.7),
           child: Column(mainAxisSize: MainAxisSize.min, children: children),
         );
       },

@@ -282,4 +282,24 @@ void main() {
       expect(find.text('over'), findsOneWidget);
     });
   });
+
+  testWidgets('an empty header band collapses instead of sitting there',
+      (tester) async {
+    // Colouring hides the control and has no title: 88 dp of nothing above
+    // the picture is a gap, not a header.
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: KidScreen.game(showLeading: false, body: Text('body')),
+      ),
+    );
+    final headerless = tester.getTopLeft(find.text('body')).dy;
+
+    await tester.pumpWidget(
+      const MaterialApp(home: KidScreen.game(body: Text('body'))),
+    );
+    final withHeader = tester.getTopLeft(find.text('body')).dy;
+
+    expect(headerless, lessThan(withHeader));
+    expect(withHeader - headerless, KidScreen.headerHeight);
+  });
 }
