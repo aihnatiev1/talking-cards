@@ -1660,7 +1660,7 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
       accent: DT.brand,
       background: DT.sceneSkyTop,
       title: _ProgressTube(value: (_popped / _goal).clamp(0.0, 1.0)),
-      trailing: _CountPill(popped: _popped, target: _goal),
+      trailing: KidCountPill(label: '$_popped/$_goal'),
       body: LayoutBuilder(
         builder: (context, constraints) {
           // Cache layout for the ticker. The box is the play area under the
@@ -2824,7 +2824,7 @@ class _RipplePainter extends CustomPainter {
 }
 
 // ─────────────────────────────────────────────
-//  Top bar: count pill
+//  Top bar: the progress tube
 // ─────────────────────────────────────────────
 
 /// The round's progress as a tube of water (spec §8, 2.9).
@@ -2933,39 +2933,6 @@ class _TubePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _TubePainter old) => old.t != t;
-}
-
-class _CountPill extends StatelessWidget {
-  final int popped;
-  final int target;
-
-  const _CountPill({required this.popped, required this.target});
-
-  @override
-  Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 72),
-      child: Center(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: DT.brand,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: DT.shadowSoft(DT.brand),
-          ),
-          child: Text(
-            '$popped/$target',
-            style: const TextStyle(
-              fontFamily: DT.kidFont,
-              fontVariations: [FontVariation('wght', 900)],
-              fontSize: 16,
-              color: Colors.white,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 // ─────────────────────────────────────────────

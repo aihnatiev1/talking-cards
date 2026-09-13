@@ -53,7 +53,7 @@ void main() {
     'iPad landscape': Size(1194, 834),
   };
 
-  for (final pairs in [3, 4]) {
+  for (final pairs in [3, 4, 8]) {
     for (final entry in surfaces.entries) {
       testWidgets('$pairs pairs fit on ${entry.key}', (tester) async {
         tester.view.physicalSize = entry.value;
@@ -90,6 +90,58 @@ void main() {
           expect(screen.contains(rect.center), isTrue,
               reason: 'a tappable tile centred outside the screen on '
                   '${entry.key}: $rect');
+        }
+      });
+
+      testWidgets('$pairs pairs are laid out to spec on ${entry.key}',
+          (tester) async {
+        tester.view.physicalSize = entry.value;
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+
+        await tester.pumpWidget(
+          ProviderScope(
+            child: MaterialApp(
+              home: MemoryMatchScreen(
+                pack: pack,
+                cards: pack.cards,
+                pairCount: pairs,
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        // The grid slots, not the drawings inside them: the deal animation
+        // lives under each tile's key, so the keyed rect is the slot.
+        final slots = <Rect>[
+          for (var id = 0; id < pairs * 2; id++)
+            tester.getRect(find.byKey(ValueKey(id))),
+        ];
+        expect(slots, hasLength(pairs * 2));
+
+        // Columns: 2 up to 3 pairs, 4 from 8 pairs on (wave 3, 3.3),
+        // 3 in between. Counted from where the slots actually land.
+        final columns = slots.map((r) => r.center.dx.round()).toSet().length;
+        final expectedCols = switch (pairs) { <= 3 => 2, >= 8 => 4, _ => 3 };
+        expect(columns, expectedCols,
+            reason: '$pairs pairs should deal in $expectedCols columns on '
+                '${entry.key}');
+
+        // The tablet ceiling (3.2): a card never blows up past 220 dp,
+        // however much room an 11" iPad has to give.
+        for (final r in slots) {
+          expect(r.width, lessThanOrEqualTo(221),
+              reason: 'a tile grew past the ceiling on ${entry.key}: $r');
+        }
+
+        // And no two slots overlap — 4×4 that fits is still wrong if the
+        // rows sit on top of each other.
+        for (var i = 0; i < slots.length; i++) {
+          for (var j = i + 1; j < slots.length; j++) {
+            expect(slots[i].deflate(1).overlaps(slots[j].deflate(1)), isFalse,
+                reason: 'slots $i and $j overlap on ${entry.key}');
+          }
         }
       });
     }

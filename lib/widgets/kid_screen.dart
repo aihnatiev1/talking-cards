@@ -269,6 +269,78 @@ class KidProgressPill extends StatelessWidget {
   }
 }
 
+/// The header's `x/y` counter: dark text on white, ringed in the accent.
+///
+/// The first version of this pill was white on the accent — `DT.brand`
+/// landed at 4.3:1 and a mint pack at 2.0:1, below AA, let alone the AAA
+/// rule 5 of CLAUDE.md asks for. Turning it inside out keeps the colour
+/// (now a 2 dp ring plus the soft shadow, which carry the pack identity
+/// just as well) and puts [DT.textPrimary] on [DT.surfaceWhite] — 11.7:1,
+/// the same figure on every pack, because the pair no longer depends on
+/// the accent at all. Pinned by `test/widgets/kid_count_pill_test.dart`.
+///
+/// Sits in the [KidScreen.trailing] slot, so it reserves the 72 dp the
+/// slot is worth and keeps the title centred.
+class KidCountPill extends StatelessWidget {
+  const KidCountPill({
+    super.key,
+    required this.label,
+    this.accent,
+    this.semanticsLabel,
+  });
+
+  /// Already-formatted text — `7/20`, `3/12 · 5`.
+  final String label;
+
+  /// Ring and shadow colour; the nearest [KidScreen]'s accent by default.
+  final Color? accent;
+
+  final String? semanticsLabel;
+
+  /// Finder hook.
+  static const pillKey = ValueKey('kid_count_pill');
+
+  /// Text and background of the pill, as tested for contrast.
+  static const foreground = DT.textPrimary;
+  static const background = DT.surfaceWhite;
+
+  /// Ring width. Thick enough to read as the pack's colour at a glance.
+  static const double ringWidth = 2;
+
+  @override
+  Widget build(BuildContext context) {
+    final ring = accent ?? KidScreen.accentOf(context);
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 72),
+      child: Center(
+        child: Container(
+          key: pillKey,
+          padding: const EdgeInsets.symmetric(
+            horizontal: DT.sp12,
+            vertical: 6,
+          ),
+          decoration: BoxDecoration(
+            color: background,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: ring, width: ringWidth),
+            boxShadow: DT.shadowSoft(ring),
+          ),
+          child: Text(
+            label,
+            semanticsLabel: semanticsLabel,
+            style: const TextStyle(
+              fontFamily: DT.kidFont,
+              fontVariations: [FontVariation('wght', 900)],
+              fontSize: 16,
+              color: foreground,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Icons for the header controls. One place, so the icon system being built
 /// in parallel (ux-gap-audit G1) can swap Material glyphs for `KidIcon`
 /// with a single edit.

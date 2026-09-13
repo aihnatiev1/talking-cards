@@ -103,9 +103,21 @@ class _BoardMetrics {
 
   static const gap = 12.0;
 
-  /// 3 pairs → 2×3 grid with big toddler tiles; bigger boards keep the
-  /// classic 3-column layout.
-  static int colsFor(int pairs) => pairs <= 3 ? 2 : 3;
+  /// A card never grows past this, however much room there is
+  /// (memory_match_redesign §8, 3.2). On an 11" iPad three pairs used to
+  /// blow up into tiles half a screen tall: impressive for a second, then
+  /// a neck-turning scan between two objects far apart. Capped, the board
+  /// stays an object on the table and simply sits centred in the space.
+  static const maxTileW = 220.0;
+
+  /// 3 pairs → 2×3 grid with big toddler tiles; 8 pairs → 4 columns
+  /// (16 cards in 4×4 — three columns would make five rows no screen can
+  /// hold); everything between keeps the classic 3-column layout.
+  static int colsFor(int pairs) => switch (pairs) {
+    <= 3 => 2,
+    >= 8 => 4,
+    _ => 3,
+  };
 
   static _BoardMetrics of({
     required Size box,
@@ -117,8 +129,11 @@ class _BoardMetrics {
     final ratio = pairs <= 3 ? 0.9 : 0.82;
 
     final tileW = min(
-      (box.width - gap * (cols - 1)) / cols,
-      (box.height - gap * (rows - 1)) / rows * ratio,
+      maxTileW,
+      min(
+        (box.width - gap * (cols - 1)) / cols,
+        (box.height - gap * (rows - 1)) / rows * ratio,
+      ),
     );
     return _BoardMetrics(
       tileW: tileW,
@@ -884,27 +899,7 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
       background: isDark ? DT.bgDark : _theme.bg,
       // No title: cards may come from several packs, so naming one would be
       // wrong, and "Find the pair" is spoken, not read.
-      trailing: SizedBox(
-        width: 72,
-        child: Center(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: DT.shadowSoft(color),
-            ),
-            child: Text(
-              '$_matched/$_activePairs',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-      ),
+      trailing: KidCountPill(label: '$_matched/$_activePairs'),
       body: Column(
         children: [
           // ── Pair progress: stars, not dots ──

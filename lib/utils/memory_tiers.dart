@@ -21,8 +21,8 @@ export 'confidence_ladder.dart' show RoundConfidence, TierChange;
 
 /// The ladder of board sizes and the per-level windows on it.
 abstract final class MemoryTiers {
-  /// 2 → 3 → 4 → 6 → 8 pairs. 8 needs a four-column board (wave 3), which
-  /// is why no level's ceiling reaches it yet.
+  /// 2 → 3 → 4 → 6 → 8 pairs. 8 is dealt on a four-column board and is
+  /// reached only by the oldest level, and only after calm rounds on 6.
   static const steps = <int>[2, 3, 4, 6, 8];
 
   /// Where a child of [level] starts (1: 1–2 y, 2: 2–3, 3: 3–4, 4: 4–5).
@@ -40,7 +40,7 @@ abstract final class MemoryTiers {
     <= 1 => 3,
     2 => 4,
     3 => 6,
-    _ => 6,
+    _ => 8,
   };
 
   /// Calm rounds in a row needed for a bigger board: the little ones get
