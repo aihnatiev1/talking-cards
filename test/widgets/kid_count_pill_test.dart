@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -87,6 +88,22 @@ void main() {
     // the title in the middle does not shift as the count changes.
     expect(tester.getSize(find.byType(KidCountPill)).width,
         greaterThanOrEqualTo(72.0));
+  });
+
+  test('every kid screen with an x/y counter uses the pill', () {
+    // The cards screen kept its own pack-coloured text for a while after
+    // the games moved over — mint on `DT.bgWarm` is 1.9:1. Cheaper to pin
+    // the call site here than to boot the whole screen with audio, prefs
+    // and assets just to read one colour.
+    for (final path in const [
+      'lib/screens/cards_screen.dart',
+      'lib/screens/bubble_pop_screen.dart',
+      'lib/screens/memory_match_screen.dart',
+    ]) {
+      final source = File(path).readAsStringSync();
+      expect(source, contains('trailing: KidCountPill('),
+          reason: '$path must put its counter in KidCountPill');
+    }
   });
 
   testWidgets('a game header gives back/close the full 72 dp hit zone',

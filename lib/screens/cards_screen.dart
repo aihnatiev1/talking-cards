@@ -829,22 +829,16 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
         onLongPress: _showParentTools,
         child: _PackCoverBadge(pack: widget.pack),
       ),
-      trailing: ConstrainedBox(
-        constraints: const BoxConstraints(minWidth: 72),
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.only(right: 4),
-            child: Text(
-              _autoPlayTimer && _countdownSeconds > 0
-                  ? '${_currentIndex + 1}/${cards.length}  · $_countdownSeconds'
-                  : '${_currentIndex + 1}/${cards.length}',
-              style: TextStyle(
-                color: widget.pack.color,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
+      // The counter is the same pill as in the games: dark on white, ringed
+      // in the pack colour. It used to be pack-coloured text on `DT.bgWarm`,
+      // which put mint at 1.9:1 — below AA; the pill is 11.7:1 on every pack.
+      trailing: KidCountPill(
+        label: _autoPlayTimer && _countdownSeconds > 0
+            ? '${_currentIndex + 1}/${cards.length} · $_countdownSeconds'
+            : '${_currentIndex + 1}/${cards.length}',
+        semanticsLabel: s(
+          'Картка ${_currentIndex + 1} з ${cards.length}',
+          'Card ${_currentIndex + 1} of ${cards.length}',
         ),
       ),
       // Any finger on the screen is activity for Bloom: it resets his idle
