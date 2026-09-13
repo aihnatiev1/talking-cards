@@ -618,21 +618,31 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
         // opposite corner.
         if (spareW >= _sideModeSpare) {
           final size = tablet && box.maxWidth < 900 ? 112.0 : 160.0;
+          // The board only ever grows to what its own height allows, so
+          // handing it the whole remaining width pushed it against the
+          // right edge and left Bloom marooned in empty space. Measure the
+          // board for the narrowed box and give the pair exactly the room
+          // they use, centred together.
+          final side = _BoardMetrics.of(
+            box: Size(box.maxWidth - size - 40, box.maxHeight - 12),
+            pairs: _activePairs,
+            tiles: _tiles.length,
+          );
           return Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SizedBox(
-                width: _bloomZoneWidth,
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: _bloomZone(policy, size: size),
-                  ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _bloomZone(policy, size: size),
                 ),
               ),
               const SizedBox(width: 16),
-              Flexible(child: _board(tablet: tablet)),
+              SizedBox(
+                width: side.width + 24,
+                child: _board(tablet: tablet),
+              ),
             ],
           );
         }
@@ -656,9 +666,8 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
     );
   }
 
-  /// Width of the zone Bloom needs beside the mat, and the height of the
-  /// strip he gets under it (8 gap + 88 Bloom + 16 bottom).
-  static const _bloomZoneWidth = 200.0;
+  /// Height of the strip Bloom gets under the mat (8 gap + 88 Bloom + 16
+  /// bottom); beside the mat he takes only his own width.
   static const _bloomStrip = 112.0;
   static const _sideModeSpare = 216.0;
 
