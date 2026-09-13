@@ -137,20 +137,36 @@ void main() {
     await open(tester, packOf(2), 2);
     expect(tiles(), findsNWidgets(4));
 
-    await tester.tap(tiles().at(0));
-    await tester.pump(const Duration(milliseconds: 500));
-    await tester.tap(tiles().at(1));
-    // Long enough for the hold (1200 ms at level 2) and the turn back.
-    await tester.pump(const Duration(milliseconds: 2500));
-    await tester.pump(const Duration(milliseconds: 500));
-
-    expect(tester.takeException(), isNull);
-    // Either the two were a pair and both stay up, or they were not and
-    // the board is face down again — never one card left hanging.
+    // Level 2's first round opens with a face-up preview; a tap cuts it
+    // short. Let the board actually be face down before playing, or the
+    // four preview faces look like a stuck board.
     final faces = find.descendant(
       of: find.byType(GridView),
       matching: find.byType(Text),
     );
-    expect(faces.evaluate().length, anyOf(0, 2));
+    for (var i = 0; i < 20 && faces.evaluate().isNotEmpty; i++) {
+      await tester.tap(tiles().at(0));
+      await tester.pump(const Duration(milliseconds: 250));
+    }
+    expect(faces, findsNothing);
+
+    await tester.tap(tiles().at(0));
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.tap(tiles().at(1));
+
+    // The hold now waits for the word to finish before turning the cards
+    // back, so its length is not a fixed number to pump past. Walk the
+    // clock until the board settles instead — a fixed 2.5 s was a race.
+    var settled = false;
+    for (var i = 0; i < 40 && !settled; i++) {
+      await tester.pump(const Duration(milliseconds: 250));
+      settled = i >= 8 && faces.evaluate().length.isEven;
+    }
+
+    expect(tester.takeException(), isNull);
+    // Cards only ever rest in pairs: both of a match stay up, a mismatch
+    // goes back down together, and a finished round previews the next one
+    // face up. An odd count means a card was left hanging mid-flip.
+    expect(faces.evaluate().length.isEven, isTrue);
   });
 }
