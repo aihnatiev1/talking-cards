@@ -68,10 +68,11 @@ class _GamesTabState extends ConsumerState<GamesTab> {
       (p) => !p.isLocked && !p.id.startsWith('_'),
       orElse: () => packs.first,
     );
-    // Toddler entry: start with 3 pairs (2×3 grid); the screen escalates to
-    // 4 pairs by itself after 2 wins in the same session.
+    // No pair count from here: the board sizes itself from the profile's
+    // level and from how calm the last rounds were
+    // (memory_match_redesign §6).
     _openGame(
-      KidRoutes.game(MemoryMatchScreen(pack: pack, cards: playable, pairCount: 3)),
+      KidRoutes.game(MemoryMatchScreen(pack: pack, cards: playable)),
     );
   }
 

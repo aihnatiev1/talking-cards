@@ -704,6 +704,7 @@ class AudioService {
     String fallbackWord, {
     String locale = 'uk-UA',
   }) async {
+    debugWordSink?.call(audioKey);
     // No TTS fallback: if there's no recorded audio for this card, stay
     // silent (user opted out of TTS entirely).
     if (audioKey == null) return;
@@ -793,6 +794,12 @@ class AudioService {
   /// touching SoLoud — `(file, pitch, volume)` per sound that would have
   /// played. A dropped sound never reaches the sink, which is how the
   /// "never over a word" rule is asserted without an audio engine.
+  /// Every word a screen asks for, for tests that check *that* a card
+  /// spoke — SoLoud is not loaded in the test runner, so the call itself
+  /// is the only observable. Set in `setUp`, cleared in `tearDown`.
+  @visibleForTesting
+  static void Function(String? audioKey)? debugWordSink;
+
   @visibleForTesting
   static void Function(String file, double pitch, double volume)? debugFxSink;
 

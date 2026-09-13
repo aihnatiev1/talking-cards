@@ -219,6 +219,19 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                 SettingsActionRow(
                   onTap: () {
                     Navigator.of(ctx).pop();
+                    // Charts, minutes and a share sheet — a parent screen,
+                    // so it asks the gate itself (G14).
+                    StatsScreen.open(
+                      context,
+                      isEn: ref.read(languageProvider) == 'en',
+                    );
+                  },
+                  icon: Icons.insights_outlined,
+                  label: s('Прогрес дитини', "Child's progress"),
+                ),
+                SettingsActionRow(
+                  onTap: () {
+                    Navigator.of(ctx).pop();
                     _openParentArea(context);
                   },
                   icon: Icons.family_restroom,
@@ -721,7 +734,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
           isEn: isEnNow,
           onCelebrated: () => ref
               .read(streakProvider.notifier)
-              .markCelebrated(pending.bonusEmoji),
+              .markCelebrated(pending.id),
         );
         if (!mounted) return;
         _milestoneShowing = false;
@@ -957,8 +970,17 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                       if (streak.currentStreak >= 2) ...[
                         StreakChip(
                           streak: streak.currentStreak,
+                          // The flame is the child's own counter, so it
+                          // opens the child's own collection — the stickers
+                          // the streak has been earning (G14). The parent's
+                          // report moved behind the gate
+                          // (`StatsScreen.open`, in the About sheet).
                           onTap: () => Navigator.of(context).push(
-                            KidRoutes.sheet(const StatsScreen()),
+                            KidRoutes.sheet(
+                              const KidWordWallScreen(
+                                initialTab: TreasureTab.stickers,
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -1256,10 +1278,14 @@ class _TreasureBoxBanner extends ConsumerWidget {
           ),
           child: Row(
             children: [
-              // Placeholder until the treasure-box icon lands (F5): the
-              // second character on a screen that already has Bloom by the
-              // hero was unreadable at 44 dp (bloom_character.md §3.3).
-              const Text('🎁', style: TextStyle(fontSize: 30)),
+              // The drawn chest, not an emoji: this banner is the door to
+              // the treasure box (G14), and the door should look like the
+              // thing behind it.
+              const AppIconView(
+                AppIcon.rewardChestClosed,
+                size: 34,
+                sticker: true,
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(

@@ -6,16 +6,37 @@ import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../providers/streak_provider.dart';
 import '../screens/cards_screen.dart';
-import '../screens/rewards_screen.dart';
 import '../utils/design_tokens.dart';
 import '../utils/kid_routes.dart';
 import '../utils/l10n.dart';
 import '../utils/uk_grammar.dart';
 import '../widgets/activity_chart.dart';
+import '../widgets/parental_gate.dart';
 import '../widgets/share_progress_card.dart';
 
+/// The parent's report: packs completed, minutes, the week's activity and
+/// every pack's progress row.
+///
+/// Parent-only by construction (ux-gap-audit G14, CLAUDE.md rule 7). It
+/// used to hang off the streak chip on the child's home screen — one tap
+/// from a toddler's finger to a screen of charts, a share sheet and a way
+/// into any pack. The child's own rewards moved to the treasure box
+/// (`KidWordWallScreen`); what is left here is for a grown-up, so the only
+/// way in is [open], which asks the gate first. The share button *inside*
+/// is not gated a second time: the gate has already been passed to get
+/// here.
 class StatsScreen extends ConsumerWidget {
   const StatsScreen({super.key});
+
+  /// Asks the parental gate, then pushes the screen. Returns `true` when
+  /// the gate was passed. Never construct a route to [StatsScreen]
+  /// directly — `test/screens/rewards_album_test.dart` guards this.
+  static Future<bool> open(BuildContext context, {required bool isEn}) async {
+    final ok = await showParentalGate(context, isEn: isEn);
+    if (!ok || !context.mounted) return false;
+    await Navigator.of(context).push(KidRoutes.sheet(const StatsScreen()));
+    return true;
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -123,37 +144,38 @@ class StatsScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
+                      // The streak is a read-out here, not a door: the
+                      // rewards album belongs to the child and lives in the
+                      // treasure box (G14), not two taps inside the
+                      // parent's report.
                       if (streak.currentStreak >= 2)
-                        GestureDetector(
-                          onTap: () => Navigator.of(context).push(
-                            KidRoutes.content(const RewardsScreen()),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 12),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Column(
-                              children: [
-                                Text(
-                                  '🔥 ${streak.currentStreak}',
-                                  style: const TextStyle(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
+                          child: Column(
+                            children: [
+                              Text(
+                                '🔥 ${streak.currentStreak}',
+                                style: const TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
                                 ),
-                                Text(
-                                  s.isEn ? 'days' : dayWord(streak.currentStreak),
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white70,
-                                  ),
+                              ),
+                              Text(
+                                s.isEn
+                                    ? 'days'
+                                    : dayWord(streak.currentStreak),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white70,
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                     ],

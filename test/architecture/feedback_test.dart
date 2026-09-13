@@ -33,8 +33,6 @@ void main() {
     'lib/screens/cards_screen.dart',
     // Articulation practice: record/stop accents, not yet mapped.
     'lib/screens/articulation_screen.dart',
-    // Word-wall selection click (parent-facing sheet).
-    'lib/screens/kid_word_wall_screen.dart',
     // Onboarding selection clicks + finish accent.
     'lib/screens/onboarding_screen.dart',
     // Profile picker selection clicks.

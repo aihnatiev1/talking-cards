@@ -21,6 +21,11 @@ class DT {
   /// Flutter splash is seamless — change all four together.
   static const bgWarm = Color(0xFFFFFBF0); // primary screen background
   static const bgCard = Color(0xFFFFF4E0); // peach cream for cards
+
+  /// The paper a printed card is made of (memory_match_redesign §1): less
+  /// peach than [bgCard], so a watercolour illustration sits on the same
+  /// cream it was painted on instead of on a tinted card.
+  static const paper = Color(0xFFFBF4E6);
   static const surfaceWhite = Colors.white;
 
   /// Parent-zone dark scaffold only (`buildAppDarkTheme`). Deep indigo
@@ -382,6 +387,57 @@ class DTMotion {
 
   /// `blow`: one exhale.
   final Duration bloomBlow = const Duration(milliseconds: 300);
+
+  // Memory match (docs/design/memory_match_redesign.md §4). The board is a
+  // table: a press answers in [quick], every transition lands inside the
+  // 220–320 ms window of the experience audit (п. 11), and the word never
+  // waits for a transition.
+  /// One card turning over, and the same beat backwards after a miss.
+  final Duration memoryFlip = const Duration(milliseconds: 320);
+
+  /// The word starts while the card is still turning.
+  final Duration memoryWordCue = const Duration(milliseconds: 120);
+
+  /// Two cards "finding each other": 5 dp towards one another + 1.06.
+  final Duration memoryKnock = const Duration(milliseconds: 200);
+
+  /// The star sticker popping onto a matched card.
+  final Duration memorySticker = const Duration(milliseconds: 220);
+
+  /// The local spark burst of a match — a particle effect, not a
+  /// transition, so it may run past 320 ms (п. 12: it finishes by itself).
+  final Duration memorySparkle = const Duration(milliseconds: 500);
+
+  /// The second card of a miss starts turning back this much later.
+  final Duration memoryMissStagger = const Duration(milliseconds: 60);
+
+  /// Silence after the word before the miss pair may turn back.
+  final Duration memoryVoiceGrace = const Duration(milliseconds: 200);
+
+  /// A tap during the miss hold cuts it short once this much of it has
+  /// been seen — earlier than that the child never saw the second card.
+  final Duration memoryHoldCut = const Duration(milliseconds: 500);
+
+  /// Tap on a card that is already face up: it bounces and repeats itself.
+  final Duration memoryBounce = const Duration(milliseconds: 180);
+
+  /// The preview ("знайомство") before the cards go face down, and the
+  /// stagger of them going down.
+  final Duration memoryPreviewL1 = const Duration(milliseconds: 2000);
+  final Duration memoryPreviewL2 = const Duration(milliseconds: 1500);
+  final Duration memoryPreviewStagger = const Duration(milliseconds: 60);
+
+  /// Between the last pair landing and the celebration card.
+  final Duration memoryRoundEnd = const Duration(milliseconds: 1200);
+
+  /// How long a mismatched pair stays visible, by profile level — the
+  /// younger the child, the longer they get to look (§6).
+  Duration memoryHold(int level) => switch (level) {
+        <= 1 => const Duration(milliseconds: 1400),
+        2 => const Duration(milliseconds: 1200),
+        3 => const Duration(milliseconds: 900),
+        _ => const Duration(milliseconds: 800),
+      };
 
   /// Idle breathing — one half-cycle (rest → peak); `AmbientLoop` reverses,
   /// so the full period is 3.0 s. Asleep it is twice as slow.

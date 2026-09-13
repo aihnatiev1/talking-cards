@@ -97,6 +97,13 @@ class BloomScene {
     prop: BloomProp.wand,
   );
 
+  /// «Знайди пару» (docs/design/memory_match_redesign.md §2, §3): the
+  /// board owns the motion budget and makes the sounds, so Bloom sits
+  /// beside the mat and only reacts. No idle hints (the board's own
+  /// two-step nudge is wave 2) and no nap — a mascot that falls asleep
+  /// mid-round reads as "the game ended".
+  static const memory = BloomScene(ambient: BloomAmbient.blinkOnly);
+
   /// Overlays and tests: nothing ticks.
   static const still = BloomScene(ambient: BloomAmbient.still);
 

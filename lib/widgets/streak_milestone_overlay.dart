@@ -33,7 +33,7 @@ Future<void> showStreakMilestone(
     isEn: isEn,
     title: title,
     subtitle: subtitle,
-    badge: m.bonusEmoji,
+    badge: m.id,
     accent: DT.streakOrange,
   );
   onCelebrated();

@@ -31,7 +31,17 @@ class AppIconPainter extends CustomPainter {
   final Color? color;
   final bool sticker;
 
-  const AppIconPainter(this.icon, {this.color, this.sticker = false});
+  /// Flattens the whole sheet into one shape in this colour (G14: the
+  /// album's unearned stickers). Fills and fat strokes stay, the ink
+  /// outline, the highlight band and the doodles drop out.
+  final Color? silhouette;
+
+  const AppIconPainter(
+    this.icon, {
+    this.color,
+    this.sticker = false,
+    this.silhouette,
+  });
 
   /// Side of the design space every routine draws in.
   static const double grid = 48;
@@ -47,13 +57,16 @@ class AppIconPainter extends CustomPainter {
     canvas.scale(scale);
     final sheet = _Sheet(color ?? defaultColorOf(icon));
     _compose(sheet, icon);
-    sheet.render(canvas, sticker: sticker);
+    sheet.render(canvas, sticker: sticker, silhouette: silhouette);
     canvas.restore();
   }
 
   @override
   bool shouldRepaint(covariant AppIconPainter old) =>
-      old.icon != icon || old.color != color || old.sticker != sticker;
+      old.icon != icon ||
+      old.color != color ||
+      old.sticker != sticker ||
+      old.silhouette != silhouette;
 }
 
 /// The semantic accent of each icon (spec §5.1 palette row).
@@ -93,6 +106,11 @@ Color defaultColorOf(AppIcon icon) => switch (icon) {
       AppIcon.rewardTrophy => DT.sunBurst,
       AppIcon.streakFlame => DT.peach,
       AppIcon.hint => DT.sunBurst,
+      AppIcon.stickerUnicorn => DT.pinkTint,
+      AppIcon.stickerDragon => DT.mint,
+      AppIcon.stickerRainbow => DT.sky,
+      AppIcon.stickerButterfly => DT.violet,
+      AppIcon.stickerAlbum => DT.coral,
       AppIcon.navCards => DT.violet,
       AppIcon.navGames => DT.peach,
       AppIcon.navColoring => DT.mint,
@@ -258,11 +276,32 @@ class _Sheet {
   void dot(double x, double y, double r, [Color? color]) =>
       ops.add(_Dot(Offset(x, y), r, color ?? Colors.white));
 
-  void render(Canvas canvas, {required bool sticker}) {
+  void render(Canvas canvas, {required bool sticker, Color? silhouette}) {
     final paint = Paint()
       ..isAntiAlias = true
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
+
+    if (silhouette != null) {
+      // One flat paper cut-out: the same union of shapes and fat strokes,
+      // in one colour. Thin lines and dots are detail, not silhouette.
+      paint.color = silhouette;
+      for (final op in ops) {
+        switch (op) {
+          case _Shape(:final path):
+            paint.style = PaintingStyle.fill;
+            canvas.drawPath(path, paint);
+          case _Fat(:final path, :final width):
+            paint
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = width + _strokeW;
+            canvas.drawPath(path, paint);
+          case _Line() || _Dot():
+            break;
+        }
+      }
+      return;
+    }
 
     if (sticker) {
       paint
@@ -781,6 +820,95 @@ void _compose(_Sheet s, AppIcon icon) {
       s.shape(_rr(19, 35, 10, 6, 3), color: _lit(s.accent), twoTone: false);
       s.shape(_rr(18, 28, 12, 8, 3.5), twoTone: false);
       s.shape(_circle(24, 19, 13.5));
+
+    // ── Album stickers (G14) ──
+    case AppIcon.stickerUnicorn:
+      // Head in profile: rainbow mane behind, golden horn, a soft muzzle
+      // with one eye, a nostril and a smile.
+      s.shape(_circle(34, 14, 7.5), color: DT.violet);
+      s.shape(_circle(38, 24, 6.5), color: DT.sky);
+      s.shape(_circle(34, 33, 5.5), color: DT.pink);
+      s.shape(
+        _roundPoly(const [Offset(22, 2), Offset(28, 15), Offset(16, 15)], 2),
+        color: DT.sunBurst,
+      );
+      s.shape(
+        _placed(
+          _roundPoly(const [
+            Offset(-4, -7),
+            Offset(4, -3),
+            Offset(-1, 4),
+          ], 2),
+          31,
+          13,
+          0.25,
+        ),
+      );
+      s.shape(_oval(8, 12, 25, 26));
+      s.shape(_oval(4, 24, 17, 14), color: _lit(s.accent), twoTone: false);
+      s.dot(20, 23, 2.2, _ink70);
+      s.dot(8, 29, 1.5, _ink70);
+      s.line(_arc(13, 31, 4, 0.3, math.pi - 0.8), width: 1.6, color: _ink70);
+
+    case AppIcon.stickerDragon:
+      // A friendly dragon head: a violet crest along the top, a snout to
+      // the left and one small puff of flame leaving it.
+      for (var i = 0; i < 3; i++) {
+        s.shape(
+          _roundPoly([
+            Offset(26 + i * 6.0, 14),
+            Offset(29 + i * 6.0, 5 + i * 1.0),
+            Offset(33 + i * 6.0, 14),
+          ], 1.5),
+          color: DT.violet,
+        );
+      }
+      s.shape(_rr(13, 11, 30, 24, 11));
+      s.shape(_rr(5, 21, 18, 14, 7), color: _lit(s.accent), twoTone: false);
+      s.dot(26, 21, 2.4, _ink70);
+      s.dot(37, 21, 2.4, _ink70);
+      s.line(_arc(28, 27, 5, 0.2, math.pi - 0.6), width: 1.6, color: _ink70);
+      s.dot(9, 25, 1.4, _ink70);
+      s.shape(_circle(6, 33, 4.5), color: DT.coral);
+      s.shape(_circle(11, 39, 3), color: DT.sunBurst, twoTone: false);
+
+    case AppIcon.stickerRainbow:
+      // Three fat arcs rising out of two cloud puffs.
+      s.fat(_arc(24, 33, 17, math.pi, math.pi), 5, color: DT.coral);
+      s.fat(_arc(24, 33, 12, math.pi, math.pi), 5, color: DT.sunBurst);
+      s.fat(_arc(24, 33, 7, math.pi, math.pi), 5, color: DT.mint);
+      s.shape(_circle(9, 34, 7), color: Colors.white, twoTone: false);
+      s.shape(_circle(15, 36, 5.5), color: Colors.white, twoTone: false);
+      s.shape(_circle(39, 34, 7), color: Colors.white, twoTone: false);
+      s.shape(_circle(33, 36, 5.5), color: Colors.white, twoTone: false);
+      s.dot(15, 11, 1.8, DT.sunBurst);
+      s.dot(35, 9, 2.2, DT.sunBurst);
+
+    case AppIcon.stickerButterfly:
+      // Four wings, a chubby body, two antennae with dots.
+      s.shape(_placed(_oval(-11, -8, 22, 16), 13, 17, -0.25));
+      s.shape(_placed(_oval(-11, -8, 22, 16), 35, 17, 0.25));
+      s.shape(_placed(_oval(-8, -6, 16, 12), 15, 32, 0.25), color: DT.pink);
+      s.shape(_placed(_oval(-8, -6, 16, 12), 33, 32, -0.25), color: DT.pink);
+      s.shape(_rr(21, 10, 6, 30, 3), color: DT.peach);
+      s.line(_poly(const [Offset(23, 11), Offset(18, 4)]),
+          color: _ink70, width: 2);
+      s.line(_poly(const [Offset(25, 11), Offset(30, 4)]),
+          color: _ink70, width: 2);
+      s.dot(17, 4, 2, DT.sunBurst);
+      s.dot(31, 4, 2, DT.sunBurst);
+      s.dot(14, 17, 2.6, Colors.white);
+      s.dot(34, 17, 2.6, Colors.white);
+
+    case AppIcon.stickerAlbum:
+      // The album itself: a chubby book with a paper label and a star
+      // sticker already stuck on the cover.
+      s.shape(_rr(8, 6, 32, 36, 6));
+      s.shape(_rr(8, 6, 8, 36, 5), color: _lit(s.accent), twoTone: false);
+      s.line(_poly(const [Offset(16, 8), Offset(16, 40)]));
+      s.shape(_rr(20, 12, 15, 12, 3),
+          color: Colors.white, twoTone: false);
+      s.shape(_star(27, 32, 7, 3.2, 1.2), color: DT.sunBurst);
 
     // ── Navigation (redraws of the former `_ToyIcon` art in DT tones) ──
     case AppIcon.navCards:

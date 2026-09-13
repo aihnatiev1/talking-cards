@@ -69,6 +69,16 @@ enum AppIcon {
   streakFlame,
   hint,
 
+  // ── Album stickers (G14) ────────────────────
+  /// The four streak-milestone stickers of the album, and the album
+  /// itself (Bloom holds it in the header, and it labels the «Наліпки»
+  /// tab of the treasure box).
+  stickerUnicorn,
+  stickerDragon,
+  stickerRainbow,
+  stickerButterfly,
+  stickerAlbum,
+
   // ── Main navigation (former `_ToyIcon` in PlayfulNavigationBar) ──
   navCards,
   navGames,
@@ -113,6 +123,11 @@ enum AppIcon {
         AppIcon.rewardTrophy => 'Trophy',
         AppIcon.streakFlame => 'Streak',
         AppIcon.hint => 'Hint',
+        AppIcon.stickerUnicorn => 'Unicorn sticker',
+        AppIcon.stickerDragon => 'Dragon sticker',
+        AppIcon.stickerRainbow => 'Rainbow sticker',
+        AppIcon.stickerButterfly => 'Butterfly sticker',
+        AppIcon.stickerAlbum => 'Sticker album',
         AppIcon.navCards => 'Cards',
         AppIcon.navGames => 'Games',
         AppIcon.navColoring => 'Coloring',
@@ -136,6 +151,11 @@ class AppIconView extends StatelessWidget {
   final Color? color;
   final bool sticker;
 
+  /// Draws the icon as one flat shape in this colour — no two-tone, no
+  /// ink outline, no doodles. The album's «not yet» state (G14): the
+  /// child sees a shape worth wanting, not a padlock.
+  final Color? silhouette;
+
   /// Overrides [AppIcon.label] when the call site knows the locale.
   final String? semanticLabel;
 
@@ -145,6 +165,7 @@ class AppIconView extends StatelessWidget {
     this.size,
     this.color,
     this.sticker = false,
+    this.silhouette,
     this.semanticLabel,
   });
 
@@ -160,7 +181,12 @@ class AppIconView extends StatelessWidget {
           dimension: side,
           child: CustomPaint(
             isComplex: true,
-            painter: AppIconPainter(icon, color: color, sticker: sticker),
+            painter: AppIconPainter(
+              icon,
+              color: color,
+              sticker: sticker,
+              silhouette: silhouette,
+            ),
           ),
         ),
       ),

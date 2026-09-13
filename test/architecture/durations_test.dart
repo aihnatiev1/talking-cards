@@ -53,8 +53,6 @@ void main() {
     'lib/screens/coloring_screen.dart',
     'lib/screens/guess_screen.dart',
     'lib/screens/home_screen.dart',
-    'lib/screens/kid_word_wall_screen.dart',
-    'lib/screens/memory_match_screen.dart',
     'lib/screens/odd_one_out_screen.dart',
     'lib/screens/onboarding_screen.dart',
     'lib/screens/opposite_game_screen.dart',

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/profile_service.dart';
+import '../utils/app_icons.dart';
 
 class StreakState {
   final int currentStreak;
@@ -32,21 +33,39 @@ class StreakState {
       );
 }
 
-/// Milestones: days required → (badge, bonus emoji, label)
+/// One streak milestone: the day count that earns it, the sticker the
+/// child sticks into the album, and its name in both languages.
+///
+/// [id] is the persisted key (and the glyph the parent-facing share card
+/// and the milestone overlay still print). It stays an emoji because it is
+/// what is already in `SharedPreferences` under `streak_rewards` for every
+/// installed user — the album shows [sticker], never [id] (ux-gap-audit
+/// G14: the medal/emoji tiles became drawn stickers).
 class Milestone {
   final int days;
-  final String badge;
-  final String bonusEmoji;
+  final String id;
+  final AppIcon sticker;
   final String label;
+  final String labelEn;
 
-  const Milestone(this.days, this.badge, this.bonusEmoji, this.label);
+  const Milestone(
+    this.days,
+    this.id,
+    this.sticker,
+    this.label,
+    this.labelEn,
+  );
+
+  /// The sticker's name in [isEn]'s language — the one word of text the
+  /// album shows under a sticker.
+  String name(bool isEn) => isEn ? labelEn : label;
 }
 
 const milestones = [
-  Milestone(3, '🥉', '🦄', '3 дні'),
-  Milestone(7, '🥈', '🐉', '7 днів'),
-  Milestone(14, '🥇', '🌈', '14 днів'),
-  Milestone(30, '🏆', '🦋', '30 днів'),
+  Milestone(3, '🦄', AppIcon.stickerUnicorn, 'Єдиноріг', 'Unicorn'),
+  Milestone(7, '🐉', AppIcon.stickerDragon, 'Дракончик', 'Dragon'),
+  Milestone(14, '🌈', AppIcon.stickerRainbow, 'Веселка', 'Rainbow'),
+  Milestone(30, '🦋', AppIcon.stickerButterfly, 'Метелик', 'Butterfly'),
 ];
 
 final streakProvider =
@@ -103,7 +122,7 @@ class StreakNotifier extends StateNotifier<StreakState> {
     final newRewards = {...state.unlockedRewards};
     for (final m in milestones) {
       if (newStreak >= m.days) {
-        newRewards.add(m.bonusEmoji);
+        newRewards.add(m.id);
       }
     }
 
@@ -123,8 +142,8 @@ class StreakNotifier extends StateNotifier<StreakState> {
   /// Returns null when nothing pending.
   Milestone? get pendingCelebration {
     for (final m in milestones.reversed) {
-      if (state.unlockedRewards.contains(m.bonusEmoji) &&
-          !state.celebratedRewards.contains(m.bonusEmoji)) {
+      if (state.unlockedRewards.contains(m.id) &&
+          !state.celebratedRewards.contains(m.id)) {
         return m;
       }
     }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
@@ -7,15 +6,30 @@ import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../providers/profile_provider.dart';
 import '../providers/srs_provider.dart';
+import '../screens/rewards_screen.dart';
 import '../services/audio_service.dart';
+import '../utils/app_icons.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
+import '../utils/motion.dart';
 import '../widgets/bloom_mascot.dart';
 import '../widgets/card_image.dart';
 import '../widgets/kid_screen.dart';
+import '../widgets/kid_tap.dart';
 
-/// Kid-facing version of the Word Wall — lives outside Parent Dashboard so
-/// the child can browse their own collection without a parental gate.
+/// Which half of the treasure box is open.
+enum TreasureTab { words, stickers }
+
+/// The child's treasure box — the one place in the kid zone that holds
+/// what they have collected: the words they know («Слова») and the
+/// stickers they earned («Наліпки», ux-gap-audit G14).
+///
+/// Rewards used to hang off `StatsScreen`, a parent screen with a share
+/// button, three charts and 21 progress rows — the child's prizes were
+/// two taps deep inside the grown-ups' report. Now the report is behind
+/// the parental gate ([StatsScreen.open]) and the prizes are here, one tap
+/// from home, behind two big drawn tabs instead of a Material `TabBar` a
+/// non-reader cannot use.
 ///
 /// Differences from `_WordsTab` in parent_dashboard:
 /// - No "Share" button (that's parent flex)
@@ -23,7 +37,10 @@ import '../widgets/kid_screen.dart';
 /// - Tap on tile = plays audio with subtle pulse, no popup
 /// - Empty state invites them to play
 class KidWordWallScreen extends ConsumerStatefulWidget {
-  const KidWordWallScreen({super.key});
+  const KidWordWallScreen({super.key, this.initialTab = TreasureTab.words});
+
+  /// Which tab opens first — the streak chip lands on [TreasureTab.stickers].
+  final TreasureTab initialTab;
 
   @override
   ConsumerState<KidWordWallScreen> createState() =>
@@ -33,20 +50,43 @@ class KidWordWallScreen extends ConsumerStatefulWidget {
 class _KidWordWallScreenState extends ConsumerState<KidWordWallScreen> {
   static const _learnedThreshold = 2;
 
+  late TreasureTab _tab = widget.initialTab;
+
+  void _select(TreasureTab tab) {
+    if (_tab == tab) return;
+    setState(() => _tab = tab);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final srs = ref.watch(srsProvider);
-    final packsAsync = ref.watch(packsProvider);
-    final profile = ref.watch(profileProvider);
     final isEn = ref.watch(languageProvider) == 'en';
-    final s = AppS(isEn);
-    final childName = profile.active?.name ?? '';
 
     // No text title: the body's own header greets the child by name and
     // shows the count — that is the "Treasure box" a non-reader gets.
     return KidScreen(
       accent: DT.brand,
-      body: packsAsync.when(
+      body: Column(
+        children: [
+          _TreasureTabs(selected: _tab, onSelect: _select, isEn: isEn),
+          Expanded(
+            child: switch (_tab) {
+              TreasureTab.stickers => const RewardsAlbum(),
+              TreasureTab.words => _words(context, isEn),
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _words(BuildContext context, bool isEn) {
+    final srs = ref.watch(srsProvider);
+    final packsAsync = ref.watch(packsProvider);
+    final profile = ref.watch(profileProvider);
+    final s = AppS(isEn);
+    final childName = profile.active?.name ?? '';
+
+    return packsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, __) =>
             Center(child: Text(s('Помилка', 'Error'))),
@@ -104,7 +144,6 @@ class _KidWordWallScreenState extends ConsumerState<KidWordWallScreen> {
             ],
           );
         },
-      ),
     );
   }
 
@@ -136,6 +175,115 @@ class _KidWordWallScreenState extends ConsumerState<KidWordWallScreen> {
                 fontSize: responsiveFont(context, 14),
                 color: Colors.grey[600],
                 height: 1.4,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The two doors of the treasure box, as big drawn tabs.
+///
+/// Not a Material `TabBar`: that is a text strip with a 2 dp underline and
+/// a 48 dp target — unusable by a child who cannot read and taps with a
+/// whole hand. These are 84 dp cards, each a drawn [AppIcon] with its word
+/// under it (the word is for the parent reading over the shoulder; the
+/// icon is what the child aims at), selected one filled in the accent.
+class _TreasureTabs extends StatelessWidget {
+  const _TreasureTabs({
+    required this.selected,
+    required this.onSelect,
+    required this.isEn,
+  });
+
+  final TreasureTab selected;
+  final ValueChanged<TreasureTab> onSelect;
+  final bool isEn;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = AppS(isEn);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(DT.sp16, 0, DT.sp16, DT.sp8),
+      child: Row(
+        children: [
+          Expanded(
+            child: _TreasureTab(
+              key: const ValueKey('treasure_tab_words'),
+              icon: AppIcon.navCards,
+              label: s('Слова', 'Words'),
+              accent: DT.brand,
+              selected: selected == TreasureTab.words,
+              onTap: () => onSelect(TreasureTab.words),
+            ),
+          ),
+          const SizedBox(width: DT.sp12),
+          Expanded(
+            child: _TreasureTab(
+              key: const ValueKey('treasure_tab_stickers'),
+              icon: AppIcon.stickerAlbum,
+              label: s('Наліпки', 'Stickers'),
+              accent: DT.peach,
+              selected: selected == TreasureTab.stickers,
+              onTap: () => onSelect(TreasureTab.stickers),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TreasureTab extends StatelessWidget {
+  const _TreasureTab({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.accent,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final AppIcon icon;
+  final String label;
+  final Color accent;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = PackPalette.of(accent);
+    return KidTap(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: MotionPolicy.of(context).dur(DT.motion.quick),
+        curve: DT.motion.standard,
+        height: 84,
+        decoration: BoxDecoration(
+          color: selected ? palette.accent : palette.tint,
+          borderRadius: BorderRadius.circular(DT.rLg),
+          border: Border.all(color: palette.border, width: 1.5),
+          boxShadow: selected ? DT.shadowSoft(palette.accent) : DT.shadowRest,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AppIconView(
+              icon,
+              size: 40,
+              sticker: selected,
+              semanticLabel: label,
+            ),
+            const SizedBox(height: DT.sp4),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: DT.tileTitle.copyWith(
+                fontSize: responsiveFont(context, 13),
+                color: selected ? Colors.white : palette.onTint,
               ),
             ),
           ],
@@ -262,7 +410,7 @@ class _LearnedTileState extends State<_LearnedTile>
     super.initState();
     _pulse = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 320),
+      duration: DT.motion.slow,
     );
   }
 
@@ -273,11 +421,11 @@ class _LearnedTileState extends State<_LearnedTile>
   }
 
   void _onTap() {
-    HapticFeedback.selectionClick();
     AudioService.instance.playWordOnly(
       widget.card.audioKey,
       widget.card.sound,
     );
+    if (MotionPolicy.of(context).reduce) return;
     _pulse
       ..reset()
       ..forward();
@@ -286,7 +434,10 @@ class _LearnedTileState extends State<_LearnedTile>
   @override
   Widget build(BuildContext context) {
     final card = widget.card;
-    return GestureDetector(
+    return KidTap(
+      // The card's own word is the answer to the tap — a tock on top of it
+      // would only race the voice.
+      sound: null,
       onTap: _onTap,
       child: AnimatedBuilder(
         animation: _pulse,
