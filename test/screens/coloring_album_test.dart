@@ -185,6 +185,21 @@ void main() {
       expect(find.byKey(const ValueKey('ghost-finger')), findsNothing);
     });
 
+    testWidgets('has no close button — it is a tab, not a pushed route',
+        (tester) async {
+      // The default X popped the home shell that hosts this tab and left
+      // the child looking at a black screen. The way out is the tab bar.
+      final container = await open(tester);
+      addTearDown(container.dispose);
+
+      expect(
+        find.byWidgetPredicate(
+          (w) => w is Semantics && w.properties.label == 'Close',
+        ),
+        findsNothing,
+      );
+    });
+
     testWidgets('Bloom waits by the button before anything is finished',
         (tester) async {
       final container = await open(tester);

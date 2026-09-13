@@ -497,7 +497,9 @@ class _KidControl extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = PackPalette.of(accent);
     return KidTap(
-      onTap: onTap ?? () => Navigator.of(context).pop(),
+      // `maybePop`, not `pop`: a screen hosted as a tab has nothing under
+      // it, and popping the last route leaves the child looking at black.
+      onTap: onTap ?? () => Navigator.of(context).maybePop(),
       child: Semantics(
         button: true,
         label: label,
