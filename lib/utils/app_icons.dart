@@ -51,6 +51,16 @@ enum AppIcon {
   stepCards,
   stepQuest,
 
+  // ── Quest-map landmarks (G13) ───────────────
+  /// The listen stop reuses [stepListen] (an ear) and the star stop
+  /// reuses [star]; these three are the landmarks that had no drawing.
+  stopCardTree,
+  stopBell,
+  stopMicFlower,
+
+  /// One footprint of the "little steps to the treasure" header.
+  pawStep,
+
   // ── Rewards ─────────────────────────────────
   rewardChestClosed,
   rewardChestOpen,
@@ -93,6 +103,10 @@ enum AppIcon {
         AppIcon.stepListen => 'Listen',
         AppIcon.stepCards => 'Cards',
         AppIcon.stepQuest => 'Quest',
+        AppIcon.stopCardTree => 'Card tree',
+        AppIcon.stopBell => 'Bell',
+        AppIcon.stopMicFlower => 'Flower microphone',
+        AppIcon.pawStep => 'Step',
         AppIcon.rewardChestClosed => 'Treasure chest',
         AppIcon.rewardChestOpen => 'Open treasure chest',
         AppIcon.rewardGift => 'Gift',

@@ -60,12 +60,16 @@ class BloomScene {
   /// Whether the second hint demonstrates a swipe (paw slides sideways).
   final bool swipeHint;
 
+  /// What Bloom holds on this stage — the bubble wand in the bubble game.
+  final BloomProp prop;
+
   const BloomScene({
     this.ambient = BloomAmbient.blinkOnly,
     this.hintsEnabled = false,
     this.sleepAfter,
     this.soloActor = false,
     this.swipeHint = false,
+    this.prop = BloomProp.none,
   });
 
   /// The cards screen: hints, a 30 s nap, the swipe demo, Bloom alone.
@@ -85,6 +89,14 @@ class BloomScene {
     soloActor: true,
   );
 
+  /// «Лопай бульбашки» (docs/design/bubble_pop_redesign.md §2): the
+  /// bubbles own the motion budget, no idle hints, no nap, the object
+  /// makes the sound — and Bloom holds the wand the bubbles come from.
+  static const bubbles = BloomScene(
+    ambient: BloomAmbient.blinkOnly,
+    prop: BloomProp.wand,
+  );
+
   /// Overlays and tests: nothing ticks.
   static const still = BloomScene(ambient: BloomAmbient.still);
 
@@ -95,6 +107,7 @@ class BloomScene {
     bool clearSleep = false,
     bool? soloActor,
     bool? swipeHint,
+    BloomProp? prop,
   }) {
     return BloomScene(
       ambient: ambient ?? this.ambient,
@@ -102,6 +115,7 @@ class BloomScene {
       sleepAfter: clearSleep ? null : (sleepAfter ?? this.sleepAfter),
       soloActor: soloActor ?? this.soloActor,
       swipeHint: swipeHint ?? this.swipeHint,
+      prop: prop ?? this.prop,
     );
   }
 
@@ -112,11 +126,12 @@ class BloomScene {
       other.hintsEnabled == hintsEnabled &&
       other.sleepAfter == sleepAfter &&
       other.soloActor == soloActor &&
-      other.swipeHint == swipeHint;
+      other.swipeHint == swipeHint &&
+      other.prop == prop;
 
   @override
-  int get hashCode =>
-      Object.hash(ambient, hintsEnabled, sleepAfter, soloActor, swipeHint);
+  int get hashCode => Object.hash(
+        ambient, hintsEnabled, sleepAfter, soloActor, swipeHint, prop);
 }
 
 /// Bloom right now (§5.2). A value: the widget compares it with the last

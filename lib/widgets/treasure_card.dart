@@ -80,10 +80,12 @@ class TreasureCard extends StatelessWidget {
                               offset: Offset(0, -3 * t),
                               child: child,
                             ),
+                            // The same chest the quest map ends on, closed
+                            // until the last step is done (G13).
                             child: AppIconView(
                               allDone
-                                  ? AppIcon.rewardTrophy
-                                  : AppIcon.rewardGift,
+                                  ? AppIcon.rewardChestOpen
+                                  : AppIcon.rewardChestClosed,
                               size: 40,
                             ),
                           ),

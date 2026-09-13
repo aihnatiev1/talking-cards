@@ -59,6 +59,10 @@ class CardImage extends StatelessWidget {
   final CardArtSize size;
   final BoxFit fit;
 
+  /// Where the picture sits when [fit] crops it (`BoxFit.cover` in a
+  /// bubble): the subjects of the cards sit a little above centre.
+  final Alignment alignment;
+
   /// Behind the emoji. Defaults to transparent so tiles keep their own.
   final Color? background;
 
@@ -72,6 +76,7 @@ class CardImage extends StatelessWidget {
     required this.fallbackEmoji,
     this.size = CardArtSize.tile,
     this.fit = BoxFit.contain,
+    this.alignment = Alignment.center,
     this.background,
     this.padding = const EdgeInsets.all(12),
     this.fallback,
@@ -83,6 +88,7 @@ class CardImage extends StatelessWidget {
     super.key,
     this.size = CardArtSize.tile,
     this.fit = BoxFit.contain,
+    this.alignment = Alignment.center,
     this.background,
     this.padding = const EdgeInsets.all(12),
   })  : name = card.image,
@@ -132,6 +138,7 @@ class CardImage extends StatelessWidget {
           child: Image(
             image: provider,
             fit: fit,
+            alignment: alignment,
             width: double.infinity,
             height: double.infinity,
           // Last line of defence. Play can evict a pack between the

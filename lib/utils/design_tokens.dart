@@ -81,6 +81,21 @@ class DT {
   static const bloomEyeShine = Colors.white;
   static const double bloomInkAlpha = 0.45;
 
+  // ── Scene: the bubble meadow ─────────────────
+  /// Sky and meadow of «Лопай бульбашки» (docs/design/bubble_pop_redesign.md
+  /// §1 «Кольори сцени»). The grass shades continue the quest map's
+  /// landscape; the sky is deliberately low-contrast — it is a backdrop,
+  /// the bubbles are the only high-contrast objects in it.
+  static const sceneSkyTop = Color(0xFFD9EDFB);
+  static const sceneSkyMid = Color(0xFFEEF4F0);
+  static const sceneSkyHorizon = Color(0xFFF7F1DE);
+  static const sceneCloud = Colors.white;
+  static const sceneGrassFar = Color(0xFFDCEBC7);
+  static const sceneGrassNear = Color(0xFFCEE5BC);
+  static const sceneGrassShade = Color(0xFFACC991);
+  static const sceneBushLight = Color(0xFF90C39A);
+  static const sceneBushDark = Color(0xFF6BA989);
+
   // ── Overlay barriers ────────────────────────
   /// Behind celebrations and full-screen overlays: dark enough to lift the
   /// mascot, light enough that the scene the child was in stays legible.
@@ -378,6 +393,21 @@ class DTMotion {
 
   /// Host Bloom fades out when an overlay brings its own.
   final Duration bloomFade = const Duration(milliseconds: 150);
+
+  // Bubbles (docs/design/bubble_pop_redesign.md §3, §5). The pop is the
+  // L2 base; `BubbleTuning` stretches it ×1.2 for L1 and ×0.9 for L3+,
+  // and derives the card's `minHold` from the same token.
+  /// One bubble pop: squash, burst, the card's hold, its fade.
+  final Duration bubblePop = const Duration(milliseconds: 1000);
+
+  /// Ripple of a tap into empty sky (20 → 72 dp).
+  final Duration bubbleRipple = const Duration(milliseconds: 320);
+
+  // Quest map (ux-gap-audit G13). Bloom walks the trail from the stop he
+  // has just finished to the next one; the paw prints in the header fill
+  // on the same beat so the two read as one event.
+  /// Bloom's walk from one stop to the next.
+  final Duration journeyStep = const Duration(milliseconds: 900);
 
   // Idle loops (`AmbientLoop` periods). One half-cycle rest → peak; the
   // loop reverses, so the felt period is double.

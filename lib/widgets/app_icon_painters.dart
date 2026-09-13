@@ -83,6 +83,10 @@ Color defaultColorOf(AppIcon icon) => switch (icon) {
       AppIcon.stepListen => DT.peach,
       AppIcon.stepCards => DT.violet,
       AppIcon.stepQuest => DT.mint,
+      AppIcon.stopCardTree => DT.mint,
+      AppIcon.stopBell => DT.sunBurst,
+      AppIcon.stopMicFlower => DT.peach,
+      AppIcon.pawStep => DT.peach,
       AppIcon.rewardChestClosed => DT.peach,
       AppIcon.rewardChestOpen => DT.peach,
       AppIcon.rewardGift => DT.peach,
@@ -660,6 +664,54 @@ void _compose(_Sheet s, AppIcon icon) {
           color: DT.coral, width: 2.5);
       s.line(_poly(const [Offset(39, 19), Offset(33, 25)]),
           color: DT.coral, width: 2.5);
+
+    // ── Quest-map landmarks (G13) ──
+    case AppIcon.stopCardTree:
+      // A little tree with two cards hanging in its crown — the stop
+      // where the child goes and looks at pictures.
+      s.shape(_rr(21, 28, 6, 16, 3), color: DT.peach);
+      s.shape(_circle(14, 17, 11));
+      s.shape(_circle(34, 16, 10));
+      s.shape(_circle(24, 20, 11));
+      s.shape(_placed(_rr(-4.5, -5.5, 9, 11, 2.5), 13, 28, -0.22),
+          color: DT.violet);
+      s.shape(_placed(_rr(-4.5, -5.5, 9, 11, 2.5), 34, 27, 0.18),
+          color: DT.sunBurst);
+
+    case AppIcon.stopBell:
+      // The "listen and guess" stop: a bell with a clapper.
+      s.fat(_arc(24, 12, 4, math.pi, math.pi), 3, color: _lit(s.accent));
+      s.shape(Path()
+        ..moveTo(24, 9)
+        ..cubicTo(33, 9, 35, 19, 35, 31)
+        ..lineTo(13, 31)
+        ..cubicTo(13, 19, 15, 9, 24, 9)
+        ..close());
+      s.shape(_rr(9, 29, 30, 7, 3.5));
+      s.shape(_circle(24, 40, 3.6), color: DT.coral, twoTone: false);
+
+    case AppIcon.stopMicFlower:
+      // A microphone growing like a flower: petals, stem, one leaf.
+      s.fat(_poly(const [Offset(24, 30), Offset(24, 43)]), 3.5,
+          color: DT.mint);
+      s.shape(_placed(_oval(-6.5, -4, 13, 8), 14, 38, -0.4), color: DT.mint);
+      for (var i = 0; i < 6; i++) {
+        final a = -math.pi / 2 + i * math.pi / 3;
+        s.shape(_circle(24 + 9 * math.cos(a), 20 + 9 * math.sin(a), 6));
+      }
+      s.shape(_rr(18.5, 11, 11, 19, 5.5), color: DT.violet);
+      s.line(_poly(const [Offset(21, 17), Offset(27, 17)]),
+          color: Colors.white, width: 1.5);
+      s.line(_poly(const [Offset(21, 22), Offset(27, 22)]),
+          color: Colors.white, width: 1.5);
+
+    case AppIcon.pawStep:
+      // One paw print: pad plus four toes.
+      s.shape(_oval(13, 21, 22, 18));
+      s.shape(_placed(_oval(-4, -5.5, 8, 11), 12, 15, -0.35));
+      s.shape(_placed(_oval(-4, -5.5, 8, 11), 20, 10, -0.12));
+      s.shape(_placed(_oval(-4, -5.5, 8, 11), 29, 10, 0.12));
+      s.shape(_placed(_oval(-4, -5.5, 8, 11), 37, 15, 0.35));
 
     // ── Rewards ──
     case AppIcon.rewardChestClosed:

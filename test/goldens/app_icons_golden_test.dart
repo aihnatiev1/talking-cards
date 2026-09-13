@@ -23,7 +23,7 @@ void main() {
       await pumpGolden(
         tester,
         const _IconSheet(),
-        size: const Size(390, 1000),
+        size: const Size(390, 1120),
       );
       await expectLater(
         find.byKey(goldenKey),

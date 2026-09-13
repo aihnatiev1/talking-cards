@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
@@ -12,6 +11,10 @@ import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../services/audio_service.dart';
 
+import '../utils/app_icons.dart';
+import '../utils/motion.dart';
+import '../widgets/app_icon_painters.dart';
+import '../widgets/card_image.dart';
 import '../widgets/quest_journey_map.dart';
 import '../widgets/kid_screen.dart';
 import '../widgets/kid_tap.dart';
@@ -312,7 +315,7 @@ class _PackPickerSheetState extends ConsumerState<_PackPickerSheet>
     super.initState();
     _entryCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: DT.motion.sheetEnter,
     )..forward();
   }
 
@@ -342,21 +345,18 @@ class _PackPickerSheetState extends ConsumerState<_PackPickerSheet>
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          const Text('🎁', style: TextStyle(fontSize: 44)),
+          // The gift is drawn, not an emoji, and one line of words is
+          // enough: the covers below say what the choice is (rule 4).
+          const AppIconView(AppIcon.rewardGift, size: 56),
           const SizedBox(height: 8),
-          const Text(
-            'Обери розділ!',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 4),
           Text(
             AppS(ref.read(languageProvider) == 'en')(
-              'Де відкрити нову картку?',
-              'Where to open the new card?',
+              'Де відкрити картку?',
+              'Where to open the card?',
             ),
-            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+            style: DT.h2,
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           Wrap(
             spacing: 12,
             runSpacing: 12,
@@ -368,6 +368,11 @@ class _PackPickerSheetState extends ConsumerState<_PackPickerSheet>
                   pack.cards.length - pack.effectiveFreePreviewCount - bonus;
               final allUnlocked = available <= 0;
               final isSelected = _selectedIndex == i;
+              // Cover, else the first card that has artwork — the same
+              // fallback ladder as the pack grid tile.
+              final thumb = pack.cards
+                  .where((c) => c.image != null)
+                  .firstOrNull;
 
               return AnimatedBuilder(
                 animation: _entryCtrl,
@@ -387,24 +392,21 @@ class _PackPickerSheetState extends ConsumerState<_PackPickerSheet>
                   onTap: allUnlocked
                       ? null
                       : () {
-                          HapticFeedback.selectionClick();
                           setState(() => _selectedIndex = i);
-                          Future.delayed(const Duration(milliseconds: 300), () {
-                            widget.onPick(pack);
-                          });
+                          Future.delayed(
+                            DT.motion.base,
+                            () => widget.onPick(pack),
+                          );
                         },
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: 90,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 6,
-                    ),
+                    duration: MotionPolicy.of(context).dur(DT.motion.quick),
+                    width: 120,
+                    padding: const EdgeInsets.all(DT.sp8),
                     decoration: BoxDecoration(
                       color: isSelected
                           ? pack.color.withValues(alpha: 0.2)
                           : pack.color.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(DT.rLg),
                       border: Border.all(
                         color: isSelected
                             ? pack.color
@@ -415,36 +417,56 @@ class _PackPickerSheetState extends ConsumerState<_PackPickerSheet>
                     child: Opacity(
                       opacity: allUnlocked ? 0.35 : 1.0,
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
+                          // The pack's own picture, not an emoji: the child
+                          // chooses by what she will see inside.
                           AnimatedScale(
-                            scale: isSelected ? 1.2 : 1.0,
-                            duration: const Duration(milliseconds: 200),
-                            child: Text(
-                              pack.icon,
-                              style: const TextStyle(fontSize: 28),
+                            scale: isSelected ? 1.08 : 1.0,
+                            duration:
+                                MotionPolicy.of(context).dur(DT.motion.quick),
+                            child: SizedBox(
+                              width: 104,
+                              height: 76,
+                              child: ClipRRect(
+                                borderRadius:
+                                    BorderRadius.circular(DT.rMd),
+                                child: CardImage(
+                                  name: pack.cover ?? thumb?.image,
+                                  fallbackEmoji: pack.icon,
+                                  fallback: isLetterIcon(pack.icon)
+                                      ? Center(
+                                          child: LetterStickerIcon(
+                                            letter: pack.icon,
+                                            color: pack.color,
+                                            size: 52,
+                                          ),
+                                        )
+                                      : null,
+                                  background:
+                                      pack.color.withValues(alpha: 0.06),
+                                  padding: EdgeInsets.zero,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: DT.sp4),
                           Text(
                             pack.title,
                             textAlign: TextAlign.center,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
+                            style: DT.tileTitle.copyWith(
+                              fontSize: 13,
                               color: pack.color,
                             ),
                           ),
-                          Text(
-                            allUnlocked
-                                ? '✅'
-                                : '${pack.effectiveFreePreviewCount + bonus}/${pack.cards.length}',
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: Colors.grey[400],
+                          if (allUnlocked)
+                            const Padding(
+                              padding: EdgeInsets.only(top: DT.sp4),
+                              child: AppIconView(AppIcon.check, size: 16),
                             ),
-                          ),
                         ],
                       ),
                     ),

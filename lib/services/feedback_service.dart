@@ -66,11 +66,21 @@ enum FeedbackEvent {
 
   /// Page swipe crossed 50 % — haptic only; the sound is [pageLanded].
   swipe,
+
+  /// A bubble burst under a finger («Лопай бульбашки»). The game passes
+  /// the pitch — large bubble low, small bubble high — so the row keeps
+  /// no spread of its own.
+  bubblePop,
+
+  /// A tap into empty space inside a game: the screen answers every touch
+  /// (rule 2) with a soft "puh" and a selection click, but there is no
+  /// judgement in it — not a miss, not a "no".
+  emptyTap,
 }
 
 /// Haptic kinds the table can ask for. Kept as our own enum so nothing but
 /// [FeedbackService] has to import `HapticFeedback`.
-enum FeedbackHaptic { none, light, medium, heavy }
+enum FeedbackHaptic { none, selection, light, medium, heavy }
 
 /// One row of the feedback table: what an event sounds and feels like.
 ///
@@ -275,6 +285,20 @@ class FeedbackService {
     FeedbackEvent.swipe: const FeedbackSpec.silent(
       haptic: FeedbackHaptic.light,
     ),
+    // A bubble pops: the soap-film pop with a medium bump. Pitch comes
+    // from the game per bubble size (bubble_pop_redesign §4), so no
+    // spread here — the game already makes neighbours differ.
+    FeedbackEvent.bubblePop: const FeedbackSpec(
+      sound: KidSound.pop,
+      spread: 0.0,
+      haptic: FeedbackHaptic.medium,
+    ),
+    // A tap into nothing: felt "puh" plus the lightest click there is.
+    // Under the word, no reward, no "no" (bubble_pop_redesign §5).
+    FeedbackEvent.emptyTap: const FeedbackSpec(
+      sound: KidSound.tapSoft,
+      haptic: FeedbackHaptic.selection,
+    ),
   };
 
   /// The row for [e]. Every enum value has one (asserted by the table test).
@@ -368,6 +392,8 @@ class FeedbackService {
     switch (kind) {
       case FeedbackHaptic.none:
         break;
+      case FeedbackHaptic.selection:
+        HapticFeedback.selectionClick();
       case FeedbackHaptic.light:
         HapticFeedback.lightImpact();
       case FeedbackHaptic.medium:

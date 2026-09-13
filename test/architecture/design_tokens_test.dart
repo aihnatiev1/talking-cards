@@ -37,7 +37,6 @@ void main() {
   /// F7 have one source. Everything else is plain migration debt.
   const colorLiteralDebt = {
     'lib/screens/articulation_screen.dart',
-    'lib/screens/bubble_pop_screen.dart',
     'lib/screens/onboarding_screen.dart',
     'lib/screens/parent_dashboard_screen.dart',
     'lib/screens/paywall_screen.dart',
@@ -53,9 +52,7 @@ void main() {
   /// (or, better, one of the `DT.display / h1 / h2 / tileTitle` styles).
   ///
   /// shrink-only: remove an entry when the file is clean, never add.
-  const fontLiteralDebt = {
-    'lib/widgets/quest_journey_map.dart',
-  };
+  const fontLiteralDebt = <String>{};
 
   List<String> offenders(
     bool Function(String source) hasProblem, {

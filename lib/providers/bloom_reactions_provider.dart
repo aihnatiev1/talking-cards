@@ -198,6 +198,7 @@ class BloomReactions extends StateNotifier<BloomState> {
     }
     _setState(state.copyWith(
       ambient: scene.ambient,
+      prop: scene.prop,
       emotion: fresh ? _levelEmotion : null,
       clearHint: fresh,
       clearLookAt: fresh,
@@ -214,9 +215,19 @@ class BloomReactions extends StateNotifier<BloomState> {
     _setState(state.copyWith(
       emotion: _levelEmotion,
       ambient: scene.ambient,
+      prop: scene.prop,
       clearHint: true,
     ));
     _armIdleTimers();
+  }
+
+  /// Every N-th pop in a game (bubble_pop_redesign §6): one `cheer`, one
+  /// hop, timed with the screen's praise text. Silent on purpose — the
+  /// text and the game's sparkle carry the beat; the voice (when the
+  /// praise clips exist) is the screen's to play.
+  void praised() {
+    _activity();
+    _cheer(hops: 1);
   }
 
   void packOpened() {
@@ -335,6 +346,7 @@ class BloomReactions extends StateNotifier<BloomState> {
       case FeedbackEvent.cardTouch:
       case FeedbackEvent.pageLanded:
       case FeedbackEvent.packOpen:
+      case FeedbackEvent.bubblePop:
         _activity();
       case FeedbackEvent.progressStep:
         // The hop for this step came from [cardAdvanced] already.
@@ -351,7 +363,9 @@ class BloomReactions extends StateNotifier<BloomState> {
         _startOneShot(BloomEmotion.curious, DT.motion.bloomCurious);
       case FeedbackEvent.milestone:
       case FeedbackEvent.lockedHint:
-        // A parent-facing bell / a locked tile: Bloom takes no part.
+      case FeedbackEvent.emptyTap:
+        // A parent-facing bell / a locked tile / a tap into empty sky:
+        // Bloom takes no part (a single miss earns nothing, §2).
         break;
     }
   }

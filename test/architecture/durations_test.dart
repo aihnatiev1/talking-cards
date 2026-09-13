@@ -34,7 +34,7 @@ void main() {
   ];
 
   /// Files that still build `Duration(milliseconds: …)` literals
-  /// (35 on 2026-09-13).
+  /// (35 on 2026-09-13, 26 after G13).
   ///
   /// shrink-only: remove an entry when the file is clean, never add.
   ///
@@ -48,7 +48,6 @@ void main() {
   /// Everything else is plain migration debt.
   const durationLiteralDebt = {
     'lib/screens/articulation_screen.dart',
-    'lib/screens/bubble_pop_screen.dart',
     'lib/screens/card_reveal_screen.dart',
     'lib/screens/cards_screen.dart',
     'lib/screens/coloring_screen.dart',
@@ -60,7 +59,6 @@ void main() {
     'lib/screens/onboarding_screen.dart',
     'lib/screens/opposite_game_screen.dart',
     'lib/screens/paywall_screen.dart',
-    'lib/screens/quest_map_screen.dart',
     'lib/screens/repeat_game_screen.dart',
     'lib/screens/splash_screen.dart',
     'lib/tabs/games_tab.dart',
@@ -70,7 +68,6 @@ void main() {
     'lib/widgets/flash_card.dart',
     'lib/widgets/pack_grid_card.dart',
     'lib/widgets/playful_navigation_bar.dart',
-    'lib/widgets/quest_journey_map.dart',
     'lib/widgets/speaker_button.dart',
     'lib/widgets/streak_chip.dart',
     'lib/widgets/swipe_hint.dart',

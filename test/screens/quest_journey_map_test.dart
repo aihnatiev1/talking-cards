@@ -70,7 +70,10 @@ void main() {
   testWidgets('stop actions, reward gating, reduced motion and preview', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(390, 844);
+    const previewSize = bool.fromEnvironment('QUEST_TABLET')
+        ? Size(834, 1194)
+        : Size(390, 844);
+    tester.view.physicalSize = previewSize;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     final loader = FontLoader('Nunito')
@@ -87,7 +90,7 @@ void main() {
           theme: ThemeData(fontFamily: 'Nunito'),
           home: MediaQuery(
             data: const MediaQueryData(
-              size: Size(390, 844),
+              size: previewSize,
               disableAnimations: true,
             ),
             child: RepaintBoundary(
