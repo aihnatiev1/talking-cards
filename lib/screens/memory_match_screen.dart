@@ -532,6 +532,10 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
         ? _NudgeKind.invite
         : (_level <= 1 ? _NudgeKind.peek : _NudgeKind.shake);
     _stir(index, kind);
+    // Bloom looks where the board is asking (§2: he reacts, he never
+    // runs the round). Only step 2 — the invitation of step 1 is silent
+    // on purpose, and a mascot pointing at a card is not silent.
+    _bloom.nudged(_towardsTile(index));
     _hints++;
     _nudgesGiven++;
     // A pencil tick, the quietest thing in the palette: the hint asks, it
@@ -542,6 +546,18 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
     );
     MemoryMatchScreen.debugNudgeSink?.call(2, _hints);
     _armNudge();
+  }
+
+  /// The direction from Bloom to tile [index], in his own `-1..1` space.
+  /// He sits at the bottom-left corner of the table in both layouts
+  /// (beside the mat, or in the strip under it), so every card is up and
+  /// to the right of him; the grid's own columns and rows say how far.
+  Alignment _towardsTile(int index) {
+    final cols = _BoardMetrics.colsFor(_activePairs);
+    final rows = (_tiles.length / cols).ceil();
+    final colT = cols <= 1 ? 0.5 : (index % cols) / (cols - 1);
+    final rowT = rows <= 1 ? 0.5 : (index ~/ cols) / (rows - 1);
+    return Alignment(0.3 + 0.7 * colT, -0.9 + 0.7 * rowT);
   }
 
   void _stir(int index, _NudgeKind kind) {

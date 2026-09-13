@@ -358,6 +358,31 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                   ? () => runPaywallFlow(context, ref, source: 'games_lock')
                   : null,
             ),
+            // «Знайди бульбашку» — the same sky, one thing to look for
+            // (bubble_pop_redesign §5, experience audit п. 23). Free
+            // popping keeps its own tile above: this is an extra way to
+            // play, not a replacement, and nothing here punishes a child
+            // who pops the wrong one.
+            _BigGame(
+              title: isEn ? 'Find the bubble' : 'Знайди бульбашку',
+              subtitle: isEn
+                  ? 'Pop the one Bloom shows'
+                  : 'Лопни ту, що показує Блум',
+              color: DT.sky,
+              bg: DT.skyTint,
+              thumb: _pickThumb(allCards, skip: 26),
+              badge: AppIcon.gameBubbles,
+              onTap: playableCount >= 6
+                  ? () => Navigator.of(context).push(
+                      KidRoutes.game(
+                        const BubblePopScreen(mode: BubbleMode.find),
+                      ),
+                    )
+                  : null,
+              lockedHint: isEn
+                  ? 'Open more cards in Packs first'
+                  : 'Спочатку відкрий більше карток',
+            ),
             _BigGame(
               title: isEn ? 'Opposites' : 'Протилежності',
               subtitle: isEn

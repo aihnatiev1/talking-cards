@@ -75,6 +75,7 @@ class BloomReactions extends StateNotifier<BloomState> {
   static const greetingGap = Duration(minutes: 5);
   static const resumeGreetAfter = Duration(minutes: 5);
   static const giggleGap = Duration(milliseconds: 1500);
+  static const nudgeGap = Duration(seconds: 2);
   static const cardHopGap = Duration(seconds: 3);
   static const secondHintAfter = Duration(seconds: 8);
   static const maxHintsPerTarget = 2;
@@ -113,6 +114,7 @@ class BloomReactions extends StateNotifier<BloomState> {
   DateTime? _lastGreeting;
   DateTime? _lastGiggle;
   DateTime? _lastCardHop;
+  DateTime? _lastNudge;
   int _forwardCards = 0;
   int _hintsGiven = 0;
   Alignment? _hintTarget;
@@ -193,6 +195,7 @@ class BloomReactions extends StateNotifier<BloomState> {
     if (fresh) {
       _hintsGiven = 0;
       _hintTarget = null;
+      _lastNudge = null;
       _cancelOneShot();
       _wake(silent: true);
     }
@@ -210,6 +213,7 @@ class BloomReactions extends StateNotifier<BloomState> {
     if (_scenes.remove(key) == null) return;
     _hintsGiven = 0;
     _hintTarget = null;
+    _lastNudge = null;
     _cancelOneShot();
     _wake(silent: true);
     _setState(state.copyWith(
@@ -305,7 +309,15 @@ class BloomReactions extends StateNotifier<BloomState> {
 
   void bloomTapped() {
     _activity();
-    // The hop always; the giggle at most once per 1.5 s, never over a word.
+    // What the tap *means* belongs to the stage (§5.4): a hop everywhere,
+    // an exhale where Bloom is the source of the play — in «Лопай
+    // бульбашки» the wand answers the finger with a bubble
+    // (bubble_pop_redesign §2), and `happy` (6) would outrank `blow` (5)
+    // forever if the tap always asked for it.
+    final emotion = scene.tapEmotion;
+    // The gesture always; the giggle at most once per 1.5 s, never over a
+    // word. The giggle is the tap's voice in both poses: `bloom_blow` is
+    // the bubble leaving the wand, and that one is the game's to play.
     final t = _now();
     final last = _lastGiggle;
     BloomSound? sound;
@@ -313,21 +325,37 @@ class BloomReactions extends StateNotifier<BloomState> {
       _lastGiggle = t;
       sound = BloomSound.giggle;
     }
-    _startOneShot(BloomEmotion.happy, DT.motion.celebrate, sound: sound);
+    _startOneShot(emotion, _tapLength(emotion), sound: sound);
     if (sound == null) return;
-    // The hop may have been swallowed by the debounce (§5.3 п. 2) — the
-    // giggle is still owed; play it here when the one-shot did not.
-    if (_oneShot != BloomEmotion.happy) _playSound(sound);
+    // The gesture may have been swallowed by the debounce (§5.3 п. 2) —
+    // the giggle is still owed; play it here when the one-shot did not.
+    if (_oneShot != emotion) _playSound(sound);
   }
+
+  static Duration _tapLength(BloomEmotion emotion) => switch (emotion) {
+        BloomEmotion.blow => DT.motion.bloomBlow,
+        BloomEmotion.wave => DT.motion.bloomWave,
+        BloomEmotion.curious => DT.motion.bloomCurious,
+        _ => DT.motion.celebrate,
+      };
 
   /// A host-timed nudge: point at [target] now.
   ///
   /// The idle clock of a game is not Bloom's — «Лопай бульбашки» hints
-  /// after 4 / 5 / 6 s from its own tuning table, while [_armIdleTimers]
-  /// counts the cards-screen 6 / 8 / 10. The host that owns the clock asks
-  /// for the gesture; everything else (priority, the pose's own length)
-  /// still belongs here. Silent: in a game the object makes the sound.
-  void pointAt(Alignment target) {
+  /// after 4 / 5 / 6 s from its own tuning table and «Знайди пару» after
+  /// 7 / 9 / 12 / 15, while [_armIdleTimers] counts the cards-screen
+  /// 6 / 8 / 10. So this deliberately ignores [BloomScene.hintsEnabled]:
+  /// that flag only says whether *Bloom's own* clock may fire, and a host
+  /// that has already decided a hint is due is not asking permission.
+  /// Everything else still belongs here — the priority table (`point` 4
+  /// loses to a cheer in the air), the pose's own length, and a 2 s gap so
+  /// a board with a fast clock cannot make Bloom point twice in a breath.
+  /// Silent: in a game the object makes the sound.
+  void nudged(Alignment target) {
+    final t = _now();
+    final last = _lastNudge;
+    if (last != null && t.difference(last) < nudgeGap) return;
+    _lastNudge = t;
     _hintTarget = target;
     _startOneShot(
       BloomEmotion.point,
@@ -336,6 +364,9 @@ class BloomReactions extends StateNotifier<BloomState> {
       lookAt: target,
     );
   }
+
+  /// The older name of [nudged], kept for the hosts that already call it.
+  void pointAt(Alignment target) => nudged(target);
 
   void hintTargetChanged(Alignment? target) {
     _hintTarget = target;

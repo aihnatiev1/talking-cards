@@ -63,6 +63,14 @@ class BloomScene {
   /// What Bloom holds on this stage — the bubble wand in the bubble game.
   final BloomProp prop;
 
+  /// What a tap on Bloom himself means here. `happy` everywhere by
+  /// default — the hop and the giggle of §5.1. A stage where Bloom is the
+  /// *cause* of what the child plays with says so: in «Лопай бульбашки»
+  /// the tap blows a bubble out of the wand, so the pose is `blow`
+  /// (bubble_pop_redesign §2). Without this the `happy` of `bloomTapped`
+  /// outranks `blow` (6 > 5) and the pose could never be seen.
+  final BloomEmotion tapEmotion;
+
   const BloomScene({
     this.ambient = BloomAmbient.blinkOnly,
     this.hintsEnabled = false,
@@ -70,6 +78,7 @@ class BloomScene {
     this.soloActor = false,
     this.swipeHint = false,
     this.prop = BloomProp.none,
+    this.tapEmotion = BloomEmotion.happy,
   });
 
   /// The cards screen: hints, a 30 s nap, the swipe demo, Bloom alone.
@@ -95,6 +104,7 @@ class BloomScene {
   static const bubbles = BloomScene(
     ambient: BloomAmbient.blinkOnly,
     prop: BloomProp.wand,
+    tapEmotion: BloomEmotion.blow,
   );
 
   /// «Знайди пару» (docs/design/memory_match_redesign.md §2, §3): the
@@ -115,6 +125,7 @@ class BloomScene {
     bool? soloActor,
     bool? swipeHint,
     BloomProp? prop,
+    BloomEmotion? tapEmotion,
   }) {
     return BloomScene(
       ambient: ambient ?? this.ambient,
@@ -123,6 +134,7 @@ class BloomScene {
       soloActor: soloActor ?? this.soloActor,
       swipeHint: swipeHint ?? this.swipeHint,
       prop: prop ?? this.prop,
+      tapEmotion: tapEmotion ?? this.tapEmotion,
     );
   }
 
@@ -134,11 +146,12 @@ class BloomScene {
       other.sleepAfter == sleepAfter &&
       other.soloActor == soloActor &&
       other.swipeHint == swipeHint &&
-      other.prop == prop;
+      other.prop == prop &&
+      other.tapEmotion == tapEmotion;
 
   @override
-  int get hashCode => Object.hash(
-        ambient, hintsEnabled, sleepAfter, soloActor, swipeHint, prop);
+  int get hashCode => Object.hash(ambient, hintsEnabled, sleepAfter, soloActor,
+      swipeHint, prop, tapEmotion);
 }
 
 /// Bloom right now (§5.2). A value: the widget compares it with the last

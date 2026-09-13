@@ -16,7 +16,13 @@ class AnalyticsService {
     }
   }
 
+  /// Test seam: every event that would go to Firebase, as it is built.
+  /// Null in production, so nothing is recorded and nothing is kept.
+  @visibleForTesting
+  static void Function(String name, Map<String, Object> params)? debugSink;
+
   Future<void> _safeLog(String name, [Map<String, Object>? params]) async {
+    debugSink?.call(name, params ?? const {});
     final a = _analytics;
     if (a == null) return;
     try {
@@ -279,8 +285,34 @@ class AnalyticsService {
   Future<void> logGameStart(String gameId) =>
       _safeLog('game_start', {'game_id': gameId});
 
-  Future<void> logGameComplete(String gameId, int score) =>
-      _safeLog('game_complete', {'game_id': gameId, 'score': score});
+  /// A finished round. The optional fields are the calibration set of
+  /// «Лопай бульбашки» (bubble_pop_redesign §5): they say whether the
+  /// diameters, the hit slop and the crossing times of a level actually
+  /// fit the hands that play it (targets: L1 ≥ 0.60, L2 ≥ 0.70,
+  /// L3+ ≥ 0.75).
+  ///
+  /// COPPA: aggregates of one round, of exactly the same class as the
+  /// `score` that has always been here — no identifiers, no content, no
+  /// path through the app. [level] is the profile's age band (1–4), which
+  /// is already a user property, and [deviceClass] is `phone` / `tabletS`
+  /// / `tabletL`.
+  Future<void> logGameComplete(
+    String gameId,
+    int score, {
+    double? hitRate,
+    int? timeToFirstPopMs,
+    int? level,
+    String? deviceClass,
+  }) =>
+      _safeLog('game_complete', {
+        'game_id': gameId,
+        'score': score,
+        if (hitRate != null)
+          'hit_rate': double.parse(hitRate.clamp(0.0, 1.0).toStringAsFixed(2)),
+        if (timeToFirstPopMs != null) 'time_to_first_pop_ms': timeToFirstPopMs,
+        if (level != null) 'level': level,
+        if (deviceClass != null) 'device_class': deviceClass,
+      });
 
   Future<void> logSoundFilterOpen(String letter) =>
       _safeLog('sound_filter_open', {'letter': letter});

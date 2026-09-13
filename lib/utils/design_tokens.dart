@@ -595,6 +595,20 @@ class DTMotion {
   /// Between two idle hints inside one round (§2: repeat every 8 s).
   final Duration bubbleHintRepeat = const Duration(seconds: 8);
 
+  /// The window a run of misses has to happen in before Bloom notices it
+  /// (§5: 2 / 3 / 3 misses in four seconds → `curious` + a wiggling hint).
+  /// A rule, not an animation: a miss four seconds after the last one is
+  /// a new try, not a struggle.
+  final Duration bubbleMissWindow = const Duration(seconds: 4);
+
+  /// The sign over Bloom's head turning over to the next thing to find
+  /// (§5, «Знайди бульбашку»).
+  final Duration bubbleSignFlip = const Duration(milliseconds: 220);
+
+  /// How long the round's spoken instruction is given before the first
+  /// target is named, so the two voices never talk over each other.
+  final Duration bubbleFindIntro = const Duration(milliseconds: 1600);
+
   // Quest map (ux-gap-audit G13). Bloom walks the trail from the stop he
   // has just finished to the next one; the paw prints in the header fill
   // on the same beat so the two read as one event.

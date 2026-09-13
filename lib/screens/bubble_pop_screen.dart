@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
+import '../models/semantic_group.dart';
 import '../providers/bloom_reactions_provider.dart';
 import '../providers/daily_quest_provider.dart';
 import '../providers/language_provider.dart';
@@ -39,10 +40,12 @@ import '../widgets/kid_screen.dart';
 /// live bubbles → popping bubbles → praise. Bloom sits **under** the
 /// bubbles so he never covers the learning object.
 ///
-/// Two modes — All unlocked packs vs. Tricky words (mistakes ∪ SRS-due).
-/// The child entry always starts in "all words"; there is no in-game mode
-/// switch (an adult control does not live in the child's play zone). Pace
-/// comes from the profile: [BubbleTuning.forLevel].
+/// Three modes — all unlocked packs, tricky words (mistakes ∪ SRS-due),
+/// and «Знайди бульбашку», where Bloom holds up a sign and exactly one of
+/// the bubbles in the sky is the thing on it. There is no in-game mode
+/// switch (an adult control does not live in the child's play zone): the
+/// mode comes from the tile, the pace from the profile
+/// ([BubbleTuning.forLevel]).
 class BubblePopScreen extends ConsumerStatefulWidget {
   final BubbleMode mode;
 
@@ -52,7 +55,22 @@ class BubblePopScreen extends ConsumerStatefulWidget {
   ConsumerState<BubblePopScreen> createState() => _BubblePopScreenState();
 }
 
-enum BubbleMode { all, tricky }
+enum BubbleMode {
+  /// Free popping: every bubble is a word, every pop counts.
+  all,
+
+  /// The same game over the mistakes ∪ SRS-due pool.
+  tricky,
+
+  /// «Знайди бульбашку» (spec §5, experience audit п. 23): Bloom holds a
+  /// sign with one card on it and exactly one live bubble carries that
+  /// picture. Popping any *other* bubble still pops, still says its word
+  /// and still costs nothing — the counter simply waits. There is no
+  /// punishment anywhere in this game, and a missed bubble is not a
+  /// mistake, so free popping (mode [all]) stays exactly as it was and
+  /// keeps its own tile.
+  find,
+}
 
 // ─────────────────────────────────────────────
 //  Tuning — spec §5, one table for age × device
@@ -106,6 +124,7 @@ class BubbleTuning {
     required this.level,
     required this.device,
     required this.targetPops,
+    required this.findPops,
     required this.roundSeconds,
     required this.minDiameter,
     required this.maxDiameter,
@@ -130,6 +149,11 @@ class BubbleTuning {
 
   /// Pops that end the round.
   final int targetPops;
+
+  /// Finds that end a «Знайди бульбашку» round (spec §5: 3 / 4 / 6). A
+  /// find costs several pops and a look around, so the round is counted
+  /// in finds and not in pops.
+  final int findPops;
 
   /// Round time limit.
   final int roundSeconds;
@@ -171,6 +195,15 @@ class BubbleTuning {
   /// Whole pop animation.
   final Duration popDuration;
 
+  /// Pops (or finds) that end the round in [mode].
+  int goalFor(BubbleMode mode) =>
+      mode == BubbleMode.find ? findPops : targetPops;
+
+  /// Praise every N-th step of the counter. A find is rare and big: every
+  /// one of them is worth a cheer, except the last (the celebration).
+  int praiseBeatFor(BubbleMode mode) =>
+      mode == BubbleMode.find ? 1 : praiseEvery;
+
   static BubbleTuning forLevel(int level, BubbleDeviceClass device) {
     final f = device.sizeFactor;
     final pop = DT.motion.bubblePop;
@@ -179,6 +212,7 @@ class BubbleTuning {
           level: 1,
           device: device,
           targetPops: 8,
+          findPops: 3,
           roundSeconds: 45,
           minDiameter: 120 * f,
           maxDiameter: 176 * f,
@@ -204,6 +238,7 @@ class BubbleTuning {
           level: 2,
           device: device,
           targetPops: 12,
+          findPops: 4,
           roundSeconds: 50,
           minDiameter: 104 * f,
           maxDiameter: 160 * f,
@@ -229,6 +264,7 @@ class BubbleTuning {
           level: 3,
           device: device,
           targetPops: 20,
+          findPops: 6,
           roundSeconds: 60,
           minDiameter: 88 * f,
           maxDiameter: 144 * f,
@@ -323,6 +359,11 @@ bool _isExcludedPack(PackModel p) {
   if (PackModel.nonWordPackIds.contains(p.id)) return true;
   return false;
 }
+
+/// How many different pictures «Знайди бульбашку» needs before it is a
+/// game and not the same card again: six keeps two targets in a row
+/// visibly different even in a small catalogue.
+const int _kMinFindTargets = 6;
 
 /// Rim colours: six saturated accents (spec §3), distinct enough for the
 /// future "collect the yellow ones" mode. `DT.pink` is left out — too hot.
@@ -591,7 +632,46 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
 
   int _nextBubbleId = 1;
   int _nextRippleId = 1;
+
+  /// The counter under the pill: pops in [BubbleMode.all] / [tricky],
+  /// finds in [BubbleMode.find].
   int _popped = 0;
+
+  /// Calibration aggregates of the round (spec §5, wave 3.3): every
+  /// bubble that burst under a finger, every tap that hit nothing, and
+  /// when the first pop happened. Nothing here identifies anybody — they
+  /// leave as four numbers on `game_complete`, the same class of data as
+  /// the score that has always been sent, and they answer one question:
+  /// is this level's bubble big enough and slow enough for these hands.
+  int _pops = 0;
+  int _misses = 0;
+  int? _firstPopMs;
+
+  // ── «Знайди бульбашку» (§5) ─────────────────
+  /// The card on Bloom's sign. Exactly one live bubble carries its
+  /// picture; every other bubble is still a word and still pops.
+  CardModel? _target;
+
+  /// Cards the target may be drawn from: one per illustration (the same
+  /// picture lives in several packs), drawn from [SemanticGroup]s where
+  /// the catalogue has enough of them, so two targets in a row are two
+  /// visibly different things.
+  List<CardModel> _targetPool = const [];
+
+  /// Bumped on every change of [_target] — the sign turns over on it.
+  int _targetSeq = 0;
+
+  /// Names the first target only after the spoken instruction has had
+  /// its say, so the two voices never overlap.
+  Timer? _introTimer;
+
+  // ── Misses in a row (§2, wave 3.2) ──────────
+  /// Misses inside the current [DTMotion.bubbleMissWindow], the clock of
+  /// the last one, and how many such runs this round has had — the first
+  /// run gets Bloom's `curious`, the next ones get his pointing paw.
+  int _missRun = 0;
+  int _lastMissMs = 0;
+  int _noticedMissRuns = 0;
 
   /// Praise currently on screen, and a sequence number so two cheers in a
   /// row restart the animation instead of reusing the same element.
@@ -718,6 +798,7 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     }
     _celebrationTimer?.cancel();
     _cascadeTimer?.cancel();
+    _introTimer?.cancel();
     _words.dispose();
     _bloom.sceneLeft(_bloomScene);
     _ticker.stop();
@@ -732,40 +813,65 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
   /// [silent] — the quiet restart after a round with no pops (spec §5):
   /// same deck, no analytics, no snack; the child was only watching.
   void _startRound({BubbleMode? mode, bool silent = false}) {
-    final newMode = mode ?? _mode;
-    final pool = _buildPool(newMode);
+    var newMode = mode ?? _mode;
+    var pool = _buildPool(newMode);
     final level = ref.read(profileProvider).active?.level ?? 2;
     final tuning = BubbleTuning.forLevel(level, _device);
+    final isEn = ref.read(languageProvider) == 'en';
 
     // Tricky mode fallback when not enough material yet.
     if (newMode == BubbleMode.tricky && pool.length < 5) {
-      final fallback = _buildPool(BubbleMode.all);
+      newMode = BubbleMode.all;
+      pool = _buildPool(BubbleMode.all);
       if (!silent) {
-        _showSnack(AppS(ref.read(languageProvider) == 'en')(
+        _showSnack(AppS(isEn)(
           'Замало складних слів — переходимо до всіх слів',
           'Not enough tricky words yet — switching to all words',
         ));
       }
-      setState(() {
-        _mode = BubbleMode.all;
-        _pool = fallback;
-        _tuning = tuning;
-      });
-    } else {
-      setState(() {
-        _mode = newMode;
-        _pool = pool;
-        _tuning = tuning;
-      });
     }
 
+    // Find mode needs enough *different pictures* to keep changing the
+    // sign; without them the honest thing is free popping, not a round
+    // that shows the same cat three times.
+    var targets = const <CardModel>[];
+    if (newMode == BubbleMode.find) {
+      targets = _findTargets(pool);
+      if (targets.length < _kMinFindTargets) {
+        newMode = BubbleMode.all;
+        targets = const [];
+        if (!silent) {
+          _showSnack(AppS(isEn)(
+            'Замало різних карток — просто лопаємо бульбашки',
+            'Not enough different cards yet — just popping bubbles',
+          ));
+        }
+      }
+    }
+
+    setState(() {
+      _mode = newMode;
+      _pool = pool;
+      _targetPool = targets;
+      _tuning = tuning;
+    });
+
     _cascadeTimer?.cancel();
+    _introTimer?.cancel();
+    _introTimer = null;
     _words.clear();
     _live.clear();
     _popping.clear();
     _ripples.clear();
     _deck.clear();
     _popped = 0;
+    _pops = 0;
+    _misses = 0;
+    _firstPopMs = null;
+    _missRun = 0;
+    _lastMissMs = 0;
+    _noticedMissRuns = 0;
+    _target = null;
     _praise = null;
     _elapsedMs = 0;
     _msSinceSpawn = 0;
@@ -784,6 +890,8 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     if (!silent) {
       AnalyticsService.instance.logGameStart('bubble_pop_${_mode.name}');
     }
+
+    if (_mode == BubbleMode.find) _nextTarget(announce: !silent, delayed: true);
 
     // Pre-seed two bubbles mid-screen so the round doesn't open on an empty
     // sky — the first bottom spawn otherwise takes several seconds to drift
@@ -815,8 +923,17 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
 
     // Quest + analytics only on natural completion.
     ref.read(dailyQuestProvider.notifier).completeTask(QuestTask.playQuiz);
-    AnalyticsService.instance
-        .logGameComplete('bubble_pop_${_mode.name}', _popped);
+    // Calibration (spec §5): how many of the taps found a bubble, and how
+    // long the first one took. Aggregates of this round only.
+    final taps = _pops + _misses;
+    AnalyticsService.instance.logGameComplete(
+      'bubble_pop_${_mode.name}',
+      _popped,
+      hitRate: taps == 0 ? 0 : _pops / taps,
+      timeToFirstPopMs: _firstPopMs,
+      level: _tuning.level,
+      deviceClass: _device.name,
+    );
     // Bloom's three hops on the grass and the confetti from his corner;
     // the shared card (tada + praise, "again" pill) follows once the
     // cheer has landed.
@@ -891,7 +1008,9 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     final allowedPacks =
         packs.where((p) => !p.isLocked && !_isExcludedPack(p)).toList();
 
-    if (mode == BubbleMode.all) {
+    // Find plays over the same open catalogue as free popping; only the
+    // *targets* are chosen with more care (see [_findTargets]).
+    if (mode != BubbleMode.tricky) {
       return allowedPacks.expand((p) => p.cards).where(isPlayable).toList();
     }
 
@@ -908,6 +1027,92 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
         allowedPacks.expand((p) => p.cards).where(isPlayable).toList();
     final byId = {for (final c in allowedCards) c.id: c};
     return ids.map((id) => byId[id]).whereType<CardModel>().toList();
+  }
+
+  // ── «Знайди бульбашку»: the target (§5) ───────
+
+  /// The cards the sign may show, one per illustration.
+  ///
+  /// The same picture appears in several packs under several ids, and two
+  /// of them in the sky at once would make the question unanswerable — so
+  /// the pool is keyed by [CardModel.image], exactly like
+  /// [SemanticGroup]s are.
+  ///
+  /// Where the open catalogue has enough of them, targets come only from
+  /// curated groups (animals, food, things that drive…). That is not
+  /// about the category: it is that those pictures are the ones a child
+  /// can name and point at, and belonging to a group is what lets the
+  /// next target be *visibly* different from the last one
+  /// ([SemanticGroups.contrast]). When the catalogue is thin — one small
+  /// free pack — every distinct picture is fair game.
+  List<CardModel> _findTargets(List<CardModel> pool) {
+    final byImage = <String, CardModel>{};
+    for (final card in pool) {
+      final image = card.image;
+      if (image != null) byImage.putIfAbsent(image, () => card);
+    }
+    final all = byImage.values.toList();
+    final grouped = [
+      for (final card in all)
+        if (SemanticGroups.of(card) != null) card,
+    ];
+    return grouped.length >= _kMinFindTargets ? grouped : all;
+  }
+
+  /// Whether [card] is the thing on the sign. By picture, not by id: two
+  /// packs share the illustration and the child sees only the picture.
+  bool _isTarget(CardModel card) {
+    final target = _target;
+    return target != null && card.image == target.image;
+  }
+
+  /// Turn the sign over to the next thing to find.
+  ///
+  /// Never the same picture twice running, and — when the groups are
+  /// there — never a picture the last one could be confused with: a cat
+  /// then a dog is a change of word, not a change of task.
+  ///
+  /// [announce] says the new word; [delayed] holds it back until the
+  /// round's spoken instruction has finished (start of a round only).
+  void _nextTarget({bool announce = true, bool delayed = false}) {
+    if (_targetPool.isEmpty) return;
+    final prev = _target;
+    final prevGroup = prev == null ? null : SemanticGroups.of(prev);
+    final fresh = [
+      for (final c in _targetPool)
+        if (c.image != prev?.image) c,
+    ];
+    final pool = fresh.isEmpty ? _targetPool : fresh;
+    final contrasting = prevGroup == null
+        ? const <CardModel>[]
+        : [
+            for (final c in pool)
+              if (SemanticGroups.of(c) case final g?
+                  when SemanticGroups.contrast(prevGroup, g))
+                c,
+          ];
+    final from = contrasting.isEmpty ? pool : contrasting;
+
+    _target = from[_rng.nextInt(from.length)];
+    _targetSeq++;
+    if (!announce) return;
+    _introTimer?.cancel();
+    if (delayed) {
+      _introTimer = Timer(DT.motion.bubbleFindIntro, () {
+        _introTimer = null;
+        if (mounted && !_ended) _sayTarget();
+      });
+    } else {
+      _sayTarget();
+    }
+  }
+
+  /// Say the word on the sign. Through the same queue as a pop, so it
+  /// waits its turn instead of cutting the word of the bubble that has
+  /// just burst.
+  void _sayTarget() {
+    final target = _target;
+    if (target != null) _words.say(target);
   }
 
   // ── Ticker ─────────────────────────────────────
@@ -991,7 +1196,7 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     if (cast) _population.value++;
 
     // End conditions.
-    if (_popped >= _tuning.targetPops) {
+    if (_popped >= _goal) {
       _endRound();
       return;
     }
@@ -1011,6 +1216,9 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     // at 60fps on the old tablets this app targets.
     _frame.value++;
   }
+
+  /// What ends the round: pops, or finds in [BubbleMode.find].
+  int get _goal => _tuning.goalFor(_mode);
 
   int _randomSpawnInterval() => _tuning.spawnMinMs +
       _rng.nextInt(_tuning.spawnMaxMs - _tuning.spawnMinMs);
@@ -1041,6 +1249,11 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
         ((target.posX - bloom.dx) / (body.width / 2)).clamp(-1.0, 1.0),
         ((target.posY - bloom.dy) / (body.height / 2)).clamp(-1.0, 1.0),
       ));
+    }
+    if (_mode == BubbleMode.find) {
+      // The sign already says what to look for; the reminder is its word.
+      _sayTarget();
+      return true;
     }
     if (_hints >= 2 && !_instructionRepeated) {
       _instructionRepeated = true;
@@ -1089,7 +1302,16 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     // immediately — skip it when there is an alternative (matters for the
     // small tricky-mode pools; with 200+ cards this never triggers).
     final liveIds = {for (final b in _live) b.card.id};
-    final idx = _deck.lastIndexWhere((c) => !liveIds.contains(c.id));
+    // In find mode the target enters the sky only when [_spawnBubble]
+    // asks for it by name: drawing it here as well could put two of the
+    // same picture up at once, and then there is no right bubble.
+    final blocked = _mode == BubbleMode.find ? _target?.image : null;
+    var idx = _deck.lastIndexWhere(
+      (c) => !liveIds.contains(c.id) && (blocked == null || c.image != blocked),
+    );
+    if (idx < 0 && blocked != null) {
+      idx = _deck.lastIndexWhere((c) => c.image != blocked);
+    }
     return idx >= 0 ? _deck.removeAt(idx) : _deck.removeLast();
   }
 
@@ -1111,7 +1333,7 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
   }) {
     if (_pool.isEmpty) return;
     final t = _tuning;
-    final card = _drawCard();
+    final card = _findCardToSpawn() ?? _drawCard();
     final size = t.minDiameter + _rng.nextDouble() * (t.maxDiameter - t.minDiameter);
     // Bigger bubble → slower: the crossing time interpolates between the
     // small/fast and large/slow ends of the table, and the velocity is
@@ -1164,6 +1386,23 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
       spawnT: t.level >= 3 ? 1.0 : 0.0,
     ));
     _precacheDeck();
+  }
+
+  /// The target, when this spawn is the one that must carry it.
+  ///
+  /// §5 allows it to arrive by the second spawn after the sign turns
+  /// over; it takes the first, because "second" is not a promise the sky
+  /// can keep. Bubbles stop being born once [BubbleTuning.maxAlive] are
+  /// up, and at L3 one takes seven to twelve seconds to cross — so a
+  /// spawn that passed the target over could be followed by no spawn at
+  /// all, and a three-year-old would be searching a sky that has nothing
+  /// to find in it. Null in every other mode, and whenever the target is
+  /// already up there.
+  CardModel? _findCardToSpawn() {
+    if (_mode != BubbleMode.find) return null;
+    final target = _target;
+    if (target == null) return null;
+    return _live.any((b) => _isTarget(b.card)) ? null : target;
   }
 
   /// Warm the next two cards of the deck so a new bubble never shows the
@@ -1231,33 +1470,55 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
 
     // Pop + medium bump on pointer-down, then the word — through the
     // queue, so a fast run of pops is whole words and not beginnings.
+    final found = _isTarget(b.card);
     FeedbackService.instance.event(
       FeedbackEvent.bubblePop,
       pitch: _pitchFor(b.size),
     );
+    // The thing on the sign: one warm note over the pop. The hand has
+    // already been answered by the pop's own bump.
+    if (found) {
+      FeedbackService.instance.event(FeedbackEvent.correct, haptic: false);
+    }
     final word = _words.say(b.card);
     _msSinceTouch = 0;
+    // A pop is a hand that works: whatever run of misses was building up
+    // is over, and the calibration counters take note.
+    _missRun = 0;
+    _pops++;
+    _firstPopMs ??= _elapsedMs;
     // Bloom hops with the child (spec §2). His own debounce keeps a hop
     // already in the air from restarting, so three pops a second on L3
     // read as one happy rabbit and not a shiver.
     _bloom.success(BloomSuccessTier.micro);
 
+    // In find mode the counter belongs to the sign. A bubble that was
+    // not the one still pops, still says its word and still teaches —
+    // the child simply keeps looking (audit п. 23: no punishment, and
+    // nothing taken away).
+    final counts = _mode != BubbleMode.find || found;
+
     setState(() {
       _live.removeWhere((x) => x.id == b.id);
       _population.value++;
       _popping.add(_popRequestFor(b, word: word));
-      _popped++;
+      if (counts) _popped++;
       // The last pop hands over to the celebration; cheering underneath
       // it would just be two rewards fighting for the screen.
-      if (_popped % _tuning.praiseEvery == 0 &&
-          _popped < _tuning.targetPops) {
+      if (counts &&
+          _popped % _tuning.praiseBeatFor(_mode) == 0 &&
+          _popped < _goal) {
         _showPraise();
       }
     });
 
+    // The sign turns over to the next thing, and names it — after the
+    // word of the bubble just popped, through the same queue.
+    if (found && _popped < _goal) _nextTarget();
+
     // End-of-round check on tap (don't wait for the next ticker frame —
     // feels more responsive when the last pop ends the game immediately).
-    if (_popped >= _tuning.targetPops) {
+    if (_popped >= _goal) {
       _endRound();
     }
   }
@@ -1292,12 +1553,77 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     if (bloom.contains(at)) return;
     // A miss is still the child being here: it resets the idle clock.
     _msSinceTouch = 0;
+    _misses++;
+    _noteMissRun();
     FeedbackService.instance.event(FeedbackEvent.emptyTap);
     if (_reduce) return;
     setState(() {
       if (_ripples.length >= _maxRipples) _ripples.removeAt(0);
       _ripples.add(_RippleRequest(id: _nextRippleId++, at: at));
     });
+  }
+
+  /// A run of misses inside [DTMotion.bubbleMissWindow] (spec §2, §5:
+  /// two for a one-year-old, three from two years up).
+  ///
+  /// One miss earns nothing — a toddler's finger lands next to things all
+  /// day. A run of them means the child is trying and not getting there,
+  /// and the answer is help, not judgement: Bloom tilts his head
+  /// (`curious`) and the biggest bubble in the sky wiggles and glows.
+  /// Should the run repeat, he stops wondering and points.
+  void _noteMissRun() {
+    if (_elapsedMs - _lastMissMs >
+        DT.motion.bubbleMissWindow.inMilliseconds) {
+      _missRun = 0;
+    }
+    _lastMissMs = _elapsedMs;
+    _missRun++;
+    if (_missRun < _tuning.missesToCurious) return;
+    _missRun = 0;
+    _noticedMissRuns++;
+    _hintBiggest();
+  }
+
+  /// Bloom notices, and the biggest bubble answers for itself. Shares the
+  /// wiggle-glow of the idle hint but not its clock: this one is about
+  /// aim, not about waiting, so it does not repeat the instruction and
+  /// does not count as an idle hint.
+  void _hintBiggest() {
+    if (_ended || _live.isEmpty) return;
+    final target = _live.reduce((a, b) => b.size > a.size ? b : a);
+    for (final b in _live) {
+      b.hintT = b.id == target.id ? 0.0 : null;
+    }
+    _population.value++;
+    final body = _screenSize;
+    if (body != null) {
+      final bloom = BubbleStage.bloomRect(body, _device).center;
+      // Give his brain the direction first: the second run of misses is
+      // a pointed paw, and a paw needs somewhere to point.
+      _bloom.hintTargetChanged(Alignment(
+        ((target.posX - bloom.dx) / (body.width / 2)).clamp(-1.0, 1.0),
+        ((target.posY - bloom.dy) / (body.height / 2)).clamp(-1.0, 1.0),
+      ));
+    }
+    // First run of the round → `curious`; the ones after → the paw.
+    _bloom.miss(_noticedMissRuns);
+  }
+
+  /// The finger is down and travelling: pop whatever it passes through.
+  /// Same hit zone as a tap (diameter + slop) and the same [_popBubble],
+  /// so a wiped bubble is a pop in every way — word, sound, counter.
+  /// One bubble per move event: two bubbles that overlap under one finger
+  /// are two separate answers, a frame apart.
+  void _onWipe(PointerMoveEvent e) {
+    if (_ended || _tuning.level > 1 || _live.isEmpty) return;
+    final at = e.localPosition;
+    for (final b in List.of(_live)) {
+      final reach = b.size / 2 + _tuning.hitSlop;
+      if ((Offset(b.posX, b.posY) - at).distanceSquared <= reach * reach) {
+        _popBubble(b);
+        return;
+      }
+    }
   }
 
   void _onRippleDone(int id) {
@@ -1333,10 +1659,8 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     return KidScreen.game(
       accent: DT.brand,
       background: DT.sceneSkyTop,
-      title: _ProgressTube(
-        value: (_popped / _tuning.targetPops).clamp(0.0, 1.0),
-      ),
-      trailing: _CountPill(popped: _popped, target: _tuning.targetPops),
+      title: _ProgressTube(value: (_popped / _goal).clamp(0.0, 1.0)),
+      trailing: _CountPill(popped: _popped, target: _goal),
       body: LayoutBuilder(
         builder: (context, constraints) {
           // Cache layout for the ticker. The box is the play area under the
@@ -1392,6 +1716,26 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
                 ),
               ),
 
+              // The sign Bloom holds up: the thing to find, as a picture
+              // (rule 4 — a two-word label would be for the parent, not
+              // for the child). It sits over his head, out of the flight
+              // zone, and under the bubbles like he is. A tap on it says
+              // the word again and is not a miss.
+              if (_target case final target? when _mode == BubbleMode.find)
+                Positioned.fromRect(
+                  key: const ValueKey('find_sign'),
+                  rect: _TargetSign.rectFor(body, bloomRect, _device),
+                  child: AnimatedOpacity(
+                    opacity: _celebrating || _finale ? 0 : 1,
+                    duration: policy.dur(DT.motion.bloomFade),
+                    child: _TargetSign(
+                      card: target,
+                      seq: _targetSeq,
+                      onTap: _sayTarget,
+                    ),
+                  ),
+                ),
+
               // Live bubbles. The children change when the cast does
               // (~1/s); the positions are a repaint of one Flow layer per
               // frame, and each bubble is its own RepaintBoundary, so the
@@ -1433,6 +1777,19 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
                   },
                 ),
               ),
+
+              // Wiping (spec 3.5, rule 3 — forgiving input). A
+              // one-year-old does not tap, they sweep: the finger lands
+              // somewhere and travels, and every bubble it goes through
+              // bursts. Translucent, so a pointer-down still reaches the
+              // bubble underneath and nothing about tapping changes.
+              if (_tuning.level <= 1)
+                Positioned.fill(
+                  child: Listener(
+                    behavior: HitTestBehavior.translucent,
+                    onPointerMove: _onWipe,
+                  ),
+                ),
 
               // Popping bubbles (own animation controllers).
               for (final p in _popping)
@@ -1729,6 +2086,91 @@ class _BubbleFlowDelegate extends FlowDelegate {
   @override
   bool shouldRepaint(covariant _BubbleFlowDelegate old) =>
       old.bubbles != bubbles || old.slop != slop || old.reduce != reduce;
+}
+
+// ─────────────────────────────────────────────
+//  The sign over Bloom's head (spec §5, «Знайди бульбашку»)
+// ─────────────────────────────────────────────
+
+/// What to look for, held up over Bloom: the card itself, 72×96 dp on a
+/// phone and 96×128 on a tablet, cover-cropped like the bubbles so the
+/// picture on the sign and the picture in the sky are the same picture.
+///
+/// No caption. A three-year-old does not read, and the word is already
+/// spoken — by Bloom when the sign turns over, by the idle hint, and by
+/// a tap on the sign itself (rule 4, rule 2).
+class _TargetSign extends StatelessWidget {
+  const _TargetSign({
+    required this.card,
+    required this.seq,
+    required this.onTap,
+  });
+
+  final CardModel card;
+
+  /// Bumped on every change of target: the sign turns over on it.
+  final int seq;
+  final VoidCallback onTap;
+
+  /// Sign width by device; the height is [_CardInside.cardAspect] of it.
+  static double widthFor(BubbleDeviceClass device) =>
+      device == BubbleDeviceClass.phone ? 72 : 96;
+
+  /// Where the sign hangs: centred over [bloom], its foot [DT.sp8] above
+  /// his ears, kept inside the play area on both sides.
+  static Rect rectFor(Size body, Rect bloom, BubbleDeviceClass device) {
+    final w = widthFor(device);
+    final h = w * _CardInside.cardAspect;
+    final left =
+        (bloom.center.dx - w / 2).clamp(DT.sp8, max(DT.sp8, body.width - w - DT.sp8));
+    final top = max(DT.sp8, bloom.top - DT.sp8 - h);
+    return Rect.fromLTWH(left.toDouble(), top, w, h);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final flip = MotionPolicy.of(context).dur(DT.motion.bubbleSignFlip);
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: DT.surfaceWhite,
+          borderRadius: BorderRadius.circular(DT.sp12),
+          border: Border.all(color: DT.surfaceWhite, width: 3),
+          boxShadow: DT.shadowSoft(DT.brand),
+        ),
+        child: ClipRRect(
+          // The white border is the frame: the picture is clipped just
+          // inside it.
+          borderRadius: BorderRadius.circular(DT.sp12 - 3),
+          child: AnimatedSwitcher(
+            duration: flip,
+            switchInCurve: DT.motion.standard,
+            switchOutCurve: DT.motion.standard,
+            transitionBuilder: (child, animation) => AnimatedBuilder(
+              animation: animation,
+              builder: (context, inner) => Transform(
+                alignment: Alignment.center,
+                transform: Matrix4.identity()
+                  ..setEntry(3, 2, 0.001)
+                  ..rotateY((1 - animation.value) * pi / 2),
+                child: inner,
+              ),
+              child: child,
+            ),
+            child: CardImage.forCard(
+              card,
+              key: ValueKey(seq),
+              fit: BoxFit.cover,
+              alignment: _BubbleGlass.artAlignment,
+              padding: EdgeInsets.zero,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 // ─────────────────────────────────────────────

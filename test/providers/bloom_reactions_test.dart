@@ -1,5 +1,6 @@
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talking_cards/providers/bloom_reactions_provider.dart';
 import 'package:talking_cards/services/feedback_service.dart';
@@ -399,6 +400,130 @@ void main() {
         t.bloom.appResumed(Duration.zero);
         async.elapse(const Duration(seconds: 6));
         expect(t.bloom.state.emotion, BloomEmotion.point);
+        t.bloom.dispose();
+      });
+    });
+  });
+
+  group('the stage decides what a tap means', () {
+    test('in the bubbles the tap is an exhale, elsewhere a hop', () {
+      fakeAsync((async) {
+        final t = make(async);
+        t.bloom.sceneEntered('cards', BloomScene.cards);
+        t.bloom.bloomTapped();
+        expect(t.bloom.state.emotion, BloomEmotion.happy);
+        async.elapse(DT.motion.celebrate);
+
+        // The wand answers the finger: `blow` (5) would never be seen if
+        // the tap always asked for `happy` (6).
+        t.bloom.sceneEntered('bubbles', BloomScene.bubbles);
+        async.elapse(const Duration(seconds: 2));
+        t.bloom.bloomTapped();
+        expect(t.bloom.state.emotion, BloomEmotion.blow);
+        expect(t.bloom.state.prop, BloomProp.wand);
+        expect(t.sounds.last, BloomSound.giggle);
+        async.elapse(DT.motion.bloomBlow);
+        expect(t.bloom.state.emotion, BloomEmotion.idle);
+
+        // And the stage under it still means a hop.
+        t.bloom.sceneLeft('bubbles');
+        t.bloom.bloomTapped();
+        expect(t.bloom.state.emotion, BloomEmotion.happy);
+        t.bloom.dispose();
+      });
+    });
+
+    test('the exhale is debounced like any other one-shot', () {
+      fakeAsync((async) {
+        final t = make(async);
+        t.bloom.sceneEntered('bubbles', BloomScene.bubbles);
+        t.bloom.bloomTapped();
+        final serial = t.bloom.state.serial;
+        async.elapse(const Duration(milliseconds: 100));
+        t.bloom.bloomTapped();
+        expect(t.bloom.state.serial, serial, reason: 'no restart mid-exhale');
+        expect(t.bloom.state.emotion, BloomEmotion.blow);
+        t.bloom.dispose();
+      });
+    });
+  });
+
+  group('a host-timed nudge', () {
+    const target = Alignment(0.65, -0.55);
+
+    test('points even where Bloom has no clock of his own', () {
+      fakeAsync((async) {
+        final t = make(async);
+        t.bloom.sceneEntered('memory', BloomScene.memory);
+        expect(BloomScene.memory.hintsEnabled, isFalse,
+            reason: 'the board runs its own two-step nudge');
+
+        // Bloom's own hint clock never fires here...
+        async.elapse(const Duration(minutes: 1));
+        expect(t.bloom.state.emotion, BloomEmotion.idle);
+
+        // ...but the host that owns the clock is not asking permission.
+        t.bloom.nudged(target);
+        expect(t.bloom.state.emotion, BloomEmotion.point);
+        expect(t.bloom.state.hintDirection, target);
+        expect(t.bloom.state.lookAt, target);
+        expect(t.sounds, isEmpty, reason: 'in a game the board speaks');
+        async.elapse(DT.motion.bloomPoint);
+        expect(t.bloom.state.emotion, BloomEmotion.idle);
+        t.bloom.dispose();
+      });
+    });
+
+    test('at most once per 2 s, and never over a bigger gesture', () {
+      fakeAsync((async) {
+        final t = make(async);
+        t.bloom.sceneEntered('memory', BloomScene.memory);
+        t.bloom.nudged(target);
+        async.elapse(DT.motion.bloomPoint);
+        final serial = t.bloom.state.serial;
+
+        t.bloom.nudged(const Alignment(-0.5, 0));
+        expect(t.bloom.state.serial, serial, reason: 'inside the 2 s gap');
+        expect(t.bloom.state.emotion, BloomEmotion.idle);
+
+        async.elapse(BloomReactions.nudgeGap);
+        t.bloom.nudged(target);
+        expect(t.bloom.state.emotion, BloomEmotion.point);
+        async.elapse(DT.motion.bloomPoint);
+
+        // A cheer in the air outranks a point (7 > 4) — the gap is spent,
+        // so it is the priority table talking and not the debounce.
+        async.elapse(BloomReactions.nudgeGap);
+        t.bloom.success(BloomSuccessTier.round);
+        t.bloom.nudged(target);
+        expect(t.bloom.state.emotion, BloomEmotion.cheer);
+        t.bloom.dispose();
+      });
+    });
+
+    test('the nap waits for the gesture, then lands', () {
+      fakeAsync((async) {
+        final t = make(async);
+        t.bloom.sceneEntered('cards', BloomScene.cards);
+        // Both of Bloom's own hints have been spent by now (8 s, 16 s).
+        async.elapse(const Duration(milliseconds: 29600));
+        expect(t.bloom.state.level, BloomLevel.idle);
+
+        t.bloom.nudged(target);
+        expect(t.bloom.state.emotion, BloomEmotion.point);
+        // The nap is due at 30 s — it never interrupts a one-shot.
+        async.elapse(const Duration(milliseconds: 500));
+        expect(t.bloom.state.emotion, BloomEmotion.point);
+        expect(t.bloom.state.level, BloomLevel.idle);
+
+        async.elapse(BloomReactions.sleepRetry);
+        expect(t.bloom.state.emotion, BloomEmotion.sleep);
+        expect(t.sounds.last, BloomSound.zzz);
+
+        // And a nudge into a sleeping Bloom wakes him silently to point.
+        t.bloom.nudged(target);
+        expect(t.bloom.state.emotion, BloomEmotion.point);
+        expect(t.bloom.state.level, BloomLevel.idle);
         t.bloom.dispose();
       });
     });
