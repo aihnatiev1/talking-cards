@@ -341,6 +341,107 @@ class KidCountPill extends StatelessWidget {
   }
 }
 
+/// A tappable pill in the kid zone: dark text on white, ringed in the pack
+/// accent, inside a full 72 dp target.
+///
+/// Same reasoning as [KidCountPill] — the accent goes into the ring, the
+/// shadow and the icon, never under the text — plus the two things a
+/// counter does not need: a hit zone a toddler can find (CLAUDE.md rule 1)
+/// and an [icon] that says what the tap does for a child who cannot read.
+/// The icon is drawn in [DT.solid] of the accent (≥ 4.5:1 on white for
+/// every pack; the raw mint is 2.0:1 and would be a ghost).
+///
+/// Contrast pinned by `test/widgets/kid_count_pill_test.dart`.
+class KidActionPill extends StatelessWidget {
+  const KidActionPill({
+    super.key,
+    required this.label,
+    required this.onTap,
+    this.icon,
+    this.accent,
+    this.semanticsLabel,
+  });
+
+  /// Already-formatted text — a countdown, a short number.
+  final String label;
+
+  /// What the tap does, for a non-reader. Optional.
+  final IconData? icon;
+
+  final VoidCallback onTap;
+
+  /// Ring, shadow and icon colour; the nearest [KidScreen]'s accent by default.
+  final Color? accent;
+
+  final String? semanticsLabel;
+
+  /// Finder hook.
+  static const pillKey = ValueKey('kid_action_pill');
+
+  /// Text and background, as tested for contrast.
+  static const foreground = DT.textPrimary;
+  static const background = DT.surfaceWhite;
+  static const double ringWidth = KidCountPill.ringWidth;
+
+  /// The accent, darkened until it reads as an icon on [background].
+  static Color iconColor(Color accent) => DT.solid(accent);
+
+  @override
+  Widget build(BuildContext context) {
+    final ring = accent ?? KidScreen.accentOf(context);
+    final glyph = icon;
+    return KidTap(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Semantics(
+        button: true,
+        label: semanticsLabel ?? label,
+        excludeSemantics: true,
+        child: SizedBox(
+          height: 72,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 72),
+              child: Container(
+                key: pillKey,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DT.sp16,
+                  vertical: DT.sp8,
+                ),
+                decoration: BoxDecoration(
+                  color: background,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: ring, width: ringWidth),
+                  boxShadow: DT.shadowSoft(ring),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (glyph != null) ...[
+                      Icon(glyph, size: 20, color: iconColor(ring)),
+                      const SizedBox(width: 6),
+                    ],
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        fontFamily: DT.kidFont,
+                        fontVariations: [FontVariation('wght', 900)],
+                        fontSize: 18,
+                        color: foreground,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Icons for the header controls. One place, so the icon system being built
 /// in parallel (ux-gap-audit G1) can swap Material glyphs for `KidIcon`
 /// with a single edit.

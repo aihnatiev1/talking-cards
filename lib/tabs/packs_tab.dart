@@ -1198,7 +1198,12 @@ class _HeroWithBloomState extends ConsumerState<_HeroWithBloom> {
 
   bool _onStage = false;
 
-  BloomReactions get _bloom => ref.read(bloomReactionsProvider.notifier);
+  /// Resolved once, not per call: `ref` is dead inside `dispose`, and a
+  /// getter that reaches for it there throws — taking every line after it
+  /// down with it. That is how a word kept playing over the home screen:
+  /// `_bloom.sceneLeft()` sat above `AudioService.stop()` in dispose, so
+  /// the stop never ran. Nothing in dispose may touch `ref`.
+  late final BloomReactions _bloom = ref.read(bloomReactionsProvider.notifier);
 
   BloomScene get _scene => BloomScene.home.copyWith(
         ambient: widget.heroDone ? BloomAmbient.breathe : BloomAmbient.blinkOnly,

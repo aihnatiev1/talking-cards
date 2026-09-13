@@ -10,9 +10,7 @@ import 'ambient_loop.dart';
 import 'card_image.dart';
 import 'kid_tap.dart';
 
-/// One secondary step of today's plan, rendered as a 72×72 "stone" under
-/// the hero. The [label] is for the grown-up: it shows only under a large
-/// text scale and as a long-press tooltip (ux-gap G5 / rule 4).
+/// A localized daily action with an illustration and a completion badge.
 class DailyTask {
   final AppIcon icon;
   final String label;
@@ -29,16 +27,8 @@ class DailyTask {
   });
 }
 
-/// The single above-the-fold block on Home (ux-gap G5 «Bloom запрошує»):
-/// a 150 dp hero — illustration filling the left ~45 %, Bloom peeking out
-/// from behind its right edge, the title and a 72 dp play disc — plus the
-/// remaining daily steps as three wordless stones inside the SAME frame.
-///
-/// Bloom is not built here: the host hands him in as [mascot] so this
-/// widget stays free of Riverpod (goldens pass a still `BloomMascot`, the
-/// home tab passes the live one). He is painted *under* the illustration in
-/// z — the child never sees him cover the picture — and his hit zone stays
-/// his own: a tap on Bloom is Bloom's, a tap anywhere else is the hero's.
+/// Responsive invitation with a framed illustration, a separate mascot slot,
+/// and full-width localized actions. Motion is confined to the play button.
 class DailyHeroCard extends StatelessWidget {
   final String title;
   final Color accent;
@@ -94,19 +84,17 @@ class DailyHeroCard extends StatelessWidget {
         ? _AllDoneRow(isEn: isEn, onTap: onAllDoneTap)
         : _StoneRow(tasks: tasks, accent: accent);
 
-    // Invite breath, 1.0 → 1.02: gentle, because the card is the widest
-    // thing on the screen. Stops once the hero's own step is done; under
-    // reduced motion it rests at 1.0 — the play disc and the accent frame
-    // already say "press me".
-    return AmbientLoop(
-      period: DT.motion.ambientBreath,
-      enabled: !heroDone,
-      builder: (_, t, child) =>
-          Transform.scale(scale: 1.0 + 0.02 * t, child: child),
-      // The widest card on the home screen — illustration, soft shadow,
-      // two rows of text — under an endless breath. Without the boundary
-      // every frame of that loop re-records the whole subtree; with it the
-      // breath is one layer being scaled.
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: MotionPolicy.of(context).dur(const Duration(milliseconds: 480)),
+      curve: Curves.easeOutCubic,
+      builder: (_, t, child) => Opacity(
+        opacity: t,
+        child: Transform.translate(
+          offset: Offset(0, 12 * (1 - t)),
+          child: child,
+        ),
+      ),
       child: RepaintBoundary(
         child: Container(
           decoration: BoxDecoration(
@@ -126,6 +114,7 @@ class DailyHeroCard extends StatelessWidget {
               children: [
                 _HeroPane(
                   title: title,
+                  isEn: isEn,
                   accent: accent,
                   image: image,
                   fallbackEmoji: fallbackEmoji,
@@ -164,6 +153,7 @@ class DailyHeroCard extends StatelessWidget {
 /// (audit A1-9: tap = the word + a bounce, the sheet moves to long-press).
 class _HeroPane extends StatefulWidget {
   final String title;
+  final bool isEn;
   final Color accent;
   final String? image;
   final String fallbackEmoji;
@@ -175,6 +165,7 @@ class _HeroPane extends StatefulWidget {
 
   const _HeroPane({
     required this.title,
+    required this.isEn,
     required this.accent,
     required this.image,
     required this.fallbackEmoji,
@@ -213,128 +204,179 @@ class _HeroPaneState extends State<_HeroPane>
   @override
   Widget build(BuildContext context) {
     final accent = widget.accent;
-    final heroHeight = DT.size.heroHeight;
     final progress = widget.progress;
-    // Opaque pane — Bloom's body sits behind it and must not show through
-    // a translucent tint.
-    final paneColor = Color.alphaBlend(
-      accent.withValues(alpha: 0.10),
-      DT.surfaceWhite,
-    );
-
     return LayoutBuilder(
-      builder: (context, constraints) {
-        final artWidth = math.min(
-          constraints.maxWidth * DT.size.heroArtFraction,
-          DT.size.heroArtMax,
-        );
-
-        final art = SizedBox(
-          width: artWidth,
-          height: heroHeight,
-          child: AnimatedBuilder(
-            animation: _bounce,
-            builder: (_, child) => Transform.scale(
-              scale: 1.0 + 0.06 * math.sin(math.pi * _bounce.value),
-              child: child,
-            ),
-            child: Container(
-              color: paneColor,
-              alignment: Alignment.center,
-              // Card-of-the-day may be paid content the asset pack has not
-              // delivered yet; CardImage shows the emoji until it lands,
-              // then swaps itself for the picture.
-              child: CardImage(
-                name: widget.image,
-                fallbackEmoji: widget.fallbackEmoji,
-                size: CardArtSize.hero,
-                fit: BoxFit.cover,
-                padding: EdgeInsets.zero,
-              ),
-            ),
-          ),
-        );
-
-        final row = Row(
-          children: [
-            art,
-            Expanded(
-              child: Padding(
-                // Bloom lives in the lower-left of this column (his box is
-                // bottom-aligned to the pane); the title stays in the upper
-                // half so the two never meet.
-                padding: const EdgeInsets.fromLTRB(
-                  DT.sp12,
-                  DT.sp16,
-                  DT.sp8,
-                  DT.sp16,
+      builder: (context, bounds) {
+        final compact = bounds.maxWidth < 400;
+        final artWidth = math.min(bounds.maxWidth * .36, 225.0);
+        final heading = widget.heroDone
+            ? (widget.isEn ? 'Well done!' : 'Молодець!')
+            : progress != null
+            ? (widget.isEn ? 'Let’s continue' : 'Продовжимо гру')
+            : (widget.isEn ? 'Discover today' : 'Відкриваємо світ');
+        double textHeight(String text, TextStyle style) {
+          final painter =
+              TextPainter(
+                text: TextSpan(
+                  text: text,
+                  style: DefaultTextStyle.of(context).style.merge(style),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        widget.title,
-                        maxLines: 1,
-                        style: DT.h1.copyWith(
-                          fontVariations: DT.kidWeight(900),
-                          fontWeight: FontWeight.w900,
-                          color: DT.onTint(accent),
-                          letterSpacing: 0.2,
+                textDirection: Directionality.of(context),
+                textScaler: MediaQuery.textScalerOf(context),
+              )..layout(
+                maxWidth: math.max(
+                  1,
+                  bounds.maxWidth - artWidth - (compact ? 24 : 42),
+                ),
+              );
+          final height = painter.height;
+          painter.dispose();
+          return height;
+        }
+
+        final paneHeight = math.max(
+          compact ? 194.0 : 228.0,
+          40 +
+              7 +
+              16 +
+              76 +
+              (progress == null ? 0 : 18) +
+              textHeight(heading, DT.caption.copyWith(fontSize: 12)) +
+              textHeight(
+                widget.title,
+                DT.h1.copyWith(fontSize: compact ? 21 : 26, height: 1.15),
+              ),
+        );
+        final content = Padding(
+          padding: EdgeInsets.fromLTRB(
+            compact ? 12 : 20,
+            20,
+            compact ? 12 : 22,
+            20,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                heading,
+                style: DT.caption.copyWith(
+                  color: DT.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(height: 7),
+              Text(
+                widget.title,
+                style: DT.h1.copyWith(
+                  fontSize: compact ? 21 : 26,
+                  color: DT.onTint(accent),
+                  height: 1.15,
+                ),
+              ),
+              if (progress != null) ...[
+                const SizedBox(height: 12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: progress.clamp(0.0, 1.0)),
+                    duration: MotionPolicy.of(
+                      context,
+                    ).dur(const Duration(milliseconds: 650)),
+                    builder: (_, value, __) => LinearProgressIndicator(
+                      value: value,
+                      minHeight: 6,
+                      backgroundColor: accent.withValues(alpha: .1),
+                      color: accent,
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  AmbientLoop(
+                    period: const Duration(milliseconds: 1400),
+                    settleAfter: const Duration(milliseconds: 4200),
+                    enabled: !widget.heroDone,
+                    builder: (_, t, child) => Transform.translate(
+                      offset: Offset(0, -3 * t),
+                      child: Transform.rotate(
+                        angle: -.045 * math.sin(t * math.pi),
+                        child: child,
+                      ),
+                    ),
+                    child: _PlayDisc(accent: accent, done: widget.heroDone),
+                  ),
+                  if (widget.mascot != null) ...[
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: SizedBox(
+                          width: 68,
+                          height: 76,
+                          child: FittedBox(
+                            fit: BoxFit.contain,
+                            child: widget.mascot!,
+                          ),
                         ),
                       ),
                     ),
-                    if (progress != null) ...[
-                      const SizedBox(height: DT.sp8),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(2),
-                        child: LinearProgressIndicator(
-                          value: progress.clamp(0.0, 1.0),
-                          minHeight: 4,
-                          backgroundColor: accent.withValues(alpha: 0.15),
-                          valueColor: AlwaysStoppedAnimation<Color>(accent),
-                        ),
-                      ),
-                    ],
                   ],
-                ),
+                ],
               ),
-            ),
-            // The one big affordance: a 72 dp disc a non-reader presses.
-            Padding(
-              padding: const EdgeInsets.only(right: DT.sp12),
-              child: _PlayDisc(accent: accent, done: widget.heroDone),
-            ),
-          ],
+            ],
+          ),
         );
-
-        final mascot = widget.mascot;
         return Semantics(
           button: true,
           label: widget.title,
           child: KidTap(
             onTap: _onTap,
             onLongPress: widget.onLongPress,
-            // CardsScreen plays pack_open on entry and the card-of-the-day
-            // speaks its word; a tock here too is two sounds for one tap.
             sound: null,
             child: SizedBox(
-              height: heroHeight,
-              child: Stack(
-                clipBehavior: Clip.none,
+              height: paneHeight,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Bloom first, so the illustration paints over his body:
-                  // he peeks out from behind its right edge, feet on the
-                  // pane's bottom line, looking right at the play disc.
-                  if (mascot != null)
-                    Positioned(
-                      left: artWidth - _mascotHidden(context),
-                      bottom: -_mascotSlop(context),
-                      child: mascot,
+                  SizedBox(
+                    width: artWidth,
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        compact ? 12 : 18,
+                        18,
+                        0,
+                        18,
+                      ),
+                      child: AnimatedBuilder(
+                        animation: _bounce,
+                        builder: (_, child) => Transform.scale(
+                          scale: 1.0 + .035 * math.sin(math.pi * _bounce.value),
+                          child: child,
+                        ),
+                        child: Container(
+                          constraints: const BoxConstraints(minHeight: 150),
+                          decoration: BoxDecoration(
+                            color: accent.withValues(alpha: .07),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(20),
+                            child: CardImage(
+                              name: widget.image,
+                              fallbackEmoji: widget.fallbackEmoji,
+                              size: CardArtSize.hero,
+                              fit: BoxFit.contain,
+                              padding: const EdgeInsets.all(6),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
-                  row,
+                  ),
+                  Expanded(child: content),
                 ],
               ),
             ),
@@ -343,24 +385,6 @@ class _HeroPaneState extends State<_HeroPane>
       },
     );
   }
-
-  /// Bloom's figure is centred in a `max(size, tapMin)` hit box; the box
-  /// overhangs the figure by this much on every side.
-  double _mascotSlop(BuildContext context) {
-    final size = DT.size.mascotCompanionOf(context);
-    return (math.max(size, DT.size.tapMin) - size) / 2;
-  }
-
-  /// How far the mascot box starts left of the illustration's right edge.
-  /// Half the figure's square goes behind the picture: the painted body is
-  /// narrower than its square, so this is what actually reads as "peeking"
-  /// rather than "standing beside".
-  double _mascotHidden(BuildContext context) {
-    final size = DT.size.mascotCompanionOf(context);
-    return size * _hiddenFraction + _mascotSlop(context);
-  }
-
-  static const _hiddenFraction = 0.5;
 }
 
 class _PlayDisc extends StatelessWidget {
@@ -376,16 +400,29 @@ class _PlayDisc extends StatelessWidget {
       width: side,
       height: side,
       decoration: BoxDecoration(
-        color: done
-            ? DT.success.withValues(alpha: 0.12)
-            : accent.withValues(alpha: 0.14),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.lerp(done ? DT.success : accent, Colors.white, .25)!,
+            done ? DT.success : accent,
+          ],
+        ),
         shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 3),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: .2),
+            offset: const Offset(0, 4),
+            blurRadius: 8,
+          ),
+        ],
       ),
       alignment: Alignment.center,
       child: AppIconView(
         done ? AppIcon.check : AppIcon.play,
         size: 36,
-        color: done ? DT.success : accent,
+        color: Colors.white,
       ),
     );
   }
@@ -403,20 +440,32 @@ class _StoneRow extends StatelessWidget {
     // the first unfinished one as up-next so the row doesn't read as a set
     // of disabled controls.
     final next = tasks.indexWhere((t) => !t.isDone);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (int i = 0; i < tasks.length; i++) ...[
-          if (i > 0) const SizedBox(width: DT.sp16),
-          _Stone(
-            key: ValueKey('daily_task_$i'),
-            task: tasks[i],
-            accent: accent,
-            isNext: i == next,
-          ),
-        ],
-      ],
+    return LayoutBuilder(
+      builder: (context, box) {
+        final largeText = MediaQuery.textScalerOf(context).scale(14) > 21;
+        final count = largeText || box.maxWidth < 290
+            ? 1
+            : math.min(tasks.length, 3);
+        final width = count == 0
+            ? box.maxWidth
+            : (box.maxWidth - (count - 1) * 10) / count;
+        return Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            for (var i = 0; i < tasks.length; i++)
+              SizedBox(
+                width: width,
+                child: _Stone(
+                  key: ValueKey('daily_task_$i'),
+                  task: tasks[i],
+                  accent: accent,
+                  isNext: i == next,
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }
@@ -502,51 +551,37 @@ class _StoneState extends State<_Stone> with SingleTickerProviderStateMixin {
       bg = DT.textPrimary.withValues(alpha: 0.05);
     }
 
-    // The caption is for the grown-up: shown only under a large text scale
-    // (rule 4 — icons, not words), otherwise reachable by long-press.
-    final showLabel = MediaQuery.textScalerOf(context).scale(10) > 12;
-
     final stone = Container(
-      width: side,
-      height: side,
+      constraints: BoxConstraints(minHeight: side),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(DT.rLg),
-        border: active ? Border.all(color: accent, width: 1.5) : null,
+        color: t.isDone ? DT.success.withValues(alpha: .09) : bg,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: (t.isDone ? DT.success : accent).withValues(alpha: .16),
+        ),
       ),
-      alignment: Alignment.center,
-      // A done stone keeps its task icon — a bare check says "something
-      // happened" but not what; the check rides as a small badge instead.
-      child: t.isDone
-          ? Stack(
-              clipBehavior: Clip.none,
-              alignment: Alignment.center,
-              children: [
-                AppIconView(t.icon, size: 36, color: DT.surfaceWhite),
-                Positioned(
-                  right: -6,
-                  bottom: -6,
-                  child: Container(
-                    width: 24,
-                    height: 24,
-                    decoration: const BoxDecoration(
-                      color: DT.surfaceWhite,
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: const AppIconView(
-                      AppIcon.check,
-                      size: 16,
-                      color: DT.success,
-                    ),
-                  ),
-                ),
-              ],
-            )
-          : Opacity(
-              opacity: active || next ? 1.0 : 0.55,
-              child: AppIconView(t.icon, size: 36),
+      child: Row(
+        children: [
+          SizedBox(width: 32, height: 32, child: AppIconView(t.icon, size: 30)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              t.label,
+              style: DT.caption.copyWith(
+                fontSize: 13,
+                height: 1.2,
+                color: DT.textPrimary,
+                fontWeight: FontWeight.w800,
+              ),
             ),
+          ),
+          if (t.isDone) ...[
+            const SizedBox(width: 4),
+            const Icon(Icons.check_circle_rounded, size: 19, color: DT.success),
+          ],
+        ],
+      ),
     );
 
     // Only the active step breathes (1.0 → 1.04). Under reduced motion it
@@ -554,6 +589,7 @@ class _StoneState extends State<_Stone> with SingleTickerProviderStateMixin {
     Widget body = AmbientLoop(
       period: DT.motion.ambientPulse,
       enabled: active,
+      settleAfter: const Duration(seconds: 4),
       builder: (_, pulse, child) =>
           Transform.scale(scale: 1.0 + 0.04 * pulse, child: child),
       child: AnimatedBuilder(
@@ -573,29 +609,6 @@ class _StoneState extends State<_Stone> with SingleTickerProviderStateMixin {
         child: stone,
       ),
     );
-
-    if (showLabel) {
-      body = Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          body,
-          const SizedBox(height: DT.sp4),
-          SizedBox(
-            width: side + DT.sp16,
-            child: Text(
-              t.label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: DT.caption.copyWith(
-                fontSize: 12,
-                color: t.isDone ? DT.success : DT.textSecondary,
-              ),
-            ),
-          ),
-        ],
-      );
-    }
 
     return Tooltip(
       message: t.label,

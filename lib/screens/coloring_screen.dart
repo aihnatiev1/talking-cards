@@ -15,13 +15,11 @@ import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../services/feedback_service.dart';
 import '../services/paywall_flow.dart';
-import '../utils/app_icons.dart';
 import '../utils/confetti_overlay_mixin.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../utils/motion.dart';
 import '../services/asset_pack_service.dart';
-import '../widgets/card_image.dart';
 import '../widgets/content_download_view.dart';
 import '../widgets/kid_screen.dart';
 import '../widgets/kid_tap.dart';
@@ -87,6 +85,9 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
   static const int _gridCols = 24;
   static const int _gridRows = 24;
   static const double _completionRatio = 0.85;
+
+  /// Pictures already dealt in this visit, by illustration name.
+  final Set<String?> _seenThisVisit = {};
 
   static const _completedCountKey = 'coloring_completed_count';
   // 72dp button + the done bar's vertical margins.
@@ -230,7 +231,16 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
       }
       return;
     }
-    final chosen = _resume(pool) ?? ColoringScreen.pickNext(pool, _card, _rng);
+    // Nothing repeats inside one visit. The album button is gone, and this
+    // is what replaces it: rather than a shelf of finished pictures the
+    // child has to go find, the next picture is simply never one already
+    // revealed today. With 400+ illustrations the pool outlasts any
+    // sitting; when it does run out, the visit starts over.
+    final fresh = pool.where((c) => !_seenThisVisit.contains(c.image)).toList();
+    if (fresh.isEmpty) _seenThisVisit.clear();
+    final from = fresh.isEmpty ? pool : fresh;
+    final chosen = _resume(pool) ?? ColoringScreen.pickNext(from, _card, _rng);
+    _seenThisVisit.add(chosen.image);
     _mayResume = false;
     _card = chosen;
     // Remembered before the first stroke: a child who leaves mid-picture
@@ -444,44 +454,6 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
     _pickCardAndLoad();
   }
 
-  /// Opens the album: every picture this child has revealed, biggest first
-  /// touch target the sheet can give them. Tapping one brings it back to
-  /// the canvas.
-  void _openAlbum() {
-    FeedbackService.instance.event(FeedbackEvent.tap);
-    final packs = ref.read(packsProvider).valueOrNull ?? const <PackModel>[];
-    final pool = ColoringScreen.coloringPool(packs);
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      barrierColor: DT.barrierSheet,
-      builder: (_) => _AlbumSheet(
-        pool: pool,
-        onPick: (card) {
-          Navigator.of(context).pop();
-          _openFromAlbum(card);
-        },
-      ),
-    );
-  }
-
-  void _openFromAlbum(CardModel card) {
-    setState(() {
-      _strokes.clear();
-      _current.clear();
-      _revealedCells.clear();
-      _done = false;
-      _image = null;
-      _contentUnavailable = false;
-      _loadFailures = 0;
-      _mayResume = false;
-      _card = card;
-    });
-    _revealCtrl.value = 1.0;
-    ref.read(coloringAlbumProvider.notifier).setUnfinished(card.id);
-    _loadImage(card);
-  }
-
   // ─────────────────────────────────────────────
   //  UI
   // ─────────────────────────────────────────────
@@ -614,17 +586,11 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
                               accent: card.colorAccent,
                               onNext: _next,
                               label: s('Нова картинка', 'New picture'),
-                              album: album.entries.length,
-                              onAlbum: _openAlbum,
-                              albumLabel: s('Мої картинки', 'My pictures'),
                             )
                           : _IdleBar(
                               key: const ValueKey('idle'),
                               onNext: _next,
                               label: s('Нова картинка', 'New picture'),
-                              album: album.entries.length,
-                              onAlbum: _openAlbum,
-                              albumLabel: s('Мої картинки', 'My pictures'),
                             ),
                     ),
                   ),
@@ -816,234 +782,83 @@ class _ColoringPainter extends CustomPainter {
 /// Permanent 72×72dp round "new picture" button (design audit #25). Lives
 /// in the same bottom-right spot before and after completion so the child
 /// learns a single control; [_DoneBar] reuses it instead of a text button.
+/// The two controls under the picture.
+///
+/// They were icon-only circles — a Material shuffle glyph and a book with a
+/// number — and the words that explain them ("Нова картинка", "Мої
+/// картинки") lived in a `Tooltip`, which means a long press. Nobody long-
+/// presses a toddler app. An unlabelled icon is not minimal, it is mute:
+/// the rule about keeping text out of the child's way is about the play
+/// area, not about the controls a grown-up uses to steer it.
+/// The one control under the picture: a new picture.
+///
+/// It was two icon-only circles whose words lived in a `Tooltip` — a long
+/// press nobody performs. The album went with them: a shelf of finished
+/// pictures is a place a child has to be taught to visit, and the same
+/// promise is kept better by simply never dealing a picture twice in one
+/// sitting.
 class _NewPictureButton extends StatelessWidget {
+  const _NewPictureButton({required this.onTap, required this.label});
+
   final VoidCallback onTap;
   final String label;
 
-  const _NewPictureButton({required this.onTap, required this.label});
-
-  static const double size = 72;
+  static const double height = 72;
 
   @override
   Widget build(BuildContext context) {
-    return Tooltip(
-      message: label,
-      child: KidTap(
-        onTap: onTap,
-        child: Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            color: DT.violet,
-            shape: BoxShape.circle,
-            boxShadow: DT.shadowSoft(DT.violet),
-          ),
-          child: const Center(
-            child: Icon(
-              Icons.shuffle_rounded,
-              size: 34,
-              color: Colors.white,
+    return KidTap(
+      onTap: onTap,
+      child: Container(
+        height: height,
+        // Hugs its word instead of spanning the tablet: a pill reads as a
+        // button, a full-width band reads as a bar nobody presses.
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        decoration: BoxDecoration(
+          color: DT.mint,
+          borderRadius: BorderRadius.circular(DT.rLg),
+          boxShadow: DT.shadowSoft(DT.mint),
+        ),
+        // A `Row` that hugs, not `alignment:` — a Container with an
+        // alignment takes every pixel its parent offers.
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                // Big enough to read across a room: this is the only text
+                // on the screen and a parent reads it from a lap.
+                style: DT.h2.copyWith(color: DT.surfaceWhite),
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
   }
 }
 
-/// Bottom bar while the child is still revealing: just the new-picture
-/// button, right-aligned to match its place in [_DoneBar].
+/// Bottom bar while the child is still revealing: one button, in the same
+/// place it sits in [_DoneBar], so finishing a picture does not move it.
 class _IdleBar extends StatelessWidget {
-  final VoidCallback onNext;
-  final String label;
-  final int album;
-  final VoidCallback onAlbum;
-  final String albumLabel;
-
   const _IdleBar({
     super.key,
     required this.onNext,
     required this.label,
-    required this.album,
-    required this.onAlbum,
-    required this.albumLabel,
   });
+
+  final VoidCallback onNext;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      child: Row(
-        children: [
-          if (album > 0)
-            _AlbumButton(count: album, onTap: onAlbum, label: albumLabel),
-          const Spacer(),
-          _NewPictureButton(onTap: onNext, label: label),
-        ],
-      ),
+      padding: const EdgeInsets.fromLTRB(DT.sp16, DT.sp8, DT.sp16, DT.sp12),
+      child: Center(child: _NewPictureButton(onTap: onNext, label: label)),
     );
-  }
-}
-
-/// The way into the child's own collection (п. 24). Only appears once there
-/// is something in it — an empty shelf is not an invitation, and the kid
-/// zone gets no control that does nothing.
-class _AlbumButton extends StatelessWidget {
-  final int count;
-  final VoidCallback onTap;
-  final String label;
-
-  const _AlbumButton({
-    required this.count,
-    required this.onTap,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: label,
-      child: KidTap(
-        onTap: onTap,
-        child: SizedBox(
-          width: _NewPictureButton.size,
-          height: _NewPictureButton.size,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Container(
-                width: _NewPictureButton.size,
-                height: _NewPictureButton.size,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: DT.violet.withValues(alpha: 0.45),
-                    width: 2,
-                  ),
-                  boxShadow: DT.shadowSoft(DT.violet),
-                ),
-                child: const Center(
-                  child: AppIconView(AppIcon.stickerAlbum, size: 38),
-                ),
-              ),
-              Positioned(
-                right: -2,
-                top: -2,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: DT.sp8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: DT.violet,
-                    borderRadius: BorderRadius.circular(DT.rSm),
-                  ),
-                  child: Text(
-                    '$count',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// The album itself: every picture this child has brought to full colour,
-/// newest first. Pictures only — the sheet says what it is by being full of
-/// the child's own work (rule 4). Tapping one puts it back on the canvas.
-class _AlbumSheet extends ConsumerWidget {
-  final List<CardModel> pool;
-  final ValueChanged<CardModel> onPick;
-
-  const _AlbumSheet({required this.pool, required this.onPick});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final entries = ref.watch(coloringAlbumProvider).entries;
-    final byImage = {for (final c in pool) c.image: c};
-
-    return Container(
-      decoration: const BoxDecoration(
-        color: DT.bgWarm,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(DT.rXl)),
-      ),
-      padding: const EdgeInsets.fromLTRB(DT.sp16, DT.sp12, DT.sp16, DT.sp24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 44,
-            height: 5,
-            decoration: BoxDecoration(
-              color: DT.textMuted.withValues(alpha: 0.35),
-              borderRadius: BorderRadius.circular(DT.rSm),
-            ),
-          ),
-          const SizedBox(height: DT.sp16),
-          Flexible(
-            child: GridView.count(
-              shrinkWrap: true,
-              crossAxisCount: 3,
-              mainAxisSpacing: DT.sp12,
-              crossAxisSpacing: DT.sp12,
-              children: [
-                for (final entry in entries)
-                  _AlbumTile(
-                    key: ValueKey(entry.image),
-                    image: entry.image,
-                    card: byImage[entry.image],
-                    onTap: onPick,
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AlbumTile extends StatelessWidget {
-  final String image;
-
-  /// Null when the picture is no longer in the pool (locked again, or the
-  /// language switched away from it): it still shows, it just cannot be
-  /// reopened — the collection does not lose entries behind the child's back.
-  final CardModel? card;
-  final ValueChanged<CardModel> onTap;
-
-  const _AlbumTile({
-    super.key,
-    required this.image,
-    required this.card,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final tile = Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(DT.rLg),
-        boxShadow: DT.shadowSoft(DT.violet),
-      ),
-      padding: const EdgeInsets.all(DT.sp8),
-      child: CardImage(
-        name: image,
-        fallbackEmoji: card?.emoji ?? '🖼️',
-        padding: EdgeInsets.zero,
-      ),
-    );
-    final target = card;
-    if (target == null) return tile;
-    return KidTap(onTap: () => onTap(target), child: tile);
   }
 }
 
@@ -1194,9 +1009,6 @@ class _DoneBar extends StatelessWidget {
   final Color accent;
   final VoidCallback onNext;
   final String label;
-  final int album;
-  final VoidCallback onAlbum;
-  final String albumLabel;
 
   const _DoneBar({
     super.key,
@@ -1204,16 +1016,12 @@ class _DoneBar extends StatelessWidget {
     required this.accent,
     required this.onNext,
     required this.label,
-    required this.album,
-    required this.onAlbum,
-    required this.albumLabel,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      padding: EdgeInsets.fromLTRB(album > 0 ? 8 : 20, 0, 0, 0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -1226,29 +1034,11 @@ class _DoneBar extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        children: [
-          if (album > 0)
-            _AlbumButton(count: album, onTap: onAlbum, label: albumLabel)
-          else
-            const Text('🎉', style: TextStyle(fontSize: 28)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              word,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: accent,
-                letterSpacing: 0.3,
-              ),
-            ),
-          ),
-          _NewPictureButton(onTap: onNext, label: label),
-        ],
-      ),
+      // The word used to sit between the two buttons and squeezed them off
+      // a phone. It is already on the picture and was just spoken — two
+      // controls that say what they do are worth more here than a third
+      // repetition of the word.
+      child: Center(child: _NewPictureButton(onTap: onNext, label: label)),
     );
   }
 }

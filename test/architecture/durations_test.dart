@@ -48,7 +48,6 @@ void main() {
   /// (`daily_hero_card` already reads `DT.motion.ambientBreath`).
   /// Everything else is plain migration debt.
   const durationLiteralDebt = {
-    'lib/screens/articulation_screen.dart',
     'lib/screens/card_reveal_screen.dart',
     'lib/screens/cards_screen.dart',
     'lib/screens/home_screen.dart',

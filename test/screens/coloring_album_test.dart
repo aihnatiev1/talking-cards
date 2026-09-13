@@ -228,15 +228,16 @@ void main() {
         await tester.pump();
       }
 
-      // Recorded under this profile, and the way back to it appears in the
-      // bottom bar (the album button only exists once there is an album).
+      // Recorded under this profile — the album is now invisible storage
+      // (it remembers what was finished), not a shelf the child must visit.
       final album = container.read(coloringAlbumProvider);
       expect(album.entries, hasLength(1));
       expect(['cat', 'dog'], contains(album.entries.single.image));
       expect(album.unfinishedCardId, isNull);
       await tester.pump();
-      // The way back to the collection now exists in the bottom bar.
-      expect(find.byIcon(Icons.shuffle_rounded), findsOneWidget);
+      // One control, centred, with its word on it — no icon-only twin.
+      expect(find.text('Нова картинка'), findsOneWidget);
+      expect(find.textContaining('Мої картинки'), findsNothing);
       // Let the celebration's confetti timer run out before the tree goes.
       await tester.pump(const Duration(seconds: 2));
     });

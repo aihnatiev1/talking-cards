@@ -143,7 +143,12 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   /// This screen's stage in Bloom's brain; left in [dispose] so the home
   /// Bloom takes over again (bloom_character.md §5.4).
   final Object _bloomScene = Object();
-  BloomReactions get _bloom => ref.read(bloomReactionsProvider.notifier);
+  /// Resolved once, not per call: `ref` is dead inside `dispose`, and a
+  /// getter that reaches for it there throws — taking every line after it
+  /// down with it. That is how a word kept playing over the home screen:
+  /// `_bloom.sceneLeft()` sat above `AudioService.stop()` in dispose, so
+  /// the stop never ran. Nothing in dispose may touch `ref`.
+  late final BloomReactions _bloom = ref.read(bloomReactionsProvider.notifier);
 
   /// From the shelf, the card is up and to the right.
   static const _cardDirection = Alignment(0.7, -0.8);
@@ -767,7 +772,11 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     if (_muteListener != null) {
       AudioService.instance.autoSpeak.removeListener(_muteListener!);
     }
-    if (!_celebrating) AudioService.instance.stop();
+    // Always, not only when not celebrating: leaving the pack is leaving
+    // the pack, and a word that follows the child onto the home screen is
+    // the app talking to nobody. The celebration owns its own sounds and
+    // starts them after this.
+    AudioService.instance.stop();
     _speakDebounce?.cancel();
     _landingBeat?.cancel();
     _pageController.dispose();

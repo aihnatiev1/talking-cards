@@ -31,8 +31,6 @@ void main() {
   const hapticDebt = {
     // Parent-zone long-press on the title (cards_screen._showParentTools).
     'lib/screens/cards_screen.dart',
-    // Articulation practice: record/stop accents, not yet mapped.
-    'lib/screens/articulation_screen.dart',
     // Onboarding selection clicks + finish accent.
     'lib/screens/onboarding_screen.dart',
     // Profile picker selection clicks.

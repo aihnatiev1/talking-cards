@@ -665,12 +665,18 @@ class AudioService {
 
     try {
       isSpeaking.value = true;
-      _currentHandle = await _soloud.play(source);
-      final handle = _currentHandle;
-      if (handle == null) {
-        if (_speakGeneration == gen) isSpeaking.value = false;
+      final handle = await _soloud.play(source);
+      // `play` is the second await, and a `stop()` landing inside it finds
+      // `_currentHandle` still null: it bumps the generation, silences
+      // nothing, and this voice starts a moment later with nobody holding
+      // its handle. That is the word that kept talking over the home
+      // screen after the back button. Re-check on the far side and stop
+      // the voice we just started if this call has been overtaken.
+      if (_speakGeneration != gen) {
+        _soloud.stop(handle);
         return;
       }
+      _currentHandle = handle;
       _protectVoice(handle);
       while (_currentHandle == handle &&
           _soloud.getIsValidVoiceHandle(handle)) {
@@ -732,12 +738,18 @@ class AudioService {
 
     try {
       isSpeaking.value = true;
-      _currentHandle = await _soloud.play(source);
-      final handle = _currentHandle;
-      if (handle == null) {
-        if (_speakGeneration == gen) isSpeaking.value = false;
+      final handle = await _soloud.play(source);
+      // `play` is the second await, and a `stop()` landing inside it finds
+      // `_currentHandle` still null: it bumps the generation, silences
+      // nothing, and this voice starts a moment later with nobody holding
+      // its handle. That is the word that kept talking over the home
+      // screen after the back button. Re-check on the far side and stop
+      // the voice we just started if this call has been overtaken.
+      if (_speakGeneration != gen) {
+        _soloud.stop(handle);
         return;
       }
+      _currentHandle = handle;
       _protectVoice(handle);
       // Recordings have shape: WORD · silence · phrase. The exact word-end
       // ms was detected at preprocessing time (see tools that build

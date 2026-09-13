@@ -561,9 +561,14 @@ class _PackPickerSheetState extends ConsumerState<_PackPickerSheet>
                             textAlign: TextAlign.center,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
+                            // The title is charcoal, not the pack colour:
+                            // on the 8–20 % pack wash over `DT.bgWarm` a
+                            // mint title measured 2.0:1. The tile still
+                            // reads as the pack — the wash, the border and
+                            // the cover carry it.
                             style: DT.tileTitle.copyWith(
                               fontSize: 13,
-                              color: pack.color,
+                              color: DT.textPrimary,
                             ),
                           ),
                           if (allUnlocked)
