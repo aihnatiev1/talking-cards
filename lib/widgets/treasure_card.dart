@@ -32,6 +32,8 @@ class TreasureCard extends StatelessWidget {
 
     return KidTap(
       onTap: onTap,
+      // The chest screen answers with its own chime (G12 — "нічого").
+      sound: null,
       child: Container(
         height: 108,
         decoration: BoxDecoration(

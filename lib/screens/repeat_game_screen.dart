@@ -222,8 +222,11 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
                     offset: Offset(0, _exitSlide.value),
                     child: Opacity(opacity: _exitFade.value, child: child),
                   ),
-                  child: GestureDetector(
+                  child: KidTap(
                     onTap: _speakCurrent,
+                    // The card speaks the word — a tock on top of the voice
+                    // is one sound too many (G12).
+                    sound: null,
                     child: Container(
                       width: double.infinity,
                       decoration: BoxDecoration(

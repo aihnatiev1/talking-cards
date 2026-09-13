@@ -1,8 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import '../widgets/settings_action_row.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -40,6 +38,7 @@ import '../utils/design_tokens.dart';
 import '../utils/kid_routes.dart';
 import '../utils/l10n.dart';
 import '../utils/pack_categories.dart';
+import '../widgets/app_logo_mark.dart';
 import '../widgets/bloom_mascot.dart';
 import '../widgets/bubble_pop.dart';
 import '../widgets/card_image.dart';
@@ -48,6 +47,7 @@ import '../widgets/notification_toggle_tile.dart';
 import '../widgets/pack_grid_card.dart';
 import '../widgets/parental_gate.dart';
 import '../widgets/profile_avatar_chip.dart';
+import '../widgets/settings_action_row.dart';
 import '../widgets/streak_chip.dart';
 import '../widgets/streak_milestone_overlay.dart';
 import '../widgets/kid_tap.dart';
@@ -144,10 +144,10 @@ class _PacksTabState extends ConsumerState<PacksTab> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const CircleAvatar(
-                  radius: 28,
-                  backgroundColor: DT.violetTint,
-                  child: AppIconView(AppIcon.navCards, size: 36),
+                AppLogoMark(
+                  size: 64,
+                  semanticsLabel:
+                      s('Картки-розмовлялки', 'FirstWords Cards'),
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -1116,7 +1116,14 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                   child: GridView.builder(
                     padding: EdgeInsets.fromLTRB(16 * scale, 4, 16 * scale, 8),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
+                      // Two columns on a phone: three of them put a pack
+                      // cover under ~110 dp, below what a 1-year-old can
+                      // aim at or recognise (ux-gap G12 / А1-12). Tablets
+                      // keep three.
+                      crossAxisCount:
+                          MediaQuery.sizeOf(context).width < kMediumScreen
+                          ? 2
+                          : 3,
                       mainAxisSpacing: 10 * scale,
                       crossAxisSpacing: 10 * scale,
                       childAspectRatio: 0.95,
@@ -1258,9 +1265,8 @@ class _TreasureBoxBanner extends ConsumerWidget {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      child: GestureDetector(
+      child: KidTap(
         onTap: () {
-          HapticFeedback.lightImpact();
           Navigator.of(
             context,
           ).push(KidRoutes.sheet(const KidWordWallScreen()));
@@ -1384,13 +1390,13 @@ class _CategoryChip extends StatelessWidget {
     final icon = _categoryIcon(label);
     final dark = Theme.of(context).brightness == Brightness.dark;
     // A 40dp FilterChip was half the child's minimum target and chose by
-    // word; a child chooses by the icon (audit #11). 56dp, icon first,
+    // word; a child chooses by the icon (audit #11). 64dp, icon first,
     // haptic + pop on tap.
     return KidTap(
       onTap: onSelected,
       child: AnimatedContainer(
         duration: DT.pressMs,
-        height: 56,
+        height: 64,
         padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(
           color: selected

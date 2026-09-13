@@ -9,9 +9,11 @@ import '../providers/srs_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/purchase_service.dart';
 import '../services/remote_config_service.dart';
+import '../utils/app_icons.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../utils/uk_grammar.dart';
+import '../widgets/paywall_hero_art.dart';
 
 class PaywallScreen extends ConsumerStatefulWidget {
   /// When true, shows the onboarding-specific welcome variant: stronger
@@ -378,7 +380,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 400),
+                  duration: DT.motion.slow,
                   opacity: _canCloseEarly ? 1.0 : 0.0,
                   child: IgnorePointer(
                     ignoring: !_canCloseEarly,
@@ -417,15 +419,14 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    _benefit(Icons.grid_view_rounded,
-                        _packsBenefit(s, packCount)),
+                    _benefit(AppIcon.stepCards, _packsBenefit(s, packCount)),
                     const SizedBox(height: 10),
                     _benefit(
-                        Icons.volume_up_rounded,
+                        AppIcon.sound,
                         s('400+ яскравих карток зі звуком',
                             '400+ vivid cards with sound')),
                     const SizedBox(height: 10),
-                    _benefit(Icons.auto_awesome_rounded,
+                    _benefit(AppIcon.star,
                         s('Нові розділи щомісяця', 'New packs every month')),
                     const SizedBox(height: 18),
                     _testimonial(s),
@@ -669,7 +670,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         selected: selected,
         button: true,
         child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: DT.motion.base,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
           color: selected
@@ -811,7 +812,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           end: Alignment.bottomRight,
           colors: [
             DT.brand.withValues(alpha: 0.18),
-            const Color(0xFFF9A825).withValues(alpha: 0.18),
+            DT.sunBurst.withValues(alpha: 0.30),
           ],
         ),
         borderRadius: BorderRadius.circular(22),
@@ -819,8 +820,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       ),
       child: Column(
         children: [
-          Text(trialDays == null ? '🔓' : (isOnb ? '🎉' : '🎁'),
-              style: const TextStyle(fontSize: 48)),
+          PaywallHeroArt(
+            semanticsLabel: s('Блум і картки — усе, що відкриється',
+                'Bloom and the cards this unlocks'),
+          ),
           const SizedBox(height: 6),
           if (isOnb && trialDays != null) ...[
             Text(
@@ -828,7 +831,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               style: TextStyle(
                 fontSize: responsiveFont(context, 14),
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFFF9A825),
+                color: DT.onTint(DT.sunBurst),
                 letterSpacing: 1.2,
               ),
             ),
@@ -891,10 +894,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(
             5,
-            (_) => const Icon(
-              Icons.star_rounded,
-              color: Color(0xFFFFB300),
-              size: 22,
+            (i) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 1),
+              child: AppIconView(
+                AppIcon.star,
+                key: ValueKey('rating-star-$i'),
+                size: 22,
+              ),
             ),
           ),
         ),
@@ -918,10 +924,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFBEA),
+        color: DT.sunTint,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-            color: const Color(0xFFFFC107).withValues(alpha: 0.35)),
+            color: DT.sunBurst.withValues(alpha: 0.55)),
       ),
       child: Column(
         children: [
@@ -930,10 +936,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
                 5,
-                (_) => const Icon(
-                  Icons.star_rounded,
-                  color: Color(0xFFFFB300),
-                  size: 18,
+                (i) => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 1),
+                  child: AppIconView(
+                    AppIcon.star,
+                    key: ValueKey('quote-star-$i'),
+                    size: 18,
+                  ),
                 ),
               ),
             ),
@@ -945,7 +954,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
             style: TextStyle(
               fontSize: responsiveFont(context, 14),
               fontStyle: FontStyle.italic,
-              color: const Color(0xFF4A3F1A),
+              color: DT.textPrimary,
               height: 1.35,
             ),
           ),
@@ -975,17 +984,21 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         '$count learning ${count == 1 ? 'pack' : 'packs'}');
   }
 
-  Widget _benefit(IconData icon, String text) {
+  /// One benefit line. The glyph is an [AppIcon] — the same drawing the
+  /// child sees on the tabs and the quest map, so the parent recognises
+  /// what they are buying (G15) instead of reading a Material pictogram.
+  Widget _benefit(AppIcon icon, String text) {
     return Row(
       children: [
         Container(
-          width: 34,
-          height: 34,
+          width: 38,
+          height: 38,
+          alignment: Alignment.center,
           decoration: BoxDecoration(
             color: DT.brand.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(DT.rSm),
           ),
-          child: Icon(icon, color: DT.brand, size: 18),
+          child: AppIconView(icon, size: 26),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -996,7 +1009,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               // Hardcoded dark grey was invisible on the dark theme.
               color: Theme.of(context).brightness == Brightness.dark
                   ? Colors.white.withValues(alpha: 0.87)
-                  : const Color(0xFF3A3A3A),
+                  : DT.textPrimary,
               height: 1.3,
               fontWeight: FontWeight.w500,
             ),
@@ -1012,7 +1025,7 @@ class _Plan {
   final String price;
   final String period; // empty for one-time purchase
   final String? badge;
-  final Color badgeColor = const Color(0xFFFF6B6B);
+  final Color badgeColor = DT.coral;
   final String productId;
 
   const _Plan(

@@ -56,7 +56,6 @@ void main() {
     'lib/screens/odd_one_out_screen.dart',
     'lib/screens/onboarding_screen.dart',
     'lib/screens/opposite_game_screen.dart',
-    'lib/screens/paywall_screen.dart',
     'lib/screens/repeat_game_screen.dart',
     'lib/screens/splash_screen.dart',
     'lib/tabs/games_tab.dart',

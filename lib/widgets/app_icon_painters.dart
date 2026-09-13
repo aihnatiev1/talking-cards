@@ -93,6 +93,8 @@ Color defaultColorOf(AppIcon icon) => switch (icon) {
       AppIcon.gameOdd => DT.violet,
       AppIcon.gameOpposites => DT.pink,
       AppIcon.gameArticulation => DT.pink,
+      AppIcon.gameSort => DT.sky,
+      AppIcon.gameSyllables => DT.coral,
       AppIcon.stepListen => DT.peach,
       AppIcon.stepCards => DT.violet,
       AppIcon.stepQuest => DT.mint,
@@ -111,6 +113,7 @@ Color defaultColorOf(AppIcon icon) => switch (icon) {
       AppIcon.stickerRainbow => DT.sky,
       AppIcon.stickerButterfly => DT.violet,
       AppIcon.stickerAlbum => DT.coral,
+      AppIcon.calendar => DT.sky,
       AppIcon.navCards => DT.violet,
       AppIcon.navGames => DT.peach,
       AppIcon.navColoring => DT.mint,
@@ -666,6 +669,30 @@ void _compose(_Sheet s, AppIcon icon) {
       s.shape(_oval(17, 24, 14, 14), color: DT.coral);
       s.line(_poly(const [Offset(24, 28), Offset(24, 36)]));
 
+    case AppIcon.gameSort:
+      // «По купках»: two paper trays, a round and a square piece above
+      // them — the game is "this one goes there".
+      s.shape(_circle(13, 13, 7), color: DT.sunBurst);
+      s.shape(_placed(_rr(-6, -6, 12, 12, 3.5), 34, 13, 0.2),
+          color: DT.coral);
+      s.shape(_rr(4, 26, 18, 15, 5.5));
+      s.shape(_rr(26, 26, 18, 15, 5.5));
+      s.line(_poly(const [Offset(7, 31.5), Offset(19, 31.5)]));
+      s.line(_poly(const [Offset(29, 31.5), Offset(41, 31.5)]));
+
+    case AppIcon.gameSyllables:
+      // «Рахуй склади»: a drum and two sticks — one beat per syllable.
+      s.fat(_poly(const [Offset(7, 9), Offset(17, 20)]), 3,
+          color: DT.peach);
+      s.fat(_poly(const [Offset(41, 9), Offset(31, 20)]), 3,
+          color: DT.peach);
+      s.shape(_rr(8, 20, 32, 20, 8));
+      s.shape(_oval(8, 16, 32, 11), color: _lit(s.accent), twoTone: false);
+      s.line(_poly(const [Offset(13, 26), Offset(20, 35)]));
+      s.line(_poly(const [Offset(20, 26), Offset(13, 35)]));
+      s.line(_poly(const [Offset(28, 26), Offset(35, 35)]));
+      s.line(_poly(const [Offset(35, 26), Offset(28, 35)]));
+
     // ── Daily steps ──
     case AppIcon.stepListen:
       s.shape(Path()
@@ -909,6 +936,23 @@ void _compose(_Sheet s, AppIcon icon) {
       s.shape(_rr(20, 12, 15, 12, 3),
           color: Colors.white, twoTone: false);
       s.shape(_star(27, 32, 7, 3.2, 1.2), color: DT.sunBurst);
+
+    // ── Parent zone (G15) ──
+    case AppIcon.calendar:
+      // A wall calendar: two rings, a torn-off header and marked days.
+      // The dashboard's "active days" counter, in the app's own hand.
+      s.fat(_poly(const [Offset(16, 5), Offset(16, 13)]), 3.5,
+          color: _lit(s.accent));
+      s.fat(_poly(const [Offset(32, 5), Offset(32, 13)]), 3.5,
+          color: _lit(s.accent));
+      s.shape(_rr(6, 10, 36, 32, 8));
+      s.line(_poly(const [Offset(7, 21), Offset(41, 21)]));
+      s.dot(16, 28, 2.4);
+      s.dot(24, 28, 2.4);
+      s.dot(32, 28, 2.4);
+      s.dot(16, 35.5, 2.4);
+      s.dot(24, 35.5, 2.4);
+      s.dot(32, 35.5, 3.2, DT.coral);
 
     // ── Navigation (redraws of the former `_ToyIcon` art in DT tones) ──
     case AppIcon.navCards:

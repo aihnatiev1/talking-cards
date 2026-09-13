@@ -13,6 +13,7 @@ import '../providers/streak_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/weak_words_provider.dart';
 import '../screens/profile_selector_screen.dart';
+import '../utils/app_icons.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../widgets/activity_chart.dart';
@@ -135,7 +136,7 @@ class _OverviewTab extends ConsumerWidget {
       children: [
         _statRow([
           _StatCard(
-            emoji: '🔥',
+            icon: AppIcon.streakFlame,
             label: s('Серія', 'Streak'),
             value: isEn
                 ? '${streak.currentStreak} d.'
@@ -143,7 +144,7 @@ class _OverviewTab extends ConsumerWidget {
             color: DT.streakOrange,
           ),
           _StatCard(
-            emoji: '📚',
+            icon: AppIcon.stepCards,
             label: s('Переглянуто', 'Seen'),
             value: isEn
                 ? '$wordsSeenTotal ${wordsSeenTotal == 1 ? 'card' : 'cards'}'
@@ -154,13 +155,13 @@ class _OverviewTab extends ConsumerWidget {
         const SizedBox(height: 12),
         _statRow([
           _StatCard(
-            emoji: '✅',
+            icon: AppIcon.check,
             label: s('Паки пройдено', 'Packs done'),
             value: '${completedPacks.length}',
-            color: Colors.green,
+            color: DT.success,
           ),
           _StatCard(
-            emoji: '📅',
+            icon: AppIcon.calendar,
             label: s('Активних днів', 'Active days'),
             value: '$activeDays',
             color: DT.teal,
@@ -178,11 +179,7 @@ class _OverviewTab extends ConsumerWidget {
             ),
             child: Row(
               children: [
-                const Icon(
-                  Icons.emoji_events_outlined,
-                  size: 32,
-                  color: Color(0xFFAF8138),
-                ),
+                const AppIconView(AppIcon.stickerAlbum, size: 36),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Text(
@@ -273,13 +270,15 @@ class _OverviewTab extends ConsumerWidget {
 }
 
 class _StatCard extends StatelessWidget {
-  final String emoji;
+  /// The same drawing the child sees on the tabs and the quest map — the
+  /// parent zone speaks one visual language with the kid zone (G15).
+  final AppIcon icon;
   final String label;
   final String value;
   final Color color;
 
   const _StatCard({
-    required this.emoji,
+    required this.icon,
     required this.label,
     required this.value,
     required this.color,
@@ -297,7 +296,7 @@ class _StatCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(emoji, style: TextStyle(fontSize: responsiveFont(context, 24))),
+          AppIconView(icon, size: responsiveFont(context, 28)),
           const SizedBox(height: 8),
           Text(
             value,
@@ -849,7 +848,7 @@ class _GamesTab extends ConsumerWidget {
               children: [
                 Expanded(
                   child: _StatCard(
-                    emoji: '🎮',
+                    icon: AppIcon.navGames,
                     label: s('Всього сесій', 'Total sessions'),
                     value: '$totalPlays',
                     color: DT.brand,
@@ -858,10 +857,10 @@ class _GamesTab extends ConsumerWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: _StatCard(
-                    emoji: favorite.emoji,
+                    icon: appIconForGame(favorite.id),
                     label: s('Улюблена гра', 'Favorite game'),
                     value: isEn ? favorite.labelEn : favorite.labelUk,
-                    color: const Color(0xFF7B1FA2),
+                    color: DT.violet,
                   ),
                 ),
               ],
@@ -906,9 +905,9 @@ class _GameStatRow extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Text(
-              stat.emoji,
-              style: TextStyle(fontSize: responsiveFont(context, 24)),
+            AppIconView(
+              appIconForGame(stat.id),
+              size: responsiveFont(context, 28),
             ),
             const SizedBox(width: 12),
             Expanded(

@@ -143,8 +143,12 @@ class _ParentalGateDialogState extends State<_ParentalGateDialog> {
     return Padding(
       padding: const EdgeInsets.all(4),
       child: SizedBox(
-        width: 64,
-        height: 56,
+        // 72×64: an adult thumb on a phone held one-handed still misses a
+        // 64×56 key often enough to burn one of the three tries (G15).
+        // The gate stays neutral otherwise — no mascot, no confetti: this
+        // is the door out of the child's half of the app, not part of it.
+        width: 72,
+        height: 64,
         child: TextButton(
           style: TextButton.styleFrom(
             backgroundColor: DT.brand.withValues(alpha: 0.08),

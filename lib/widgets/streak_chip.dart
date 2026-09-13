@@ -13,11 +13,7 @@ class StreakChip extends StatelessWidget {
   final int streak;
   final VoidCallback onTap;
 
-  const StreakChip({
-    super.key,
-    required this.streak,
-    required this.onTap,
-  });
+  const StreakChip({super.key, required this.streak, required this.onTap});
 
   /// Two full pulses (1400 ms out, 1400 ms back, twice) as an intro accent,
   /// then calm. A permanent loop kept the home tab repainting at 60fps for
@@ -34,59 +30,61 @@ class StreakChip extends StatelessWidget {
       onTap: onTap,
       // Under reduced motion the flame and the day count sit at rest
       // (glow 0.25, scale 1.0) and stay just as legible.
-      child: AmbientLoop(
-        period: const Duration(milliseconds: 1400),
-        settleAfter: _burst,
-        builder: (context, t, _) {
-          final glow = 0.25 + 0.35 * t;
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  DT.streakOrange.withValues(alpha: 0.95),
-                  DT.coral,
+      // The flame is a door to the sticker album — a child's destination,
+      // so the finger gets the full 72 dp even though the chip itself is
+      // header-sized (CLAUDE.md rule 1 / ux-gap G12).
+      child: KidHitBox(
+        child: AmbientLoop(
+          period: const Duration(milliseconds: 1400),
+          settleAfter: _burst,
+          builder: (context, t, _) {
+            final glow = 0.25 + 0.35 * t;
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [DT.streakOrange.withValues(alpha: 0.95), DT.coral],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: DT.streakOrange.withValues(alpha: glow),
+                    blurRadius: 10 + 4 * t,
+                    spreadRadius: 1 + 0.5 * t,
+                  ),
                 ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: DT.streakOrange.withValues(alpha: glow),
-                  blurRadius: 10 + 4 * t,
-                  spreadRadius: 1 + 0.5 * t,
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Transform.scale(
-                  scale: 1.0 + 0.08 * t,
-                  // The flame with eyes (spec §5.1), sticker-edged on the
-                  // orange gradient.
-                  child: const AppIconView(
-                    AppIcon.streakFlame,
-                    size: 20,
-                    sticker: true,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Transform.scale(
+                    scale: 1.0 + 0.08 * t,
+                    // The flame with eyes (spec §5.1), sticker-edged on the
+                    // orange gradient.
+                    child: const AppIconView(
+                      AppIcon.streakFlame,
+                      size: 20,
+                      sticker: true,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 5),
-                Text(
-                  '$streak',
-                  style: DT.tileTitle.copyWith(
-                    fontSize: responsiveFont(context, 14),
-                    fontVariations: DT.kidWeight(900),
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    letterSpacing: 0.3,
+                  const SizedBox(width: 5),
+                  Text(
+                    '$streak',
+                    style: DT.tileTitle.copyWith(
+                      fontSize: responsiveFont(context, 14),
+                      fontVariations: DT.kidWeight(900),
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: 0.3,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          );
-        },
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }

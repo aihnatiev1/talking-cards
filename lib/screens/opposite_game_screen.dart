@@ -173,9 +173,11 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
 
               // Question card — large, tappable for audio (word only — kids
               // get confused if the full example sentence plays each tap)
-              GestureDetector(
+              KidTap(
                 onTap: () => AudioService.instance
                     .playWordOnly(question.audioKey, question.sound),
+                // The word itself is the answer to this tap.
+                sound: null,
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
                   child: _QuestionCard(key: ValueKey(question.id), card: question, s: s),

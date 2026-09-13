@@ -11,6 +11,7 @@ import '../services/feedback_service.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../widgets/card_image.dart';
+import '../widgets/kid_tap.dart';
 
 /// Full-screen card reveal with celebration effects.
 class CardRevealScreen extends ConsumerStatefulWidget {
@@ -314,18 +315,31 @@ class _CardRevealScreenState extends ConsumerState<CardRevealScreen>
               child: _buildButtons(),
             ),
 
-          // Close button
+          // Close button. The drawing stays small and half-transparent on
+          // purpose — leaving the reveal is not something to invite — but
+          // the hit zone is the full 72 dp, and its centre sits 48 dp in
+          // from the right edge so a palm resting on the bezel misses it
+          // (ux-gap G12).
           Positioned(
             top: MediaQuery.of(context).padding.top + 8,
             right: 12,
             child: _showButtons
-                ? IconButton(
-                    icon: Icon(
-                      Icons.close_rounded,
-                      color: Colors.white.withValues(alpha: 0.5),
-                      size: 28,
+                ? KidTap(
+                    onTap: () => Navigator.of(context).pop(),
+                    sound: null,
+                    child: Semantics(
+                      button: true,
+                      label: 'Close',
+                      child: SizedBox(
+                        width: DT.size.tapBack,
+                        height: DT.size.tapBack,
+                        child: Icon(
+                          Icons.close_rounded,
+                          color: Colors.white.withValues(alpha: 0.5),
+                          size: 28,
+                        ),
+                      ),
                     ),
-                    onPressed: () => Navigator.of(context).pop(),
                   )
                 : const SizedBox.shrink(),
           ),
@@ -549,6 +563,7 @@ class _CardRevealScreenState extends ConsumerState<CardRevealScreen>
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: () {
+                KidTap.feedback();
                 Navigator.of(context).pop();
                 widget.onGoToPack?.call();
               },
@@ -569,6 +584,8 @@ class _CardRevealScreenState extends ConsumerState<CardRevealScreen>
               style: ElevatedButton.styleFrom(
                 backgroundColor: packColor,
                 foregroundColor: Colors.white,
+                // Rule 1: both buttons on this screen are child targets.
+                minimumSize: Size.fromHeight(DT.size.tapMin),
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18),
@@ -584,7 +601,10 @@ class _CardRevealScreenState extends ConsumerState<CardRevealScreen>
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () {
+                KidTap.feedback();
+                Navigator.of(context).pop();
+              },
               icon: const Icon(Icons.home_rounded, size: 18),
               label: Text(
                 s('На головну', 'Home'),
@@ -593,6 +613,7 @@ class _CardRevealScreenState extends ConsumerState<CardRevealScreen>
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white.withValues(alpha: 0.15),
                 foregroundColor: Colors.white,
+                minimumSize: Size.fromHeight(DT.size.tapMin),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),

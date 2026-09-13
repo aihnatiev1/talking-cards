@@ -37,8 +37,6 @@ void main() {
     'lib/screens/onboarding_screen.dart',
     // Profile picker selection clicks.
     'lib/screens/profile_selector_screen.dart',
-    // Word-wall chip on the packs tab (opens a parent sheet).
-    'lib/tabs/packs_tab.dart',
     // Flip and favourite (long-press) accents on the flash card.
     'lib/widgets/flash_card.dart',
     // Long-press wobble on a pack tile.

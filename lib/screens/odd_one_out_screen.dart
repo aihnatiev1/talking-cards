@@ -258,8 +258,10 @@ class _HintThumb extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 44,
-      height: 44,
+      // 56, not 44: the hint row is the child's second chance at the round
+      // and has to read at arm's length (ux-gap G12).
+      width: 56,
+      height: 56,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: Colors.white,

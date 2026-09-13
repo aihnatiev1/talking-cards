@@ -45,6 +45,8 @@ enum AppIcon {
   gameOdd,
   gameOpposites,
   gameArticulation,
+  gameSort,
+  gameSyllables,
 
   // ── Daily steps ─────────────────────────────
   stepListen,
@@ -79,6 +81,12 @@ enum AppIcon {
   stickerButterfly,
   stickerAlbum,
 
+  // ── Parent zone (G15) ───────────────────────
+  /// The parent dashboard counts days; a paper wall calendar says so
+  /// without an emoji. Parent-facing, but drawn in the same hand — the
+  /// grown-up half of the app is the same universe (audit G15).
+  calendar,
+
   // ── Main navigation (former `_ToyIcon` in PlayfulNavigationBar) ──
   navCards,
   navGames,
@@ -110,6 +118,8 @@ enum AppIcon {
         AppIcon.gameOdd => 'Odd one out',
         AppIcon.gameOpposites => 'Opposites',
         AppIcon.gameArticulation => 'Articulation',
+        AppIcon.gameSort => 'Sort it',
+        AppIcon.gameSyllables => 'Count syllables',
         AppIcon.stepListen => 'Listen',
         AppIcon.stepCards => 'Cards',
         AppIcon.stepQuest => 'Quest',
@@ -128,11 +138,33 @@ enum AppIcon {
         AppIcon.stickerRainbow => 'Rainbow sticker',
         AppIcon.stickerButterfly => 'Butterfly sticker',
         AppIcon.stickerAlbum => 'Sticker album',
+        AppIcon.calendar => 'Days',
         AppIcon.navCards => 'Cards',
         AppIcon.navGames => 'Games',
         AppIcon.navColoring => 'Coloring',
       };
 }
+
+/// The glyph of one game, by its `gameDefinitions` id
+/// (`lib/providers/game_stats_provider.dart`).
+///
+/// The parent dashboard used to print the game's emoji next to its name
+/// while the games tab drew the real badge — two icon languages for the
+/// same seven games (G15). An unknown id (a game added to the stats table
+/// before it has art) falls back to the generic games glyph rather than
+/// throwing on a parent's screen.
+AppIcon appIconForGame(String id) => switch (id) {
+      'quiz' => AppIcon.gameGuess,
+      'memory' => AppIcon.gameMatch,
+      'sort' => AppIcon.gameSort,
+      'odd_one_out' => AppIcon.gameOdd,
+      'opposite_game' => AppIcon.gameOpposites,
+      'syllable_game' => AppIcon.gameSyllables,
+      'repeat_game' => AppIcon.gameRepeat,
+      'bubble_pop' => AppIcon.gameBubbles,
+      'articulation' => AppIcon.gameArticulation,
+      _ => AppIcon.navGames,
+    };
 
 /// Renders one [AppIcon].
 ///

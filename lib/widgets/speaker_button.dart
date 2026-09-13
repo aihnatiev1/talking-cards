@@ -56,9 +56,11 @@ class SpeakerButton extends StatelessWidget {
                   child: child,
                 ),
                 child: Container(
-                  // Paired with the 56dp heart on the card (audit #20).
-                  width: 56,
-                  height: 56,
+                  // The one control a child presses on the cards screen, so
+                  // it carries the full 72 dp target (CLAUDE.md rule 1 /
+                  // ux-gap G12) rather than the old 56.
+                  width: DT.size.tapMin,
+                  height: DT.size.tapMin,
                   decoration: BoxDecoration(
                     color: autoOn ? _onColor : _offColor,
                     shape: BoxShape.circle,
@@ -77,7 +79,8 @@ class SpeakerButton extends StatelessWidget {
                   child: Center(
                     child: AppIconView(
                       autoOn ? AppIcon.sound : AppIcon.soundOff,
-                      size: 30,
+                      // 0.53 of the disc — the ratio the 30/56 button had.
+                      size: 38,
                       color: Colors.white,
                     ),
                   ),

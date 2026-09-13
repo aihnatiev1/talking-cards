@@ -67,8 +67,7 @@ class KidTap extends StatefulWidget {
 
   /// The haptic and the tock alone, for a widget that already animates its
   /// own press (Material buttons with `NoSplash`, for instance).
-  static void feedback() =>
-      FeedbackService.instance.event(FeedbackEvent.tap);
+  static void feedback() => FeedbackService.instance.event(FeedbackEvent.tap);
 
   /// The tock by itself, pitch-varied so twenty taps are not one sound.
   static void playTap() =>
@@ -172,10 +171,31 @@ class _KidTapState extends State<KidTap> with SingleTickerProviderStateMixin {
       onTapCancel: enabled ? _release : null,
       onTap: widget.onTap == null ? null : _tap,
       onLongPress: widget.onLongPress == null ? null : _longPress,
-      child: ScaleTransition(
-        scale: _scale,
-        child: widget.child,
-      ),
+      child: ScaleTransition(scale: _scale, child: widget.child),
+    );
+  }
+}
+
+/// Pads a drawing that is smaller than a child target out to [min]
+/// (default [DTSize.tapMin]) without changing how it looks.
+///
+/// Header chips (streak, profile) are deliberately small — they ride a row
+/// with a title — but they open child destinations, so the *finger* still
+/// gets its 72 dp. Guarded by `test/architecture/tap_targets_test.dart`.
+class KidHitBox extends StatelessWidget {
+  const KidHitBox({super.key, required this.child, this.min});
+
+  final Widget child;
+  final double? min;
+
+  @override
+  Widget build(BuildContext context) {
+    final edge = min ?? DT.size.tapMin;
+    return ConstrainedBox(
+      constraints: BoxConstraints(minWidth: edge, minHeight: edge),
+      // Shrink-wrapping centre: the box is the child's size until the
+      // minimum kicks in, so a chip never stretches to the row's height.
+      child: Center(widthFactor: 1, heightFactor: 1, child: child),
     );
   }
 }

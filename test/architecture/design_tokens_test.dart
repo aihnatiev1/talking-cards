@@ -38,8 +38,6 @@ void main() {
   const colorLiteralDebt = {
     'lib/screens/articulation_screen.dart',
     'lib/screens/onboarding_screen.dart',
-    'lib/screens/parent_dashboard_screen.dart',
-    'lib/screens/paywall_screen.dart',
     'lib/screens/quest_map_screen.dart',
     'lib/services/whatsnew_service.dart',
     'lib/widgets/bubble_pop.dart',

@@ -8,6 +8,7 @@ import '../utils/kid_routes.dart';
 import '../utils/l10n.dart';
 import '../widgets/confetti_burst.dart';
 import '../widgets/kid_screen.dart';
+import '../widgets/kid_tap.dart';
 
 // ─────────────────────────────────────────────
 //  Exercise data
@@ -254,7 +255,7 @@ class _ExerciseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return KidTap(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
