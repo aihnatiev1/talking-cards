@@ -43,6 +43,7 @@ import '../widgets/bloom_mascot.dart';
 import '../widgets/bubble_pop.dart';
 import '../widgets/card_image.dart';
 import '../widgets/daily_hero_card.dart';
+import '../widgets/entrance_stagger.dart';
 import '../widgets/notification_toggle_tile.dart';
 import '../widgets/pack_grid_card.dart';
 import '../widgets/parental_gate.dart';
@@ -1113,34 +1114,42 @@ class _PacksTabState extends ConsumerState<PacksTab> {
 
                 // Grid
                 Expanded(
-                  child: GridView.builder(
-                    padding: EdgeInsets.fromLTRB(16 * scale, 4, 16 * scale, 8),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      // Two columns on a phone: three of them put a pack
-                      // cover under ~110 dp, below what a 1-year-old can
-                      // aim at or recognise (ux-gap G12 / А1-12). Tablets
-                      // keep three.
-                      crossAxisCount:
-                          MediaQuery.sizeOf(context).width < kMediumScreen
-                          ? 2
-                          : 3,
-                      mainAxisSpacing: 10 * scale,
-                      crossAxisSpacing: 10 * scale,
-                      childAspectRatio: 0.95,
+                  // The tiles arrive one after another (G11); the scope
+                  // remembers when the grid appeared so a tile scrolled to
+                  // later shows up at once instead of replaying the wave.
+                  child: StaggerScope(
+                    child: GridView.builder(
+                      padding: EdgeInsets.fromLTRB(16 * scale, 4, 16 * scale, 8),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        // Two columns on a phone: three of them put a pack
+                        // cover under ~110 dp, below what a 1-year-old can
+                        // aim at or recognise (ux-gap G12 / А1-12). Tablets
+                        // keep three.
+                        crossAxisCount:
+                            MediaQuery.sizeOf(context).width < kMediumScreen
+                            ? 2
+                            : 3,
+                        mainAxisSpacing: 10 * scale,
+                        crossAxisSpacing: 10 * scale,
+                        childAspectRatio: 0.95,
+                      ),
+                      itemCount: gridItems.length,
+                      itemBuilder: (context, index) {
+                        final item = gridItems[index];
+                        final pack = item.pack;
+                        return StaggeredEntrance(
+                          key: ValueKey(pack.id),
+                          index: index,
+                          child: PackGridCard(
+                            pack: pack,
+                            isCompleted: completedPacks.contains(pack.id),
+                            progress: packProgress[pack.id] ?? 0,
+                            isSeasonal: item.isSeasonal,
+                            onTap: () => _onPackTap(context, pack),
+                          ),
+                        );
+                      },
                     ),
-                    itemCount: gridItems.length,
-                    itemBuilder: (context, index) {
-                      final item = gridItems[index];
-                      final pack = item.pack;
-                      return PackGridCard(
-                        key: ValueKey(pack.id),
-                        pack: pack,
-                        isCompleted: completedPacks.contains(pack.id),
-                        progress: packProgress[pack.id] ?? 0,
-                        isSeasonal: item.isSeasonal,
-                        onTap: () => _onPackTap(context, pack),
-                      );
-                    },
                   ),
                 ),
               ],

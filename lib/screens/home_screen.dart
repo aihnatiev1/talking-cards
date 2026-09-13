@@ -40,9 +40,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   /// new one fades in (motion audit §5, "перемикання табів").
   int _visibleTab = 0;
 
-  /// Fade-through 180 ms: out 0–90, in 90–180. Content never moves — for a
-  /// child the tabs must stay exactly where they were.
-  static const Duration _fadeThrough = Duration(milliseconds: 180);
+  /// Fade-through (`DT.motion.tabFade`, 180 ms): out over the first half,
+  /// in over the second. Content never moves — for a child the tabs must
+  /// stay exactly where they were.
+  static final Duration _fadeThrough = DT.motion.tabFade;
   late final AnimationController _fadeCtrl;
   late final Animation<double> _fade;
 

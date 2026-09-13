@@ -20,6 +20,7 @@ import '../utils/design_tokens.dart';
 import '../utils/kid_routes.dart';
 import '../providers/content_pack_provider.dart';
 import '../widgets/card_image.dart';
+import '../widgets/entrance_stagger.dart';
 import '../widgets/kid_tap.dart';
 
 class GamesTab extends ConsumerStatefulWidget {
@@ -547,18 +548,25 @@ class _GameGrid extends StatelessWidget {
           if (subtitle > subtitleHeight) subtitleHeight = subtitle;
         }
         final textHeight = titleHeight + subtitleHeight + 26;
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: columns,
-            mainAxisSpacing: 18,
-            crossAxisSpacing: 16,
-            mainAxisExtent: width * .96 + textHeight + 4,
+        return StaggerScope(
+          child: GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: columns,
+              mainAxisSpacing: 18,
+              crossAxisSpacing: 16,
+              mainAxisExtent: width * .96 + textHeight + 4,
+            ),
+            itemCount: games.length,
+            // Tiles land one after another (G11) instead of the whole board
+            // appearing in one frame.
+            itemBuilder: (_, i) => StaggeredEntrance(
+              key: ValueKey(games[i].title),
+              index: i,
+              child: _BigGameTile(game: games[i], textHeight: textHeight),
+            ),
           ),
-          itemCount: games.length,
-          itemBuilder: (_, i) =>
-              _BigGameTile(game: games[i], textHeight: textHeight),
         );
       },
     );

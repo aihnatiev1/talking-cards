@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/pack_model.dart';
+import '../utils/motion.dart';
 import 'card_image.dart';
 
 /// The pack illustration's flight from the home tile to the `CardsScreen`
@@ -39,6 +40,10 @@ class PackCoverHero extends StatelessWidget {
 
   static String tagFor(String packId) => 'pack-cover-$packId';
 
+  /// Key of the widget the flight builds in the overlay — the one handle a
+  /// test has on "the picture is in the air right now".
+  static Key shuttleKeyFor(String packId) => ValueKey('pack-flight-$packId');
+
   /// The picture a pack shows for itself — the same rule `PackGridCard`
   /// uses for its thumbnail, so the shuttle carries the picture that was
   /// on the tile. Cover first; else the first card with an illustration;
@@ -56,6 +61,17 @@ class PackCoverHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Under reduced motion (and in widget tests) the route itself is
+    // instant, so a flight would be a one-frame flicker of a picture over
+    // a screen that already changed. `HeroMode` switches the Hero off
+    // rather than the widget disappearing, so both ends keep their layout.
+    return HeroMode(
+      enabled: !MotionPolicy.of(context).reduce,
+      child: _hero(),
+    );
+  }
+
+  Widget _hero() {
     return Hero(
       tag: tagFor(pack.id),
       transitionOnUserGestures: transitionOnUserGestures,
@@ -65,6 +81,7 @@ class PackCoverHero extends StatelessWidget {
         decoration: BoxDecoration(color: _tint, borderRadius: borderRadius),
       ),
       flightShuttleBuilder: (_, __, ___, ____, _____) => ClipRRect(
+        key: shuttleKeyFor(pack.id),
         borderRadius: borderRadius,
         child: ColoredBox(
           color: _tint,

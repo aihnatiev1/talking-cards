@@ -18,6 +18,7 @@ import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../widgets/ambient_loop.dart';
 import '../widgets/answer_feedback.dart';
+import '../widgets/entrance_stagger.dart';
 import '../widgets/game_celebration_overlay.dart';
 import '../widgets/kid_screen.dart';
 import '../widgets/kid_tap.dart';
@@ -288,29 +289,38 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
           const SizedBox(height: 16),
           // 4 options in 2x2 grid — takes remaining space
           Expanded(
-            child: GridView.count(
-              crossAxisCount: 2,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 0.85,
-              physics: const NeverScrollableScrollPhysics(),
-              children: state.options.map((card) {
-                final isTarget = card.id == state.correctCard.id;
-                final mark = !isTarget
-                    ? AnswerMark.none
-                    : _showCorrect
-                        ? AnswerMark.correct
-                        : _misses.showHint
-                            ? AnswerMark.hint
-                            : AnswerMark.none;
-                return QuizOption(
-                  key: ValueKey(card.id),
-                  card: card,
-                  mark: mark,
-                  nudge: _nudges[card.id] ?? 0,
-                  onTap: () => _onAnswer(card.id),
-                );
-              }).toList(),
+            child: StaggerScope(
+              child: GridView.count(
+                crossAxisCount: 2,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 0.85,
+                physics: const NeverScrollableScrollPhysics(),
+                children: state.options.indexed.map((entry) {
+                  final (index, card) = entry;
+                  final isTarget = card.id == state.correctCard.id;
+                  final mark = !isTarget
+                      ? AnswerMark.none
+                      : _showCorrect
+                          ? AnswerMark.correct
+                          : _misses.showHint
+                              ? AnswerMark.hint
+                              : AnswerMark.none;
+                  // The four options land one after another (G11) so the
+                  // child's eye is walked across them instead of being met
+                  // by a full board.
+                  return StaggeredEntrance(
+                    key: ValueKey(card.id),
+                    index: index,
+                    child: QuizOption(
+                      card: card,
+                      mark: mark,
+                      nudge: _nudges[card.id] ?? 0,
+                      onTap: () => _onAnswer(card.id),
+                    ),
+                  );
+                }).toList(),
+              ),
             ),
           ),
         ],

@@ -305,6 +305,21 @@ class DTMotion {
   final Duration overlayExit = const Duration(milliseconds: 160);
   final Duration replace = const Duration(milliseconds: 320);
 
+  /// Cross-fade between the three home tabs inside the `IndexedStack`
+  /// (ux-gap-audit G11). Half of it fades the old tab out, half fades the
+  /// new one in, so the swap itself is invisible.
+  final Duration tabFade = const Duration(milliseconds: 180);
+
+  // Entrance stagger (ux-gap-audit G11). A grid that appears all at once
+  // reads as a page load; one that arrives tile by tile reads as someone
+  // laying cards on a table. `StaggerScope` / `StaggeredEntrance` own it.
+  /// Delay added per item index before its [enter] fade begins.
+  final Duration stagger = const Duration(milliseconds: 40);
+
+  /// The wave never runs longer than this, however many items the list
+  /// has: a 21-pack grid would otherwise take 840 ms to finish arriving.
+  final Duration staggerCap = const Duration(milliseconds: 320);
+
   // Celebration beats (motion audit 2026-09-13 §4). `Celebration` runs one
   // master controller of [celebrationTotal] and derives every `Interval`
   // from these, so a beat is a token here and not a literal in the widget.
