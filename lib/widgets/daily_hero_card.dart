@@ -508,11 +508,33 @@ class _StoneState extends State<_Stone> with SingleTickerProviderStateMixin {
         border: active ? Border.all(color: accent, width: 1.5) : null,
       ),
       alignment: Alignment.center,
+      // A done stone keeps its task icon — a bare check says "something
+      // happened" but not what; the check rides as a small badge instead.
       child: t.isDone
-          ? const AppIconView(
-              AppIcon.check,
-              size: 36,
-              color: DT.surfaceWhite,
+          ? Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                AppIconView(t.icon, size: 36, color: DT.surfaceWhite),
+                Positioned(
+                  right: -6,
+                  bottom: -6,
+                  child: Container(
+                    width: 24,
+                    height: 24,
+                    decoration: const BoxDecoration(
+                      color: DT.surfaceWhite,
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: const AppIconView(
+                      AppIcon.check,
+                      size: 16,
+                      color: DT.success,
+                    ),
+                  ),
+                ),
+              ],
             )
           : Opacity(
               opacity: active || next ? 1.0 : 0.55,
