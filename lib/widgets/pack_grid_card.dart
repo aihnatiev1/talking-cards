@@ -95,6 +95,10 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
         !ref.watch(contentPackProvider).isReady;
 
     Widget tile = KidTap(
+      // One gesture, one sound: the box opening (`pack_open`, played by
+      // CardsScreen on entry) replaces the tock here. The paywall branch
+      // of the tap plays its own tock (packs_tab._onPackTap).
+      sound: null,
       onTap: widget.onTap,
       onLongPress: _triggerWobble,
       child: Container(

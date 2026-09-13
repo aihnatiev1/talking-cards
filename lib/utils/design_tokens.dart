@@ -419,8 +419,11 @@ class DTSize {
   final double bloomShelfCompact = 56;
   final double bloomShelfTablet = 80;
 
-  /// How much of Bloom peeks over the home hero's top edge (§4.2).
-  final double bloomPeek = 28;
+  /// How much of Bloom shows above the home hero, as a share of his size.
+  /// A fixed 28 dp read fine at 56 (eyes out) and as "ears stuck behind a
+  /// box" at the tablet's 72. 0.6 keeps eyes and cheeks visible at any size.
+  final double bloomPeekFraction = 0.6;
+  double bloomPeekOf(double mascotSize) => mascotSize * bloomPeekFraction;
 
   /// Bloom S for [context]: tablet / compact / phone by the shortest and
   /// the vertical extent of the screen.

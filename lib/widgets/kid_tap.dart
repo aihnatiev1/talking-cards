@@ -3,17 +3,13 @@ import 'package:flutter/physics.dart';
 
 import '../services/feedback_service.dart';
 import '../utils/design_tokens.dart';
+import '../utils/sfx.dart';
 
-/// What a [KidTap] says out loud when the tap lands.
-///
-/// [none] is for targets that already speak for themselves — a flash card
-/// says the word, a speaker button plays the clip — so the pop does not
-/// pile onto the voice.
-enum KidSound { pop, none }
+export '../utils/sfx.dart' show KidSound;
 
-/// One answer to every child tap: a light haptic the instant the finger
-/// lands, a squeeze that starts on `pointerDown` (not on `tap`), a springy
-/// release with a hint of overshoot, and a soft pop when the tap counts.
+/// One answer to every child tap: a light haptic and the [sound] the
+/// instant the finger lands, a squeeze that starts on `pointerDown` (not
+/// on `tap`), and a springy release with a hint of overshoot.
 ///
 /// Children aged 1–4 do not read, so a tap that changes nothing they can
 /// feel or hear reads as "not counted" and is repeated, which is how a
@@ -22,14 +18,23 @@ enum KidSound { pop, none }
 /// implementations and eight silent targets; this widget is the one
 /// press language for the kid zone. Spec: §6 of the same document.
 ///
-/// Feedback channels, in order of arrival (haptic and pop are the `tap`
-/// row of [FeedbackService], so every child tap in the app is one sound):
-///  * down — light haptic, scale 1→[pressScale] in [DT.pressDownMs] with
-///    `easeOutCubic`;
+/// Feedback channels, in order of arrival (haptic and sound are one row
+/// of [FeedbackService] — `tap` by default — so every child tap in the app
+/// is one sound):
+///  * down — light haptic + [sound], scale 1→[pressScale] in
+///    [DT.pressDownMs] with `easeOutCubic`. The sound is on the way *down*
+///    so it reaches the ear ≤ 100 ms after the touch even through a
+///    Bluetooth speaker (sound_palette §3.4);
 ///  * up — spring back (`mass 1, stiffness 420, damping 22`) with a small
-///    overshoot to ~1.01, then [onTap] and the [sound];
-///  * cancel / long-press start — the same spring back, no sound, so a
-///    wobble or favourite never looks "stuck pressed".
+///    overshoot to ~1.01, then [onTap];
+///  * cancel / long-press start — the same spring back, so a wobble or
+///    favourite never looks "stuck pressed".
+///
+/// [sound] is a palette role: `KidSound.tap` for a button, `cardTouch` for
+/// a flash card, `packOpen` where the tile itself should sound like the
+/// box (today the screen plays it, so the tile passes `null`). `null` is
+/// for targets that speak for themselves — the speaker button plays the
+/// clip, Bloom giggles — so no tock piles onto the voice.
 ///
 /// Reduced motion (`MediaQuery.disableAnimationsOf`) drops the scale and
 /// keeps the haptic and the sound. The ticker only runs while a press is
@@ -41,7 +46,7 @@ class KidTap extends StatefulWidget {
 
   /// Scale at the bottom of the press. Defaults to [DT.pressScale].
   final double pressScale;
-  final KidSound sound;
+  final KidSound? sound;
   final bool haptic;
   final HitTestBehavior behavior;
 
@@ -51,7 +56,7 @@ class KidTap extends StatefulWidget {
     this.onTap,
     this.onLongPress,
     this.pressScale = DT.pressScale,
-    this.sound = KidSound.pop,
+    this.sound = KidSound.tap,
     this.haptic = true,
     this.behavior = HitTestBehavior.opaque,
   });
@@ -60,13 +65,13 @@ class KidTap extends StatefulWidget {
   /// under critical so the child sees the tile "bounce" rather than glide.
   static const spring = SpringDescription(mass: 1, stiffness: 420, damping: 22);
 
-  /// The haptic and the pop alone, for a widget that already animates its
+  /// The haptic and the tock alone, for a widget that already animates its
   /// own press (Material buttons with `NoSplash`, for instance).
   static void feedback() =>
       FeedbackService.instance.event(FeedbackEvent.tap);
 
-  /// The pop by itself, pitch-varied so twenty taps are not one sound.
-  static void playPop() =>
+  /// The tock by itself, pitch-varied so twenty taps are not one sound.
+  static void playTap() =>
       FeedbackService.instance.event(FeedbackEvent.tap, haptic: false);
 
   @override
@@ -99,9 +104,7 @@ class _KidTapState extends State<KidTap> with SingleTickerProviderStateMixin {
   void _down(TapDownDetails _) {
     _pressed = true;
     _reduceMotion = MediaQuery.disableAnimationsOf(context);
-    if (widget.haptic) {
-      FeedbackService.instance.event(FeedbackEvent.tap, sound: false);
-    }
+    _feedback();
     if (_reduceMotion) return;
     _scale.animateTo(
       widget.pressScale,
@@ -136,10 +139,23 @@ class _KidTapState extends State<KidTap> with SingleTickerProviderStateMixin {
     });
   }
 
-  void _tap() {
-    if (widget.sound == KidSound.pop) KidTap.playPop();
-    widget.onTap?.call();
+  /// Haptic and sound together, on the way down. A role with an event row
+  /// (`tap`, `cardTouch`, `packOpen`) goes through [FeedbackService.event]
+  /// so Bloom hears it too; any other role plays as itself.
+  void _feedback() {
+    final sound = widget.sound;
+    final event = sound == null ? null : FeedbackService.eventOf(sound);
+    if (event != null) {
+      FeedbackService.instance.event(event, haptic: widget.haptic);
+      return;
+    }
+    if (widget.haptic) {
+      FeedbackService.instance.event(FeedbackEvent.tap, sound: false);
+    }
+    if (sound != null) FeedbackService.instance.play(sound);
   }
+
+  void _tap() => widget.onTap?.call();
 
   void _longPress() {
     _release();

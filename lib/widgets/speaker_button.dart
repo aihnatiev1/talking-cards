@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/audio_service.dart';
+import '../services/feedback_service.dart';
 import '../utils/app_icons.dart';
 import '../utils/constants.dart';
 import 'ambient_loop.dart';
@@ -27,7 +28,7 @@ class SpeakerButton extends StatelessWidget {
           builder: (_, speaking, __) {
             return KidTap(
               // Toggling speech is itself the sound of this tap.
-              sound: KidSound.none,
+              sound: null,
               onTap: () {
                 final audio = AudioService.instance;
                 final newValue = !audio.autoSpeak.value;
@@ -37,7 +38,10 @@ class SpeakerButton extends StatelessWidget {
                 if (newValue) {
                   onActivated?.call();
                 } else {
+                  // The only action in the app whose answer used to be
+                  // silence. A low tock says "heard" (sound_palette §6.14).
                   audio.stop();
+                  FeedbackService.instance.play(KidSound.tap, pitch: 0.9);
                 }
               },
               // Pulses (1.0 → 1.2, 500 ms) while a clip plays with sound

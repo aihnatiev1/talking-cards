@@ -124,6 +124,15 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   bool _skipEndWait = false;
   bool _isFlipped = false;
 
+  /// Page whose landing already sounded; a drag that snaps back to the
+  /// same page is not a new card on the table.
+  int _lastLandedIndex = 0;
+
+  /// The progress step (fifth card, tenth…) waiting for the end of its
+  /// card's word, and the `isSpeaking` listener that waits for it.
+  int? _pendingStep;
+  VoidCallback? _stepListener;
+
   // Auto-play timer mode
   bool _autoPlayTimer = false;
   Timer? _autoPlayCountdown;
@@ -172,6 +181,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
       widget.pack.id,
     );
     _currentIndex = startIndex;
+    _lastLandedIndex = startIndex;
     _pageController = PageController(
       viewportFraction: 0.92,
       initialPage: startIndex,
@@ -189,6 +199,10 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
 
     AnalyticsService.instance.logPackOpen(widget.pack.id);
     EngageService.instance.saveLastPack(widget.pack.id, widget.pack.title);
+    // The box opens — the one sound of entering a pack, from every door
+    // (tile, hero, quest, deep link, "Play again"). Its tail ends before
+    // the route lands; the first word starts after that.
+    FeedbackService.instance.event(FeedbackEvent.packOpen);
     _syncBloomScene();
     _bloom.hintTargetChanged(_cardDirection);
     _bloom.packOpened();
@@ -378,6 +392,64 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     _countdownSeconds = 0;
   }
 
+  /// The swiped page came to rest: the card lies on the table. Lower on
+  /// the way back (sound_palette §6.9). Fires once per landing — a drag
+  /// that snaps back to the same page stays quiet.
+  void _onPageLanded() {
+    if (_currentIndex == _lastLandedIndex) return;
+    final back = _currentIndex < _lastLandedIndex;
+    _lastLandedIndex = _currentIndex;
+    FeedbackService.instance.event(
+      FeedbackEvent.pageLanded,
+      pitch: back ? 0.80 : null,
+    );
+  }
+
+  /// Arm `success_medium` for progress step [step]: after the end of this
+  /// card's word, never during (sound_palette §6.10). When no word will
+  /// come (speaker off, silent card) it plays now. A swipe before the word
+  /// ends drops it — a sound that arrives late reads as a bug.
+  void _armProgressStep(int step) {
+    _clearProgressStep();
+    final audio = AudioService.instance;
+    final card = _cards[_currentIndex];
+    if (!audio.autoSpeak.value || !audio.hasSound(card.audioKey)) {
+      FeedbackService.instance.event(FeedbackEvent.progressStep, step: step);
+      return;
+    }
+    _pendingStep = step;
+    // Phases: the previous word may still be running when the page turns,
+    // so wait for quiet → this word's start → its end.
+    var phase = audio.isSpeaking.value ? 0 : 1;
+    _stepListener = () {
+      final speaking = audio.isSpeaking.value;
+      switch (phase) {
+        case 0:
+          if (!speaking) phase = 1;
+        case 1:
+          if (speaking) phase = 2;
+        default:
+          if (speaking) return;
+          final pending = _pendingStep;
+          _clearProgressStep();
+          if (pending != null && mounted) {
+            FeedbackService.instance.event(
+              FeedbackEvent.progressStep,
+              step: pending,
+            );
+          }
+      }
+    };
+    audio.isSpeaking.addListener(_stepListener!);
+  }
+
+  void _clearProgressStep() {
+    final l = _stepListener;
+    if (l != null) AudioService.instance.isSpeaking.removeListener(l);
+    _stepListener = null;
+    _pendingStep = null;
+  }
+
   void _speakCurrentCard() {
     final card = _cards[_currentIndex];
     _speakCard(card);
@@ -543,9 +615,9 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     // The overlay brings its own Bloom M; the one on the shelf fades out
     // so there is one character on screen (bloom_character.md §4.2).
     setState(() => _celebrating = true);
-    // Cut the narrator's tail; the tada + praise are the Celebration's
-    // (FeedbackEvent.packDone), so nothing is played here.
-    AudioService.instance.stop();
+    // Cut the narrator's tail only if there is one; the fanfare + praise
+    // are the Celebration's (FeedbackEvent.packDone), nothing plays here.
+    if (AudioService.instance.isSpeaking.value) AudioService.instance.stop();
     // Don't mark virtual packs (favorites, review) as completed
     var askReview = false;
     if (!widget.pack.id.startsWith('_')) {
@@ -688,6 +760,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   void dispose() {
     _bloom.sceneLeft(_bloomScene);
     _cancelAutoPlayCountdown();
+    _clearProgressStep();
     if (_muteListener != null) {
       AudioService.instance.autoSpeak.removeListener(_muteListener!);
     }
@@ -792,7 +865,10 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                   onNotification: (n) {
                     if (n is ScrollStartNotification)
                       _userSwiping = n.dragDetails != null;
-                    if (n is ScrollEndNotification) _userSwiping = false;
+                    if (n is ScrollEndNotification) {
+                      _userSwiping = false;
+                      _onPageLanded();
+                    }
                     final pastEnd = n is OverscrollNotification
                         ? n.overscroll > 0
                         : n is ScrollUpdateNotification &&
@@ -813,6 +889,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                       FeedbackService.instance.event(FeedbackEvent.swipe);
                       if (_userSwiping) _swipeHintKey.currentState?.dismiss();
                       _cancelAutoPlayCountdown();
+                      _clearProgressStep();
                       final prev = _currentIndex;
                       setState(() {
                         _currentIndex = index;
@@ -821,7 +898,8 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                       _precacheAround(index);
                       // Track only forward progress
                       if (index > prev) {
-                        _bloom.cardAdvanced(index);
+                        final step = _bloom.cardAdvanced(index);
+                        if (step != null) _armProgressStep(step);
                         AnalyticsService.instance.logCardView(
                           cards[index].id,
                           widget.pack.id,

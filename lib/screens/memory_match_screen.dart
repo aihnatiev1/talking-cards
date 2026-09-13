@@ -402,7 +402,7 @@ class _TileWidgetState extends State<_TileWidget>
     return KidTap(
       onTap: widget.onTap,
       // The tile answers with its word (playWordOnly), not a pop.
-      sound: KidSound.none,
+      sound: null,
       child: AnimatedBuilder(
         animation: _anim,
         builder: (_, __) {

@@ -19,7 +19,6 @@ void main() {
   }) make(
     FakeAsync async, {
     int level = 2,
-    bool praiseMissing = false,
   }) {
     final speaking = ValueNotifier<bool>(false);
     final sounds = <BloomSound>[];
@@ -27,7 +26,6 @@ void main() {
       profileLevel: () => level,
       speaking: speaking,
       playSound: sounds.add,
-      praiseMissing: () => praiseMissing,
       now: () => async.getClock(epoch).now(),
     );
     return (bloom: bloom, speaking: speaking, sounds: sounds);
@@ -291,17 +289,40 @@ void main() {
       });
     });
 
-    test('yay stands in for praise only when praise is known missing', () {
+    test('the cheer itself is silent — its voice is the celebration\'s', () {
+      // `success_large` at 0 and praise / `bloom_yay` at 400 both come from
+      // FeedbackService (sound_palette §6.20–21); a `yay` here would land
+      // on top of the fanfare.
       fakeAsync((async) {
-        final quiet = make(async);
-        quiet.bloom.packCompleted();
-        expect(quiet.sounds, isEmpty);
-        quiet.bloom.dispose();
+        final t = make(async);
+        t.bloom.packCompleted();
+        expect(t.bloom.state.emotion, BloomEmotion.cheer);
+        expect(t.sounds, isEmpty);
+        async.elapse(const Duration(seconds: 3));
+        expect(t.sounds, isEmpty);
+        t.bloom.dispose();
+      });
+    });
 
-        final loud = make(async, praiseMissing: true);
-        loud.bloom.packCompleted();
-        expect(loud.sounds, [BloomSound.yay]);
-        loud.bloom.dispose();
+    test('cardAdvanced reports the progress step on the hop cadence', () {
+      fakeAsync((async) {
+        final t = make(async, level: 2);
+        final steps = <int?>[];
+        for (var i = 1; i <= 5; i++) {
+          steps.add(t.bloom.cardAdvanced(i));
+        }
+        expect(steps, [null, null, null, null, 1]);
+        expect(t.bloom.state.emotion, BloomEmotion.happy);
+        async.elapse(DT.motion.celebrate);
+        expect(t.bloom.state.emotion, BloomEmotion.idle);
+        for (var i = 6; i <= 10; i++) {
+          steps.add(t.bloom.cardAdvanced(i));
+        }
+        expect(steps.last, 2);
+        // The second step lands inside the 3 s hop gap: no hop, still a
+        // step — the sound belongs to the screen, the hop to Bloom.
+        expect(t.bloom.state.emotion, BloomEmotion.idle);
+        t.bloom.dispose();
       });
     });
 

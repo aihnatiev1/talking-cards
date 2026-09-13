@@ -250,7 +250,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
           // one big accent-coloured button on the screen.
           KidTap(
             // Replays the target word — no pop under the voice.
-            sound: KidSound.none,
+            sound: null,
             onTap: _playCurrentSound,
             child: ValueListenableBuilder<bool>(
               valueListenable: AudioService.instance.isSpeaking,

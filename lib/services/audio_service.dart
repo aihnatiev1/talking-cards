@@ -7,6 +7,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:audio_session/audio_session.dart';
 
+import '../utils/sfx.dart';
 import 'analytics_service.dart';
 import 'asset_pack_service.dart';
 
@@ -560,6 +561,9 @@ class AudioService {
         _soloud.stop(h);
       }
     } catch (_) {}
+
+    // 4. The handful of SFX the first minute needs (sound_palette §4.6).
+    await warmSfx();
   }
 
   /// Loads [keys] from disk ahead of the first tap. Everything else stays
@@ -656,6 +660,7 @@ class AudioService {
         if (_speakGeneration == gen) isSpeaking.value = false;
         return;
       }
+      _protectVoice(handle);
       while (_currentHandle == handle &&
           _soloud.getIsValidVoiceHandle(handle)) {
         await Future.delayed(const Duration(milliseconds: 50));
@@ -715,6 +720,7 @@ class AudioService {
         if (_speakGeneration == gen) isSpeaking.value = false;
         return;
       }
+      _protectVoice(handle);
       // Recordings have shape: WORD · silence · phrase. The exact word-end
       // ms was detected at preprocessing time (see tools that build
       // assets/data/audio_word_lengths.json). For files that lack a trailing
@@ -746,6 +752,17 @@ class AudioService {
   /// Whether audio exists for the given key (loaded lazily on first play).
   bool hasSound(String? key) => key != null && _knownKeys.contains(key);
 
+  /// The word is the loudest thing in the room and must also be the last
+  /// thing the mixer drops: with SoLoud's default of 16 active voices, a
+  /// bubble cascade plus confetti plus a fanfare could otherwise evict the
+  /// narrator mid-syllable (sound_palette §3.1). The flag dies with the
+  /// handle, so nothing has to be undone.
+  void _protectVoice(SoundHandle handle) {
+    try {
+      _soloud.setProtectVoice(handle, true);
+    } catch (_) {}
+  }
+
   // --- Reward & guidance layer -------------------------------------------
   // SFX in assets/audio_sfx/ are tiny synthesized v1 placeholders — swap
   // for studio sounds when available. Praise and instruction clips must be
@@ -772,7 +789,68 @@ class AudioService {
     }
   }
 
-  /// Fire-and-forget UI sound: 'pop', 'ding' or 'tada'. Plays over the
+  /// Test seam: when set, [play] and [playBloom] report here instead of
+  /// touching SoLoud — `(file, pitch, volume)` per sound that would have
+  /// played. A dropped sound never reaches the sink, which is how the
+  /// "never over a word" rule is asserted without an audio engine.
+  @visibleForTesting
+  static void Function(String file, double pitch, double volume)? debugFxSink;
+
+  /// Play a palette role (`docs/design/sound_palette.md` §2).
+  ///
+  /// The role's own file plays when it is on disk; otherwise the v1
+  /// placeholder it names ([KidSound.fallback]) stands in, at
+  /// [KidSound.fallbackPitch]. Either miss is remembered for the session
+  /// by [_getFx], so a missing studio file costs one failed load, not one
+  /// per tap. [volume] and [pitch] default to the role's own mix.
+  ///
+  /// [dropIfSpeaking]: a tonal role (class B/C, `transient == false`) is
+  /// *dropped* — not queued — while the narrator speaks. Transients play
+  /// regardless: they are shorter than a syllable. Like [playSfx] this
+  /// never calls [stop]; an SFX cannot cut the word off.
+  Future<void> play(
+    KidSound sound, {
+    double? volume,
+    double? pitch,
+    bool dropIfSpeaking = false,
+  }) async {
+    if (dropIfSpeaking && !sound.transient && isSpeaking.value) return;
+    final vol = volume ?? sound.volume;
+    var speed = pitch ?? sound.pitch;
+    final sink = debugFxSink;
+    if (sink != null) {
+      sink(sound.file, speed, vol);
+      return;
+    }
+    var src = await _getFx(sound.assetPath);
+    if (src == null) {
+      src = await _getFx(sound.fallbackPath);
+      speed *= sound.fallbackPitch;
+    }
+    if (src == null) return;
+    await _playFx(src, volume: vol, pitch: speed);
+  }
+
+  /// Decode the wave-1 roles (and `bloom_hi`, which greets on the splash)
+  /// ahead of the first tap. On Android `loadAsset` copies the file to
+  /// temp before decoding, so the first play of every SFX is the slow one
+  /// — better on the splash than under a finger. ≈ 180 KB of files; the
+  /// rest of the palette stays lazy, and the 900+ voice clips are not
+  /// touched (that rule is about them, not about seven tiny WAVs).
+  Future<void> warmSfx() async {
+    await Future.wait([
+      for (final s in KidSound.warm) _warmRole(s),
+      _getFx('${KidSound.dir}/bloom_hi.wav'),
+    ]);
+  }
+
+  Future<void> _warmRole(KidSound s) async {
+    final own = await _getFx(s.assetPath);
+    if (own == null) await _getFx(s.fallbackPath);
+  }
+
+  /// Fire-and-forget UI sound by file stem — kept for compatibility; new
+  /// code names a [KidSound] through `FeedbackService`. Plays over the
   /// current word without touching [stop] state — a bubble pop must never
   /// cut the narrator off.
   ///
@@ -786,8 +864,16 @@ class AudioService {
     double volume = 1.0,
     double pitch = 1.0,
   }) async {
-    final src = await _getFx('assets/audio_sfx/$name.wav');
+    final src = await _getFx('${KidSound.dir}/$name.wav');
     if (src == null) return;
+    await _playFx(src, volume: volume, pitch: pitch);
+  }
+
+  Future<void> _playFx(
+    AudioSource src, {
+    required double volume,
+    required double pitch,
+  }) async {
     try {
       if (pitch == 1.0) {
         await _soloud.play(src, volume: volume);
@@ -849,14 +935,23 @@ class AudioService {
   ///
   /// Same lazy `_getFx` path as [playSfx]; while the files are not yet
   /// recorded this is a silent no-op, exactly like [playPraise] — so the
-  /// mascot can be wired now and sound later. Never plays over a word: the
-  /// caller checks [isSpeaking] and *drops* the sound, it does not queue it.
+  /// mascot can be wired now and sound later. Never plays over a word:
+  /// the sound is *dropped*, not queued (bloom_character.md §6 rule 1) —
+  /// enforced here as well as in `BloomReactions`, so the celebration's
+  /// stand-in `bloom_yay` obeys the same rule.
   Future<void> playBloom(
     String name, {
     double volume = 0.6,
     double pitch = 1.0,
-  }) =>
-      playSfx(name, volume: volume, pitch: pitch);
+  }) {
+    if (isSpeaking.value) return Future.value();
+    final sink = debugFxSink;
+    if (sink != null) {
+      sink(name, pitch, volume);
+      return Future.value();
+    }
+    return playSfx(name, volume: volume, pitch: pitch);
+  }
 
   /// Per-game voice instruction played on entry ("Лопай бульбашки!").
   /// Expects assets/audio_mp3/instr_{uk|en}_{gameId}.mp3.

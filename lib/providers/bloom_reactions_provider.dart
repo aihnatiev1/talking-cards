@@ -39,14 +39,11 @@ class BloomReactions extends StateNotifier<BloomState> {
     ValueListenable<bool>? speaking,
     FeedbackService? feedback,
     void Function(BloomSound sound)? playSound,
-    bool Function()? praiseMissing,
     DateTime Function()? now,
   })  : _profileLevel = profileLevel,
         _speaking = speaking ?? AudioService.instance.isSpeaking,
         _feedback = feedback ?? FeedbackService.instance,
         _play = playSound ?? _playViaAudioService,
-        _praiseMissing =
-            praiseMissing ?? (() => AudioService.instance.praiseKnownMissing),
         _now = now ?? DateTime.now,
         super(const BloomState()) {
     _speaking.addListener(_onSpeakingChanged);
@@ -99,7 +96,6 @@ class BloomReactions extends StateNotifier<BloomState> {
   final ValueListenable<bool> _speaking;
   final FeedbackService _feedback;
   final void Function(BloomSound) _play;
-  final bool Function() _praiseMissing;
   final DateTime Function() _now;
 
   final LinkedHashMap<Object, BloomScene> _scenes = LinkedHashMap();
@@ -238,19 +234,27 @@ class BloomReactions extends StateNotifier<BloomState> {
   static const _defaultCardLook = Alignment(0.7, -0.8);
   static const _cameFromRight = Alignment(1, -0.2);
 
-  void cardAdvanced(int index) {
+  /// A forward swipe. Returns the 1-based number of the progress step this
+  /// card completes (every [hopEvery]-th forward card), or `null` — the
+  /// one counter both Bloom's hop and the screen's `success_medium` read,
+  /// so the sound and the jump can never drift apart (sound_palette §9.2).
+  /// The step is reported even when the hop itself is debounced.
+  int? cardAdvanced(int index) {
     _activity();
     _forwardCards++;
     _hintsGiven = 0;
     _glance(_cameFromRight);
     final every = hopEvery(_profileLevel());
-    if (_forwardCards % every != 0) return;
+    if (_forwardCards % every != 0) return null;
+    final step = _forwardCards ~/ every;
     final t = _now();
     final last = _lastCardHop;
-    if (last != null && t.difference(last) < cardHopGap) return;
+    if (last != null && t.difference(last) < cardHopGap) return step;
     _lastCardHop = t;
-    // Silent on purpose: the pause between words belongs to the word.
+    // Silent on purpose: the pause between words belongs to the word; the
+    // progress sound is the screen's, after the word (§9.2).
     _startOneShot(BloomEmotion.happy, DT.motion.celebrate);
+    return step;
   }
 
   void objectTapped() => _activity();
@@ -328,7 +332,13 @@ class BloomReactions extends StateNotifier<BloomState> {
       case FeedbackEvent.tap:
       case FeedbackEvent.select:
       case FeedbackEvent.swipe:
+      case FeedbackEvent.cardTouch:
+      case FeedbackEvent.pageLanded:
+      case FeedbackEvent.packOpen:
         _activity();
+      case FeedbackEvent.progressStep:
+        // The hop for this step came from [cardAdvanced] already.
+        break;
       case FeedbackEvent.correct:
         success(BloomSuccessTier.micro);
       case FeedbackEvent.wrong:
@@ -462,14 +472,14 @@ class BloomReactions extends StateNotifier<BloomState> {
   }
 
   void _cheer({required int hops}) {
-    // The narrator's praise is the cheer's voice; Bloom's own `yay` stands
-    // in only when praise is known to be missing (§6).
-    final sound = _praiseMissing() ? BloomSound.yay : null;
+    // The cheer's voice belongs to the celebration: `success_large` at 0,
+    // the narrator's praise — or Bloom's `yay` when no praise file is
+    // bundled — at 400, both from `FeedbackService` (sound_palette §6.21).
+    // Playing `yay` here too would put it at 0 ms on top of the fanfare.
     _startOneShot(
       BloomEmotion.cheer,
       hops >= 3 ? DT.motion.bloomCheerBig : DT.motion.bloomCheer,
       hops: hops,
-      sound: sound,
     );
   }
 

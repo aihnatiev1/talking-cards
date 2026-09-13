@@ -30,6 +30,7 @@ import '../screens/quest_map_screen.dart';
 import '../screens/stats_screen.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
+import '../services/feedback_service.dart';
 import '../services/paywall_flow.dart';
 import '../services/profile_service.dart';
 import '../services/purchase_service.dart';
@@ -272,6 +273,9 @@ class _PacksTabState extends ConsumerState<PacksTab> {
       return;
     }
     if (pack.isLocked) {
+      // The tile itself is silent (its sound is `pack_open` on entering the
+      // cards); a tap that goes to the paywall instead still gets a tock.
+      FeedbackService.instance.event(FeedbackEvent.tap, haptic: false);
       final purchased = await runPaywallFlow(
         context,
         ref,
@@ -1097,7 +1101,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
 
 /// The daily hero with Bloom S peeking over its top-right corner
 /// (bloom_character.md §4.2): head and ears above the edge, body behind the
-/// card, so the hero gets [DTSize.bloomPeek] of extra top room. Bloom sits
+/// card, so the hero gets [DTSize.bloomPeekOf] of extra top room. Bloom sits
 /// *under* the hero in z and never covers the illustration (left 45 %) or
 /// the badge.
 ///
@@ -1182,7 +1186,7 @@ class _HeroWithBloomState extends ConsumerState<_HeroWithBloom> {
           ),
         ),
         Padding(
-          padding: EdgeInsets.only(top: DT.size.bloomPeek),
+          padding: EdgeInsets.only(top: DT.size.bloomPeekOf(size)),
           child: widget.hero,
         ),
       ],

@@ -8,6 +8,7 @@ import '../models/card_model.dart';
 import '../providers/favorites_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
+import '../services/feedback_service.dart';
 import 'ambient_loop.dart';
 import 'card_image.dart';
 import 'kid_tap.dart';
@@ -116,8 +117,10 @@ class FlashCardState extends ConsumerState<FlashCard>
     return ScaleTransition(
       scale: _entranceAnim,
       child: KidTap(
-        // The word is this tap's sound; a pop underneath it would be noise.
-        sound: KidSound.none,
+        // Finger on paper on the way down; the word is the sound of the
+        // release. `card_touch` is an on-device A/B (sound_palette §9.5):
+        // off leaves the haptic and the word, as before.
+        sound: FeedbackService.cardTouchEnabled ? KidSound.cardTouch : null,
         // Only the card face, not its margin (as the old detector did).
         behavior: HitTestBehavior.deferToChild,
         onTap: () {

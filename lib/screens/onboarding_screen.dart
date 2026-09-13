@@ -868,7 +868,7 @@ class _MagicCardState extends State<_MagicCard> {
     return KidTap(
       onTap: widget.onTap,
       // The card speaks its word; the press itself stays quiet.
-      sound: KidSound.none,
+      sound: null,
       // Only the card, not the empty space around it.
       behavior: HitTestBehavior.deferToChild,
       child: LayoutBuilder(

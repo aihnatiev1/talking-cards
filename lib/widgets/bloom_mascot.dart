@@ -353,7 +353,7 @@ class _BloomBodyState extends State<_BloomBody>
 
     final onTap = widget.onTap;
     if (onTap != null) {
-      box = KidTap(onTap: onTap, sound: KidSound.none, child: box);
+      box = KidTap(onTap: onTap, sound: null, child: box);
     }
 
     return Semantics(
