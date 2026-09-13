@@ -18,7 +18,10 @@ void main() {
   group('every role can sound today', () {
     for (final s in KidSound.values) {
       test('$s → ${s.file}.wav or its placeholder', () {
-        final own = File(s.assetPath).existsSync();
+        final own = s.variants == 1
+            ? File(s.assetPath).existsSync()
+            : List.generate(s.variants, (i) => s.variantPath(i + 1))
+                .every((p) => File(p).existsSync());
         final standIn = File(s.fallbackPath).existsSync();
         expect(KidSound.placeholders, contains(s.fallback),
             reason: 'a fallback must be one of the three v1 files');
@@ -27,6 +30,19 @@ void main() {
         expect(own || standIn, isTrue);
       });
     }
+
+    test('a multi-take role has every take on disk, or none of them', () {
+      // A gap in the middle is the worst case: the cursor walks onto a
+      // missing take, silently falls back to the placeholder, and one pop
+      // in three sounds like the old synthesised one.
+      for (final s in KidSound.values.where((s) => s.variants > 1)) {
+        final present = List.generate(s.variants, (i) => s.variantPath(i + 1))
+            .where((p) => File(p).existsSync())
+            .length;
+        expect(present, anyOf(0, s.variants),
+            reason: '$s has $present of ${s.variants} takes on disk');
+      }
+    });
 
     test('the warm set is wave 1', () {
       expect(

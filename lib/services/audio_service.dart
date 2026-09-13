@@ -824,18 +824,37 @@ class AudioService {
     if (dropIfSpeaking && !sound.transient && isSpeaking.value) return;
     final vol = volume ?? sound.volume;
     var speed = pitch ?? sound.pitch;
+    final path = _nextVariant(sound);
     final sink = debugFxSink;
     if (sink != null) {
-      sink(sound.file, speed, vol);
+      sink(path.split('/').last.replaceAll('.wav', ''), speed, vol);
       return;
     }
-    var src = await _getFx(sound.assetPath);
+    var src = await _getFx(path);
     if (src == null) {
       src = await _getFx(sound.fallbackPath);
       speed *= sound.fallbackPitch;
     }
     if (src == null) return;
     await _playFx(src, volume: vol, pitch: speed);
+  }
+
+  /// Which take of a multi-recording role plays next.
+  final Map<KidSound, int> _variantCursor = {};
+
+  /// Walks the takes in order rather than picking at random: with three
+  /// files a shuffle repeats the same one back-to-back a third of the
+  /// time, which is exactly the repetition the extra recordings were made
+  /// to avoid. The start point is random so a round does not always open
+  /// on take one.
+  String _nextVariant(KidSound sound) {
+    if (sound.variants == 1) return sound.assetPath;
+    final next = _variantCursor.update(
+      sound,
+      (i) => i % sound.variants + 1,
+      ifAbsent: () => _rng.nextInt(sound.variants) + 1,
+    );
+    return sound.variantPath(next);
   }
 
   /// Decode the wave-1 roles (and `bloom_hi`, which greets on the splash)
@@ -852,6 +871,13 @@ class AudioService {
   }
 
   Future<void> _warmRole(KidSound s) async {
+    if (s.variants > 1) {
+      final takes = await Future.wait([
+        for (var i = 1; i <= s.variants; i++) _getFx(s.variantPath(i)),
+      ]);
+      if (takes.every((t) => t == null)) await _getFx(s.fallbackPath);
+      return;
+    }
     final own = await _getFx(s.assetPath);
     if (own == null) await _getFx(s.fallbackPath);
   }

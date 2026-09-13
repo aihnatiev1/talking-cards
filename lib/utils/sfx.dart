@@ -78,7 +78,7 @@ enum KidSound {
   ),
 
   /// A real soap bubble. Games only — never a button.
-  pop('pop', fallback: 'pop', volume: 0.7, transient: true),
+  pop('pop', fallback: 'pop', volume: 0.7, transient: true, variants: 3),
 
   /// Wooden latch + short glockenspiel run up — something opened.
   unlock('unlock', fallback: 'tada', volume: 0.7),
@@ -94,6 +94,7 @@ enum KidSound {
     this.spread = 0.0,
     this.fallbackPitch = 1.0,
     this.transient = false,
+    this.variants = 1,
   });
 
   /// File stem under `assets/audio_sfx/` — `success_medium.wav`.
@@ -123,6 +124,13 @@ enum KidSound {
   /// `AudioService.play(dropIfSpeaking: true)` while the narrator speaks.
   final bool transient;
 
+  /// How many recordings of this role exist, numbered from 1
+  /// (`pop_1.wav`, `pop_2.wav`, `pop_3.wav`). More than one because pitch
+  /// alone cannot hide repetition in the sound a child triggers most: a
+  /// bubble round is twenty pops, and the third identical one has already
+  /// stopped being a reward. 1 means a single unnumbered file.
+  final int variants;
+
   /// The files the v1 build shipped; every [fallback] is one of these.
   static const placeholders = {'pop', 'ding', 'tada'};
 
@@ -131,6 +139,9 @@ enum KidSound {
   static const dir = 'assets/audio_sfx';
 
   String get assetPath => '$dir/$file.wav';
+
+  /// Path of variant [i] (1-based), or [assetPath] for a single-take role.
+  String variantPath(int i) => variants == 1 ? assetPath : '$dir/${file}_$i.wav';
   String get fallbackPath => '$dir/$fallback.wav';
 
   /// The seven roles `AudioService.warmSfx` decodes on the splash so the
