@@ -379,6 +379,16 @@ class DTMotion {
   /// Host Bloom fades out when an overlay brings its own.
   final Duration bloomFade = const Duration(milliseconds: 150);
 
+  // Idle loops (`AmbientLoop` periods). One half-cycle rest → peak; the
+  // loop reverses, so the felt period is double.
+
+  /// The home hero's invite breath (1.0 → 1.02): the whole card, so slow
+  /// enough that the screen does not seem to breathe with it.
+  final Duration ambientBreath = const Duration(milliseconds: 1600);
+
+  /// The active step / stone (1.0 → 1.04): one element at a time.
+  final Duration ambientPulse = const Duration(milliseconds: 1200);
+
   // Curves
   final Curve standard = Curves.easeOutCubic;
   final Curve emphasized = Curves.easeOutBack;
@@ -423,6 +433,15 @@ class DTSize {
   /// A fixed 28 dp read fine at 56 (eyes out) and as "ears stuck behind a
   /// box" at the tablet's 72. 0.6 keeps eyes and cheeks visible at any size.
   final double bloomPeekFraction = 0.6;
+
+  /// The home hero (ux-gap G5): 150 dp tall, the illustration fills the
+  /// left [heroArtFraction] of it up to [heroArtMax] dp, and the whole
+  /// card stops growing at [heroMaxWidth] so a 1194 px tablet gets a
+  /// centred card rather than a strip.
+  final double heroHeight = 150;
+  final double heroArtFraction = 0.45;
+  final double heroArtMax = 220;
+  final double heroMaxWidth = 640;
   double bloomPeekOf(double mascotSize) => mascotSize * bloomPeekFraction;
 
   /// Bloom S for [context]: tablet / compact / phone by the shortest and

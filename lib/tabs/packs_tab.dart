@@ -435,6 +435,14 @@ class _PacksTabState extends ConsumerState<PacksTab> {
     });
   }
 
+  /// Whether the step the hero itself stands for is finished — the Card of
+  /// the Day listens, or (Continue / Start here) the day's cards. Mirrors
+  /// the `heroDone:` each branch of [_buildDailyHero] passes.
+  bool _heroTaskDone(DailyQuestState quest, {required bool heroIsCardOfDay}) =>
+      quest.completed.contains(
+        heroIsCardOfDay ? QuestTask.listenCardOfDay : QuestTask.viewCards3,
+      );
+
   /// The single above-the-fold block: hero (Continue, or Card of the Day) plus
   /// the two remaining daily steps as compact buttons in the same frame.
   ///
@@ -452,6 +460,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
     required PackModel? continuePack,
     required int continueProgress,
     required bool isEn,
+    required Widget mascot,
   }) {
     // Recommended pack: first non-locked, non-virtual, non-completed.
     PackModel? recommendedPack;
@@ -512,9 +521,13 @@ class _PacksTabState extends ConsumerState<PacksTab> {
       );
     }
 
+    // Tap = the word (audit A1-9): the card speaks and the illustration
+    // bounces; the parent's sheet (favourites, listen again) is on the
+    // hero's long-press — see [_showCardOfDayPopup].
     void openCardOfDay() {
       if (cotd == null) return;
-      _showCardOfDayPopup(cotd);
+      AnalyticsService.instance.logCardOfDayTap(cotd.id);
+      AudioService.instance.speakCard(cotd.audioKey, cotd.sound, cotd.text);
       ref
           .read(dailyQuestProvider.notifier)
           .completeTask(QuestTask.listenCardOfDay);
@@ -623,8 +636,6 @@ class _PacksTabState extends ConsumerState<PacksTab> {
       final cp = continuePack;
       final total = cp.cards.length;
       return DailyHeroCard(
-        badge: isEn ? 'Continue' : 'Продовжити',
-        badgeIcon: AppIcon.play,
         title: cp.title,
         accent: cp.color,
         image: packThumb(cp),
@@ -633,6 +644,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
             ? continueProgress / total
             : null,
         heroDone: viewDone,
+        mascot: mascot,
         onHeroTap: () {
           AnalyticsService.instance.logContinueHeroTap(cp.id);
           _onPackTap(context, cp);
@@ -646,14 +658,14 @@ class _PacksTabState extends ConsumerState<PacksTab> {
 
     if (cotd != null) {
       return DailyHeroCard(
-        badge: isEn ? 'Card of the day' : 'Картка дня',
-        badgeIcon: AppIcon.stepListen,
         title: cotd.sound,
         accent: cotd.colorAccent,
         image: cotd.image,
         fallbackEmoji: cotd.emoji,
         heroDone: listenDone,
+        mascot: mascot,
         onHeroTap: openCardOfDay,
+        onHeroLongPress: () => _showCardOfDayPopup(cotd),
         tasks: [packTask, adventureTask],
         allDone: allDone,
         onAllDoneTap: allDone ? onAllDone : null,
@@ -666,13 +678,12 @@ class _PacksTabState extends ConsumerState<PacksTab> {
     final rp = recommendedPack;
     if (rp == null) return const SizedBox.shrink();
     return DailyHeroCard(
-      badge: isEn ? 'Start here' : 'Почнемо',
-      badgeIcon: AppIcon.stepCards,
       title: rp.title,
       accent: rp.color,
       image: packThumb(rp),
       fallbackEmoji: rp.icon,
       heroDone: viewDone,
+      mascot: mascot,
       onHeroTap: () => _onPackTap(context, rp),
       tasks: [adventureTask],
       allDone: allDone,
@@ -984,20 +995,34 @@ class _PacksTabState extends ConsumerState<PacksTab> {
 
                 // One hero block: Continue / Card of the Day + the day's two
                 // remaining steps, all inside a single frame.
+                // Capped at heroMaxWidth and centred so a tablet gets a
+                // card, not a 150 dp strip across 1194 px.
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                  child: _HeroWithBloom(
-                    semanticsLabel: isEnMode ? 'Bloom' : 'Блум',
-                    hero: _buildDailyHero(
-                      context,
-                      packs: packs,
-                      cotd: cotd,
-                      cotdLocked: cotdLocked,
-                      questState: quest,
-                      completedPacks: completedPacks,
-                      continuePack: continuePack,
-                      continueProgress: continueProgress,
-                      isEn: isEnMode,
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: DT.size.heroMaxWidth,
+                      ),
+                      child: _HeroWithBloom(
+                        semanticsLabel: isEnMode ? 'Bloom' : 'Блум',
+                        heroDone: _heroTaskDone(
+                          quest,
+                          heroIsCardOfDay: continuePack == null && cotd != null,
+                        ),
+                        builder: (context, mascot) => _buildDailyHero(
+                          context,
+                          packs: packs,
+                          cotd: cotd,
+                          cotdLocked: cotdLocked,
+                          questState: quest,
+                          completedPacks: completedPacks,
+                          continuePack: continuePack,
+                          continueProgress: continueProgress,
+                          isEn: isEnMode,
+                          mascot: mascot,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -1098,21 +1123,29 @@ class _PacksTabState extends ConsumerState<PacksTab> {
   }
 }
 
-/// The daily hero with Bloom S peeking over its top-right corner
-/// (bloom_character.md §4.2): head and ears above the edge, body behind the
-/// card, so the hero gets [DTSize.bloomPeekOf] of extra top room. Bloom sits
-/// *under* the hero in z and never covers the illustration (left 45 %) or
-/// the badge.
+/// The daily hero with Bloom S peeking out from behind the illustration
+/// (ux-gap G5; bloom_character.md §4.2 z-rule): body behind the picture,
+/// feet on the hero's bottom line, looking right at the play disc. Bloom is
+/// built here — the one live `BloomMascot` on this route — and handed to
+/// [builder], which places him *under* the illustration in z so he never
+/// covers it.
 ///
 /// This widget is also the home tab's stage in Bloom's brain: it enters
 /// the `home` scene on mount, leaves it while the tab is hidden
-/// (`TickerMode` off under `IndexedStack` or an opaque route) and tells
-/// Bloom he may breathe once the hero has stopped pulsing (`heroDone`).
+/// (`TickerMode` off under `IndexedStack` or an opaque route), points his
+/// hint at the play disc, and tells him he may breathe once the hero has
+/// stopped pulsing ([heroDone]) — with hints off then, so he never points
+/// at a check mark.
 class _HeroWithBloom extends ConsumerStatefulWidget {
-  final Widget hero;
+  final Widget Function(BuildContext context, Widget mascot) builder;
+  final bool heroDone;
   final String semanticsLabel;
 
-  const _HeroWithBloom({required this.hero, required this.semanticsLabel});
+  const _HeroWithBloom({
+    required this.builder,
+    required this.heroDone,
+    required this.semanticsLabel,
+  });
 
   @override
   ConsumerState<_HeroWithBloom> createState() => _HeroWithBloomState();
@@ -1120,18 +1153,24 @@ class _HeroWithBloom extends ConsumerStatefulWidget {
 
 class _HeroWithBloomState extends ConsumerState<_HeroWithBloom> {
   static final Object _sceneKey = Object();
+
+  /// From Bloom (lower-left of the text column) to the play disc (right,
+  /// a little above his eye line).
+  static const _playDirection = Alignment(1, -0.2);
+
   bool _onStage = false;
 
   BloomReactions get _bloom => ref.read(bloomReactionsProvider.notifier);
 
-  bool get _heroDone {
-    final hero = widget.hero;
-    return hero is DailyHeroCard && hero.heroDone;
-  }
-
   BloomScene get _scene => BloomScene.home.copyWith(
-        ambient: _heroDone ? BloomAmbient.breathe : BloomAmbient.blinkOnly,
+        ambient: widget.heroDone ? BloomAmbient.breathe : BloomAmbient.blinkOnly,
+        hintsEnabled: !widget.heroDone,
       );
+
+  void _enter() {
+    _bloom.sceneEntered(_sceneKey, _scene);
+    _bloom.hintTargetChanged(_playDirection);
+  }
 
   @override
   void didChangeDependencies() {
@@ -1144,7 +1183,7 @@ class _HeroWithBloomState extends ConsumerState<_HeroWithBloom> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (_onStage) {
-        _bloom.sceneEntered(_sceneKey, _scene);
+        _enter();
       } else {
         _bloom.sceneLeft(_sceneKey);
       }
@@ -1154,10 +1193,9 @@ class _HeroWithBloomState extends ConsumerState<_HeroWithBloom> {
   @override
   void didUpdateWidget(_HeroWithBloom old) {
     super.didUpdateWidget(old);
-    final was = old.hero is DailyHeroCard && (old.hero as DailyHeroCard).heroDone;
-    if (was == _heroDone || !_onStage) return;
+    if (old.heroDone == widget.heroDone || !_onStage) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && _onStage) _bloom.sceneEntered(_sceneKey, _scene);
+      if (mounted && _onStage) _enter();
     });
   }
 
@@ -1169,27 +1207,11 @@ class _HeroWithBloomState extends ConsumerState<_HeroWithBloom> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.hero is! DailyHeroCard) return widget.hero;
-    final size = DT.size.mascotCompanionOf(context);
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        // Bloom first, so the hero paints over his body.
-        Positioned(
-          top: 0,
-          right: DT.sp24,
-          child: BloomMascot(
-            size: size,
-            facing: BloomFacing.right,
-            semanticsLabel: widget.semanticsLabel,
-          ),
-        ),
-        Padding(
-          padding: EdgeInsets.only(top: DT.size.bloomPeekOf(size)),
-          child: widget.hero,
-        ),
-      ],
+    final mascot = BloomMascot(
+      size: DT.size.mascotCompanionOf(context),
+      semanticsLabel: widget.semanticsLabel,
     );
+    return widget.builder(context, mascot);
   }
 }
 

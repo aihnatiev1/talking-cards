@@ -42,8 +42,9 @@ void main() {
   /// `card_reveal_screen`) may keep a stagger or two that is genuinely
   /// choreography, but the base beats should still come from `DT.motion`
   /// (the celebration beats already do — see `Celebration`). Idle loops
-  /// (`daily_hero_card`, `streak_chip`, `pack_grid_card` shimmer) hand a
-  /// `period` to `AmbientLoop` — a `DTMotion.ambient*` step is the way out.
+  /// (`streak_chip`, `pack_grid_card` shimmer) hand a `period` to
+  /// `AmbientLoop` — a `DTMotion.ambient*` step is the way out
+  /// (`daily_hero_card` already reads `DT.motion.ambientBreath`).
   /// Everything else is plain migration debt.
   const durationLiteralDebt = {
     'lib/screens/articulation_screen.dart',
@@ -66,7 +67,6 @@ void main() {
     'lib/tabs/packs_tab.dart',
     'lib/widgets/activity_chart.dart',
     'lib/widgets/bubble_pop.dart',
-    'lib/widgets/daily_hero_card.dart',
     'lib/widgets/flash_card.dart',
     'lib/widgets/pack_grid_card.dart',
     'lib/widgets/playful_navigation_bar.dart',
