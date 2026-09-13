@@ -47,6 +47,9 @@ class QuizState {
 class QuizNotifier extends StateNotifier<QuizState?> {
   final List<CardModel> _allCards;
   final _random = Random();
+  int _mistakesThisQuestion = 0;
+  int _lastAnswerQuality = 0;
+  int get lastAnswerQuality => _lastAnswerQuality;
 
   /// Cards already shown as correct answer in current session (across restarts).
   final Set<String> _globalUsedIds = {};
@@ -89,13 +92,17 @@ class QuizNotifier extends StateNotifier<QuizState?> {
 
     // Priority 1: mistakes not yet re-asked this round
     final mistakeCards = playable
-        .where((c) => _mistakeIds.contains(c.id) && !_roundUsedIds.contains(c.id))
+        .where(
+          (c) => _mistakeIds.contains(c.id) && !_roundUsedIds.contains(c.id),
+        )
         .toList();
 
     // Priority 2: never seen globally and not used this round
     final freshCards = playable
-        .where((c) =>
-            !_globalUsedIds.contains(c.id) && !_roundUsedIds.contains(c.id))
+        .where(
+          (c) =>
+              !_globalUsedIds.contains(c.id) && !_roundUsedIds.contains(c.id),
+        )
         .toList();
 
     // Priority 3: anything not used this round
@@ -112,7 +119,8 @@ class QuizNotifier extends StateNotifier<QuizState?> {
       pool = anyAvailable;
     } else {
       // Everything exhausted — finish
-      state = state?.copyWith(finished: true) ??
+      state =
+          state?.copyWith(finished: true) ??
           QuizState(
             correctCard: playable.first,
             options: [],
@@ -130,12 +138,13 @@ class QuizNotifier extends StateNotifier<QuizState?> {
     _globalUsedIds.add(correct.id);
 
     // 3 wrong options (different from correct)
-    final wrong = (playable.where((c) => c.id != correct.id).toList()
-          ..shuffle(_random))
-        .take(3)
-        .toList();
+    final wrong =
+        (playable.where((c) => c.id != correct.id).toList()..shuffle(_random))
+            .take(3)
+            .toList();
     final options = [correct, ...wrong]..shuffle(_random);
 
+    _mistakesThisQuestion = 0;
     state = QuizState(
       correctCard: correct,
       options: options,
@@ -148,19 +157,17 @@ class QuizNotifier extends StateNotifier<QuizState?> {
   void answer(String cardId) {
     if (state == null || state!.finished) return;
     final isCorrect = cardId == state!.correctCard.id;
+    _lastAnswerQuality = isCorrect ? (_mistakesThisQuestion == 0 ? 5 : 3) : 2;
+    if (!isCorrect) _mistakesThisQuestion++;
+
     if (isCorrect) {
       // Remove from mistakes if child got it right on retry
       _mistakeIds.remove(state!.correctCard.id);
-      state = state!.copyWith(
-        score: state!.score + 1,
-        lastAnswerCorrect: true,
-      );
+      state = state!.copyWith(score: state!.score + 1, lastAnswerCorrect: true);
     } else {
       // Remember the mistake for future rounds
       _mistakeIds.add(state!.correctCard.id);
-      state = state!.copyWith(
-        lastAnswerCorrect: false,
-      );
+      state = state!.copyWith(lastAnswerCorrect: false);
     }
   }
 

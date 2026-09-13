@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
@@ -15,12 +14,13 @@ import '../providers/srs_provider.dart';
 import '../providers/weak_words_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
-import '../utils/confetti_overlay_mixin.dart';
+import '../services/feedback_service.dart';
 import '../utils/constants.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
-import '../widgets/bloom_mascot.dart';
 import '../widgets/card_image.dart';
+import '../widgets/game_celebration_overlay.dart';
+import '../widgets/kid_screen.dart';
 
 /// Pop-It-style sensory toy:
 /// bubbles drift up from the bottom, child taps to pop, the card image inside
@@ -136,9 +136,7 @@ class _PopRequest {
 // ─────────────────────────────────────────────
 
 class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
-    with
-        SingleTickerProviderStateMixin,
-        ConfettiOverlayMixin<BubblePopScreen> {
+    with SingleTickerProviderStateMixin {
   late final Ticker _ticker;
   /// Bumped once per ticker frame; only the bubble layer listens.
   final ValueNotifier<int> _frame = ValueNotifier(0);
@@ -176,11 +174,9 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
   int _msSinceSpawn = 0;
   int _spawnIntervalMs = 900;
   bool _ended = false;
-  bool _earlyExit = false; // true when user closed via X (no celebration)
 
   // Cached at first build because we ticker-update without [setState].
   Size? _screenSize;
-  double _topPadding = 0;
 
   @override
   void initState() {
@@ -203,7 +199,6 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     _ticker.stop();
     _ticker.dispose();
     _frame.dispose();
-    disposeConfetti();
     super.dispose();
   }
 
@@ -238,7 +233,6 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     _elapsedMs = 0;
     _msSinceSpawn = 0;
     _ended = false;
-    _earlyExit = false;
     _spawnIntervalMs = _randomSpawnInterval();
     _lastTick = Duration.zero;
 
@@ -256,11 +250,10 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     if (!_ticker.isActive) _ticker.start();
   }
 
-  /// Stops physics and shows the celebration overlay (unless [earlyExit]).
+  /// Stops physics and shows the round celebration (unless [earlyExit]).
   void _endRound({bool earlyExit = false}) {
     if (_ended) return;
     _ended = true;
-    _earlyExit = earlyExit;
     _ticker.stop();
     _live.clear();
 
@@ -269,10 +262,23 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
       ref.read(dailyQuestProvider.notifier).completeTask(QuestTask.playQuiz);
       AnalyticsService.instance
           .logGameComplete('bubble_pop_${_mode.name}', _popped);
-      // Burst of confetti behind the celebration card.
+      // The shared round celebration (confetti, Bloom, tada + praise) over
+      // the finished board; it pops itself before calling back.
+      final popped = _popped;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        showConfetti();
+        final s = AppS(ref.read(languageProvider) == 'en');
+        showGameCelebration(
+          context,
+          isEn: s.isEn,
+          childName: _childName,
+          subtitle: s(
+            'Ти лопнув $popped бульок!',
+            'You popped $popped bubbles!',
+          ),
+          onAgain: () => _startRound(mode: _mode),
+          onDone: () => Navigator.of(context).pop(),
+        );
       });
     }
 
@@ -438,9 +444,9 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
   void _onBubbleTap(_LiveBubble b) {
     if (_ended) return;
 
-    HapticFeedback.mediumImpact();
-    // Instant "pop" SFX layered over the narrator — never cuts the word off.
-    AudioService.instance.playSfx('pop');
+    // Instant pop + haptic layered over the narrator — never cuts the word
+    // off (FeedbackEvent.tap: a pitch-varied pop, so twenty pops differ).
+    FeedbackService.instance.event(FeedbackEvent.tap);
     AudioService.instance.playWordOnly(b.card.audioKey, b.card.sound);
 
     setState(() {
@@ -501,16 +507,18 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isEn = ref.watch(languageProvider) == 'en';
-    final s = AppS(isEn);
-
-    return Scaffold(
-      backgroundColor: const Color(0xFFEAF6FF), // sky-water
+    // Shell: close top-left, wordless fill-up pill under the header, the
+    // count as the one piece of text a three-year-old can already read.
+    return KidScreen.game(
+      accent: kAccent,
+      background: DT.skyTint,
+      progress: (_popped / _kRoundTargetPops).clamp(0.0, 1.0),
+      trailing: _CountPill(popped: _popped, target: _kRoundTargetPops),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          // Cache layout for the ticker.
+          // Cache layout for the ticker. The box is the play area under the
+          // shell's header, so bubbles no longer drift under the controls.
           _screenSize = Size(constraints.maxWidth, constraints.maxHeight);
-          _topPadding = MediaQuery.of(context).padding.top;
 
           return Stack(
             children: [
@@ -570,19 +578,6 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
                   ),
                 ),
 
-              // Top bar — close button + wordless fill-up progress bar.
-              Positioned(
-                left: 0,
-                right: 0,
-                top: _topPadding,
-                child: _TopBar(
-                  progress: _popped / _kRoundTargetPops,
-                  popped: _popped,
-                  target: _kRoundTargetPops,
-                  onClose: () => Navigator.of(context).pop(),
-                ),
-              ),
-
               // Praise flash. Above the bubbles so it reads, below the
               // celebration overlay, and IgnorePointer inside so it can
               // never swallow a tap meant for a bubble.
@@ -595,21 +590,6 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
                     onDone: () {
                       if (mounted) setState(() => _praise = null);
                     },
-                  ),
-                ),
-
-              // Celebration overlay.
-              if (_ended && !_earlyExit)
-                Positioned.fill(
-                  child: _CelebrationOverlay(
-                    s: s,
-                    popped: _popped,
-                    childName: _childName,
-                    onAgain: () {
-                      // Restart with the same mode.
-                      _startRound(mode: _mode);
-                    },
-                    onDone: () => Navigator.of(context).pop(),
                   ),
                 ),
             ],
@@ -936,87 +916,34 @@ class _CardInside extends StatelessWidget {
 //  Top bar: close button + fill-up progress bar
 // ─────────────────────────────────────────────
 
-class _TopBar extends StatelessWidget {
-  /// 0..1 fraction of the round target already popped.
-  final double progress;
+class _CountPill extends StatelessWidget {
   final int popped;
   final int target;
-  final VoidCallback onClose;
 
-  const _TopBar({
-    required this.progress,
-    required this.popped,
-    required this.target,
-    required this.onClose,
-  });
+  const _CountPill({required this.popped, required this.target});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-      child: Row(
-        children: [
-          // Close X — 56dp hit target for reliable toddler/parent taps.
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: onClose,
-            child: SizedBox(
-              width: 56,
-              height: 56,
-              child: Center(
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: DT.shadowSoft(kAccent),
-                  ),
-                  child: const Icon(Icons.close_rounded,
-                      size: 24, color: DT.textPrimary),
-                ),
-              ),
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 72),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: kAccent,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: DT.shadowSoft(kAccent),
+          ),
+          child: Text(
+            '$popped/$target',
+            style: const TextStyle(
+              fontFamily: DT.kidFont,
+              fontVariations: [FontVariation('wght', 900)],
+              fontSize: 16,
+              color: Colors.white,
             ),
           ),
-          const SizedBox(width: 12),
-          // Thin wordless progress bar that fills as bubbles pop — no
-          // numbers or timers in the child's play zone.
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(5),
-              child: LinearProgressIndicator(
-                value: progress.clamp(0.0, 1.0),
-                minHeight: 10,
-                backgroundColor: Colors.white.withValues(alpha: 0.7),
-                valueColor: const AlwaysStoppedAnimation<Color>(kAccent),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          // The bar alone said "something is loading" on a big screen —
-          // a mostly empty play area with a strip across the top. The
-          // count is the same pill the other games use, and a number is
-          // the one piece of text a three-year-old can already read.
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: kAccent,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: DT.shadowSoft(kAccent),
-            ),
-            child: Text(
-              '$popped/$target',
-              style: const TextStyle(
-                fontFamily: DT.kidFont,
-                fontVariations: [FontVariation('wght', 900)],
-                fontSize: 16,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          const SizedBox(width: 4),
-        ],
+        ),
       ),
     );
   }
@@ -1097,116 +1024,6 @@ class _PraiseFlashState extends State<_PraiseFlash>
           ),
         ),
       ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────
-//  Celebration overlay
-// ─────────────────────────────────────────────
-
-class _CelebrationOverlay extends StatelessWidget {
-  final AppS s;
-  final int popped;
-  final String childName;
-  final VoidCallback onAgain;
-  final VoidCallback onDone;
-
-  const _CelebrationOverlay({
-    required this.s,
-    required this.popped,
-    required this.childName,
-    required this.onAgain,
-    required this.onDone,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        // Backdrop.
-        const Positioned.fill(
-          child: ColoredBox(color: Color(0xCC000000)),
-        ),
-        Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: 320,
-              minWidth: 0,
-            ),
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              padding: const EdgeInsets.all(28),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(28),
-                boxShadow: DT.shadowLift(kAccent),
-              ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                BloomMascot(
-                  size: 96 * screenScale(context).clamp(1.0, 1.2),
-                  emotion: BloomEmotion.waving,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  s('Молодець, $childName!', 'Great job, $childName!'),
-                  textAlign: TextAlign.center,
-                  style: DT.h1.copyWith(fontSize: 22),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  s(
-                    'Ти лопнув $popped бульок!',
-                    'You popped $popped bubbles!',
-                  ),
-                  textAlign: TextAlign.center,
-                  style: DT.body.copyWith(fontSize: 16),
-                ),
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: onAgain,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: kAccent,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      textStyle: DT.tileTitle,
-                    ),
-                    child: Text(s('Ще раз', 'Again')),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: onDone,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: kAccent,
-                      side: BorderSide(
-                        color: kAccent.withValues(alpha: 0.6),
-                        width: 2,
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      textStyle: DT.tileTitle,
-                    ),
-                    child: Text(s('Готово', 'Done')),
-                  ),
-                ),
-              ],
-            ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
@@ -13,10 +12,13 @@ import '../providers/language_provider.dart';
 import '../providers/profile_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
-import '../utils/confetti_overlay_mixin.dart';
-import '../utils/l10n.dart';
+import '../services/feedback_service.dart';
+import '../utils/design_tokens.dart';
+import '../widgets/answer_feedback.dart';
 import '../widgets/card_image.dart';
 import '../widgets/game_celebration_overlay.dart';
+import '../widgets/kid_screen.dart';
+import '../widgets/kid_tap.dart';
 
 // ─────────────────────────────────────────────
 //  Data
@@ -28,6 +30,9 @@ class _Tile {
   final int tileId; // unique across the board
   bool isFlipped = false;
   bool isMatched = false;
+
+  /// Mismatch counter — every increment nudges the face-up tile once.
+  int nudge = 0;
 
   _Tile({
     required this.card,
@@ -59,8 +64,7 @@ class MemoryMatchScreen extends ConsumerStatefulWidget {
   ConsumerState<MemoryMatchScreen> createState() => _MemoryMatchScreenState();
 }
 
-class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen>
-    with ConfettiOverlayMixin {
+class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
   late List<_Tile> _tiles;
   int? _firstIndex; // index of first flipped tile awaiting a pair
   bool _isLocked = false; // true while showing a mismatch before flipping back
@@ -86,12 +90,6 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen>
         isEn: ref.read(languageProvider) == 'en',
       );
     });
-  }
-
-  @override
-  void dispose() {
-    disposeConfetti();
-    super.dispose();
   }
 
   // ── Setup ───────────────────────────────────
@@ -129,7 +127,8 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen>
     final tile = _tiles[index];
     if (tile.isFlipped || tile.isMatched) return;
 
-    HapticFeedback.lightImpact();
+    // Light haptic already fired on pointer-down inside KidTap (v2); a
+    // second one here felt like a double-tap.
     AudioService.instance.playWordOnly(tile.card.audioKey, tile.card.sound);
 
     setState(() => _tiles[index].isFlipped = true);
@@ -151,30 +150,21 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen>
   }
 
   void _onMatch(int a, int b) {
-    HapticFeedback.mediumImpact();
-    AudioService.instance.playSfx('ding');
+    FeedbackService.instance.event(FeedbackEvent.correct);
     setState(() {
       _tiles[a].isMatched = true;
       _tiles[b].isMatched = true;
       _matched++;
     });
-    // Mini-celebration for every successful pair (not just the final match)
-    // — toddlers need immediate reinforcement to learn the loop.
+    // Both tiles pop, frame in success and burst from their own centre
+    // (AnswerFrame) — immediate reinforcement for every pair, not just
+    // the final match.
     if (_matched < _activePairs) {
       AudioService.instance
           .playPraise(isEn: ref.read(languageProvider) == 'en');
-      final size = MediaQuery.of(context).size;
-      showConfetti(
-        origin: Offset(size.width / 2, size.height / 2.2),
-        linger: const Duration(milliseconds: 700),
-      );
     } else {
-      HapticFeedback.heavyImpact();
-      final size = MediaQuery.of(context).size;
-      showConfetti(
-        origin: Offset(size.width / 2, size.height / 2),
-        linger: const Duration(milliseconds: 2000),
-      );
+      // The last pair: no extra accent here — the round celebration below
+      // brings the tada + haptic (FeedbackEvent.roundDone).
       _wins++;
       Future.delayed(const Duration(milliseconds: 1200), () {
         if (!mounted) return;
@@ -202,7 +192,13 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen>
   }
 
   void _onMismatch(int a, int b) {
-    HapticFeedback.mediumImpact();
+    // Soft pop + one nudge of both cards, then they simply turn back —
+    // no cross, no red (G10).
+    FeedbackService.instance.event(FeedbackEvent.wrong);
+    setState(() {
+      _tiles[a].nudge++;
+      _tiles[b].nudge++;
+    });
     _isLocked = true;
     Future.delayed(const Duration(milliseconds: 900), () {
       if (!mounted) return;
@@ -218,70 +214,43 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen>
 
   @override
   Widget build(BuildContext context) {
-    final s = AppS(ref.read(languageProvider) == 'en');
     final color = widget.pack.color;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: isDark
-          ? const Color(0xFF1A1A2E)
-          : const Color(0xFFFAFAFF), // neutral — pack color used as accent only
-      body: SafeArea(
-          child: Column(
-            children: [
-              // ── Top bar ──────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.arrow_back_ios_new_rounded,
-                          color: isDark ? Colors.white70 : Colors.black54,
-                          size: 22),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                    // No pack subtitle — cards may come from several packs,
-                    // so naming one pack here would simply be wrong.
-                    Expanded(
-                      child: Text(
-                        s('Знайди пару', 'Find the pair'),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: isDark ? Colors.white : Colors.black87,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                    // Matched pairs badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: color,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: color.withValues(alpha: 0.4),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Text(
-                        '$_matched/$_activePairs',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                  ],
-                ),
+    // The kid zone has no dark palette by design; the one dark surface is
+    // the parent scaffold's, reused here so a dark-mode tablet is not
+    // blinding at bedtime.
+    return KidScreen.game(
+      accent: color,
+      background: isDark ? DT.bgDark : DT.bgWarm,
+      // No title: cards may come from several packs, so naming one would be
+      // wrong, and "Find the pair" is spoken, not read.
+      trailing: SizedBox(
+        width: 72,
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 6,
+            ),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: DT.shadowSoft(color),
+            ),
+            child: Text(
+              '$_matched/$_activePairs',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
               ),
-
+            ),
+          ),
+        ),
+      ),
+      body: Column(
+            children: [
               // ── Pair progress dots ─────────────
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
@@ -364,7 +333,6 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen>
 
             ],
           ),
-        ),
     );
   }
 }
@@ -391,18 +359,14 @@ class _TileWidget extends StatefulWidget {
 }
 
 class _TileWidgetState extends State<_TileWidget>
-    with TickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
   late final Animation<double> _anim;
-
-  late final AnimationController _bounceCtrl;
-  late final Animation<double> _bounceScale;
 
   // Track last-processed state to avoid mutable-object comparison issue.
   // _Tile is mutated in-place → old.tile == widget.tile (same ref), so
   // comparing old.tile.isFlipped gives the NEW value, not the old one.
   bool _lastFaceUp = false;
-  bool _lastMatched = false;
 
   bool get _faceUp => widget.tile.isFlipped || widget.tile.isMatched;
 
@@ -416,16 +380,6 @@ class _TileWidgetState extends State<_TileWidget>
     _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
     _lastFaceUp = _faceUp;
     if (_faceUp) _ctrl.value = 1.0;
-
-    _bounceCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 320),
-    );
-    _bounceScale = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.18), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: 1.18, end: 1.0), weight: 1),
-    ]).animate(CurvedAnimation(parent: _bounceCtrl, curve: Curves.easeInOut));
-    _lastMatched = widget.tile.isMatched;
   }
 
   @override
@@ -435,28 +389,27 @@ class _TileWidgetState extends State<_TileWidget>
     if (nowFace && !_lastFaceUp) _ctrl.forward();
     if (!nowFace && _lastFaceUp) _ctrl.reverse();
     _lastFaceUp = nowFace;
-
-    final nowMatched = widget.tile.isMatched;
-    if (nowMatched && !_lastMatched) _bounceCtrl.forward(from: 0);
-    _lastMatched = nowMatched;
   }
 
   @override
   void dispose() {
     _ctrl.dispose();
-    _bounceCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return KidTap(
       onTap: widget.onTap,
+      // The tile answers with its word (playWordOnly), not a pop.
+      sound: KidSound.none,
       child: AnimatedBuilder(
-        animation: Listenable.merge([_anim, _bounceCtrl]),
+        animation: _anim,
         builder: (_, __) {
           final angle = _anim.value * pi;
           final showFront = angle > pi / 2;
+          // The success pop and the miss nudge live on the front face's
+          // AnswerFrame — the same look as every other game tile.
           Widget face = showFront
               ? Transform(
                   transform: Matrix4.identity()..rotateY(pi),
@@ -467,15 +420,12 @@ class _TileWidgetState extends State<_TileWidget>
               : _BackFace(
                   packColor: widget.packColor, packIcon: widget.packIcon);
 
-          return Transform.scale(
-            scale: _bounceScale.value,
-            child: Transform(
-              transform: Matrix4.identity()
-                ..setEntry(3, 2, 0.001)
-                ..rotateY(angle),
-              alignment: Alignment.center,
-              child: face,
-            ),
+          return Transform(
+            transform: Matrix4.identity()
+              ..setEntry(3, 2, 0.001)
+              ..rotateY(angle),
+            alignment: Alignment.center,
+            child: face,
           );
         },
       ),
@@ -566,31 +516,12 @@ class _FrontFace extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final matched = tile.isMatched;
-    return Container(
-      decoration: BoxDecoration(
-        color: matched ? Colors.white : tile.card.colorBg,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: matched
-              ? const Color(0xFF4CAF50)
-              : tile.card.colorAccent.withValues(alpha: 0.5),
-          width: matched ? 2.5 : 1.5,
-        ),
-        boxShadow: [
-          if (matched)
-            BoxShadow(
-              color: const Color(0xFF4CAF50).withValues(alpha: 0.35),
-              blurRadius: 10,
-              spreadRadius: 2,
-            )
-          else
-            BoxShadow(
-              color: tile.card.colorAccent.withValues(alpha: 0.15),
-              blurRadius: 6,
-              offset: const Offset(0, 3),
-            ),
-        ],
-      ),
+    return AnswerFrame(
+      background: matched ? Colors.white : tile.card.colorBg,
+      accent: tile.card.colorAccent,
+      mark: matched ? AnswerMark.correct : AnswerMark.none,
+      nudge: tile.nudge,
+      radius: 14,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -626,9 +557,7 @@ class _FrontFace extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
-                color: matched
-                    ? const Color(0xFF4CAF50)
-                    : tile.card.colorAccent,
+                color: matched ? DT.success : tile.card.colorAccent,
                 letterSpacing: 0.2,
               ),
             ),

@@ -15,24 +15,12 @@ import '../screens/opposite_game_screen.dart';
 import '../screens/repeat_game_screen.dart';
 import '../services/audio_service.dart';
 import '../services/paywall_flow.dart';
+import '../utils/app_icons.dart';
 import '../utils/design_tokens.dart';
+import '../utils/kid_routes.dart';
 import '../providers/content_pack_provider.dart';
 import '../widgets/card_image.dart';
 import '../widgets/kid_tap.dart';
-
-/// Smooth fade+scale transition for games.
-Route<T> _gameRoute<T>(Widget page) => PageRouteBuilder<T>(
-      pageBuilder: (_, __, ___) => page,
-      transitionDuration: const Duration(milliseconds: 260),
-      reverseTransitionDuration: const Duration(milliseconds: 200),
-      transitionsBuilder: (_, animation, __, child) {
-        final fade = CurvedAnimation(parent: animation, curve: Curves.easeOut);
-        final scale = Tween<double>(begin: 0.93, end: 1.0).animate(
-            CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
-        return FadeTransition(
-            opacity: fade, child: ScaleTransition(scale: scale, child: child));
-      },
-    );
 
 class GamesTab extends ConsumerStatefulWidget {
   const GamesTab({super.key});
@@ -49,8 +37,10 @@ class _GamesTabState extends ConsumerState<GamesTab> {
     final List<CardModel> cards;
     if (lang == 'en') {
       cards = allCards
-          .where((c) =>
-              c.image != null && AudioService.instance.hasSound(c.audioKey))
+          .where(
+            (c) =>
+                c.image != null && AudioService.instance.hasSound(c.audioKey),
+          )
           .toList();
     } else {
       cards = allCards
@@ -58,7 +48,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
           .toList();
     }
     if (cards.length < 4) return;
-    _openGame(_gameRoute(GuessScreen(cards: cards)));
+    _openGame(KidRoutes.game(GuessScreen(cards: cards)));
   }
 
   /// Every game goes through here so the one automatic review ask a
@@ -80,29 +70,45 @@ class _GamesTabState extends ConsumerState<GamesTab> {
     );
     // Toddler entry: start with 3 pairs (2×3 grid); the screen escalates to
     // 4 pairs by itself after 2 wins in the same session.
-    _openGame(_gameRoute(
-        MemoryMatchScreen(pack: pack, cards: playable, pairCount: 3)));
+    _openGame(
+      KidRoutes.game(MemoryMatchScreen(pack: pack, cards: playable, pairCount: 3)),
+    );
   }
 
   static const _oddOneOutExclude = {
-    'adjectives', 'actions', 'opposites', 'phrases', 'rozmovlyalky', 'poems',
-    'sound_r', 'sound_l', 'sound_sh', 'sound_s', 'sound_z',
-    'sound_zh', 'sound_ch', 'sound_shch', 'sound_ts',
-    'en_actions', 'en_opposites',
+    'adjectives',
+    'actions',
+    'opposites',
+    'phrases',
+    'rozmovlyalky',
+    'poems',
+    'sound_r',
+    'sound_l',
+    'sound_sh',
+    'sound_s',
+    'sound_z',
+    'sound_zh',
+    'sound_ch',
+    'sound_shch',
+    'sound_ts',
+    'en_actions',
+    'en_opposites',
   };
 
   void _openOddOneOut(List<PackModel> packs) {
     final lang = ref.read(languageProvider);
     final playablePacks = packs
-        .where((p) =>
-            !p.id.startsWith('_') &&
-            !p.isLocked &&
-            !_oddOneOutExclude.contains(p.id) &&
-            p.cards.length >= 4 &&
-            (lang == 'en' ? p.cards.any((c) => c.image != null) : true))
+        .where(
+          (p) =>
+              !p.id.startsWith('_') &&
+              !p.isLocked &&
+              !_oddOneOutExclude.contains(p.id) &&
+              p.cards.length >= 4 &&
+              (lang == 'en' ? p.cards.any((c) => c.image != null) : true),
+        )
         .toList();
     if (playablePacks.length < 2) return;
-    _openGame(_gameRoute(OddOneOutScreen(packs: playablePacks)));
+    _openGame(KidRoutes.game(OddOneOutScreen(packs: playablePacks)));
   }
 
   void _openRepeatGame(List<PackModel> packs) {
@@ -111,17 +117,19 @@ class _GamesTabState extends ConsumerState<GamesTab> {
     // single words). Also require a webp illustration so the child has
     // something to anchor the word to visually.
     final cards = packs
-        .where((p) =>
-            !p.id.startsWith('_') && !PackModel.nonWordPackIds.contains(p.id))
+        .where(
+          (p) =>
+              !p.id.startsWith('_') && !PackModel.nonWordPackIds.contains(p.id),
+        )
         .expand((p) => p.cards)
         .where((c) => c.image != null)
         .toList();
     if (cards.length < 4) return;
-    _openGame(_gameRoute(RepeatGameScreen(cards: cards)));
+    _openGame(KidRoutes.game(RepeatGameScreen(cards: cards)));
   }
 
   void _openArticulation() {
-    _openGame(_gameRoute(const ArticulationScreen()));
+    _openGame(KidRoutes.game(const ArticulationScreen()));
   }
 
   void _openOppositeGame(List<PackModel> packs) {
@@ -129,8 +137,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
     final id = isEn ? 'en_opposites' : 'opposites';
     final oppPack = packs.where((p) => p.id == id).firstOrNull;
     if (oppPack == null || oppPack.cards.length < 4) return;
-    Navigator.of(context)
-        .push(_gameRoute(OppositeGameScreen(pack: oppPack)));
+    Navigator.of(context).push(KidRoutes.game(OppositeGameScreen(pack: oppPack)));
   }
 
   /// Pick the first card with a webp image from the given pool.
@@ -167,12 +174,15 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                 const SizedBox(height: 16),
                 Text(
                   isEn ? 'Oops, didn\'t load' : 'Ой, не завантажилось',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton.icon(
                   onPressed: () => ref.invalidate(packsProvider),
-                  icon: const Icon(Icons.refresh_rounded),
+                  icon: const AppIconView(AppIcon.replay, size: 22),
                   label: Text(isEn ? 'Try again' : 'Спробувати ще раз'),
                 ),
               ],
@@ -193,22 +203,26 @@ class _GamesTabState extends ConsumerState<GamesTab> {
               .toList();
           final playableCount = isEn
               ? allCards
-                  .where((c) =>
-                      c.image != null &&
-                      AudioService.instance.hasSound(c.audioKey))
-                  .length
+                    .where(
+                      (c) =>
+                          c.image != null &&
+                          AudioService.instance.hasSound(c.audioKey),
+                    )
+                    .length
               : allCards
-                  .where((c) => c.audioKey != null && c.image != null)
-                  .length;
+                    .where((c) => c.audioKey != null && c.image != null)
+                    .length;
 
           final toddlerGames = <_BigGame>[
             _BigGame(
               title: isEn ? 'Guess the word' : 'Вгадай звук',
-              subtitle: isEn ? 'Listen and tap the card' : 'Слухай і тисни картку',
+              subtitle: isEn
+                  ? 'Listen and tap the card'
+                  : 'Слухай і тисни картку',
               color: DT.sky,
               bg: DT.skyTint,
               thumb: _pickThumb(allCards, skip: 0),
-              badge: '🎧',
+              badge: AppIcon.gameGuess,
               onTap: playableCount >= 4 ? () => _openQuiz(allCards) : null,
               lockedHint: isEn
                   ? 'Open more cards in Packs first'
@@ -216,12 +230,16 @@ class _GamesTabState extends ConsumerState<GamesTab> {
             ),
             _BigGame(
               title: isEn ? 'Find the pair' : 'Знайди пару',
-              subtitle: isEn ? 'Flip cards, match pairs' : 'Відкривай і шукай пари',
+              subtitle: isEn
+                  ? 'Flip cards, match pairs'
+                  : 'Відкривай і шукай пари',
               color: DT.mint,
               bg: DT.mintTint,
               thumb: _pickThumb(allCards, skip: 5),
-              badge: '🧠',
-              onTap: playableCount >= 6 ? () => _openMemoryMatch(allCards) : null,
+              badge: AppIcon.gameMatch,
+              onTap: playableCount >= 6
+                  ? () => _openMemoryMatch(allCards)
+                  : null,
               lockedHint: isEn
                   ? 'Open more cards in Packs first'
                   : 'Спочатку відкрий більше карток',
@@ -232,10 +250,11 @@ class _GamesTabState extends ConsumerState<GamesTab> {
               color: DT.coral,
               bg: DT.coralTint,
               thumb: _pickThumb(allCards, skip: 9),
-              badge: '🫧',
+              badge: AppIcon.gameBubbles,
               onTap: playableCount >= 5
-                  ? () => Navigator.of(context)
-                      .push(_gameRoute(const BubblePopScreen()))
+                  ? () => Navigator.of(
+                      context,
+                    ).push(KidRoutes.game(const BubblePopScreen()))
                   : null,
               lockedHint: isEn
                   ? 'Open more cards in Packs first'
@@ -243,11 +262,13 @@ class _GamesTabState extends ConsumerState<GamesTab> {
             ),
             _BigGame(
               title: isEn ? 'Repeat after me' : 'Повтори за мною',
-              subtitle: isEn ? 'Say the word, grown-up taps' : 'Скажи слово, дорослий натискає',
+              subtitle: isEn
+                  ? 'Say the word, grown-up taps'
+                  : 'Скажи слово, дорослий натискає',
               color: DT.peach,
               bg: DT.peachTint,
               thumb: _pickThumb(allCards, skip: 12),
-              badge: '🎤',
+              badge: AppIcon.gameRepeat,
               onTap: playableCount >= 4 ? () => _openRepeatGame(packs) : null,
               lockedHint: isEn
                   ? 'Open more cards in Packs first'
@@ -264,29 +285,33 @@ class _GamesTabState extends ConsumerState<GamesTab> {
               color: DT.violet,
               bg: DT.violetTint,
               thumb: null,
-              badge: '👅',
+              badge: AppIcon.gameArticulation,
               onTap: _openArticulation,
               lockedHint: '',
             ),
           ];
 
           final advancedPacks = packs
-              .where((p) =>
-                  !p.id.startsWith('_') &&
-                  !p.isLocked &&
-                  !_oddOneOutExclude.contains(p.id) &&
-                  p.cards.length >= 4 &&
-                  (isEn ? p.cards.any((c) => c.image != null) : true))
+              .where(
+                (p) =>
+                    !p.id.startsWith('_') &&
+                    !p.isLocked &&
+                    !_oddOneOutExclude.contains(p.id) &&
+                    p.cards.length >= 4 &&
+                    (isEn ? p.cards.any((c) => c.image != null) : true),
+              )
               .toList();
           // Whether buying would actually help: a locked pack that would
           // qualify if it were open. Without this the hint can send a
           // parent to the paywall for something a purchase cannot fix.
-          final oddUnlockable = packs.any((p) =>
-              !p.id.startsWith('_') &&
-              p.isLocked &&
-              !_oddOneOutExclude.contains(p.id) &&
-              p.cards.length >= 4 &&
-              (isEn ? p.cards.any((c) => c.image != null) : true));
+          final oddUnlockable = packs.any(
+            (p) =>
+                !p.id.startsWith('_') &&
+                p.isLocked &&
+                !_oddOneOutExclude.contains(p.id) &&
+                p.cards.length >= 4 &&
+                (isEn ? p.cards.any((c) => c.image != null) : true),
+          );
           final oddShort = 2 - advancedPacks.length;
 
           final oppPackId = isEn ? 'en_opposites' : 'opposites';
@@ -297,11 +322,13 @@ class _GamesTabState extends ConsumerState<GamesTab> {
           final advancedGames = <_BigGame>[
             _BigGame(
               title: isEn ? 'Odd one out' : 'Знайди зайве',
-              subtitle: isEn ? 'Spot the different one' : 'Знайди не таке, як інші',
+              subtitle: isEn
+                  ? 'Spot the different one'
+                  : 'Знайди не таке, як інші',
               color: DT.violet,
               bg: DT.violetTint,
               thumb: _pickThumb(allCards, skip: 20),
-              badge: '🔍',
+              badge: AppIcon.gameOdd,
               onTap: advancedPacks.length >= 2
                   ? () => _openOddOneOut(packs)
                   : null,
@@ -311,32 +338,34 @@ class _GamesTabState extends ConsumerState<GamesTab> {
               // make the tap go there.
               lockedHint: isEn
                   ? (oddUnlockable
-                      ? 'This game needs 2 open packs — '
-                          '${oddShort == 1 ? "unlock one more" : "unlock two"}'
-                      : 'This game needs 2 packs with pictures')
+                        ? 'This game needs 2 open packs — '
+                              '${oddShort == 1 ? "unlock one more" : "unlock two"}'
+                        : 'This game needs 2 packs with pictures')
                   : (oddUnlockable
-                      ? 'Грі потрібні 2 відкриті паки — '
-                          'розблокуй ще ${oddShort == 1 ? "один" : "два"}'
-                      : 'Грі потрібні 2 паки з картинками'),
+                        ? 'Грі потрібні 2 відкриті паки — '
+                              'розблокуй ще ${oddShort == 1 ? "один" : "два"}'
+                        : 'Грі потрібні 2 паки з картинками'),
               onLockedTap: oddUnlockable
                   ? () => runPaywallFlow(context, ref, source: 'games_lock')
                   : null,
             ),
             _BigGame(
               title: isEn ? 'Opposites' : 'Протилежності',
-              subtitle: isEn ? 'Big↔small, hot↔cold' : 'Великий↔малий, тепло↔холод',
+              subtitle: isEn
+                  ? 'Big↔small, hot↔cold'
+                  : 'Великий↔малий, тепло↔холод',
               color: DT.pink,
               bg: DT.pinkTint,
               thumb: oppPack != null ? _pickThumb(oppPack.cards) : null,
-              badge: '↔️',
+              badge: AppIcon.gameOpposites,
               onTap: oppPlayable ? () => _openOppositeGame(packs) : null,
               lockedHint: isEn
                   ? (oppLocked
-                      ? 'Subscribe to unlock Opposites'
-                      : 'Opposites pack is empty')
+                        ? 'Subscribe to unlock Opposites'
+                        : 'Opposites pack is empty')
                   : (oppLocked
-                      ? 'Розблокуй пак «Протилежності»'
-                      : 'Пак «Протилежності» порожній'),
+                        ? 'Розблокуй пак «Протилежності»'
+                        : 'Пак «Протилежності» порожній'),
               onLockedTap: oppLocked
                   ? () => runPaywallFlow(context, ref, source: 'games_lock')
                   : null,
@@ -360,7 +389,45 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                 emoji: '👨‍👧',
               ),
               const SizedBox(height: 10),
-              _GameGrid(games: parentGames),
+              Column(
+                children: [
+                  for (final game in parentGames)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Material(
+                        color: DT.violetTint,
+                        borderRadius: BorderRadius.circular(22),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 18,
+                            vertical: 12,
+                          ),
+                          leading: const CircleAvatar(
+                            backgroundColor: Colors.white,
+                            child: AppIconView(
+                              AppIcon.gameArticulation,
+                              size: 28,
+                            ),
+                          ),
+                          title: Text(
+                            game.title,
+                            style: DT.tileTitle.copyWith(color: DT.textPrimary),
+                          ),
+                          subtitle: Text(game.subtitle),
+                          trailing: const AppIconView(
+                            AppIcon.play,
+                            size: 18,
+                            color: DT.textMuted,
+                          ),
+                          onTap: () {
+                            KidTap.feedback();
+                            game.onTap?.call();
+                          },
+                        ),
+                      ),
+                    ),
+                ],
+              ),
               const SizedBox(height: 22),
               _SectionHeader(
                 title: isEn ? 'For older kids' : 'Для старших',
@@ -387,9 +454,10 @@ class _BigGame {
   final Color color;
   final Color bg;
   final CardModel? thumb;
-  final String badge; // emoji shown as small floating sticker
+  final AppIcon badge; // small floating sticker in the tile's corner
   final VoidCallback? onTap;
   final String lockedHint;
+
   /// When the tile is in disabled state (`onTap == null`) and this callback
   /// is set, tapping invokes it instead of the default snackbar — used to
   /// route the user straight to the paywall when the lock is subscription-
@@ -424,16 +492,15 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(left: 4, top: 4),
-      child: Row(
+      child: Wrap(
+        crossAxisAlignment: WrapCrossAlignment.center,
+        runSpacing: 4,
         children: [
           Text(emoji, style: const TextStyle(fontSize: 22)),
           const SizedBox(width: 8),
           Text(title, style: DT.h2.copyWith(fontSize: 19)),
           const SizedBox(width: 8),
-          Text(
-            subtitle,
-            style: DT.caption.copyWith(fontSize: 13),
-          ),
+          Text(subtitle, style: DT.caption.copyWith(fontSize: 13)),
         ],
       ),
     );
@@ -446,44 +513,70 @@ class _GameGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 0.82,
-      ),
-      itemCount: games.length,
-      itemBuilder: (_, i) => _BigGameTile(game: games[i]),
+    return LayoutBuilder(
+      builder: (context, box) {
+        final scale = MediaQuery.textScalerOf(context).scale(16) / 16;
+        final columns = scale > 1.5 || box.maxWidth < 310
+            ? 1
+            : (box.maxWidth / 170).floor().clamp(2, 4);
+        final width = (box.maxWidth - (columns - 1) * 16) / columns;
+        double measure(String text, TextStyle style) {
+          final painter = TextPainter(
+            text: TextSpan(
+              text: text,
+              style: DefaultTextStyle.of(context).style.merge(style),
+            ),
+            textDirection: Directionality.of(context),
+            textScaler: MediaQuery.textScalerOf(context),
+            maxLines: 2,
+          )..layout(maxWidth: width - 28);
+          final height = painter.height;
+          painter.dispose();
+          return height;
+        }
+
+        double titleHeight = 0, subtitleHeight = 0;
+        for (final game in games) {
+          final title = measure(game.title, DT.tileTitle);
+          final subtitle = measure(
+            game.subtitle,
+            DT.body.copyWith(fontSize: 12),
+          );
+          if (title > titleHeight) titleHeight = title;
+          if (subtitle > subtitleHeight) subtitleHeight = subtitle;
+        }
+        final textHeight = titleHeight + subtitleHeight + 26;
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columns,
+            mainAxisSpacing: 18,
+            crossAxisSpacing: 16,
+            mainAxisExtent: width * .96 + textHeight + 4,
+          ),
+          itemCount: games.length,
+          itemBuilder: (_, i) =>
+              _BigGameTile(game: games[i], textHeight: textHeight),
+        );
+      },
     );
   }
 }
 
-class _BigGameTile extends StatefulWidget {
+class _BigGameTile extends StatelessWidget {
   final _BigGame game;
-  const _BigGameTile({required this.game});
-
-  @override
-  State<_BigGameTile> createState() => _BigGameTileState();
-}
-
-class _BigGameTileState extends State<_BigGameTile> {
-  bool _pressed = false;
+  final double textHeight;
+  const _BigGameTile({required this.game, required this.textHeight});
 
   @override
   Widget build(BuildContext context) {
-    final g = widget.game;
+    final g = game;
     final disabled = g.onTap == null;
 
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) => setState(() => _pressed = false),
-      onTapCancel: () => setState(() => _pressed = false),
+    // Locked or not, the tap itself is answered (audit #13, #23).
+    return KidTap(
       onTap: () {
-        // Locked or not, the tap itself is answered (audit #13, #23).
-        KidTap.feedback();
         if (disabled) {
           if (g.onLockedTap != null) {
             g.onLockedTap!();
@@ -507,113 +600,118 @@ class _BigGameTileState extends State<_BigGameTile> {
         }
         g.onTap?.call();
       },
-      child: AnimatedScale(
-        scale: _pressed ? 0.96 : 1.0,
-        duration: const Duration(milliseconds: 140),
-        curve: Curves.easeOut,
-        child: AnimatedOpacity(
-          opacity: disabled ? 0.55 : 1.0,
-          duration: const Duration(milliseconds: 150),
-          child: Container(
-            decoration: BoxDecoration(
-              color: g.bg,
-              borderRadius: BorderRadius.circular(DT.rLg + 2),
-              border: Border.all(
-                color: g.color.withValues(alpha: 0.25),
-                width: 2,
+      child: AnimatedOpacity(
+        opacity: disabled ? 0.85 : 1.0,
+        duration: const Duration(milliseconds: 150),
+        child: Container(
+          decoration: BoxDecoration(
+            color: g.bg,
+            borderRadius: BorderRadius.circular(DT.rLg + 2),
+            border: Border.all(color: Colors.white, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: g.color.withValues(alpha: .28),
+                offset: const Offset(0, 5),
               ),
-              boxShadow: DT.shadowSoft(g.color),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Illustration area
-                Expanded(
-                  flex: 5,
-                  child: Stack(
-                    children: [
-                      Positioned.fill(
-                        child: ClipRRect(
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(22),
-                            topRight: Radius.circular(22),
-                          ),
-                          child: Container(
-                            color: Colors.white.withValues(alpha: 0.5),
-                            child: CardImage(
-                              name: g.thumb?.image,
-                              fallbackEmoji: g.badge,
-                              padding: const EdgeInsets.all(14),
-                            ),
-                          ),
+              BoxShadow(
+                color: g.color.withValues(alpha: .12),
+                offset: const Offset(0, 9),
+                blurRadius: 15,
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Illustration area
+              Expanded(
+                flex: 5,
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(22),
+                          topRight: Radius.circular(22),
                         ),
-                      ),
-                      // Floating emoji badge
-                      Positioned(
-                        top: 10,
-                        left: 10,
                         child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: g.color.withValues(alpha: 0.3),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
+                          color: Colors.white.withValues(alpha: 0.5),
+                          child: CardImage(
+                            name: g.thumb?.image,
+                            // Never shown: `fallback` wins whenever there
+                            // is no picture, but the slot is non-nullable
+                            // by contract.
+                            fallbackEmoji: '•',
+                            fallback: AppIconView(g.badge, size: 64),
+                            padding: const EdgeInsets.all(4),
                           ),
-                          child: Text(g.badge,
-                              style: const TextStyle(fontSize: 18)),
                         ),
                       ),
-                      if (disabled)
-                        Positioned(
-                          top: 10,
-                          right: 10,
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
+                    ),
+                    // Floating sticker badge
+                    Positioned(
+                      top: 10,
+                      left: 10,
+                      child: Container(
+                        padding: const EdgeInsets.all(5),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: g.color.withValues(alpha: 0.3),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
                             ),
-                            child: const Text('🔒',
-                                style: TextStyle(fontSize: 16)),
-                          ),
+                          ],
                         ),
+                        child: AppIconView(g.badge, size: 24),
+                      ),
+                    ),
+                    if (disabled)
+                      const Positioned(
+                        top: 10,
+                        right: 10,
+                        // The smiling padlock (never grey), sticker-edged so
+                        // it reads on the thumbnail without a disc.
+                        child: AppIconView(
+                          AppIcon.lock,
+                          size: 30,
+                          sticker: true,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              // One measured caption height keeps artwork aligned across the row.
+              SizedBox(
+                height: textHeight,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        g.title,
+                        style: DT.tileTitle.copyWith(
+                          color: DT.onTint(g.color),
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        g.subtitle,
+                        style: DT.body.copyWith(fontSize: 12),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ],
                   ),
                 ),
-                // Text area
-                Expanded(
-                  flex: 3,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          g.title,
-                          style: DT.tileTitle.copyWith(color: g.color),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          g.subtitle,
-                          style: DT.body.copyWith(fontSize: 12),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

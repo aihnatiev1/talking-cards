@@ -1,4 +1,3 @@
-import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,9 +6,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
 import '../providers/content_pack_provider.dart';
+import '../utils/app_icons.dart';
 import '../utils/design_tokens.dart';
+import 'ambient_loop.dart';
+import 'app_icon_painters.dart';
 import 'card_image.dart';
 import 'kid_tap.dart';
+import 'pack_cover_hero.dart';
 
 class PackGridCard extends ConsumerStatefulWidget {
   final PackModel pack;
@@ -32,26 +35,13 @@ class PackGridCard extends ConsumerStatefulWidget {
 }
 
 class _PackGridCardState extends ConsumerState<PackGridCard>
-    with TickerProviderStateMixin {
-  late final AnimationController _shimmer;
-  Timer? _shimmerTimer;
+    with SingleTickerProviderStateMixin {
   late final AnimationController _wobble;
   late final Animation<double> _wobbleRotation;
-  bool _pressed = false;
 
   @override
   void initState() {
     super.initState();
-    _shimmer = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1400),
-    );
-    // Shimmer in periodic bursts, not forever — see StreakChip for why.
-    if (widget.isSeasonal) {
-      _runShimmerBurst();
-      _shimmerTimer = Timer.periodic(
-          const Duration(seconds: 30), (_) => _runShimmerBurst());
-    }
     _wobble = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
@@ -65,17 +55,8 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
     ]).animate(_wobble);
   }
 
-  Future<void> _runShimmerBurst() async {
-    for (var i = 0; i < 2 && mounted; i++) {
-      await _shimmer.forward();
-      await _shimmer.reverse();
-    }
-  }
-
   @override
   void dispose() {
-    _shimmerTimer?.cancel();
-    _shimmer.dispose();
     _wobble.dispose();
     super.dispose();
   }
@@ -113,53 +94,48 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
         !pack.isFree &&
         !ref.watch(contentPackProvider).isReady;
 
-    Widget tile = GestureDetector(
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) => setState(() => _pressed = false),
-      onTapCancel: () => setState(() => _pressed = false),
-      onTap: () {
-        KidTap.feedback();
-        widget.onTap();
-      },
+    Widget tile = KidTap(
+      onTap: widget.onTap,
       onLongPress: _triggerWobble,
-      child: AnimatedScale(
-        scale: _pressed ? DT.pressScale : 1.0,
-        duration: DT.pressMs,
-        curve: Curves.easeOut,
-        child: Container(
-          // One quiet neutral base for every tile: nine differently-tinted
-          // frames side by side read as noise. The category colour now lives
-          // only in the title (and the progress bar).
-          decoration: BoxDecoration(
-            color: DT.surfaceWhite,
-            borderRadius: BorderRadius.circular(DT.rLg),
-            border: Border.all(
-              color: Colors.black.withValues(alpha: 0.06),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
+      child: Container(
+        // One quiet neutral base for every tile: nine differently-tinted
+        // frames side by side read as noise. The category colour now lives
+        // only in the title (and the progress bar).
+        decoration: BoxDecoration(
+          color: DT.surfaceWhite,
+          borderRadius: BorderRadius.circular(DT.rLg),
+          border: Border.all(
+            color: Colors.black.withValues(alpha: 0.06),
+            width: 1,
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(DT.rLg - 2),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Illustration area — takes most of the tile so the webp
-                // actually reads at a glance. No inner padding: let the image
-                // hug the corners of the tinted pane.
-                Expanded(
-                  flex: 6,
-                  child: Container(
-                    color: accent.withValues(alpha: 0.05),
-                    child: Stack(
-                      children: [
-                        Positioned.fill(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(DT.rLg - 2),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Illustration area — takes most of the tile so the webp
+              // actually reads at a glance. No inner padding: let the image
+              // hug the corners of the tinted pane.
+              Expanded(
+                flex: 6,
+                child: Container(
+                  color: accent.withValues(alpha: 0.05),
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        // The picture flies to the CardsScreen header on
+                        // open (motion audit §5). This tile is the only
+                        // take-off point for the tag; see PackCoverHero.
+                        child: PackCoverHero(
+                          pack: pack,
                           // Cover, else a card thumb, else the pack icon —
                           // and the icon also stands in while the artwork
                           // is still downloading, which this tile used to
@@ -167,72 +143,87 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
                           child: CardImage(
                             name: pack.cover ?? thumb?.image,
                             fallbackEmoji: pack.icon,
+                            // Sound packs (Р/Л/Ш…) carry a bare letter as
+                            // their icon; while the cover is still on its
+                            // way it is drawn as a paper sticker in the
+                            // pack colour rather than a font glyph.
+                            fallback: isLetterIcon(pack.icon)
+                                ? Padding(
+                                    padding: const EdgeInsets.all(10),
+                                    child: LetterStickerIcon(
+                                      letter: pack.icon,
+                                      color: accent,
+                                      size: 48,
+                                    ),
+                                  )
+                                : null,
                             padding: EdgeInsets.zero,
                           ),
                         ),
-                        // Status badge (top-right)
-                        if (widget.isCompleted ||
-                            pack.isLocked ||
-                            widget.isSeasonal ||
-                            downloading)
-                          Positioned(
-                            top: 6,
-                            right: 6,
-                            child: _StatusBadge(
-                              completed: widget.isCompleted,
-                              locked: pack.isLocked,
-                              seasonal: widget.isSeasonal,
-                              downloading: downloading,
-                              accent: accent,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-                // Title strip — compact, anchored at bottom so the image
-                // dominates the tile.
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(6, 3, 6, 5),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Shrink-to-fit on one line: «Протилежності» used to
-                      // wrap to two lines and look heavier than «Дії».
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                        pack.title,
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w800,
-                          color: accent,
-                          height: 1.1,
-                        ),
                       ),
-                      ),
-                      if (hasProgress) ...[
-                        const SizedBox(height: 4),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(2),
-                          child: LinearProgressIndicator(
-                            value:
-                                total > 0 ? widget.progress / total : 0,
-                            minHeight: 3,
-                            backgroundColor: accent.withValues(alpha: 0.15),
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(accent),
+                      // Status badge (top-right)
+                      if (widget.isCompleted ||
+                          pack.isLocked ||
+                          widget.isSeasonal ||
+                          downloading)
+                        Positioned(
+                          top: 6,
+                          right: 6,
+                          child: _StatusBadge(
+                            completed: widget.isCompleted,
+                            locked: pack.isLocked,
+                            seasonal: widget.isSeasonal,
+                            downloading: downloading,
+                            accent: accent,
                           ),
                         ),
-                      ],
                     ],
                   ),
                 ),
-              ],
-            ),
+              ),
+              // Title strip — compact, anchored at bottom so the image
+              // dominates the tile.
+              Padding(
+                padding: const EdgeInsets.fromLTRB(6, 3, 6, 5),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Shrink-to-fit on one line: «Протилежності» used to
+                    // wrap to two lines and look heavier than «Дії».
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                      pack.title,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      // Parents pick a pack by its name, so the title stays;
+                      // set in the tile face on the pack's own ink (G7/G9).
+                      style: DT.tileTitle.copyWith(
+                        fontSize: 12.5,
+                        color: PackPalette.of(accent).onTint,
+                        height: 1.1,
+                      ),
+                    ),
+                    ),
+                    if (hasProgress) ...[
+                      const SizedBox(height: 4),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(2),
+                        child: LinearProgressIndicator(
+                          value:
+                              total > 0 ? widget.progress / total : 0,
+                          minHeight: 3,
+                          backgroundColor: accent.withValues(alpha: 0.15),
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(accent),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -249,18 +240,21 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
       child: tile,
     );
 
-    // Seasonal shimmer — ambient glow around the tile
+    // Seasonal shimmer — two glow pulses to catch the eye, then calm (one
+    // idle loop per screen). Reduced motion: rests at its base (alpha 0.25,
+    // blur 14) and the ✨ badge still marks the tile.
     if (!widget.isSeasonal) return wrapped;
-    return AnimatedBuilder(
-      animation: _shimmer,
-      builder: (_, child) => Container(
+    return AmbientLoop(
+      period: const Duration(milliseconds: 1400),
+      settleAfter: const Duration(milliseconds: 5600),
+      builder: (_, t, child) => Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(DT.rLg + 4),
           boxShadow: [
             BoxShadow(
-              color: accent.withValues(alpha: 0.25 + _shimmer.value * 0.35),
-              blurRadius: 14 + _shimmer.value * 10,
-              spreadRadius: _shimmer.value * 2,
+              color: accent.withValues(alpha: 0.25 + t * 0.35),
+              blurRadius: 14 + t * 10,
+              spreadRadius: t * 2,
             ),
           ],
         ),
@@ -289,35 +283,29 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget child;
-    Color bg;
-    if (completed) {
+    // The lock is the spec's smiling sunBurst padlock with a sticker edge
+    // and no disc behind it — never a grey glyph; the star likewise. Only
+    // the check and the download ring keep a disc, as a colour field for a
+    // white mark and a track for the spinner.
+    if (locked) {
+      return const AppIconView(AppIcon.lock, size: 30, sticker: true);
+    }
+    if (!completed && !downloading) {
+      return const AppIconView(AppIcon.star, size: 28, sticker: true);
+    }
+    final Widget child = completed
+        ? const AppIconView(AppIcon.check, size: 14, color: Colors.white)
+        : SizedBox(
+            width: 15,
+            height: 15,
+            child: CircularProgressIndicator(strokeWidth: 2.5, color: accent),
+          );
+    return Container(
       // Deliberately smaller than the other badges: a finished pack shouldn't
       // pull the eye away from the packs the child hasn't opened yet.
-      child = const Icon(
-        Icons.check_rounded,
-        size: 13,
-        color: Colors.white,
-      );
-      bg = const Color(0xFF22C55E); // clean kid-friendly green
-    } else if (locked) {
-      child = Icon(Icons.lock_rounded, size: 15, color: accent);
-      bg = DT.surfaceWhite;
-    } else if (downloading) {
-      child = SizedBox(
-        width: 15,
-        height: 15,
-        child: CircularProgressIndicator(strokeWidth: 2.5, color: accent),
-      );
-      bg = DT.surfaceWhite;
-    } else {
-      child = const Text('✨', style: TextStyle(fontSize: 14));
-      bg = DT.sunBurst;
-    }
-    return Container(
       padding: EdgeInsets.all(completed ? 4 : 5),
       decoration: BoxDecoration(
-        color: bg,
+        color: completed ? DT.success : DT.surfaceWhite,
         shape: BoxShape.circle,
         border: completed
             ? Border.all(color: Colors.white, width: 1.5)

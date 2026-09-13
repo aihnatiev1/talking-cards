@@ -12,6 +12,7 @@ import '../services/remote_config_service.dart';
 import '../services/widget_service.dart';
 import '../utils/constants.dart';
 import '../utils/guarded_init.dart';
+import '../utils/kid_routes.dart';
 import '../services/notification_service.dart';
 import '../services/purchase_service.dart';
 import 'home_screen.dart';
@@ -37,6 +38,7 @@ class _SplashScreenState extends State<SplashScreen>
   bool _navigated = false;
   String? _deepLink;
   Timer? _watchdog;
+  Timer? _entrance;
 
   /// Per-service budget for splash init. Nothing here is worth a blank screen:
   /// Remote Config, StoreKit/Billing and the notification plugin all talk to
@@ -69,6 +71,20 @@ class _SplashScreenState extends State<SplashScreen>
     // Start loading in background
     _initServices();
 
+    // The logo used to wait for its own precache before the body rendered,
+    // so a slow decode (1.2 s budget) meant a blank cream screen as the very
+    // first impression of the app. Now the entrance starts on the first
+    // frame; the image simply appears inside the fade as soon as it decodes.
+    _imageReady = true;
+    _ctrl.forward();
+    // Just long enough for the 600ms logo entrance to land — the old
+    // 1200ms hold was pure added cold-start latency. A cancellable Timer, so
+    // a splash torn down early (widget tests) leaves nothing pending.
+    _entrance = Timer(const Duration(milliseconds: 700), () {
+      _animDone = true;
+      _navigateIfReady();
+    });
+
     if (_inTest) return;
     _watchdog = Timer(_watchdogBudget, () {
       if (!mounted || _navigated) return;
@@ -81,16 +97,22 @@ class _SplashScreenState extends State<SplashScreen>
     });
   }
 
+  bool _logoWarmed = false;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_imageReady) _prepareLogo();
+    if (!_logoWarmed) {
+      _logoWarmed = true;
+      _prepareLogo();
+    }
   }
 
+  /// Best-effort warm-up so the logo lands within the 600 ms entrance.
+  /// Nothing is gated on it any more: a stalled decode shows the fade
+  /// without the picture for a moment instead of an empty screen.
   Future<void> _prepareLogo() async {
     try {
-      // Bounded: _imageReady gates the entire splash body, so a stalled
-      // decode used to mean a blank cream screen that never navigated.
       final precache = precacheImage(
         const AssetImage('assets/images/webp/splash.webp'),
         context,
@@ -101,15 +123,6 @@ class _SplashScreenState extends State<SplashScreen>
     } catch (e) {
       debugPrint('splash: logo precache skipped: $e');
     }
-    if (!mounted) return;
-    setState(() => _imageReady = true);
-    _ctrl.forward();
-    // Just long enough for the 600ms logo entrance to land — the old
-    // 1200ms hold was pure added cold-start latency.
-    Future.delayed(const Duration(milliseconds: 700), () {
-      _animDone = true;
-      _navigateIfReady();
-    });
   }
 
   /// One init, time-boxed, with the timeout reported so analytics can name
@@ -202,20 +215,13 @@ class _SplashScreenState extends State<SplashScreen>
       }
     }
 
-    Navigator.of(context).pushReplacement(
-      PageRouteBuilder(
-        pageBuilder: (_, __, ___) => dest,
-        transitionsBuilder: (_, animation, __, child) {
-          return FadeTransition(opacity: animation, child: child);
-        },
-        transitionDuration: const Duration(milliseconds: 400),
-      ),
-    );
+    Navigator.of(context).pushReplacement(KidRoutes.replace(dest));
   }
 
   @override
   void dispose() {
     _watchdog?.cancel();
+    _entrance?.cancel();
     _ctrl.dispose();
     super.dispose();
   }

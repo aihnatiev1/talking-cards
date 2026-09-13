@@ -1,0 +1,337 @@
+<!doctype html><html lang="uk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Шлях до дев'ятки</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800;900&display=swap">
+<style>
+  :root {
+    --bg: #FFFBF0;
+    --surface: #FFFFFF;
+    --surface-2: #FFF4E0;
+    --ink: #3F3635;
+    --ink-2: #6B605B;
+    --ink-3: #9E948E;
+    --line: #EDE3D2;
+    --coral: #FF6B6B;
+    --coral-ink: #C24A4A;
+    --sun: #FFD93D;
+    --sun-tint: #FFF8D6;
+    --mint: #6BCB77;
+    --mint-ink: #3E8E4A;
+    --sky: #4D96FF;
+    --sky-ink: #2F6BCB;
+    --violet: #A78BFA;
+    --violet-ink: #7A5BD1;
+    --shadow: 0 6px 18px rgba(98, 84, 120, .10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1E1B2A;
+      --surface: #2A2638;
+      --surface-2: #332D44;
+      --ink: #F4EFE6;
+      --ink-2: #C9C0B4;
+      --ink-3: #8F8698;
+      --line: #3D3750;
+      --coral-ink: #FF8A8A;
+      --mint-ink: #8BDB95;
+      --sky-ink: #7FB2FF;
+      --violet-ink: #C3AEFF;
+      --sun-tint: #3E3624;
+      --shadow: 0 6px 18px rgba(0, 0, 0, .35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1E1B2A;
+    --surface: #2A2638;
+    --surface-2: #332D44;
+    --ink: #F4EFE6;
+    --ink-2: #C9C0B4;
+    --ink-3: #8F8698;
+    --line: #3D3750;
+    --coral-ink: #FF8A8A;
+    --mint-ink: #8BDB95;
+    --sky-ink: #7FB2FF;
+    --violet-ink: #C3AEFF;
+    --sun-tint: #3E3624;
+    --shadow: 0 6px 18px rgba(0, 0, 0, .35);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Nunito', 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
+    font-size: 17px;
+    line-height: 1.55;
+    padding-block: 40px 80px;
+    padding-inline: 20px;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; }
+  h1, h2, h3 { text-wrap: balance; line-height: 1.15; margin: 0; }
+  h1 { font-size: clamp(34px, 6vw, 52px); font-weight: 900; letter-spacing: -.5px; }
+  h2 { font-size: 26px; font-weight: 900; margin-top: 64px; margin-bottom: 18px; }
+  h3 { font-size: 19px; font-weight: 800; margin-top: 28px; margin-bottom: 8px; }
+  p { margin: 0 0 14px; max-width: 68ch; }
+  .lede { font-size: 20px; color: var(--ink-2); max-width: 60ch; }
+  .eyebrow { font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 10px; }
+  .meta { color: var(--ink-3); font-size: 14px; margin-top: 18px; }
+
+  .score-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 32px; }
+  .score {
+    background: var(--surface); border-radius: 22px; padding: 18px 20px; box-shadow: var(--shadow);
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .score .big { font-size: 44px; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
+  .score .lbl { font-size: 14px; color: var(--ink-2); font-weight: 700; }
+  .score.now .big { color: var(--coral-ink); }
+  .score.content .big { color: var(--mint-ink); }
+  .score.goal .big { color: var(--violet-ink); }
+
+  .bar-list { display: grid; gap: 10px; margin: 18px 0 0; padding: 0; list-style: none; max-width: 640px; }
+  .bar-list li { display: grid; grid-template-columns: 180px 1fr 40px; align-items: center; gap: 12px; font-size: 15px; }
+  .bar-list .track { height: 12px; border-radius: 6px; background: var(--line); overflow: hidden; }
+  .bar-list .fill { height: 100%; border-radius: 6px; background: var(--sky); }
+  .bar-list .fill.low { background: var(--coral); }
+  .bar-list .fill.mid { background: var(--sun); }
+  .bar-list .val { font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; }
+
+  .shots { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 18px; margin-top: 20px; }
+  figure { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+  figure img {
+    width: 100%; max-width: 100%; aspect-ratio: 402 / 874; border-radius: 18px;
+    border: 1px solid var(--line); box-shadow: var(--shadow); display: block; background: var(--surface);
+  }
+  figcaption { font-size: 14px; line-height: 1.4; color: var(--ink-2); }
+  figcaption b { color: var(--ink); font-weight: 800; }
+  figcaption .tag { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; margin-bottom: 4px; }
+  .tag.bad { background: var(--coral); color: #fff; }
+  .tag.ok { background: var(--mint); color: #fff; }
+  .tag.meh { background: var(--sun); color: #3F3635; }
+
+  .table-wrap { overflow-x: auto; margin-top: 16px; }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; min-width: 620px; }
+  th, td { text-align: left; padding: 12px 12px; vertical-align: top; border-bottom: 1px solid var(--line); }
+  th { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); font-weight: 800; }
+  td.num { width: 34px; font-weight: 900; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  td.them { color: var(--mint-ink); font-weight: 700; }
+  td.us { color: var(--coral-ink); }
+
+  .p0 { display: grid; gap: 12px; margin-top: 16px; padding: 0; list-style: none; }
+  .p0 li { background: var(--surface); border-radius: 18px; padding: 14px 18px; border-left: 6px solid var(--coral); display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: start; }
+  .p0 li .size { font-size: 12px; font-weight: 900; letter-spacing: .08em; color: var(--ink-3); padding-top: 4px; }
+  .p0 code, .sprint code, p code { font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: .85em; background: var(--surface-2); padding: 1px 6px; border-radius: 6px; color: var(--ink); }
+
+  .road { display: grid; gap: 0; margin-top: 20px; position: relative; }
+  .sprint { display: grid; grid-template-columns: 72px 1fr; gap: 18px; padding: 18px 0 22px; border-top: 1px solid var(--line); }
+  .sprint .num { font-size: 13px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); padding-top: 4px; }
+  .sprint .num b { display: block; font-size: 30px; color: var(--ink); line-height: 1; margin-bottom: 4px; }
+  .sprint h3 { margin-top: 0; }
+  .sprint .goal { font-size: 14px; font-weight: 800; color: var(--violet-ink); margin-bottom: 8px; }
+  .sprint ul { margin: 8px 0 0; padding-left: 18px; color: var(--ink-2); font-size: 15.5px; }
+  .sprint li { margin-bottom: 5px; }
+  .sprint li b { color: var(--ink); }
+  .sprint .dur { color: var(--ink-3); font-weight: 700; font-size: 14px; }
+
+  .dont { columns: 2; column-gap: 28px; margin: 14px 0 0; padding-left: 18px; color: var(--ink-2); font-size: 15.5px; }
+  .dont li { break-inside: avoid; margin-bottom: 8px; }
+
+  .docs { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-top: 16px; }
+  .doc { background: var(--surface); border-radius: 16px; padding: 14px 16px; border: 1px solid var(--line); font-size: 14.5px; }
+  .doc b { display: block; font-family: ui-monospace, Menlo, monospace; font-size: 13px; margin-bottom: 4px; color: var(--sky-ink); word-break: break-all; }
+  .doc span { color: var(--ink-2); }
+
+  .callout { background: var(--sun-tint); border-radius: 18px; padding: 16px 20px; margin-top: 18px; max-width: 720px; }
+  .callout p { margin: 0; }
+
+  @media (max-width: 640px) {
+    .score-row { grid-template-columns: 1fr; }
+    .bar-list li { grid-template-columns: 1fr 40px; }
+    .bar-list li span.name { grid-column: 1 / -1; }
+    .sprint { grid-template-columns: 1fr; gap: 6px; }
+    .dont { columns: 1; }
+    .p0 li { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .bar-list .fill { transition: width .6s ease-out; }
+  }
+</style></head><body>
+
+<div class="wrap">
+  <div class="eyebrow">Картки-розмовлялки · зведений аудит дизайну · 13 вересня 2026</div>
+  <h1>Шлях до дев'ятки</h1>
+  <p class="lede">Чому апка сьогодні відчувається на 4 з 10, що саме є в Duolingo ABC, Khan Kids і Sago Mini, чого немає в нас, і в якому порядку це закривати.</p>
+  <p class="meta">Основа: 31 скріншот з симулятора iPhone 17 Pro, п'ять звітів агентів (конкуренти, 30 екранів × 6 осей, 65 анімацій, архітектура, досвід), код гілки fix/content-availability-contract.</p>
+
+  <div class="score-row">
+    <div class="score now"><span class="big">4.5</span><span class="lbl">дитяча зона сьогодні, середнє по 26 екранах</span></div>
+    <div class="score content"><span class="big">8</span><span class="lbl">ілюстрації карток, навбар, мапа — острови якості</span></div>
+    <div class="score goal"><span class="big">9</span><span class="lbl">ціль після п'яти спринтів</span></div>
+  </div>
+
+  <h2>Вердикт</h2>
+  <p><b>Контент на 8, оболонка на 4.</b> Акварельні картки, нова навігаційна панель і намальована мапа виглядають як робота одного автора. Усе навколо них — Material-каркас: емодзі замість іконок, стандартні заголовки й кнопки в шести іграх, сірі плитки нагород, порожній splash. Око бачить трьох різних авторів в одному кадрі, і саме це читається як «дешево».</p>
+  <p>Топові апки відрізняються не окремими екранами, а тим, що рух, звук, персонаж і іконки — один шар, через який проходить усе. У нас є зерна кожної системи, але жодне не є обов'язковим шляхом: два найновіші віджети додали 59 сирих кольорів і власну шкалу натискання.</p>
+
+  <ul class="bar-list" aria-label="Оцінки дитячої зони по осях">
+    <li><span class="name">Дитяча легкість</span><span class="track"><span class="fill mid" style="width:54%"></span></span><span class="val">5.4</span></li>
+    <li><span class="name">Рух і фідбек</span><span class="track"><span class="fill mid" style="width:52%"></span></span><span class="val">5.2</span></li>
+    <li><span class="name">Візуальна ідентичність</span><span class="track"><span class="fill low" style="width:46%"></span></span><span class="val">4.6</span></li>
+    <li><span class="name">Свято і підбадьорення</span><span class="track"><span class="fill low" style="width:44%"></span></span><span class="val">4.4</span></li>
+    <li><span class="name">Присутність персонажа</span><span class="track"><span class="fill low" style="width:19%"></span></span><span class="val">1.9</span></li>
+  </ul>
+
+  <h2>Що видно на реальних екранах</h2>
+  <p>Знімки з живої збірки, а не мокапи. Зайчик є на двох із 31 екрана.</p>
+  <div class="shots">
+    <figure><img src="img/a00-splash.webp" alt="Порожній кремовий екран splash без лого"><figcaption><span class="tag bad">зламано</span><br><b>Splash порожній.</b> Прекеш лого відвалюється по таймауту 1.2 с. Перше враження — пустота.</figcaption></figure>
+    <figure><img src="img/a01-onboarding-1.webp" alt="Онбординг з емодзі дитини та сіткою емодзі-аватарів"><figcaption><span class="tag meh">Material</span><br><b>Онбординг.</b> Герой екрана — емодзі 👶, аватари — емодзі, форма — стандартна. Зайчика ще немає.</figcaption></figure>
+    <figure><img src="img/b00-home-cards.webp" alt="Модалка Що нового поверх головного екрана"><figcaption><span class="tag meh">текст у дитячій зоні</span><br><b>Перший вхід.</b> Поверх дитячої головної — п'ять абзаців «Що нового» для батьків.</figcaption></figure>
+    <figure><img src="img/b01-home-games.webp" alt="Головний екран з переповненням фільтра категорій"><figcaption><span class="tag bad">баг верстки</span><br><b>Головна.</b> Фільтр «Мовлення / Звуки / Світ» переповнюється на 14 px. Дев'ять елементів просять уваги, головної дії немає.</figcaption></figure>
+    <figure><img src="img/c00-cards-screen.webp" alt="Екран картки з котиком і словом КОТИК"><figcaption><span class="tag ok">острів 8/10</span><br><b>Картки.</b> Велика ілюстрація, велике слово, зрозумілий динамік. Але «English» у дитячій зоні і жодного персонажа.</figcaption></figure>
+    <figure><img src="img/d01-guess-after-tap.webp" alt="Гра Вгадай звук після вибору відповіді"><figcaption><span class="tag meh">без свята</span><br><b>Вгадай звук.</b> Правильна відповідь — лише бірюзова рамка. Ні персонажа, ні звуку похвали, емодзі 🎧 у заголовку.</figcaption></figure>
+    <figure><img src="img/e00-memory-match.webp" alt="Гра Знайди пару з плоскими бірюзовими квадратами"><figcaption><span class="tag bad">найменш дитяча</span><br><b>Знайди пару.</b> Плоскі квадрати з емодзі лапкою. Спека редизайну вже є в docs/design.</figcaption></figure>
+    <figure><img src="img/f00-bubble-pop.webp" alt="Гра Бульбашки з трьома блідими колами на порожньому екрані"><figcaption><span class="tag bad">порожньо</span><br><b>Бульбашки.</b> Три бліді кола з мініатюрами і 80 % порожнього екрана. Виглядає незавершено.</figcaption></figure>
+    <figure><img src="img/g00-odd-one-out.webp" alt="Гра Знайди зайве з мініатюрами і підписами"><figcaption><span class="tag meh">мініатюри</span><br><b>Знайди зайве.</b> Картки 80 px у пастельних плитках, червоний «?» в заголовку, підписи, які дитина не читає.</figcaption></figure>
+    <figure><img src="img/h00-repeat-game.webp" alt="Гра Повтори за мною з кнопками Не вийшло і Сказав"><figcaption><span class="tag meh">емодзі-кнопки</span><br><b>Повтори за мною.</b> «Не вийшло ❌» і «Сказав! ✅» замість іконок, інструкція текстом.</figcaption></figure>
+    <figure><img src="img/i00-articulation.webp" alt="Артикуляційна гімнастика: сітка емодзі з підписами"><figcaption><span class="tag bad">не наш стиль</span><br><b>Артикуляція.</b> Сітка емодзі 👅🪡🕐🍄 з текстом. Найдалі від акварельної мови апки.</figcaption></figure>
+    <figure><img src="img/k00-coloring.webp" alt="Розмальовка водою з ескізом дитини"><figcaption><span class="tag meh">пів екрана порожні</span><br><b>Розмальовка.</b> Гарний ескіз, але сторінка порожня на 60 %, кнопка «перемішати» — Material FAB.</figcaption></figure>
+    <figure><img src="img/l00-rewards.webp" alt="Нагороди: емодзі-медалі на сірих плитках"><figcaption><span class="tag bad">плейсхолдер</span><br><b>Нагороди.</b> 🔥 на градієнті, медалі 🥉🥈🥇🏆 на сірих плитках із 🔒, бонуси — червоні «?».</figcaption></figure>
+    <figure><img src="img/m00-quest-map.webp" alt="Мапа квесту зі стежкою і зупинками"><figcaption><span class="tag ok">острів, але</span><br><b>Мапа.</b> Ландшафт і стежка гарні. Зупинки — Material-іконки на квадратах, під кожною текст, зайчик стежкою не йде.</figcaption></figure>
+    <figure><img src="img/n00-card-reveal.webp" alt="Темний екран відкриття картки з плиткою і емодзі подарунка"><figcaption><span class="tag bad">поза брендом</span><br><b>Пригода дня.</b> Майже чорний екран із плиткою і емодзі 🐾🎁 у теплій кремовій апці. 7 контролерів, два крутяться назавжди.</figcaption></figure>
+    <figure><img src="img/n01-card-reveal-settled.webp" alt="Відкрита картка з конфеті на темному фоні"><figcaption><span class="tag meh">дисонанс</span><br><b>Після відкриття.</b> Конфеті на темному фоні, дві Material-кнопки. Єдиний екран, де є щось схоже на свято.</figcaption></figure>
+    <figure><img src="img/o00-paywall.webp" alt="Paywall з емодзі подарунка і списком переваг"><figcaption><span class="tag meh">інший всесвіт</span><br><b>Paywall.</b> Емодзі 🎁 як герой, інша палітра і шрифт, ніж у дитячій зоні.</figcaption></figure>
+    <figure><img src="img/q00-word-wall.webp" alt="Порожня скарбничка з маленьким статичним зайчиком"><figcaption><span class="tag meh">статуетка</span><br><b>Скарбничка.</b> Один із двох екранів, де є зайчик. Малий, статичний, очі заплющені.</figcaption></figure>
+  </div>
+
+  <h2>Що є в апці на 9/10 і немає в нас</h2>
+  <p>Стисло з бенчмарку 13 конкурентів. Джерела і деталі — у <code>docs/competitor-design-benchmark-2026-09-13.md</code>.</p>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th></th><th>У топових апок</th><th>У нас сьогодні</th></tr></thead>
+    <tbody>
+      <tr><td class="num">1</td><td class="them">Кожен тап відповідає трьома каналами одразу: стиск, звук, хаптик, на pointer-down, до 100 мс</td><td class="us">8 різних реалізацій натискання, 8 із 22 дитячих таргетів мовчать, KidTap використаний 3 рази проти 95 оголених жестів</td></tr>
+      <tr><td class="num">2</td><td class="them">Стану «неправильно» не існує: м'який звук, підказка через 1.5–2 с, прогрес усе одно росте</td><td class="us">Червона рамка і ❌ у двох іграх, три різні шейки, підказки немає</td></tr>
+      <tr><td class="num">3</td><td class="them">Живий персонаж зі станами. Duo: Rive state machine, 20+ візем, ідл ніколи не повторюється</td><td class="us">CustomPainter з двома позами, очі завжди заплющені, один bounce 480 мс, не реагує на звук</td></tr>
+      <tr><td class="num">4</td><td class="them">Один очевидний наступний крок без тексту. Khan Kids: будинок і одна велика зелена кнопка</td><td class="us">Головна з дев'ятьма конкуруючими елементами, кроки дня підписані текстом</td></tr>
+      <tr><td class="num">5</td><td class="them">Один стиль ілюстрації, нуль Material-іконок і емодзі в дитячій зоні</td><td class="us">78 Icons.* і близько 250 емодзі, іконка паку — емодзі з JSON</td></tr>
+      <tr><td class="num">6</td><td class="them">Свято — секвенція з ритмом і рівнями. Duolingo: редизайн одного milestone дав +1.7 % утримання D7</td><td class="us">П'ять різних свят, три конфеті. Найбільша перемога дитини, пройдений пак, беззвучна</td></tr>
+      <tr><td class="num">7</td><td class="them">Звук як система: 8–12 SFX, голос під пальцем, без фонових лупів</td><td class="us">Три синтезовані заглушки. Praise і інструкції не існують, тому playPraise мовчить у всій апці</td></tr>
+      <tr><td class="num">8</td><td class="them">Голос говорить першим і його можна повторити великою кнопкою</td><td class="us">Інструкції текстом, послідовність аудіо на Future.delayed з магічними числами у 25+ місцях</td></tr>
+      <tr><td class="num">9</td><td class="them">Батьківська зона за гейтом, з іншим тоном, не протікає в дитячу</td><td class="us">«English», «Що нового» і інфо-іконка в дитячій зоні, батьківські екрани в іншій палітрі</td></tr>
+      <tr><td class="num">10</td><td class="them">Прощення дотику: 72 dp і більше, тап із мікро-драгом зараховується</td><td class="us">72 dp не закодовано в токенах, кожен екран пише свої 48 / 56 / 64 / 72</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Зламане, а не негарне</h2>
+  <p>Це виправляється за тиждень і не залежить від дизайну.</p>
+  <ul class="p0">
+    <li><div><b>Свято паку беззвучне і небезпечне.</b> <code>cards_screen.dart:450</code> зупиняє аудіо, оверлей не грає ні tada, ні похвали. Повноекранний жест на конфеті робить подвійний pop: випадковий тап виносить дитину на головну.</div><span class="size">S</span></li>
+    <li><div><b>Переповнення фільтра категорій</b> на головній, <code>packs_tab.dart:1221</code>. Емодзі 22sp і жирне слово не влазять у третину ширини екрана.</div><span class="size">S</span></li>
+    <li><div><b>Порожній splash</b> через таймаут прекешу лого 1.2 с.</div><span class="size">S</span></li>
+    <li><div><b>Пригода дня — найдорожчий екран:</b> 7 контролерів, два крутяться назавжди, три повноекранні CustomPaint без RepaintBoundary, тінь з blur 80. На старому планшеті це повне перемальовування 60 разів на секунду.</div><span class="size">S</span></li>
+    <li><div><b>Hero-переходу не існує</b>, але <code>cards_screen.dart:141</code> чекає 400 мс «на Hero-анімацію».</div><span class="size">S</span></li>
+    <li><div><b>Reduced motion підтримують 4 місця з 45.</b> 14 із 16 нескінченних циклів ігнорують системний прапорець.</div><span class="size">S–M</span></li>
+  </ul>
+
+  <h2>План</h2>
+  <p>Порядок узгоджений між архітектурним і UX-звітами. Принцип: спочатку шар, через який проходить усе, потім екрани. Інакше кожен красивий екран знову буде островом.</p>
+
+  <div class="road">
+    <div class="sprint">
+      <div class="num"><b>0</b>тиждень</div>
+      <div>
+        <h3>Зламане і перший тап</h3>
+        <div class="goal">Шість пунктів вище плюс одна річ із найбільшим ефектом на відчуття якості</div>
+        <ul>
+          <li><b>KidTap v2:</b> стиск 0.94, 90 мс вниз, пружина назад, хаптик на down, поп на up. Міграція 22 дитячих таргетів. Спека в motion-audit §6.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="sprint">
+      <div class="num"><b>1</b><span class="dur">2 тижні</span></div>
+      <div>
+        <h3>Фундамент</h3>
+        <div class="goal">Після цього кожна екранна правка лягає в систему, а не поверх неї</div>
+        <ul>
+          <li><b>Токени v2.</b> Тривалості й криві руху, розміри тап-таргетів 72 dp, іконок і маскота, ролі паку. Влити constants у DT, один фон. Source-тест: сирий колір лише в токенах і арт-пейнтерах.</li>
+          <li><b>Система руху.</b> MotionPolicy full / reduced / test, AmbientLoop як єдиний власник repeat(), три спільні переходи замість 26 місць, Hero плитки паку в картки.</li>
+          <li><b>Фідбек-пайплайн.</b> Подія → звук + хаптик + рівень візуалу. Один Celebration з рівнями micro / round / daily / milestone / pack замість п'яти. Хореографія по мілісекундах у motion-audit §4.</li>
+          <li><b>Тести.</b> Golden-и на токени, KidTap, Celebration. Nunito у тестовій конфігурації.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="sprint">
+      <div class="num"><b>2</b><span class="dur">2 тижні + ілюстратор</span></div>
+      <div>
+        <h3>Один автор</h3>
+        <div class="goal">Головний стрибок від 4 до 7: апка починає виглядати як робота одної руки</div>
+        <ul>
+          <li><b>Система іконок.</b> Сітка 48, контур 2.5 dp, двотонові заливки з палітри, стікерна кромка. Перша хвиля: 8 керуючих іконок, 21 обкладинка паків, 7 бейджів ігор, 5 зупинок квесту, медалі. Material лишається лише батькам.</li>
+          <li><b>KidScreen.</b> Один каркас для дитячих екранів: 72 dp back у фіксованому місці, прогрес, кут для зайчика, одна черга оверлеїв. Прибирає 21 власний Scaffold.</li>
+          <li><b>Nunito для всієї дитячої зони</b> через тему, одна палітра, текст з дитячих екранів геть, «English» і інфо за гейт.</li>
+          <li><b>Помилка без червоного</b> і ❌: м'який звук, легкий нахил, підказка після другого промаху.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="sprint">
+      <div class="num"><b>3</b><span class="dur">2 тижні</span></div>
+      <div>
+        <h3>Персонаж і голос</h3>
+        <div class="goal">Від 7 до 8: апка починає говорити і дивитись на дитину</div>
+        <ul>
+          <li><b>Bloom фаза 1, чистий Flutter.</b> Ріг з параметрами: дихання, моргання, слухає поки грає озвучка, дивиться на тап, радіє, святкує, спить, показує підказку. Присутність там, де дитина проводить 90 % часу: hero головної, кут карток, кут ігрового поля, мандрівник на мапі.</li>
+          <li><b>Голос і звук.</b> Praise й інструкції через ElevenLabs (скрипт готовий, чекає ключ). 8–12 реальних SFX замість трьох заглушок. Фонової музики не додавати.</li>
+          <li><b>Hero головної → «Зайчик запрошує».</b> Один великий елемент = наступний крок, персонаж показує на нього і каже вголос.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="sprint">
+      <div class="num"><b>4</b><span class="dur">2 тижні</span></div>
+      <div>
+        <h3>Довершити світ</h3>
+        <div class="goal">Мапа, нагороди і батьківська зона в тому ж всесвіті</div>
+        <ul>
+          <li>Зайчик іде стежкою мапи, зупинки ілюстровані, без тексту.</li>
+          <li>Нагороди як стікер-альбом, отримане не зникає після зриву серії.</li>
+          <li>Paywall, дашборд, статистика на тих самих токенах зі «дорослим» тоном.</li>
+          <li>Редизайни Бульбашок і Знайди пару за готовими спеками, тепер поверх KidScreen і Celebration.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="sprint">
+      <div class="num"><b>5</b><span class="dur">2 тижні</span></div>
+      <div>
+        <h3>Від 8 до 9</h3>
+        <div class="goal">Професійна анімація персонажа і полірування під старі планшети</div>
+        <ul>
+          <li><b>Bloom фаза 2, Rive.</b> Файл до 250 КБ зі state machine, тільки через абстракцію MascotRenderer з painter-фолбеком для тестів. Єдина нова залежність плану. У базовий модуль, не в PAD.</li>
+          <li>Перф-профіль на планшеті 2016 року, RepaintBoundary на статичних сценах, ліміт imageCache.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout"><p><b>Сумарно близько 10–11 тижнів.</b> Спринти 0–2 дають стрибок від 4 до 7, бо прибирають відчуття трьох авторів. Персонаж і звук дають 8. Rive і полірування дають 9.</p></div>
+
+  <h2>Чого не робити</h2>
+  <ul class="dont">
+    <li>Не заводити codegen, go_router, features-структуру.</li>
+    <li>Не додавати flutter_animate чи lottie до появи MotionPolicy: обійдуть політику руху і тестовий режим.</li>
+    <li>Не класти UI-арт, Rive і SFX у Play Asset Delivery: перша хвилина дитини не чекає на доставку.</li>
+    <li>Не будувати темну тему для дитячої зони. Одна тема.</li>
+    <li>Не заводити нові палітри у віджетах, не додавати емодзі як іконки.</li>
+    <li>Не редизайнити екрани до фундаменту спринту 1: буде ще один острів.</li>
+    <li>Не чіпати parental gate, покупки, доставку контенту: вони не причина 4/10.</li>
+  </ul>
+
+  <h2>Документи в репозиторії</h2>
+  <div class="docs">
+    <div class="doc"><b>docs/road-to-9-2026-09-13.md</b><span>Головний звіт, текстова версія цієї сторінки з посиланнями на файли й рядки.</span></div>
+    <div class="doc"><b>docs/competitor-design-benchmark-2026-09-13.md</b><span>13 апок, близько 90 джерел, чекліст самооцінки для рев'ю нових екранів.</span></div>
+    <div class="doc"><b>docs/ux-gap-audit-2026-09-13.md</b><span>30 екранів × 6 осей з оцінками, 15 розривів, дизайн-бриф для ілюстратора й розробника.</span></div>
+    <div class="doc"><b>docs/motion-audit-2026-09-13.md</b><span>Інвентар 65 анімацій, хореографія п'яти рівнів свята, спека переходів і KidTap.</span></div>
+    <div class="doc"><b>docs/architecture-gap-audit-2026-09-13.md</b><span>Восьмеро фундаментів з порядком і зусиллями, список заборон.</span></div>
+    <div class="doc"><b>integration_test/audit_screenshots_test.dart</b><span>Ріг, що знімає всі 31 екран однією командою. Міра прогресу після кожного спринту.</span></div>
+  </div>
+</div>
+</body></html>

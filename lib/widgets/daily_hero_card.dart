@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
-import '../utils/constants.dart';
+import '../utils/app_icons.dart';
 import '../utils/design_tokens.dart';
+import 'ambient_loop.dart';
 import 'card_image.dart';
+import 'kid_tap.dart';
 
 /// One secondary step of today's plan, rendered as a compact button under the
 /// hero. Replaces the old free-standing "stone" in Today's Plan strip.
 class DailyTask {
-  final String emoji;
+  final AppIcon icon;
   final String label;
   final bool isDone;
   final bool isActive;
   final VoidCallback onTap;
 
   const DailyTask({
-    required this.emoji,
+    required this.icon,
     required this.label,
     required this.isDone,
     required this.isActive,
@@ -31,9 +32,12 @@ class DailyTask {
 /// Plan — which cost ~80dp of vertical space and made the child choose between
 /// two equally-loud entry points. Now there is one obvious thing to tap and the
 /// plan reads as its follow-up.
-class DailyHeroCard extends StatefulWidget {
-  /// Small pill above the title, e.g. '🔊 Картка дня' / '▶ Продовжити'.
+class DailyHeroCard extends StatelessWidget {
+  /// Small pill above the title, e.g. 'Картка дня' / 'Продовжити'.
   final String badge;
+
+  /// Sticker in front of [badge]; null for a text-only pill.
+  final AppIcon? badgeIcon;
   final String title;
   final Color accent;
 
@@ -66,6 +70,7 @@ class DailyHeroCard extends StatefulWidget {
     required this.onHeroTap,
     required this.tasks,
     required this.isEn,
+    this.badgeIcon,
     this.image,
     this.fallbackEmoji = '🃏',
     this.progress,
@@ -75,200 +80,159 @@ class DailyHeroCard extends StatefulWidget {
   });
 
   @override
-  State<DailyHeroCard> createState() => _DailyHeroCardState();
-}
-
-class _DailyHeroCardState extends State<DailyHeroCard>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _pulse;
-  late final Animation<double> _scale;
-  bool _pressed = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulse = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1600),
-    );
-    // Gentler than the old 1.03 hero pulse: the card is taller now, so the
-    // same ratio read as the whole screen breathing.
-    _scale = Tween<double>(
-      begin: 1.0,
-      end: 1.02,
-    ).animate(CurvedAnimation(parent: _pulse, curve: Curves.easeInOut));
-    _syncPulse();
-  }
-
-  @override
-  void didUpdateWidget(covariant DailyHeroCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.heroDone != widget.heroDone) _syncPulse();
-  }
-
-  void _syncPulse() {
-    if (widget.heroDone) {
-      _pulse.stop();
-      _pulse.value = 0;
-    } else if (!_pulse.isAnimating) {
-      _pulse.repeat(reverse: true);
-    }
-  }
-
-  @override
-  void dispose() {
-    _pulse.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final accent = widget.accent;
     final narrow = MediaQuery.of(context).size.width < 360;
     const heroHeight = 96.0;
+    final badgeIcon = this.badgeIcon;
 
-    final hero = GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) => setState(() => _pressed = false),
-      onTapCancel: () => setState(() => _pressed = false),
-      onTap: () {
-        HapticFeedback.lightImpact();
-        widget.onHeroTap();
-      },
-      child: AnimatedScale(
-        scale: _pressed ? DT.pressScale : 1.0,
-        duration: DT.pressMs,
-        curve: Curves.easeOut,
-        child: SizedBox(
-          height: heroHeight,
-          child: Row(
-            children: [
-              // Illustration pane — fixed width keeps intrinsic sizing bounded
-              // so the webp never balloons to its natural resolution.
-              SizedBox(
-                width: narrow ? 78 : 94,
-                height: heroHeight,
-                child: Container(
-                  color: accent.withValues(alpha: 0.10),
-                  alignment: Alignment.center,
-                  // Card-of-the-day may be paid content the asset pack has
-                  // not delivered yet; CardImage shows the emoji until it
-                  // lands, then swaps itself for the picture.
-                  child: CardImage(
-                    name: widget.image,
-                    fallbackEmoji: widget.fallbackEmoji,
-                    padding: const EdgeInsets.all(6),
-                  ),
+    final hero = KidTap(
+      onTap: onHeroTap,
+      child: SizedBox(
+        height: heroHeight,
+        child: Row(
+          children: [
+            // Illustration pane — fixed width keeps intrinsic sizing bounded
+            // so the webp never balloons to its natural resolution.
+            SizedBox(
+              width: narrow ? 78 : 94,
+              height: heroHeight,
+              child: Container(
+                color: accent.withValues(alpha: 0.10),
+                alignment: Alignment.center,
+                // Card-of-the-day may be paid content the asset pack has
+                // not delivered yet; CardImage shows the emoji until it
+                // lands, then swaps itself for the picture.
+                child: CardImage(
+                  name: image,
+                  fallbackEmoji: fallbackEmoji,
+                  padding: const EdgeInsets.all(6),
                 ),
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 10, 6, 10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: accent.withValues(alpha: 0.14),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          widget.badge,
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            color: accent,
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 6, 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: accent.withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Icon first, and big enough to be the badge on
+                          // its own; the word beside it is for the parent.
+                          if (badgeIcon != null) ...[
+                            AppIconView(badgeIcon, size: 18),
+                            const SizedBox(width: 4),
+                          ],
+                          Text(
+                            badge,
+                            style: DT.caption.copyWith(
+                              fontSize: 10,
+                              color: accent,
+                            ),
                           ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        title,
+                        maxLines: 1,
+                        style: DT.h1.copyWith(
+                          fontVariations: DT.kidWeight(900),
+                          fontWeight: FontWeight.w900,
+                          color: accent,
+                          letterSpacing: 0.2,
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          widget.title,
-                          maxLines: 1,
-                          style: TextStyle(
-                            fontSize: 21,
-                            fontWeight: FontWeight.w900,
-                            color: accent,
-                            letterSpacing: 0.2,
-                          ),
+                    ),
+                    if (progress != null) ...[
+                      const SizedBox(height: 5),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(2),
+                        child: LinearProgressIndicator(
+                          value: progress!.clamp(0.0, 1.0),
+                          minHeight: 3,
+                          backgroundColor: accent.withValues(alpha: 0.15),
+                          valueColor: AlwaysStoppedAnimation<Color>(accent),
                         ),
                       ),
-                      if (widget.progress != null) ...[
-                        const SizedBox(height: 5),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(2),
-                          child: LinearProgressIndicator(
-                            value: widget.progress!.clamp(0.0, 1.0),
-                            minHeight: 3,
-                            backgroundColor: accent.withValues(alpha: 0.15),
-                            valueColor: AlwaysStoppedAnimation<Color>(accent),
-                          ),
-                        ),
-                      ],
                     ],
-                  ),
+                  ],
                 ),
               ),
-              // Affordance: a non-reader needs a visible "press me" mark.
-              Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: widget.heroDone
-                        ? DT.success.withValues(alpha: 0.12)
-                        : accent.withValues(alpha: 0.14),
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: Icon(
-                    widget.heroDone
-                        ? Icons.check_rounded
-                        : Icons.play_arrow_rounded,
-                    size: 24,
-                    color: widget.heroDone ? DT.success : accent,
-                  ),
+            ),
+            // Affordance: a non-reader needs a visible "press me" mark.
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: heroDone
+                      ? DT.success.withValues(alpha: 0.12)
+                      : accent.withValues(alpha: 0.14),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: AppIconView(
+                  heroDone ? AppIcon.check : AppIcon.play,
+                  size: 24,
+                  color: heroDone ? DT.success : accent,
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
 
-    final Widget footer = widget.allDone
-        ? _AllDoneRow(isEn: widget.isEn, onTap: widget.onAllDoneTap)
+    final Widget footer = allDone
+        ? _AllDoneRow(isEn: isEn, onTap: onAllDoneTap)
         : Row(
             children: [
-              for (int i = 0; i < widget.tasks.length; i++) ...[
+              for (int i = 0; i < tasks.length; i++) ...[
                 if (i > 0) const SizedBox(width: 8),
                 Expanded(
                   child: _TaskButton(
                     key: ValueKey('daily_task_$i'),
-                    task: widget.tasks[i],
+                    task: tasks[i],
                     accent: accent,
                     // When the pending step is the hero itself, no button is
                     // "active" — mark the first unfinished one as up-next so
                     // the row doesn't read as two disabled controls.
-                    isNext: i == widget.tasks.indexWhere((t) => !t.isDone),
+                    isNext: i == tasks.indexWhere((t) => !t.isDone),
                   ),
                 ),
               ],
             ],
           );
 
-    return ScaleTransition(
-      scale: _scale,
+    // Invite breath, 1.0 → 1.02 over 1600 ms — gentler than the old 1.03
+    // hero pulse: the card is taller now, so the same ratio read as the
+    // whole screen breathing. Stops once the hero's own step is done;
+    // under reduced motion it rests at 1.0 — the play-arrow affordance and
+    // the accent frame already say "press me" without the breath.
+    return AmbientLoop(
+      period: const Duration(milliseconds: 1600),
+      enabled: !heroDone,
+      builder: (_, t, child) => Transform.scale(
+        scale: 1.0 + 0.02 * t,
+        child: child,
+      ),
       child: Container(
         decoration: BoxDecoration(
           color: DT.surfaceWhite,
@@ -302,7 +266,7 @@ class _DailyHeroCardState extends State<DailyHeroCard>
   }
 }
 
-class _TaskButton extends StatefulWidget {
+class _TaskButton extends StatelessWidget {
   final DailyTask task;
   final Color accent;
 
@@ -318,61 +282,11 @@ class _TaskButton extends StatefulWidget {
   });
 
   @override
-  State<_TaskButton> createState() => _TaskButtonState();
-}
-
-class _TaskButtonState extends State<_TaskButton>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _pulse;
-  late final Animation<double> _scale;
-  bool _pressed = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulse = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    );
-    _scale = Tween<double>(
-      begin: 1.0,
-      end: 1.04,
-    ).animate(CurvedAnimation(parent: _pulse, curve: Curves.easeInOut));
-    _syncPulse();
-  }
-
-  @override
-  void didUpdateWidget(covariant _TaskButton oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.task.isActive != widget.task.isActive ||
-        oldWidget.task.isDone != widget.task.isDone) {
-      _syncPulse();
-    }
-  }
-
-  void _syncPulse() {
-    final shouldPulse = widget.task.isActive && !widget.task.isDone;
-    if (shouldPulse) {
-      if (!_pulse.isAnimating) _pulse.repeat(reverse: true);
-    } else {
-      _pulse.stop();
-      _pulse.value = 0;
-    }
-  }
-
-  @override
-  void dispose() {
-    _pulse.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final t = widget.task;
+    final t = task;
     final active = t.isActive && !t.isDone;
-    final accent = widget.accent;
 
-    final next = widget.isNext && !t.isDone && !active;
+    final next = isNext && !t.isDone && !active;
 
     final Color bg;
     if (t.isDone) {
@@ -385,63 +299,63 @@ class _TaskButtonState extends State<_TaskButton>
       bg = Colors.black.withValues(alpha: 0.04);
     }
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) => setState(() => _pressed = false),
-      onTapCancel: () => setState(() => _pressed = false),
-      onTap: () {
-        HapticFeedback.lightImpact();
-        t.onTap();
-      },
-      child: AnimatedScale(
-        scale: _pressed ? DT.pressScale : 1.0,
-        duration: DT.pressMs,
-        curve: Curves.easeOut,
-        child: ScaleTransition(
-          scale: active ? _scale : const AlwaysStoppedAnimation(1.0),
-          child: Container(
-            height: 54,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            decoration: BoxDecoration(
-              color: bg,
-              borderRadius: BorderRadius.circular(16),
-              border: active ? Border.all(color: accent, width: 1.5) : null,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Opacity(
-                  opacity: t.isDone || active || next ? 1.0 : 0.55,
-                  child: Text(
-                    t.emoji,
-                    style: const TextStyle(fontSize: 22, height: 1),
+    return KidTap(
+      onTap: t.onTap,
+      // Only the active step breathes (1.0 → 1.04, 1200 ms). Under reduced
+      // motion it keeps its accent border and tinted background; only the
+      // breath is dropped.
+      child: AmbientLoop(
+        period: const Duration(milliseconds: 1200),
+        enabled: active,
+        builder: (_, pulse, child) => Transform.scale(
+          scale: 1.0 + 0.04 * pulse,
+          child: child,
+        ),
+        // Icon first (G9): the child reads the sticker, the caption under it
+        // is for the grown-up. 72dp tall — the kid-zone minimum target.
+        child: Container(
+          height: 72,
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(16),
+            border: active ? Border.all(color: accent, width: 1.5) : null,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Opacity(
+                    opacity: t.isDone || active || next ? 1.0 : 0.55,
+                    child: AppIconView(t.icon, size: 32),
                   ),
-                ),
-                const SizedBox(width: 6),
-                Flexible(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      t.label,
-                      maxLines: 1,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: t.isDone
-                            ? DT.success
-                            : (active || next ? DT.textPrimary : DT.textMuted),
-                      ),
+                  if (t.isDone)
+                    const Positioned(
+                      right: -6,
+                      top: -4,
+                      child: AppIconView(AppIcon.check, size: 15),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    t.label,
+                    maxLines: 1,
+                    style: DT.caption.copyWith(
+                      fontSize: 11,
+                      color: t.isDone
+                          ? DT.success
+                          : (active || next ? DT.textPrimary : DT.textMuted),
                     ),
                   ),
                 ),
-                if (t.isDone) ...[
-                  const SizedBox(width: 4),
-                  const Icon(Icons.check_rounded, size: 15, color: DT.success),
-                ],
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -457,16 +371,10 @@ class _AllDoneRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap == null
-          ? null
-          : () {
-              HapticFeedback.lightImpact();
-              onTap!();
-            },
+    return KidTap(
+      onTap: onTap,
       child: Container(
-        height: 54,
+        height: 72,
         decoration: BoxDecoration(
           color: DT.success.withValues(alpha: 0.10),
           borderRadius: BorderRadius.circular(16),
@@ -475,17 +383,17 @@ class _AllDoneRow extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('🎉', style: TextStyle(fontSize: 24, height: 1)),
+            const AppIconView(AppIcon.rewardGift, size: 26),
             const SizedBox(width: 8),
             Flexible(
               child: Text(
-                isEn ? 'All done today! 🎁' : 'Все на сьогодні готово! 🎁',
+                isEn ? 'All done today!' : 'Все на сьогодні готово!',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                // One green: the done-tint's own ink, not the brand indigo.
+                style: DT.tileTitle.copyWith(
                   fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  color: kAccent,
+                  color: PackPalette.of(DT.success).onTint,
                 ),
               ),
             ),

@@ -1,162 +1,71 @@
 import 'package:flutter/material.dart';
 
 import '../models/card_model.dart';
-import '../utils/constants.dart';
+import '../utils/design_tokens.dart';
+import 'answer_feedback.dart';
 import 'card_image.dart';
+import 'kid_tap.dart';
 
-class QuizOption extends StatefulWidget {
+/// One of the four picture choices in the guess game.
+///
+/// All answer feedback — the miss nudge, the success frame, pop, check and
+/// burst, the hint glow — is [AnswerFrame]'s; this widget only lays out the
+/// picture and the word. There is no "wrong" look by design (G10).
+class QuizOption extends StatelessWidget {
   final CardModel card;
-  final bool? isCorrectAnswer;
+  final AnswerMark mark;
+
+  /// Miss counter for this tile; every increment nudges it once.
+  final int nudge;
   final VoidCallback onTap;
 
   const QuizOption({
     super.key,
     required this.card,
     required this.onTap,
-    this.isCorrectAnswer,
+    this.mark = AnswerMark.none,
+    this.nudge = 0,
   });
 
   @override
-  State<QuizOption> createState() => _QuizOptionState();
-}
-
-class _QuizOptionState extends State<QuizOption>
-    with TickerProviderStateMixin {
-  late final AnimationController _shakeCtrl;
-  late final AnimationController _pressCtrl;
-  late final Animation<double> _pressAnim;
-
-  @override
-  void initState() {
-    super.initState();
-    _shakeCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-    _pressCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 100),
-    );
-    _pressAnim = Tween<double>(begin: 1.0, end: 0.92).animate(
-      CurvedAnimation(parent: _pressCtrl, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void didUpdateWidget(covariant QuizOption oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.isCorrectAnswer == false && oldWidget.isCorrectAnswer != false) {
-      _shakeCtrl.forward().then((_) => _shakeCtrl.reset());
-    }
-  }
-
-  @override
-  void dispose() {
-    _shakeCtrl.dispose();
-    _pressCtrl.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    // Determine visual state
-    final bool isCorrect = widget.isCorrectAnswer == true;
-    final bool isWrong = widget.isCorrectAnswer == false;
-
-    final Color cardColor = widget.card.colorBg;
-    Color overlayColor;
-    if (isCorrect) {
-      overlayColor = kTeal;
-    } else if (isWrong) {
-      overlayColor = const Color(0xFFFF6B6B);
-    } else {
-      overlayColor = cardColor;
-    }
-
-    return AnimatedBuilder(
-      animation: _shakeCtrl,
-      builder: (context, child) {
-        final shake = _shakeCtrl.isAnimating
-            ? 10.0 *
-                (1 - _shakeCtrl.value) *
-                ((_shakeCtrl.value * 8).toInt().isEven ? 1 : -1)
-            : 0.0;
-        return Transform.translate(
-          offset: Offset(shake, 0),
-          child: child,
-        );
-      },
-      child: GestureDetector(
-        onTapDown: (_) => _pressCtrl.forward(),
-        onTapUp: (_) {
-          _pressCtrl.reverse();
-          widget.onTap();
-        },
-        onTapCancel: () => _pressCtrl.reverse(),
-        child: ScaleTransition(
-          scale: _pressAnim,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            decoration: BoxDecoration(
-              color: overlayColor.withValues(alpha: isCorrect || isWrong ? 0.25 : 0.15),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: overlayColor.withValues(alpha: isCorrect || isWrong ? 0.8 : 0.3),
-                width: isCorrect || isWrong ? 3 : 2,
-              ),
-              boxShadow: [
-                if (isCorrect)
-                  BoxShadow(
-                    color: kTeal.withValues(alpha: 0.4),
-                    blurRadius: 16,
-                    spreadRadius: 2,
-                  ),
-                if (!isCorrect && !isWrong)
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.06),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-              ],
+    final cardColor = card.colorBg;
+    return KidTap(
+      onTap: onTap,
+      child: AnswerFrame(
+        background: cardColor,
+        accent: card.colorAccent,
+        mark: mark,
+        nudge: nudge,
+        radius: DT.rLg,
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Expanded(
+              // Pools are sanitized upstream (image required), so the
+              // null branch is a defensive placeholder — never emoji.
+              child: card.image != null
+                  ? CardImage.forCard(
+                      card,
+                      size: CardArtSize.tile,
+                      padding: const EdgeInsets.all(4),
+                    )
+                  : Container(
+                      margin: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: cardColor.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(DT.rMd),
+                      ),
+                    ),
             ),
-            padding: const EdgeInsets.all(10),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Expanded(
-                  // Pools are sanitized upstream (image required), so the
-                  // null branch is a defensive placeholder — never emoji.
-                  child: widget.card.image != null
-                      ? CardImage.forCard(
-                          widget.card,
-                          size: CardArtSize.tile,
-                          padding: const EdgeInsets.all(4),
-                        )
-                      : Container(
-                          margin: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: cardColor.withValues(alpha: 0.4),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  widget.card.sound,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: isCorrect
-                        ? kTeal
-                        : isWrong
-                            ? const Color(0xFFFF6B6B)
-                            : kSoundRed,
-                  ),
-                ),
-              ],
+            const SizedBox(height: DT.sp4),
+            Text(
+              card.sound,
+              textAlign: TextAlign.center,
+              style: DT.tileTitle.copyWith(color: card.colorAccent),
             ),
-          ),
+          ],
         ),
       ),
     );

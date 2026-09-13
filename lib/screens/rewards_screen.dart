@@ -6,6 +6,7 @@ import '../providers/language_provider.dart';
 import '../utils/constants.dart';
 import '../utils/l10n.dart';
 import '../utils/uk_grammar.dart';
+import '../widgets/kid_screen.dart';
 
 class RewardsScreen extends ConsumerWidget {
   const RewardsScreen({super.key});
@@ -17,20 +18,9 @@ class RewardsScreen extends ConsumerWidget {
     final streak = ref.watch(streakProvider);
     final s = AppS(ref.read(languageProvider) == 'en');
 
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: _accent),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          s('Нагороди', 'Rewards'),
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-      ),
+    return KidScreen(
+      accent: _accent,
+      title: const Text('🏅', style: TextStyle(fontSize: 28)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -90,7 +80,7 @@ class RewardsScreen extends ConsumerWidget {
               crossAxisSpacing: 12,
               childAspectRatio: 1.1,
               children: milestones.map((m) {
-                final earned = streak.currentStreak >= m.days;
+                final earned = streak.unlockedRewards.contains(m.bonusEmoji);
                 return _BadgeCard(
                   badge: m.badge,
                   label: m.label,
@@ -130,7 +120,6 @@ class RewardsScreen extends ConsumerWidget {
       ),
     );
   }
-
 }
 
 class _BadgeCard extends StatelessWidget {
@@ -163,10 +152,7 @@ class _BadgeCard extends StatelessWidget {
         children: [
           Text(
             badge,
-            style: TextStyle(
-              fontSize: 44,
-              color: earned ? null : Colors.grey,
-            ),
+            style: TextStyle(fontSize: 44, color: earned ? null : Colors.grey),
           ),
           const SizedBox(height: 8),
           Text(
@@ -178,13 +164,7 @@ class _BadgeCard extends StatelessWidget {
             ),
           ),
           if (!earned)
-            Text(
-              '🔒',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[400],
-              ),
-            ),
+            Text('🔒', style: TextStyle(fontSize: 12, color: Colors.grey[400])),
         ],
       ),
     );
@@ -212,10 +192,7 @@ class _BonusCard extends StatelessWidget {
         ),
       ),
       child: Center(
-        child: Text(
-          earned ? emoji : '❓',
-          style: const TextStyle(fontSize: 36),
-        ),
+        child: Text(earned ? emoji : '❓', style: const TextStyle(fontSize: 36)),
       ),
     );
   }

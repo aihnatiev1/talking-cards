@@ -4,8 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/language_provider.dart';
 import '../utils/constants.dart';
+import '../utils/design_tokens.dart';
+import '../utils/kid_routes.dart';
 import '../utils/l10n.dart';
 import '../widgets/confetti_burst.dart';
+import '../widgets/kid_screen.dart';
 
 // ─────────────────────────────────────────────
 //  Exercise data
@@ -182,24 +185,30 @@ class ArticulationScreen extends ConsumerWidget {
     final isEn = ref.watch(languageProvider) == 'en';
     final s = AppS(isEn);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5EEFF),
-      appBar: AppBar(
-        title: Text(
-          s('Артикуляційна гімнастика', 'Articulation Exercises'),
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
+    // The header carries no text; the exercise names are read by a parent,
+    // so they live in the body as content.
+    return KidScreen(
+      accent: kAccent,
+      background: DT.violetTint,
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-            child: Text(
-              s('Щоденні вправи для язика і губ',
-                  'Daily exercises for tongue and lips'),
-              style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+            child: Column(
+              children: [
+                Text(
+                  s('Артикуляційна гімнастика', 'Articulation Exercises'),
+                  textAlign: TextAlign.center,
+                  style: DT.h2,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  s('Щоденні вправи для язика і губ',
+                      'Daily exercises for tongue and lips'),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+                ),
+              ],
             ),
           ),
           Expanded(
@@ -219,11 +228,8 @@ class ArticulationScreen extends ConsumerWidget {
                   exercise: ex,
                   isEn: isEn,
                   onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => _ExercisePlayerScreen(
-                        exercise: ex,
-                        isEn: isEn,
-                      ),
+                    KidRoutes.game(
+                      _ExercisePlayerScreen(exercise: ex, isEn: isEn),
                     ),
                   ),
                 );
@@ -430,19 +436,18 @@ class _ExercisePlayerScreenState extends State<_ExercisePlayerScreen>
     final s = AppS(widget.isEn);
     final name = widget.isEn ? widget.exercise.nameEn : widget.exercise.name;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5EEFF),
-      appBar: AppBar(
-        title: Text(name,
-            style: const TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: SafeArea(
-        child: Padding(
+    return KidScreen.game(
+      accent: kAccent,
+      background: DT.violetTint,
+      progress: _maxReps == 0 ? null : _reps / _maxReps,
+      body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
             children: [
+              // Exercise name — read aloud by the parent, so it is content,
+              // not a header title.
+              Text(name, textAlign: TextAlign.center, style: DT.h2),
+              const SizedBox(height: 8),
               // "For parent" banner
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -680,7 +685,6 @@ class _ExercisePlayerScreenState extends State<_ExercisePlayerScreen>
               const SizedBox(height: 24),
             ],
           ),
-        ),
       ),
     );
   }

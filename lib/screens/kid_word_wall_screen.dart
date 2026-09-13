@@ -13,6 +13,7 @@ import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../widgets/bloom_mascot.dart';
 import '../widgets/card_image.dart';
+import '../widgets/kid_screen.dart';
 
 /// Kid-facing version of the Word Wall — lives outside Parent Dashboard so
 /// the child can browse their own collection without a parental gate.
@@ -42,23 +43,10 @@ class _KidWordWallScreenState extends ConsumerState<KidWordWallScreen> {
     final s = AppS(isEn);
     final childName = profile.active?.name ?? '';
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFFAF8F5),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(
-          s('Скарбничка', 'Treasure box'),
-          style: TextStyle(
-            fontSize: responsiveFont(context, 18),
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
+    // No text title: the body's own header greets the child by name and
+    // shows the count — that is the "Treasure box" a non-reader gets.
+    return KidScreen(
+      accent: kAccent,
       body: packsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, __) =>

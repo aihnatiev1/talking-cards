@@ -8,6 +8,7 @@ import '../providers/streak_provider.dart';
 import '../screens/cards_screen.dart';
 import '../screens/rewards_screen.dart';
 import '../utils/constants.dart';
+import '../utils/kid_routes.dart';
 import '../utils/l10n.dart';
 import '../utils/uk_grammar.dart';
 import '../widgets/activity_chart.dart';
@@ -125,8 +126,7 @@ class StatsScreen extends ConsumerWidget {
                       if (streak.currentStreak >= 2)
                         GestureDetector(
                           onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                                builder: (_) => const RewardsScreen()),
+                            KidRoutes.content(const RewardsScreen()),
                           ),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
@@ -218,8 +218,7 @@ class StatsScreen extends ConsumerWidget {
 
                   return GestureDetector(
                     onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                          builder: (_) => CardsScreen(pack: pack)),
+                      KidRoutes.content(CardsScreen(pack: pack)),
                     ),
                     child: Container(
                     margin: const EdgeInsets.only(bottom: 10),

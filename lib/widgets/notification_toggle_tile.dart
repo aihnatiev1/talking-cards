@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/language_provider.dart';
 import '../services/notification_service.dart';
 import '../utils/l10n.dart';
+import 'settings_action_row.dart';
 
 /// Row in the About sheet that toggles local notifications after a parental gate.
 class NotificationToggleTile extends ConsumerStatefulWidget {
@@ -27,7 +28,12 @@ class _NotificationToggleTileState
 
   Future<void> _loadState() async {
     final enabled = await NotificationService.instance.isEnabled;
-    if (mounted) setState(() { _enabled = enabled; _loaded = true; });
+    if (mounted) {
+      setState(() {
+        _enabled = enabled;
+        _loaded = true;
+      });
+    }
   }
 
   Future<void> _toggle() async {
@@ -44,17 +50,14 @@ class _NotificationToggleTileState
   Widget build(BuildContext context) {
     if (!_loaded) return const SizedBox.shrink();
     final s = AppS(ref.watch(languageProvider) == 'en');
-    return TextButton.icon(
-      onPressed: _toggle,
-      icon: Icon(
-        _enabled
-            ? Icons.notifications_active
-            : Icons.notifications_off_outlined,
-        size: 18,
-      ),
-      label: Text(_enabled
+    return SettingsActionRow(
+      onTap: _toggle,
+      icon: _enabled
+          ? Icons.notifications_active
+          : Icons.notifications_off_outlined,
+      label: _enabled
           ? s('Сповіщення увімкнено', 'Notifications on')
-          : s('Увімкнути сповіщення', 'Enable notifications')),
+          : s('Увімкнути сповіщення', 'Enable notifications'),
     );
   }
 }

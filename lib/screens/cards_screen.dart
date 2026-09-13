@@ -21,9 +21,10 @@ import '../services/analytics_service.dart';
 import '../services/asset_pack_service.dart';
 import '../services/audio_service.dart';
 import '../services/engage_service.dart';
+import '../services/feedback_service.dart';
 import '../utils/l10n.dart';
 import '../services/paywall_flow.dart';
-import '../widgets/celebration_overlay.dart';
+import '../widgets/celebration.dart';
 import '../widgets/content_download_view.dart';
 import '../widgets/flash_card.dart';
 import '../widgets/share_progress_card.dart';
@@ -31,8 +32,50 @@ import '../widgets/speaker_button.dart';
 import '../widgets/swipe_hint.dart';
 import 'memory_match_screen.dart';
 import '../utils/image_cache_size.dart';
-import '../widgets/kid_tap.dart';
+import '../widgets/kid_screen.dart';
+import '../widgets/card_image.dart';
+import '../widgets/pack_cover_hero.dart';
 import '../utils/design_tokens.dart';
+import '../utils/kid_routes.dart';
+
+/// The pack's picture in the header — the landing spot of the Hero that
+/// takes off from the home tile. Same picture rule as the tile (cover, else
+/// first illustrated card, else the pack emoji), drawn by [CardImage] so a
+/// pack still downloading shows its emoji instead of throwing.
+class _PackCoverBadge extends StatelessWidget {
+  final PackModel pack;
+
+  const _PackCoverBadge({required this.pack});
+
+  static const double _size = 40;
+  static final BorderRadius _radius = BorderRadius.circular(10);
+
+  @override
+  Widget build(BuildContext context) {
+    final tint = pack.color.withValues(alpha: 0.12);
+    return PackCoverHero(
+      pack: pack,
+      borderRadius: _radius,
+      // The tile this would fly back to may have scrolled out of view.
+      transitionOnUserGestures: false,
+      child: SizedBox(
+        width: _size,
+        height: _size,
+        child: ClipRRect(
+          borderRadius: _radius,
+          child: ColoredBox(
+            color: tint,
+            child: CardImage(
+              name: PackCoverHero.coverOf(pack),
+              fallbackEmoji: pack.icon,
+              padding: const EdgeInsets.all(3),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class CardsScreen extends ConsumerStatefulWidget {
   final PackModel pack;
@@ -63,10 +106,12 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   Timer? _speakDebounce;
   bool _imagesPrecached = false;
   late final List<CardModel> _cards;
+
   /// Whether any card on this screen lives in the Play asset pack.
   late final bool _needsContent;
   bool _waitLogged = false;
   final GlobalKey<SwipeHintState> _swipeHintKey = GlobalKey();
+  bool _userSwiping = false;
 
   // Prevents dispose() from killing audio when navigating to "Play again"
   bool _celebrating = false;
@@ -107,8 +152,9 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
       viewportFraction: 0.92,
       initialPage: startIndex,
     );
-    _needsContent = _cards
-        .any((c) => AssetPackService.instance.needsDownload(c.image));
+    _needsContent = _cards.any(
+      (c) => AssetPackService.instance.needsDownload(c.image),
+    );
     if (_needsContent) unawaited(AssetPackService.instance.fetch());
 
     // Restart auto-play countdown when mute is toggled
@@ -134,8 +180,10 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
       if (_cards.isNotEmpty && startIndex == _cards.length - 1) {
         _showCelebrationAfterSound();
       }
-      // Wait for Hero animation + prefs load, then play if not muted
-      Future.delayed(const Duration(milliseconds: 400), () {
+      // Speak once the route has finished fading in. The pack cover's Hero
+      // flight (tile → header) runs on the same route animation, so the
+      // first word lands right as the picture settles.
+      _afterRouteTransition(() {
         if (mounted && AudioService.instance.autoSpeak.value) {
           _speakCurrentCard();
         }
@@ -144,6 +192,25 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
         }
       });
     });
+  }
+
+  /// Runs [action] when the enclosing route's entrance animation completes
+  /// (or right away if there is none / it already finished).
+  void _afterRouteTransition(VoidCallback action) {
+    final animation = ModalRoute.of(context)?.animation;
+    if (animation == null || animation.isCompleted) {
+      action();
+      return;
+    }
+    late final AnimationStatusListener listener;
+    listener = (status) {
+      if (status == AnimationStatus.completed ||
+          status == AnimationStatus.dismissed) {
+        animation.removeStatusListener(listener);
+        if (mounted) action();
+      }
+    };
+    animation.addStatusListener(listener);
   }
 
   @override
@@ -179,8 +246,10 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
       //
       // The cacheWidth must match FlashCard's, or the same picture decodes
       // twice under two different ResizeImage keys.
-      final art = AssetPackService.instance
-          .cardArt(_cards[i].image, cacheWidth: cardCacheWidth(context));
+      final art = AssetPackService.instance.cardArt(
+        _cards[i].image,
+        cacheWidth: cardCacheWidth(context),
+      );
       if (art is! ArtReady) continue;
       precacheImage(
         art.provider,
@@ -252,8 +321,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   void _beginCountdown(int seconds) {
     if (!mounted || !_autoPlayTimer) return;
     setState(() => _countdownSeconds = seconds);
-    _autoPlayCountdown =
-        Timer.periodic(const Duration(seconds: 1), (timer) {
+    _autoPlayCountdown = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted || !_autoPlayTimer) {
         timer.cancel();
         return;
@@ -312,8 +380,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   }
 
   Future<void> _handleUnlock() async {
-    final purchased =
-        await runPaywallFlow(context, ref, source: 'preview_end');
+    final purchased = await runPaywallFlow(context, ref, source: 'preview_end');
     if (purchased && mounted) Navigator.of(context).pop();
   }
 
@@ -340,15 +407,18 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
             children: [
               Padding(
                 padding: const EdgeInsets.only(bottom: 4),
-                child: Text(s('Для батьків', 'For parents'),
-                    style: DT.h2.copyWith(color: DT.textSecondary)),
+                child: Text(
+                  s('Для батьків', 'For parents'),
+                  style: DT.h2.copyWith(color: DT.textSecondary),
+                ),
               ),
               SwitchListTile(
                 value: _autoPlayTimer,
                 secondary: Icon(Icons.timer_outlined, color: widget.pack.color),
                 title: Text(s('Автогортання', 'Auto-advance')),
-                subtitle: Text(s('Картки перегортаються самі',
-                    'Cards turn on their own')),
+                subtitle: Text(
+                  s('Картки перегортаються самі', 'Cards turn on their own'),
+                ),
                 onChanged: (_) {
                   Navigator.of(ctx).pop();
                   _toggleAutoPlayTimer();
@@ -357,16 +427,16 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
               if (_memoryEligible)
                 ListTile(
                   leading: const Text('🧠', style: TextStyle(fontSize: 24)),
-                  title: Text(s('Memory з цим розділом',
-                      'Memory with this pack')),
+                  title: Text(
+                    s('Memory з цим розділом', 'Memory with this pack'),
+                  ),
                   onTap: () {
                     Navigator.of(ctx).pop();
-                    Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => MemoryMatchScreen(
-                        pack: widget.pack,
-                        cards: _cards,
+                    Navigator.of(context).push(
+                      KidRoutes.game(
+                        MemoryMatchScreen(pack: widget.pack, cards: _cards),
                       ),
-                    ));
+                    );
                   },
                 ),
             ],
@@ -389,7 +459,9 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
       context: context,
       completedPacks: completed.length,
       totalPacks: packs.length,
-      seenCards: progress.entries.where((e) => !e.key.startsWith('_')).fold<int>(0, (s, e) => s + e.value),
+      seenCards: progress.entries
+          .where((e) => !e.key.startsWith('_'))
+          .fold<int>(0, (s, e) => s + e.value),
       totalCards: packs.fold<int>(0, (s, p) => s + p.cards.length),
       streak: streak.currentStreak,
       badges: streak.unlockedRewards,
@@ -440,6 +512,8 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
 
   void _showCelebration() {
     _celebrating = true;
+    // Cut the narrator's tail; the tada + praise are the Celebration's
+    // (FeedbackEvent.packDone), so nothing is played here.
     AudioService.instance.stop();
     // Don't mark virtual packs (favorites, review) as completed
     var askReview = false;
@@ -453,50 +527,39 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
       askReview = ref.read(completedPacksProvider).isEmpty;
       ref.read(completedPacksProvider.notifier).markCompleted(widget.pack.id);
     }
-    // Capture the route's own Navigator and overlay context up-front so the
-    // celebration buttons never try to pop through a stale ancestor — a bug
-    // where finishing a pack left the overlay stuck on the home screen.
+    // Capture the route's own Navigator up-front so the callbacks never
+    // pop through a stale ancestor — a bug where finishing a pack left the
+    // overlay stuck on the home screen. The Celebration pops itself exactly
+    // once before calling back (its own double-pop guard), so each callback
+    // below only has to deal with CardsScreen.
     final navigator = Navigator.of(context);
-    var overlayDismissed = false;
-    void dismissOverlay() {
-      if (overlayDismissed) return;
-      overlayDismissed = true;
-      if (navigator.canPop()) navigator.pop();
-    }
-
     final isEn = ref.read(languageProvider) == 'en';
-    navigator.push(
-      PageRouteBuilder(
-        opaque: false,
-        pageBuilder: (_, __, ___) => CelebrationOverlay(
-          packTitle: widget.pack.title,
-          packIcon: widget.pack.icon,
-          packCover: widget.pack.cover,
-          color: widget.pack.color,
-          isEn: isEn,
-          onShare: _shareProgress,
-          onReplay: () {
-            dismissOverlay();
-            if (!mounted) return;
-            navigator.pushReplacement(
-              MaterialPageRoute(
-                  builder: (_) => CardsScreen(pack: widget.pack)),
-            );
-          },
-          onDone: () {
-            dismissOverlay();
-            if (mounted && navigator.canPop()) navigator.pop();
-            // OS-native in-app review sheet, once ever, right after the
-            // first-pack celebration — rate-limited by the OS and never
-            // leaves the app. Explicit parent path stays in ParentDashboard.
-            if (askReview && mounted) {
-              ref
-                  .read(appReviewControllerProvider)
-                  .maybeRequestAfterWin('first_pack');
-            }
-          },
-        ),
-      ),
+    celebrate(
+      context,
+      tier: CelebrationTier.pack,
+      isEn: isEn,
+      packTitle: widget.pack.title,
+      packIcon: widget.pack.icon,
+      packCover: widget.pack.cover,
+      accent: widget.pack.color,
+      onShare: _shareProgress,
+      onAgain: () {
+        if (!mounted) return;
+        navigator.pushReplacement(
+          KidRoutes.content(CardsScreen(pack: widget.pack)),
+        );
+      },
+      onDone: () {
+        if (mounted && navigator.canPop()) navigator.pop();
+        // OS-native in-app review sheet, once ever, right after the
+        // first-pack celebration — rate-limited by the OS and never
+        // leaves the app. Explicit parent path stays in ParentDashboard.
+        if (askReview && mounted) {
+          ref
+              .read(appReviewControllerProvider)
+              .maybeRequestAfterWin('first_pack');
+        }
+      },
     );
   }
 
@@ -505,7 +568,8 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     final s = AppS(ref.read(languageProvider) == 'en');
     final allCards = widget.pack.cards;
     final bonus = ref.read(bonusCardsProvider)[widget.pack.id] ?? 0;
-    final remaining = allCards.length - widget.pack.effectiveFreePreviewCount - bonus;
+    final remaining =
+        allCards.length - widget.pack.effectiveFreePreviewCount - bonus;
     final previewEmojis = allCards
         .skip(widget.pack.effectiveFreePreviewCount + bonus)
         .take(6)
@@ -515,18 +579,19 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         child: Padding(
           padding: const EdgeInsets.all(28),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(widget.pack.icon,
-                  style: const TextStyle(fontSize: 56)),
+              Text(widget.pack.icon, style: const TextStyle(fontSize: 56)),
               const SizedBox(height: 16),
               Text(
-                s('Сподобалось? ${widget.pack.title}', 'Enjoying ${widget.pack.title}?'),
+                s(
+                  'Сподобалось? ${widget.pack.title}',
+                  'Enjoying ${widget.pack.title}?',
+                ),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 22,
@@ -536,13 +601,18 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
               ),
               const SizedBox(height: 10),
               Text(
-                s('Ще $remaining карток чекають!', '$remaining more cards waiting!'),
+                s(
+                  'Ще $remaining карток чекають!',
+                  '$remaining more cards waiting!',
+                ),
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Theme.of(context).textTheme.bodyMedium?.color),
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                ),
               ),
               const SizedBox(height: 12),
-              Text(previewEmojis,
-                  style: const TextStyle(fontSize: 28)),
+              Text(previewEmojis, style: const TextStyle(fontSize: 28)),
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
@@ -556,20 +626,25 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
-                  child: Text(s('Розблокувати все', 'Unlock all'),
+                  child: Text(
+                    s('Розблокувати все', 'Unlock all'),
                     style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold),
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
               const SizedBox(height: 10),
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: Text(s('Може пізніше', 'Maybe later'),
-                    style:
-                        TextStyle(color: Colors.grey[500], fontSize: 15)),
+                child: Text(
+                  s('Може пізніше', 'Maybe later'),
+                  style: TextStyle(color: Colors.grey[500], fontSize: 15),
+                ),
               ),
             ],
           ),
@@ -605,22 +680,18 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     if (!content.isReady && _needsContent) {
       if (!_waitLogged) {
         _waitLogged = true;
-        AnalyticsService.instance
-            .logContentWait(widget.pack.id, content.status.name);
+        AnalyticsService.instance.logContentWait(
+          widget.pack.id,
+          content.status.name,
+        );
       }
       ref.listen<ContentPackState>(contentPackProvider, (_, next) {
         if (next.isReady && mounted && AudioService.instance.autoSpeak.value) {
           _speakCurrentCard();
         }
       });
-      return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          toolbarHeight: 72,
-          leadingWidth: 80,
-          leading: _BackButton(color: widget.pack.color),
-        ),
+      return KidScreen(
+        accent: widget.pack.color,
         body: ContentDownloadView(
           state: content,
           accent: widget.pack.color,
@@ -629,97 +700,41 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        toolbarHeight: 72,
-        leadingWidth: 80,
-        leading: _BackButton(color: widget.pack.color),
-        // The child's header holds only what a child needs: back, the
-        // pack, the counter. Autoplay and the Memory shortcut moved into a
-        // parent sheet on a long-press of the title (audit #18) — a
-        // 36dp timer toggle and a third-level game link were the two
-        // controls a toddler hit by accident most.
-        title: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onLongPress: _showParentTools,
-          child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(widget.pack.icon, style: const TextStyle(fontSize: 24)),
-            const SizedBox(width: 8),
-            Flexible(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Shrink-to-fit instead of «Весела абе…» — long pack
-                  // names scale down a little rather than truncating.
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      widget.pack.title,
-                      maxLines: 1,
-                      style: TextStyle(
-                        color: widget.pack.color,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  if (widget.pack.id == '_review')
-                    Text(
-                      AppS(ref.read(languageProvider) == 'en')(
-                          '🔄 Повторення', '🔄 Review'),
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: widget.pack.color.withValues(alpha: 0.7),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                ],
+    // The child's header holds only what a child needs: back, the pack
+    // cover (the Hero from the grid tile), the counter, the progress pill.
+    // Autoplay and the Memory shortcut live in a parent sheet on a
+    // long-press of the cover (audit #18) — a 36dp timer toggle and a
+    // third-level game link were the two controls a toddler hit by
+    // accident most. The pack name is gone from the header: a two-year-old
+    // does not read it and the parent saw it on the tile a second ago.
+    return KidScreen(
+      accent: widget.pack.color,
+      progress: progress,
+      title: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onLongPress: _showParentTools,
+        child: _PackCoverBadge(pack: widget.pack),
+      ),
+      trailing: ConstrainedBox(
+        constraints: const BoxConstraints(minWidth: 72),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: Text(
+              _autoPlayTimer && _countdownSeconds > 0
+                  ? '${_currentIndex + 1}/${cards.length}  · $_countdownSeconds'
+                  : '${_currentIndex + 1}/${cards.length}',
+              style: TextStyle(
+                color: widget.pack.color,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
               ),
             ),
-          ],
           ),
         ),
-        centerTitle: true,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Center(
-              child: Text(
-                _autoPlayTimer && _countdownSeconds > 0
-                    ? '${_currentIndex + 1}/${cards.length}  · $_countdownSeconds'
-                    : '${_currentIndex + 1}/${cards.length}',
-                style: TextStyle(
-                  color: widget.pack.color,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: progress,
-                minHeight: 6,
-                backgroundColor:
-                    widget.pack.color.withValues(alpha: 0.15),
-                valueColor:
-                    AlwaysStoppedAnimation<Color>(widget.pack.color),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
           Expanded(
             child: Stack(
               children: [
@@ -729,10 +744,13 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                 // maxScrollExtent instead — handle both.
                 NotificationListener<ScrollNotification>(
                   onNotification: (n) {
+                    if (n is ScrollStartNotification)
+                      _userSwiping = n.dragDetails != null;
+                    if (n is ScrollEndNotification) _userSwiping = false;
                     final pastEnd = n is OverscrollNotification
                         ? n.overscroll > 0
                         : n is ScrollUpdateNotification &&
-                            n.metrics.pixels > n.metrics.maxScrollExtent + 24;
+                              n.metrics.pixels > n.metrics.maxScrollExtent + 24;
                     if (pastEnd &&
                         _currentIndex == cards.length - 1 &&
                         !_celebrating &&
@@ -743,78 +761,82 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                     return false;
                   },
                   child: PageView.builder(
-                  controller: _pageController,
-                  itemCount: cards.length,
-                  onPageChanged: (index) {
-                    HapticFeedback.lightImpact();
-                    _swipeHintKey.currentState?.dismiss();
-                    _cancelAutoPlayCountdown();
-                    final prev = _currentIndex;
-                    setState(() {
-                      _currentIndex = index;
-                      _isFlipped = false;
-                    });
-                    _precacheAround(index);
-                    // Track only forward progress
-                    if (index > prev) {
-                      AnalyticsService.instance.logCardView(
-                          cards[index].id, widget.pack.id);
-                      ref
-                          .read(packProgressProvider.notifier)
-                          .updateProgress(widget.pack.id, index);
-                      ref
-                          .read(dailyStatsProvider.notifier)
-                          .recordView();
-                      ref
-                          .read(dailyQuestProvider.notifier)
-                          .recordCardView();
-                      ref
-                          .read(reviewProvider.notifier)
-                          .markSeen(cards[index].id);
-                    }
-                    if (AudioService.instance.autoSpeak.value) {
-                      _speakCardDebounced(index);
-                    } else if (_autoPlayTimer) {
-                      _startAutoPlayCountdown();
-                    }
-                    // Last card reached
-                    if (index == cards.length - 1) {
-                      _showCelebrationAfterSound();
-                    }
-                  },
-                  itemBuilder: (context, index) {
-                    return AnimatedBuilder(
-                      animation: _pageController,
-                      builder: (context, child) {
-                        double value = 0;
-                        if (_pageController.position.haveDimensions) {
-                          value = index - (_pageController.page ?? index.toDouble());
-                        }
-                        // 3D rotation + scale effect
-                        final angle = value * 0.04;
-                        final scale = lerpDouble(1, 0.9, value.abs())!;
-                        return Transform(
-                          alignment: Alignment.center,
-                          transform: Matrix4.identity()
-                            ..setEntry(3, 2, 0.001)
-                            ..rotateY(angle)
-                            ..scaleByDouble(scale, scale, scale, 1),
-                          child: Opacity(
-                            opacity: lerpDouble(1, 0.5, value.abs())!.clamp(0.0, 1.0),
-                            child: child,
-                          ),
+                    controller: _pageController,
+                    itemCount: cards.length,
+                    onPageChanged: (index) {
+                      FeedbackService.instance.event(FeedbackEvent.swipe);
+                      if (_userSwiping) _swipeHintKey.currentState?.dismiss();
+                      _cancelAutoPlayCountdown();
+                      final prev = _currentIndex;
+                      setState(() {
+                        _currentIndex = index;
+                        _isFlipped = false;
+                      });
+                      _precacheAround(index);
+                      // Track only forward progress
+                      if (index > prev) {
+                        AnalyticsService.instance.logCardView(
+                          cards[index].id,
+                          widget.pack.id,
                         );
-                      },
-                      child: FlashCard(
-                        card: cards[index],
-                        isActive: index == _currentIndex,
-                        ttsLocale: _ttsLocaleForCard(cards[index]),
-                        onFlipChanged: (flipped) {
-                          setState(() => _isFlipped = flipped);
+                        ref
+                            .read(packProgressProvider.notifier)
+                            .updateProgress(widget.pack.id, index);
+                        ref.read(dailyStatsProvider.notifier).recordView();
+                        ref.read(dailyQuestProvider.notifier).recordCardView();
+                        ref
+                            .read(reviewProvider.notifier)
+                            .markSeen(cards[index].id);
+                      }
+                      if (AudioService.instance.autoSpeak.value) {
+                        _speakCardDebounced(index);
+                      } else if (_autoPlayTimer) {
+                        _startAutoPlayCountdown();
+                      }
+                      // Last card reached
+                      if (index == cards.length - 1) {
+                        _showCelebrationAfterSound();
+                      }
+                    },
+                    itemBuilder: (context, index) {
+                      return AnimatedBuilder(
+                        animation: _pageController,
+                        builder: (context, child) {
+                          double value = 0;
+                          if (_pageController.position.haveDimensions) {
+                            value =
+                                index -
+                                (_pageController.page ?? index.toDouble());
+                          }
+                          // 3D rotation + scale effect
+                          final angle = value * 0.04;
+                          final scale = lerpDouble(1, 0.9, value.abs())!;
+                          return Transform(
+                            alignment: Alignment.center,
+                            transform: Matrix4.identity()
+                              ..setEntry(3, 2, 0.001)
+                              ..rotateY(angle)
+                              ..scaleByDouble(scale, scale, scale, 1),
+                            child: Opacity(
+                              opacity: lerpDouble(
+                                1,
+                                0.5,
+                                value.abs(),
+                              )!.clamp(0.0, 1.0),
+                              child: child,
+                            ),
+                          );
                         },
-                      ),
-                    );
-                  },
+                        child: FlashCard(
+                          card: cards[index],
+                          isActive: index == _currentIndex,
+                          ttsLocale: _ttsLocaleForCard(cards[index]),
+                          onFlipChanged: (flipped) {
+                            setState(() => _isFlipped = flipped);
+                          },
+                        ),
+                      );
+                    },
                   ),
                 ),
                 if (!_isFlipped)
@@ -836,7 +858,9 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                         onTap: _toggleAutoPlayTimer,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: widget.pack.color,
                             borderRadius: BorderRadius.circular(20),
@@ -851,8 +875,11 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.pause_rounded,
-                                  color: Colors.white, size: 18),
+                              const Icon(
+                                Icons.pause_rounded,
+                                color: Colors.white,
+                                size: 18,
+                              ),
                               const SizedBox(width: 6),
                               Text(
                                 '$_countdownSeconds',
@@ -874,18 +901,22 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
           if (widget.pack.isLocked)
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 24, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
               color: widget.pack.color.withValues(alpha: 0.1),
               child: Row(
                 children: [
-                  Icon(Icons.lock_open_rounded,
-                      color: widget.pack.color, size: 22),
+                  Icon(
+                    Icons.lock_open_rounded,
+                    color: widget.pack.color,
+                    size: 22,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      s('Превʼю ${cards.length} з ${allCards.length} карток',
-                          'Preview ${cards.length} of ${allCards.length} cards'),
+                      s(
+                        'Превʼю ${cards.length} з ${allCards.length} карток',
+                        'Preview ${cards.length} of ${allCards.length} cards',
+                      ),
                       style: TextStyle(
                         color: widget.pack.color,
                         fontSize: 14,
@@ -899,12 +930,17 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                       backgroundColor: widget.pack.color,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20)),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 8),
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
                     ),
-                    child: Text(s('Розблокувати', 'Unlock'),
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    child: Text(
+                      s('Розблокувати', 'Unlock'),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ],
               ),
@@ -915,29 +951,3 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   }
 }
 
-/// Back is the one control a child hits constantly, and it sat in a 48dp
-/// IconButton at the very edge (audit #18). 64dp on a tinted disc, with the
-/// same felt-and-heard answer as every other child target.
-class _BackButton extends StatelessWidget {
-  final Color color;
-  const _BackButton({required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: KidTap(
-        onTap: () => Navigator.of(context).maybePop(),
-        child: Container(
-          width: 64,
-          height: 64,
-          margin: const EdgeInsets.only(left: 8),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.12),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(Icons.arrow_back_ios_new_rounded, color: color, size: 28),
-        ),
-      ),
-    );
-  }
-}

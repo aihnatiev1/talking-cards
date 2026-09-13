@@ -1,6 +1,12 @@
-import 'package:flutter/material.dart';
+import 'design_tokens.dart';
 
-const kAccent = Color(0xFF6C63FF);
-const kSoundRed = Color(0xFFD63031);
-const kTeal = Color(0xFF4ECDC4);
-const kStreakOrange = Color(0xFFE17055);
+/// Legacy aliases — new code uses `DT`.
+///
+/// These names predate the token file and are still read at ~130 call
+/// sites. They now resolve to the same constants as `DT.brand` etc., so the
+/// palette has one source of truth; the aliases stay so those call sites can
+/// migrate at their own pace instead of in one sweep.
+const kAccent = DT.brand;
+const kSoundRed = DT.soundRed;
+const kTeal = DT.teal;
+const kStreakOrange = DT.streakOrange;

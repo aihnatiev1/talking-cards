@@ -2,6 +2,6 @@
 <!-- Pre-Android-12 launch window: brand cream, matching the Flutter splash. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
-        <color android:color="#FAF8F5" />
+        <color android:color="#FFFBF0" />
     </item>
 </layer-list>

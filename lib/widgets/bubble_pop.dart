@@ -2,6 +2,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../utils/motion.dart';
+
 /// Sago Mini-style ambient delight: a tinted bubble springs from the tap point
 /// and floats all the way up to the top of the screen, popping at the edge.
 ///
@@ -9,6 +11,10 @@ import 'package:flutter/material.dart';
 /// [Overlay], auto-removes when its animation completes, and is fully
 /// pointer-transparent so it never blocks the underlying UI.
 void showBubblePop(BuildContext context, Offset globalPosition) {
+  // Reduced motion: a 2–6 s float across the whole screen is exactly the
+  // kind of drift the flag asks us to skip. The tap's own press feedback
+  // (KidTap scale + pop) still answers the child.
+  if (reduceMotionOf(context)) return;
   final overlay = Overlay.maybeOf(context);
   if (overlay == null) return;
   late OverlayEntry entry;

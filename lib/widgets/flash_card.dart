@@ -8,6 +8,7 @@ import '../models/card_model.dart';
 import '../providers/favorites_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
+import 'ambient_loop.dart';
 import 'card_image.dart';
 import 'kid_tap.dart';
 import '../utils/design_tokens.dart';
@@ -19,6 +20,10 @@ class FlashCard extends ConsumerStatefulWidget {
   final String? ttsLocale;
   /// Only the active (current) card should pulse its word during audio.
   final bool isActive;
+  /// Whether the «English ↻» chip is drawn on the front face. `CardsScreen`
+  /// turns it off (G9: no text buttons in the kid zone) and flips the card
+  /// from the parent tools sheet through [FlashCardState.toggleFlip].
+  final bool showEnglishChip;
 
   const FlashCard({
     super.key,
@@ -26,20 +31,15 @@ class FlashCard extends ConsumerStatefulWidget {
     this.onFlipChanged,
     this.ttsLocale,
     this.isActive = true,
+    this.showEnglishChip = true,
   });
 
   @override
-  ConsumerState<FlashCard> createState() => _FlashCardState();
+  ConsumerState<FlashCard> createState() => FlashCardState();
 }
 
-class _FlashCardState extends ConsumerState<FlashCard>
+class FlashCardState extends ConsumerState<FlashCard>
     with TickerProviderStateMixin {
-  late final AnimationController _pressCtrl;
-  late final Animation<double> _pressAnim;
-
-  late final AnimationController _pulseCtrl;
-  late final Animation<double> _pulseAnim;
-
   late final AnimationController _entranceCtrl;
   late final Animation<double> _entranceAnim;
 
@@ -50,25 +50,16 @@ class _FlashCardState extends ConsumerState<FlashCard>
   bool get _hasEnglish =>
       widget.card.soundEn != null && widget.card.soundEn!.isNotEmpty;
 
+  /// True when the card has an English side to flip to.
+  bool get hasEnglish => _hasEnglish;
+
+  /// Flip between the word and its English side. Public so the parent tools
+  /// sheet in `CardsScreen` can do what the on-card chip used to.
+  void toggleFlip() => _toggleFlip();
+
   @override
   void initState() {
     super.initState();
-    _pressCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 120),
-    );
-    _pressAnim = Tween<double>(begin: 1.0, end: 0.95).animate(
-      CurvedAnimation(parent: _pressCtrl, curve: Curves.easeInOut),
-    );
-
-    _pulseCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1600),
-    );
-    _pulseAnim = Tween<double>(begin: 1.0, end: 1.15).animate(
-      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
-    );
-
     _entranceCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
@@ -92,48 +83,13 @@ class _FlashCardState extends ConsumerState<FlashCard>
         widget.onFlipChanged?.call(isBack);
       }
     });
-
-    if (widget.isActive) {
-      AudioService.instance.isSpeaking.addListener(_onSpeakingChanged);
-      if (AudioService.instance.isSpeaking.value) {
-        _pulseCtrl.repeat(reverse: true);
-      }
-    }
-  }
-
-  @override
-  void didUpdateWidget(covariant FlashCard old) {
-    super.didUpdateWidget(old);
-    if (widget.isActive && !old.isActive) {
-      AudioService.instance.isSpeaking.addListener(_onSpeakingChanged);
-      _onSpeakingChanged(); // sync state immediately
-    } else if (!widget.isActive && old.isActive) {
-      AudioService.instance.isSpeaking.removeListener(_onSpeakingChanged);
-      _pulseCtrl.stop();
-      _pulseCtrl.value = 0.0;
-    }
   }
 
   @override
   void dispose() {
-    if (widget.isActive) {
-      AudioService.instance.isSpeaking.removeListener(_onSpeakingChanged);
-    }
-    _pressCtrl.dispose();
-    _pulseCtrl.dispose();
     _entranceCtrl.dispose();
     _flipCtrl.dispose();
     super.dispose();
-  }
-
-  void _onSpeakingChanged() {
-    if (!mounted) return;
-    if (AudioService.instance.isSpeaking.value) {
-      _pulseCtrl.repeat(reverse: true);
-    } else {
-      _pulseCtrl.stop();
-      _pulseCtrl.value = 0.0;
-    }
   }
 
   void _toggleFlip() {
@@ -159,10 +115,12 @@ class _FlashCardState extends ConsumerState<FlashCard>
 
     return ScaleTransition(
       scale: _entranceAnim,
-      child: GestureDetector(
-        onTapDown: (_) => _pressCtrl.forward(),
-        onTapUp: (_) {
-          _pressCtrl.reverse();
+      child: KidTap(
+        // The word is this tap's sound; a pop underneath it would be noise.
+        sound: KidSound.none,
+        // Only the card face, not its margin (as the old detector did).
+        behavior: HitTestBehavior.deferToChild,
+        onTap: () {
           // Tap = hear the word, always — a toddler taps the picture
           // expecting sound, not a flip to English text. Flipping to the
           // EN side moved to the 🇬🇧 chip; tapping the back flips home.
@@ -177,54 +135,49 @@ class _FlashCardState extends ConsumerState<FlashCard>
             );
           }
         },
-        onTapCancel: () => _pressCtrl.reverse(),
         // Favourite = long-press on the card itself. The 56dp heart in the
         // corner collected accidental taps and silent favourites (audit
         // #20); a hold is a deliberate parent gesture, and the badge that
         // appears says what happened.
         onLongPress: () {
-          _pressCtrl.reverse();
           HapticFeedback.mediumImpact();
           KidTap.feedback();
           ref.read(favoritesProvider.notifier).toggle(widget.card.id);
         },
-        child: ScaleTransition(
-          scale: _pressAnim,
-          child: AnimatedBuilder(
-            animation: _flipAnim,
-            builder: (context, child) {
-              final angle = _flipAnim.value * pi;
-              return Transform(
-                alignment: Alignment.center,
-                transform: Matrix4.identity()
-                  ..setEntry(3, 2, 0.001)
-                  ..rotateY(angle),
-                child: Container(
-                  margin: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 24),
-                  decoration: BoxDecoration(
-                    color: cardBg,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.10),
-                        blurRadius: 16,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: _showBack
-                      ? Transform(
-                          alignment: Alignment.center,
-                          transform: Matrix4.identity()..rotateY(pi),
-                          child: _buildBack(cardBg, theme),
-                        )
-                      : _buildFront(cardBg, theme, isFav),
+        child: AnimatedBuilder(
+          animation: _flipAnim,
+          builder: (context, child) {
+            final angle = _flipAnim.value * pi;
+            return Transform(
+              alignment: Alignment.center,
+              transform: Matrix4.identity()
+                ..setEntry(3, 2, 0.001)
+                ..rotateY(angle),
+              child: Container(
+                margin: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 24),
+                decoration: BoxDecoration(
+                  color: cardBg,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.10),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-              );
-            },
-          ),
+                clipBehavior: Clip.antiAlias,
+                child: _showBack
+                    ? Transform(
+                        alignment: Alignment.center,
+                        transform: Matrix4.identity()..rotateY(pi),
+                        child: _buildBack(cardBg, theme),
+                      )
+                    : _buildFront(cardBg, theme, isFav),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -275,7 +228,7 @@ class _FlashCardState extends ConsumerState<FlashCard>
               ),
             ),
           ),
-        if (_hasEnglish)
+        if (_hasEnglish && widget.showEnglishChip)
           Positioned(
             bottom: 6,
             right: 6,
@@ -289,8 +242,7 @@ class _FlashCardState extends ConsumerState<FlashCard>
                   color: Colors.grey.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Text('🇬🇧 English ↻',
-                    style: TextStyle(fontSize: 12, color: Colors.grey)),
+                child: const Text('🇬🇧 English ↻', style: DT.caption),
               ),
             ),
           ),
@@ -330,23 +282,31 @@ class _FlashCardState extends ConsumerState<FlashCard>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              ScaleTransition(
-                scale: _pulseAnim,
+              // The word pulses (1.0 → 1.15, 1600 ms) only on the active
+              // card and only while its clip plays. Under reduced motion it
+              // rests at 1.0 — the speaker button's glow still shows that
+              // audio is running.
+              ValueListenableBuilder<bool>(
+                valueListenable: AudioService.instance.isSpeaking,
+                builder: (_, speaking, word) => AmbientLoop(
+                  period: const Duration(milliseconds: 1600),
+                  enabled: widget.isActive && speaking,
+                  builder: (_, t, child) => Transform.scale(
+                    scale: 1.0 + 0.15 * t,
+                    child: child,
+                  ),
+                  child: word,
+                ),
                 child: Text(
                   widget.card.sound,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: DT.kidFont,
-                    fontVariations: DT.kidWeight(900),
+                  style: DT.word.copyWith(
                     // Letter cards («Аа») carry 2-3 chars — let them fill
                     // the space instead of floating small in a bare block.
                     fontSize: widget.card.sound.length <= 3 ? 72 : 32,
-                    fontWeight: FontWeight.w900,
                     // The pack's own accent, darkened for text, instead of
                     // one red for every pack (audit #19).
                     color: DT.onTint(widget.card.colorAccent),
-                    letterSpacing: 1.0,
-                    height: 1.1,
                   ),
                 ),
               ),
@@ -355,12 +315,11 @@ class _FlashCardState extends ConsumerState<FlashCard>
                 Text(
                   widget.card.text,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: DT.body.copyWith(
                     fontSize: 16,
-                    fontWeight: FontWeight.w500,
                     color: theme.brightness == Brightness.dark
                         ? Colors.grey[300]
-                        : const Color(0xFF4A4A4A),
+                        : DT.textPrimary,
                     height: 1.3,
                   ),
                 ),
@@ -402,46 +361,38 @@ class _FlashCardState extends ConsumerState<FlashCard>
                     padding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1A5276).withValues(alpha: 0.08),
+                      color: DT.sky.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Text('🇬🇧  English',
-                        style: TextStyle(
-                            fontSize: 13, color: Color(0xFF1A5276))),
+                    child: Text('🇬🇧  English',
+                        style: DT.caption.copyWith(
+                            fontSize: 13, color: DT.onTint(DT.sky))),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     widget.card.soundEn ?? '',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: DT.word.copyWith(
                       fontSize: 38,
-                      fontWeight: FontWeight.w900,
-                      color: widget.card.colorAccent,
+                      color: DT.onTint(widget.card.colorAccent),
                       letterSpacing: 1.5,
-                      height: 1.1,
                     ),
                   ),
                   const SizedBox(height: 10),
                   Text(
                     widget.card.transcription ?? '',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: DT.body.copyWith(
                       fontSize: 22,
                       fontWeight: FontWeight.w400,
                       color: theme.brightness == Brightness.dark
                           ? Colors.grey[400]
-                          : const Color(0xFF5D6D7E),
+                          : DT.textSecondary,
                       height: 1.3,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    '↺ натисніть щоб повернути',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[400],
-                    ),
-                  ),
+                  const Text('↺ натисніть щоб повернути', style: DT.caption),
                 ],
               ),
             ),
@@ -491,15 +442,14 @@ class _LetterArt extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             child: Text(
               letter,
-              style: const TextStyle(
+              style: DT.word.copyWith(
                 fontSize: 220,
-                fontWeight: FontWeight.w900,
                 color: Colors.white,
                 height: 1.0,
                 letterSpacing: -4,
-                shadows: [
+                shadows: const [
                   Shadow(
-                    color: Color(0x55000000),
+                    color: Colors.black38,
                     blurRadius: 14,
                     offset: Offset(0, 6),
                   ),

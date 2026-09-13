@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
@@ -9,12 +8,16 @@ import '../models/pack_model.dart';
 import '../providers/language_provider.dart';
 import '../providers/profile_provider.dart';
 import '../services/audio_service.dart';
-import '../utils/confetti_overlay_mixin.dart';
+import '../services/feedback_service.dart';
 import '../utils/game_state_mixin.dart';
+import '../utils/constants.dart';
+import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
-import '../utils/shake_animation_mixin.dart';
+import '../widgets/answer_feedback.dart';
 import '../widgets/card_image.dart';
 import '../widgets/game_celebration_overlay.dart';
+import '../widgets/kid_screen.dart';
+import '../widgets/kid_tap.dart';
 
 class OddOneOutScreen extends ConsumerStatefulWidget {
   final List<PackModel> packs;
@@ -26,11 +29,7 @@ class OddOneOutScreen extends ConsumerStatefulWidget {
 }
 
 class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
-    with
-        TickerProviderStateMixin,
-        ShakeAnimationMixin,
-        ConfettiOverlayMixin,
-        GameStateMixin {
+    with GameStateMixin {
   @override
   String get gameId => 'odd_one_out';
 
@@ -39,13 +38,15 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
   int get maxRounds => 5;
 
   bool _answered = false;
-  String? _tappedId;
+  // A miss nudges the tapped card (no colour, no cross); after the second
+  // miss in a round the odd card starts to glow (G10).
+  final _misses = MissTracker();
+  final Map<String, int> _nudges = {};
   late List<_Slot> _slots;
 
   @override
   void initState() {
     super.initState();
-    initShake();
     startGame();
     _buildRound();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -55,13 +56,6 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
         isEn: ref.read(languageProvider) == 'en',
       );
     });
-  }
-
-  @override
-  void dispose() {
-    disposeShake();
-    disposeConfetti();
-    super.dispose();
   }
 
   void _buildRound() {
@@ -84,28 +78,27 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
     setState(() {
       _slots = slots;
       _answered = false;
-      _tappedId = null;
+      _misses.reset();
+      _nudges.clear();
     });
   }
 
   void _onTap(_Slot slot) {
     if (_answered) return;
-    _tappedId = slot.card.id;
 
     // Play the tapped card's word — child hears the item they're evaluating,
     // which anchors the sort-by-category reasoning in speech, not silence.
     AudioService.instance.playWordOnly(slot.card.audioKey, slot.card.sound);
 
     if (slot.isOdd) {
-      HapticFeedback.lightImpact();
-      AudioService.instance.playSfx('ding');
+      FeedbackService.instance.event(FeedbackEvent.correct);
       AudioService.instance
           .playPraise(isEn: ref.read(languageProvider) == 'en');
+      // The card itself pops, frames in success and bursts (AnswerFrame).
       setState(() {
         _answered = true;
         scorePoint();
       });
-      showConfetti();
       if (score >= maxRounds) {
         Future.delayed(const Duration(milliseconds: 900), () {
           if (!mounted) return;
@@ -118,9 +111,16 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
         });
       }
     } else {
-      // Gentle redirection — soft shake only, no harsh error feedback.
-      HapticFeedback.mediumImpact();
-      shake(id: slot.card.id);
+      // Gentle redirection — a low pop and one nudge, no harsh feedback;
+      // the other cards stay tappable.
+      FeedbackService.instance.event(FeedbackEvent.wrong);
+      setState(() {
+        _nudges[slot.card.id] = (_nudges[slot.card.id] ?? 0) + 1;
+        _misses.miss();
+      });
+      if (_misses.justCrossed) {
+        FeedbackService.instance.event(FeedbackEvent.lockedHint);
+      }
     }
   }
 
@@ -146,18 +146,12 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
     final majorityCards =
         _slots.where((sl) => !sl.isOdd).map((sl) => sl.card).toList();
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF0EEFF),
-      appBar: AppBar(
-        title: Text(
-          s('Знайди зайве', 'Odd one out'),
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: SafeArea(
-        child: Padding(
+    // No text title — "Odd one out" is for the parent; the hint row of
+    // thumbnails + ❓ below is the child's question.
+    return KidScreen.game(
+      accent: kAccent,
+      background: DT.violetTint,
+      body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
             children: [
@@ -213,25 +207,31 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
               const SizedBox(height: 16),
             ],
           ),
-        ),
       ),
     );
   }
 
   Widget _buildCard(_Slot sl, AppS s) {
     final card = sl.card;
-    final isCorrect = _answered && sl.isOdd;
-    final isWrong = _answered && _tappedId == card.id && !sl.isOdd;
+    final mark = !sl.isOdd
+        ? AnswerMark.none
+        : _answered
+            ? AnswerMark.correct
+            : _misses.showHint
+                ? AnswerMark.hint
+                : AnswerMark.none;
 
-    final chip = _CardChip(
-      card: card,
-      isCorrect: isCorrect,
-      isWrong: isWrong,
-    );
-
-    return GestureDetector(
+    return KidTap(
+      key: ValueKey(card.id),
       onTap: () => _onTap(sl),
-      child: wrapShake(chip, id: card.id),
+      child: AnswerFrame(
+        background: card.colorBg,
+        accent: card.colorAccent,
+        mark: mark,
+        nudge: _nudges[card.id] ?? 0,
+        radius: 20,
+        child: _CardChip(card: card),
+      ),
     );
   }
 
@@ -283,103 +283,51 @@ class _HintThumb extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────
-//  Card chip
+//  Card chip — picture + word; the frame around it is AnswerFrame's
 // ─────────────────────────────────────────────
 
 class _CardChip extends StatelessWidget {
   final CardModel card;
-  final bool isCorrect;
-  final bool isWrong;
 
-  const _CardChip({
-    required this.card,
-    this.isCorrect = false,
-    this.isWrong = false,
-  });
+  const _CardChip({required this.card});
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      decoration: BoxDecoration(
-        color: isCorrect
-            ? const Color(0xFFE8F5E9)
-            : isWrong
-                ? const Color(0xFFFFEBEE)
-                : card.colorBg,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isCorrect
-              ? const Color(0xFF43A047)
-              : isWrong
-                  ? const Color(0xFFE53935)
-                  : card.colorAccent.withValues(alpha: 0.3),
-          width: isCorrect || isWrong ? 2.5 : 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Stack(
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Real webp only — plain placeholder if an unsanitized card
-                // ever slips through (never emoji in gameplay).
-                if (card.image != null)
-                  SizedBox(
-                    height: 70,
-                    child: CardImage.forCard(card, padding: EdgeInsets.zero),
-                  )
-                else
-                  Container(
-                    width: 70,
-                    height: 70,
-                    decoration: BoxDecoration(
-                      color: card.colorAccent.withValues(alpha: 0.25),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Text(
-                    card.sound,
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: isCorrect
-                          ? const Color(0xFF2E7D32)
-                          : isWrong
-                              ? const Color(0xFFC62828)
-                              : card.colorAccent,
-                    ),
-                  ),
-                ),
-              ],
+          // Real webp only — plain placeholder if an unsanitized card
+          // ever slips through (never emoji in gameplay).
+          if (card.image != null)
+            SizedBox(
+              height: 70,
+              child: CardImage.forCard(card, padding: EdgeInsets.zero),
+            )
+          else
+            Container(
+              width: 70,
+              height: 70,
+              decoration: BoxDecoration(
+                color: card.colorAccent.withValues(alpha: 0.25),
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+              card.sound,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: card.colorAccent,
+              ),
             ),
           ),
-          if (isCorrect)
-            const Positioned(
-              top: 8,
-              right: 8,
-              child: Text('✅', style: TextStyle(fontSize: 20)),
-            ),
-          if (isWrong)
-            const Positioned(
-              top: 8,
-              right: 8,
-              child: Text('❌', style: TextStyle(fontSize: 20)),
-            ),
         ],
       ),
     );

@@ -2,7 +2,6 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -13,6 +12,7 @@ import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
+import '../services/feedback_service.dart';
 import '../services/paywall_flow.dart';
 import '../utils/confetti_overlay_mixin.dart';
 import '../utils/constants.dart';
@@ -20,6 +20,8 @@ import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../services/asset_pack_service.dart';
 import '../widgets/content_download_view.dart';
+import '../widgets/kid_screen.dart';
+import '../widgets/kid_tap.dart';
 
 /// Water-reveal coloring screen.
 ///
@@ -347,7 +349,7 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
     _done = true;
     final card = _card;
     final isEn = ref.read(languageProvider) == 'en';
-    HapticFeedback.mediumImpact();
+    FeedbackService.instance.event(FeedbackEvent.correct);
     _revealCtrl.animateTo(0.0, curve: Curves.easeOutCubic);
     _incrementCompletedCount();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -372,8 +374,7 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
   /// child can leave a picture they dislike (design audit #25). Haptic +
   /// pop SFX because 1–2-year-olds need audio feedback on every action.
   void _next() {
-    HapticFeedback.lightImpact();
-    AudioService.instance.playSfx('pop');
+    FeedbackService.instance.event(FeedbackEvent.tap);
     if (_isGated()) {
       // Free quota exhausted — prompt paywall instead of loading another drawing.
       runPaywallFlow(context, ref, source: 'coloring_gate');
@@ -403,13 +404,10 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
     final s = AppS(isEn);
     final card = _card;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF7F2FF),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(s('Розмальовки водою', 'Water coloring')),
-      ),
+    // No text title: the finger on the picture is the whole instruction.
+    return KidScreen.game(
+      accent: kAccent,
+      background: DT.violetTint,
       body: _paywallGated
           ? _PaywallGate(
               onUnlock: () =>
@@ -427,8 +425,7 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
                     'Open at least one pack with images first'),
               ),
             )
-          : SafeArea(
-              child: Column(
+          : Column(
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
@@ -513,7 +510,6 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
                   ),
                 ],
               ),
-            ),
     );
   }
 }
@@ -712,26 +708,21 @@ class _NewPictureButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Tooltip(
       message: label,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: DT.violet,
-          shape: BoxShape.circle,
-          boxShadow: DT.shadowSoft(DT.violet),
-        ),
-        child: Material(
-          color: Colors.transparent,
-          shape: const CircleBorder(),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onTap,
-            child: const Center(
-              child: Icon(
-                Icons.shuffle_rounded,
-                size: 34,
-                color: Colors.white,
-              ),
+      child: KidTap(
+        onTap: onTap,
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            color: DT.violet,
+            shape: BoxShape.circle,
+            boxShadow: DT.shadowSoft(DT.violet),
+          ),
+          child: const Center(
+            child: Icon(
+              Icons.shuffle_rounded,
+              size: 34,
+              color: Colors.white,
             ),
           ),
         ),

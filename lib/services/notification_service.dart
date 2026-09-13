@@ -76,7 +76,7 @@ class NotificationService {
     ('🌟', 'Щоденні 5 хвилин — і мовлення розвивається!'),
     ('⭐', 'Маленькі кроки щодня — великий результат!'),
     ('🏆', 'Ви вже так далеко! Продовжуйте займатись щодня!'),
-    ('💪', 'Сьогодні — нове слово, завтра — впевнена мова!'),
+    ('💪', 'Послухайте знайоме слово й спробуйте повторити разом.'),
   ];
 
   // EN mirror of _cards — same thematic proportions: 10 animal sounds,
@@ -114,11 +114,14 @@ class NotificationService {
     ('↔️', 'BIG and SMALL, DAY and NIGHT — learning opposites.'),
     ('🔥', 'HOT or COLD? Guess the opposite!'),
     // Motivational
-    ('🔥', 'Keep the streak going! Your little one knows so many words already.'),
+    (
+      '🔥',
+      'Keep the streak going! Your little one knows so many words already.',
+    ),
     ('🌟', 'Daily 5 minutes — and speech keeps growing.'),
     ('⭐', 'Small steps every day — big results.'),
     ('🏆', 'You\'ve come so far! Keep practicing every day.'),
-    ('💪', 'A new word today — confident speech tomorrow.'),
+    ('💪', 'Listen to a familiar word and try saying it together.'),
   ];
 
   // Win-back copy (T+48h inactivity).
@@ -144,18 +147,36 @@ class NotificationService {
 
   // Streak-save copy (day X+1 at 20:00). Must interpolate currentStreak.
   List<(String, String)> _streakSaveUk(int currentStreak) => [
-        ('🔥', 'Серія $currentStreak днів — не втрачай! 5 хвилин на картки сьогодні?'),
-        ('⭐', '$currentStreak днів поспіль — чудово! Одна картка — і серія жива.'),
-        ('🎯', 'Малюк на серії $currentStreak днів. Трохи карток перед сном?'),
-        ('🏅', 'Не розривай серію $currentStreak днів — одна картка рятує день.'),
-      ];
+    (
+      '🔥',
+      'Ви займалися $currentStreak днів поспіль. Пограємо ще, коли буде зручно?',
+    ),
+    (
+      '⭐',
+      '$currentStreak днів поспіль — чудово! Можна повернутися до улюбленої картки.',
+    ),
+    ('🎯', 'Малюк на серії $currentStreak днів. Трохи карток перед сном?'),
+    (
+      '🏅',
+      'Уже $currentStreak днів відкриттів разом. Яку картку оберете сьогодні?',
+    ),
+  ];
 
   List<(String, String)> _streakSaveEn(int currentStreak) => [
-        ('🔥', 'Keep the $currentStreak-day streak alive! Just 5 minutes of cards.'),
-        ('⭐', '$currentStreak days in a row! One card keeps the streak going.'),
-        ('🎯', 'Your little one is on a $currentStreak-day roll. A quick card before bed?'),
-        ('🏅', 'Don\'t break your $currentStreak-day streak — one card saves the day.'),
-      ];
+    (
+      '🔥',
+      'You explored together for $currentStreak days. Play again whenever it suits you.',
+    ),
+    ('⭐', '$currentStreak days in a row! Revisit a favorite card together.'),
+    (
+      '🎯',
+      'Your little one is on a $currentStreak-day roll. A quick card before bed?',
+    ),
+    (
+      '🏅',
+      'You shared $currentStreak days of discoveries. Which card will you choose today?',
+    ),
+  ];
 
   /// `tz.local` throws until [init] has run; every scheduler below checks
   /// this instead of racing the splash.
@@ -167,8 +188,9 @@ class NotificationService {
     tz.setLocalLocation(tz.getLocation(timeZoneName));
     _tzReady = true;
 
-    const androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const iosSettings = DarwinInitializationSettings(
       requestSoundPermission: false,
       requestBadgePermission: false,
@@ -247,14 +269,18 @@ class NotificationService {
   /// treated as "leave them alone" by the caller.
   Future<bool?> _osAllowsNotifications() async {
     try {
-      final ios = _plugin.resolvePlatformSpecificImplementation<
-          IOSFlutterLocalNotificationsPlugin>();
+      final ios = _plugin
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >();
       if (ios != null) {
         final opts = await ios.checkPermissions();
         return opts?.isEnabled;
       }
-      final android = _plugin.resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
+      final android = _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
       return await android?.areNotificationsEnabled();
     } catch (_) {
       return null;
@@ -286,17 +312,24 @@ class NotificationService {
   }
 
   Future<bool> _requestOsPermission() async {
-    final ios = _plugin.resolvePlatformSpecificImplementation<
-        IOSFlutterLocalNotificationsPlugin>();
+    final ios = _plugin
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >();
     if (ios != null) {
       return await ios.requestPermissions(
-              alert: true, badge: true, sound: true) ??
+            alert: true,
+            badge: true,
+            sound: true,
+          ) ??
           false;
     }
     // Android 13+ needs POST_NOTIFICATIONS at runtime; older versions grant
     // it at install time and return true without showing anything.
-    final android = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     return await android?.requestNotificationsPermission() ?? false;
   }
 
@@ -324,18 +357,34 @@ class NotificationService {
       return;
     }
     const seasons = [
-      (id: 10, month: 12, day: 1,
-       title: '🎄 Новорічний пак відкрився!',
-       body: 'Вивчай зимові слова з Дідом Морозом 🎅'),
-      (id: 11, month: 4, day: 1,
-       title: '🐣 Великодній пак відкрився!',
-       body: 'Весняні слова для найменших 🌸'),
-      (id: 12, month: 6, day: 15,
-       title: '☀️ Літній пак відкрився!',
-       body: 'Час для літніх пригод! 🌊'),
-      (id: 13, month: 10, day: 1,
-       title: '🍂 Осінній пак відкрився!',
-       body: 'Пізнавай осінь з новими картками 🎃'),
+      (
+        id: 10,
+        month: 12,
+        day: 1,
+        title: '🎄 Новорічний пак відкрився!',
+        body: 'Вивчай зимові слова з Дідом Морозом 🎅',
+      ),
+      (
+        id: 11,
+        month: 4,
+        day: 1,
+        title: '🐣 Великодній пак відкрився!',
+        body: 'Весняні слова для найменших 🌸',
+      ),
+      (
+        id: 12,
+        month: 6,
+        day: 15,
+        title: '☀️ Літній пак відкрився!',
+        body: 'Час для літніх пригод! 🌊',
+      ),
+      (
+        id: 13,
+        month: 10,
+        day: 1,
+        title: '🍂 Осінній пак відкрився!',
+        body: 'Пізнавай осінь з новими картками 🎃',
+      ),
     ];
 
     final now = tz.TZDateTime.now(tz.local);
@@ -351,11 +400,23 @@ class NotificationService {
     );
 
     for (final season in seasons) {
-      var scheduled =
-          tz.TZDateTime(tz.local, now.year, season.month, season.day, 9, 0);
+      var scheduled = tz.TZDateTime(
+        tz.local,
+        now.year,
+        season.month,
+        season.day,
+        9,
+        0,
+      );
       if (scheduled.isBefore(now)) {
         scheduled = tz.TZDateTime(
-            tz.local, now.year + 1, season.month, season.day, 9, 0);
+          tz.local,
+          now.year + 1,
+          season.month,
+          season.day,
+          9,
+          0,
+        );
       }
       await _plugin.zonedSchedule(
         season.id,
@@ -379,8 +440,7 @@ class NotificationService {
     if (prefs.getBool(_paywallScheduledKey) ?? false) return;
     if (!(prefs.getBool(_enabledKey) ?? false)) return;
 
-    final scheduled =
-        tz.TZDateTime.now(tz.local).add(const Duration(days: 3));
+    final scheduled = tz.TZDateTime.now(tz.local).add(const Duration(days: 3));
     // Aim for a parent-friendly hour (11:00) on day 3 instead of midnight.
     final atElevenAM = tz.TZDateTime(
       tz.local,
@@ -508,8 +568,7 @@ class NotificationService {
     if (currentStreak < 3) return;
 
     final now = tz.TZDateTime.now(tz.local);
-    final when =
-        tz.TZDateTime(tz.local, now.year, now.month, now.day + 1, 20);
+    final when = tz.TZDateTime(tz.local, now.year, now.month, now.day + 1, 20);
 
     final deck = lang == 'en'
         ? _streakSaveEn(currentStreak)
@@ -555,8 +614,9 @@ class NotificationService {
   /// moves this with it. Null once that moment has passed: a report about
   /// a trial that is over is noise.
   static DateTime? trialReportFireTime(DateTime trialStartedAt, DateTime now) {
-    final day = trialStartedAt
-        .add(const Duration(days: PurchaseService.kTrialDays - 2));
+    final day = trialStartedAt.add(
+      const Duration(days: PurchaseService.kTrialDays - 2),
+    );
     final at = DateTime(day.year, day.month, day.day, 19);
     return at.isAfter(now) ? at : null;
   }
@@ -582,7 +642,9 @@ class NotificationService {
             : 'Ще 2 дні безкоштовно. Подивись, що $who уже дослідив(ла).',
       );
     }
-    final best = bestPack == null ? '' : (en ? ' Best so far: $bestPack.' : ' Найкраще іде: $bestPack.');
+    final best = bestPack == null
+        ? ''
+        : (en ? ' Best so far: $bestPack.' : ' Найкраще іде: $bestPack.');
     return (
       title,
       en

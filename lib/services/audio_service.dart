@@ -775,13 +775,44 @@ class AudioService {
   /// Fire-and-forget UI sound: 'pop', 'ding' or 'tada'. Plays over the
   /// current word without touching [stop] state — a bubble pop must never
   /// cut the narrator off.
-  Future<void> playSfx(String name, {double volume = 1.0}) async {
+  ///
+  /// [pitch] is a playback-speed multiplier (1.0 = as recorded). One clip
+  /// played at 0.85–1.25 is four different pops to a two-year-old, and the
+  /// twentieth identical pop of a round is what makes a sound effect
+  /// wallpaper. Cheaper than four files, and it composes with any clip
+  /// that replaces today's placeholders.
+  Future<void> playSfx(
+    String name, {
+    double volume = 1.0,
+    double pitch = 1.0,
+  }) async {
     final src = await _getFx('assets/audio_sfx/$name.wav');
     if (src == null) return;
     try {
-      await _soloud.play(src, volume: volume);
+      if (pitch == 1.0) {
+        await _soloud.play(src, volume: volume);
+        return;
+      }
+      // Start paused so the speed is set before the first sample plays;
+      // otherwise the attack sounds at the recorded pitch and then jumps.
+      final handle = await _soloud.play(src, volume: volume, paused: true);
+      _soloud.setRelativePlaySpeed(handle, pitch.clamp(0.5, 2.0));
+      _soloud.setPause(handle, false);
     } catch (_) {}
   }
+
+  /// [playSfx] at a pitch drawn from [spread] around 1.0 — the call a game
+  /// makes on every tap so no two taps sound quite the same.
+  Future<void> playSfxVaried(
+    String name, {
+    double volume = 1.0,
+    double spread = 0.2,
+  }) =>
+      playSfx(
+        name,
+        volume: volume,
+        pitch: 1.0 + (_rng.nextDouble() * 2 - 1) * spread,
+      );
 
   /// Random recorded praise clip ("Молодець!" / "Great job!"). Rate-limited
   /// to every other call so it stays special; pass [always] for game-final

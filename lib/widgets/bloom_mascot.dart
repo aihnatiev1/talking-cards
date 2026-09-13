@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+
+import 'kid_tap.dart';
 
 /// "Bloom" — Skillar's procedural mascot, a cream-cheeked bunny with closed
 /// happy eyes. Drawn via [CustomPainter] in a fixed 120×120 design space and
@@ -51,7 +52,6 @@ class _BloomMascotState extends State<BloomMascot>
   }
 
   void _onTap() {
-    HapticFeedback.lightImpact();
     _react
       ..reset()
       ..forward();
@@ -85,11 +85,9 @@ class _BloomMascotState extends State<BloomMascot>
     );
 
     if (!widget.interactive) return mascot;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: _onTap,
-      child: mascot,
-    );
+    // Same squeeze/haptic/pop as every other child target, then the
+    // happy bounce on top.
+    return KidTap(onTap: _onTap, child: mascot);
   }
 }
 

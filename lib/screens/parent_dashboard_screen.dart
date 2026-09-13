@@ -59,24 +59,35 @@ class ParentDashboardScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 4),
-                Icon(Icons.keyboard_arrow_down_rounded,
-                    size: 18, color: Colors.grey[500]),
+                Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 18,
+                  color: Colors.grey[500],
+                ),
               ],
             ),
           ),
           centerTitle: false,
           bottom: TabBar(
-            isScrollable:
-                MediaQuery.of(context).size.width < kLargeScreen,
-            tabAlignment:
-                MediaQuery.of(context).size.width >= kLargeScreen
-                    ? TabAlignment.fill
-                    : TabAlignment.start,
+            indicatorSize: TabBarIndicatorSize.tab,
+            indicator: BoxDecoration(
+              color: Theme.of(context).colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            indicatorPadding: const EdgeInsets.symmetric(vertical: 6),
+            dividerColor: Colors.transparent,
+            labelColor: Theme.of(context).colorScheme.onPrimaryContainer,
+            isScrollable: MediaQuery.of(context).size.width < kLargeScreen,
+            tabAlignment: MediaQuery.of(context).size.width >= kLargeScreen
+                ? TabAlignment.fill
+                : TabAlignment.start,
             labelStyle: TextStyle(
-                fontSize: responsiveFont(context, 13),
-                fontWeight: FontWeight.w600),
-            unselectedLabelStyle:
-                TextStyle(fontSize: responsiveFont(context, 13)),
+              fontSize: responsiveFont(context, 13),
+              fontWeight: FontWeight.w600,
+            ),
+            unselectedLabelStyle: TextStyle(
+              fontSize: responsiveFont(context, 13),
+            ),
             tabs: [
               Tab(text: s('Огляд', 'Overview')),
               Tab(text: s('Тиждень', 'Week')),
@@ -119,9 +130,7 @@ class _OverviewTab extends ConsumerWidget {
     final s = AppS(isEn);
 
     final wordsSeenTotal = packProgress.values.fold(0, (a, b) => a + b);
-    final activeDays = dailyStats.values
-        .where((v) => v > 0)
-        .length;
+    final activeDays = dailyStats.values.where((v) => v > 0).length;
 
     return ListView(
       padding: const EdgeInsets.all(20),
@@ -162,19 +171,53 @@ class _OverviewTab extends ConsumerWidget {
         const SizedBox(height: 24),
         _sectionTitle(s('Досягнення', 'Achievements')),
         const SizedBox(height: 8),
+        if (streak.unlockedRewards.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.emoji_events_outlined,
+                  size: 32,
+                  color: Color(0xFFAF8138),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    s(
+                      'Тут з’являться перші нагороди. Повертайтеся до занять і збирайте досягнення разом!',
+                      'Your first rewards will appear here. Keep learning and collect achievements together!',
+                    ),
+                    style: TextStyle(
+                      height: 1.4,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         Wrap(
           spacing: 8,
           runSpacing: 8,
           children: streak.unlockedRewards
-              .map((e) => Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: kAccent.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(e, style: const TextStyle(fontSize: 24)),
-                  ))
+              .map(
+                (e) => Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: kAccent.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(e, style: const TextStyle(fontSize: 24)),
+                ),
+              )
               .toList(),
         ),
         const SizedBox(height: 24),
@@ -198,22 +241,37 @@ class _OverviewTab extends ConsumerWidget {
     );
   }
 
-  Widget _statRow(List<Widget> children) => Row(
+  Widget _statRow(List<Widget> children) => LayoutBuilder(
+    builder: (context, box) {
+      if (box.maxWidth < 300 ||
+          MediaQuery.textScalerOf(context).scale(14) > 22) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final child in children)
+              Padding(padding: const EdgeInsets.only(bottom: 8), child: child),
+          ],
+        );
+      }
+      return Row(
         children: children
-            .map((c) => Expanded(
+            .map(
+              (c) => Expanded(
                 child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: c)))
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: c,
+                ),
+              ),
+            )
             .toList(),
       );
+    },
+  );
 
   Widget _sectionTitle(String text) => Text(
-        text,
-        style: const TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w700,
-        ),
-      );
+    text,
+    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+  );
 }
 
 class _StatCard extends StatelessWidget {
@@ -234,10 +292,9 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(16),
-        border:
-            Border.all(color: color.withValues(alpha: 0.2), width: 1),
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -249,7 +306,7 @@ class _StatCard extends StatelessWidget {
             style: TextStyle(
               fontSize: responsiveFont(context, 18),
               fontWeight: FontWeight.w800,
-              color: color,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 2),
@@ -257,7 +314,7 @@ class _StatCard extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: responsiveFont(context, 12),
-              color: color.withValues(alpha: 0.7),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ],
@@ -319,21 +376,23 @@ class _WeeklyTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(dailyStatsProvider); // rebuild when stats change
     final chartData = ref.read(dailyStatsProvider.notifier).last7Days();
-    final totalWeek =
-        chartData.fold(0, (sum, e) => sum + e.value);
+    final totalWeek = chartData.fold(0, (sum, e) => sum + e.value);
     final isEn = ref.watch(languageProvider) == 'en';
     final s = AppS(isEn);
 
     final weeklyMsg = totalWeek == 0
-        ? s('Ще немає активності цього тижня.',
-            'No activity this week yet.')
+        ? s('Ще немає активності цього тижня.', 'No activity this week yet.')
         : totalWeek < 20
-            ? s('Гарний початок! Продовжуй кожен день 💪',
-                'Nice start! Keep going every day 💪')
-            : totalWeek < 50
-                ? s('Чудовий прогрес! 🌟', 'Great progress! 🌟')
-                : s('Неймовірна активність цього тижня! 🏆',
-                    'Amazing week of activity! 🏆');
+        ? s(
+            'Гарний початок! Продовжуй кожен день 💪',
+            'Nice start! Keep going every day 💪',
+          )
+        : totalWeek < 50
+        ? s('Чудовий прогрес! 🌟', 'Great progress! 🌟')
+        : s(
+            'Неймовірна активність цього тижня! 🏆',
+            'Amazing week of activity! 🏆',
+          );
 
     return Padding(
       padding: const EdgeInsets.all(20),
@@ -344,10 +403,7 @@ class _WeeklyTab extends ConsumerWidget {
             isEn
                 ? 'Cards in 7 days: $totalWeek'
                 : 'Карток за 7 днів: $totalWeek',
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-            ),
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 20),
           ActivityChart(data: chartData, isEn: isEn),
@@ -417,7 +473,15 @@ class _WordsTab extends ConsumerWidget {
       error: (_, __) => Center(child: Text(s('Помилка', 'Error'))),
       data: (packs) {
         // Group learned cards by pack, preserve original card order in pack
-        final groups = <(String packId, String packTitle, String packIcon, List<CardModel> cards)>[];
+        final groups =
+            <
+              (
+                String packId,
+                String packTitle,
+                String packIcon,
+                List<CardModel> cards,
+              )
+            >[];
         final allLearnedCards = <CardModel>[];
         for (final pack in packs) {
           final cards = pack.cards
@@ -474,16 +538,14 @@ class _WordsTab extends ConsumerWidget {
               GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                gridDelegate:
-                    const SliverGridDelegateWithFixedCrossAxisCount(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 4,
                   crossAxisSpacing: 8,
                   mainAxisSpacing: 8,
                   childAspectRatio: 0.85,
                 ),
                 itemCount: group.$4.length,
-                itemBuilder: (_, i) =>
-                    _LearnedTile(card: group.$4[i]),
+                itemBuilder: (_, i) => _LearnedTile(card: group.$4[i]),
               ),
               const SizedBox(height: 16),
             ],
@@ -526,9 +588,7 @@ class _WordWallHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isEn
-                      ? "$childName's Word Wall"
-                      : 'Стіна слів — $childName',
+                  isEn ? "$childName's Word Wall" : 'Стіна слів — $childName',
                   style: TextStyle(
                     fontSize: responsiveFont(context, 14),
                     fontWeight: FontWeight.w600,
@@ -552,9 +612,7 @@ class _WordWallHeader extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 4),
                       child: Text(
-                        isEn
-                            ? (learnedCount == 1 ? 'word' : 'words')
-                            : 'слів',
+                        isEn ? (learnedCount == 1 ? 'word' : 'words') : 'слів',
                         style: TextStyle(
                           fontSize: responsiveFont(context, 13),
                           fontWeight: FontWeight.w700,
@@ -574,13 +632,14 @@ class _WordWallHeader extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: kAccent,
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
-              textStyle:
-                  const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+              textStyle: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
               elevation: 0,
             ),
           ),
@@ -655,8 +714,7 @@ class _PacksTab extends ConsumerWidget {
 
     return packsAsync.when(
       data: (packs) {
-        final regular =
-            packs.where((p) => !p.id.startsWith('_')).toList();
+        final regular = packs.where((p) => !p.id.startsWith('_')).toList();
         return ListView.separated(
           padding: const EdgeInsets.all(16),
           itemCount: regular.length,
@@ -674,12 +732,13 @@ class _PacksTab extends ConsumerWidget {
                 color: pack.color.withValues(alpha: 0.07),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                    color: pack.color.withValues(alpha: 0.2), width: 1),
+                  color: pack.color.withValues(alpha: 0.2),
+                  width: 1,
+                ),
               ),
               child: Row(
                 children: [
-                  Text(pack.icon,
-                      style: const TextStyle(fontSize: 28)),
+                  Text(pack.icon, style: const TextStyle(fontSize: 28)),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -698,8 +757,7 @@ class _PacksTab extends ConsumerWidget {
                               ),
                             ),
                             if (isDone)
-                              const Text('⭐',
-                                  style: TextStyle(fontSize: 14)),
+                              const Text('⭐', style: TextStyle(fontSize: 14)),
                           ],
                         ),
                         const SizedBox(height: 6),
@@ -708,10 +766,10 @@ class _PacksTab extends ConsumerWidget {
                           child: LinearProgressIndicator(
                             value: ratio.clamp(0.0, 1.0),
                             minHeight: 6,
-                            backgroundColor:
-                                pack.color.withValues(alpha: 0.15),
+                            backgroundColor: pack.color.withValues(alpha: 0.15),
                             valueColor: AlwaysStoppedAnimation<Color>(
-                                pack.color),
+                              pack.color,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -733,8 +791,7 @@ class _PacksTab extends ConsumerWidget {
           },
         );
       },
-      loading: () =>
-          const Center(child: CircularProgressIndicator()),
+      loading: () => const Center(child: CircularProgressIndicator()),
       error: (_, __) =>
           Center(child: Text(s('Помилка завантаження', 'Loading error'))),
     );
@@ -771,8 +828,9 @@ class _GamesTab extends ConsumerWidget {
                   const SizedBox(height: 12),
                   Text(
                     s(
-                        'Ще не грали в жодну гру.\nЗапустіть будь-яку гру з головного екрану!',
-                        'No games played yet.\nTry any game from the home screen!'),
+                      'Ще не грали в жодну гру.\nЗапустіть будь-яку гру з головного екрану!',
+                      'No games played yet.\nTry any game from the home screen!',
+                    ),
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 15, height: 1.5),
                   ),
@@ -783,9 +841,7 @@ class _GamesTab extends ConsumerWidget {
         }
 
         final totalPlays = stats.fold(0, (s, g) => s + g.plays);
-        final favorite = stats.reduce(
-          (a, b) => a.plays >= b.plays ? a : b,
-        );
+        final favorite = stats.reduce((a, b) => a.plays >= b.plays ? a : b);
 
         return ListView(
           padding: const EdgeInsets.all(20),
@@ -815,10 +871,7 @@ class _GamesTab extends ConsumerWidget {
             const SizedBox(height: 24),
             Text(
               s('Всі ігри', 'All games'),
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-              ),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 12),
             ...stats.map((g) => _GameStatRow(stat: g, isEn: isEn)),
@@ -855,8 +908,10 @@ class _GameStatRow extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Text(stat.emoji,
-                style: TextStyle(fontSize: responsiveFont(context, 24))),
+            Text(
+              stat.emoji,
+              style: TextStyle(fontSize: responsiveFont(context, 24)),
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -894,8 +949,9 @@ class _GameStatRow extends StatelessWidget {
               Text(
                 s('не грали', 'not played'),
                 style: TextStyle(
-                    fontSize: responsiveFont(context, 12),
-                    color: Colors.grey[400]),
+                  fontSize: responsiveFont(context, 12),
+                  color: Colors.grey[400],
+                ),
               ),
           ],
         ),
@@ -936,8 +992,9 @@ class _WeakWordsTab extends ConsumerWidget {
               const SizedBox(height: 12),
               Text(
                 s(
-                    'Поки немає помилок!\nПродовжуйте грати у вікторину.',
-                    'No mistakes yet!\nKeep playing the quiz.'),
+                  'Поки немає помилок!\nПродовжуйте грати у вікторину.',
+                  'No mistakes yet!\nKeep playing the quiz.',
+                ),
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 15, height: 1.5),
               ),
@@ -963,16 +1020,17 @@ class _WeakWordsTab extends ConsumerWidget {
         return ListView.separated(
           padding: const EdgeInsets.all(16),
           itemCount: top.length,
-          separatorBuilder: (_, __) =>
-              const Divider(height: 1),
+          separatorBuilder: (_, __) => const Divider(height: 1),
           itemBuilder: (_, i) {
             final entry = top[i];
             final card = cardMap[entry.key];
             if (card == null) return const SizedBox.shrink();
 
             return ListTile(
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 4,
+                vertical: 4,
+              ),
               leading: Container(
                 width: 44,
                 height: 44,
@@ -981,14 +1039,15 @@ class _WeakWordsTab extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Center(
-                  child:
-                      Text(card.emoji, style: const TextStyle(fontSize: 22)),
+                  child: Text(card.emoji, style: const TextStyle(fontSize: 22)),
                 ),
               ),
               title: Text(
                 card.sound,
                 style: const TextStyle(
-                    fontSize: 15, fontWeight: FontWeight.w600),
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               subtitle: card.text.isEmpty
                   ? null
@@ -996,12 +1055,13 @@ class _WeakWordsTab extends ConsumerWidget {
                       card.text,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style:
-                          TextStyle(fontSize: 12, color: Colors.grey[500]),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                     ),
               trailing: Container(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 4),
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.red.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
@@ -1019,8 +1079,7 @@ class _WeakWordsTab extends ConsumerWidget {
           },
         );
       },
-      loading: () =>
-          const Center(child: CircularProgressIndicator()),
+      loading: () => const Center(child: CircularProgressIndicator()),
       error: (_, __) => const SizedBox.shrink(),
     );
   }

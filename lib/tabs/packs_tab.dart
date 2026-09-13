@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../widgets/settings_action_row.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -33,7 +34,9 @@ import '../services/profile_service.dart';
 import '../services/purchase_service.dart';
 import '../services/widget_service.dart';
 import '../utils/constants.dart';
+import '../utils/app_icons.dart';
 import '../utils/design_tokens.dart';
+import '../utils/kid_routes.dart';
 import '../utils/l10n.dart';
 import '../utils/pack_categories.dart';
 import '../widgets/bloom_mascot.dart';
@@ -111,107 +114,140 @@ class _PacksTabState extends ConsumerState<PacksTab> {
       isEn: ref.read(languageProvider) == 'en',
     );
     if (!ok || !context.mounted) return;
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ParentDashboardScreen()),
-    );
+    Navigator.of(context).push(KidRoutes.sheet(const ParentDashboardScreen()));
   }
 
   void _showAbout(BuildContext _) async {
     final info = await PackageInfo.fromPlatform();
     if (!mounted) return;
     final s = AppS(ref.read(languageProvider) == 'en');
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        child: Padding(
-          padding: const EdgeInsets.all(28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('🗣️', style: TextStyle(fontSize: 48)),
-              const SizedBox(height: 12),
-              Text(
-                s('Картки-розмовлялки', 'FirstWords Cards'),
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 4),
-              Text(s('Версія ${info.version}', 'Version ${info.version}'),
-                  style: TextStyle(fontSize: 13, color: Colors.grey[500])),
-              const SizedBox(height: 16),
-              Text(
-                s(
-                  'Яскраві картки зі звуками для найменших. '
-                  'Слухай — вивчай — повторюй!',
-                  'Flash cards with sounds for little ones. '
-                  'Listen — learn — repeat!',
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      constraints: BoxConstraints(
+        maxWidth: 560,
+        maxHeight: MediaQuery.sizeOf(context).height * .9,
+      ),
+      builder: (ctx) => SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const CircleAvatar(
+                  radius: 28,
+                  backgroundColor: DT.violetTint,
+                  child: AppIconView(AppIcon.navCards, size: 36),
                 ),
-                style: TextStyle(
-                    fontSize: 14, color: Colors.grey[600], height: 1.4),
-              ),
-              const SizedBox(height: 20),
-              TextButton.icon(
-                onPressed: () {
-                  Navigator.of(ctx).pop();
-                  final isEn = ref.read(languageProvider) == 'en';
-                  launchUrl(
-                    Uri.parse(isEn
-                        ? 'https://aihnatiev1.github.io/talking-cards/privacy-policy-en.html'
-                        : 'https://aihnatiev1.github.io/talking-cards/privacy-policy.html'),
-                    mode: LaunchMode.externalApplication,
-                  );
-                },
-                icon: const Icon(Icons.privacy_tip_outlined, size: 18),
-                label: Text(s('Політика конфіденційності', 'Privacy Policy')),
-              ),
-              TextButton.icon(
-                onPressed: () async {
-                  final uri = Uri.parse('mailto:skillar.app@gmail.com');
-                  final canLaunch = await canLaunchUrl(uri);
-                  if (canLaunch) {
-                    launchUrl(uri);
-                  } else if (ctx.mounted) {
-                    Navigator.of(ctx).pop();
-                    ScaffoldMessenger.of(ctx).showSnackBar(
-                      const SnackBar(content: Text('skillar.app@gmail.com')),
-                    );
-                  }
-                },
-                icon: const Icon(Icons.mail_outline, size: 18),
-                label: Text(s('Підтримка', 'Support')),
-              ),
-              const NotificationToggleTile(),
-              // Theme toggle intentionally NOT here: this dialog is one tap
-              // from the child's home screen — it moved behind the parental
-              // gate (parent dashboard → Settings).
-              TextButton.icon(
-                onPressed: () {
-                  Navigator.of(ctx).pop();
-                  _openParentArea(context);
-                },
-                icon: const Icon(Icons.family_restroom, size: 18),
-                label: Text(s('Батьківський режим', 'Parent area')),
-              ),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  style: TextButton.styleFrom(
-                    backgroundColor: Colors.grey[100],
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                const SizedBox(height: 12),
+                Text(
+                  s('Картки-розмовлялки', 'FirstWords Cards'),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
                   ),
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: Text(s('Закрити', 'Close'),
-                      style: TextStyle(
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w600)),
                 ),
-              ),
-            ],
+                const SizedBox(height: 4),
+                Text(
+                  s('Версія ${info.version}', 'Version ${info.version}'),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  s(
+                    'Яскраві картки зі звуками для найменших. '
+                        'Слухай — вивчай — повторюй!',
+                    'Flash cards with sounds for little ones. '
+                        'Listen — learn — repeat!',
+                  ),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                SettingsActionRow(
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    final isEn = ref.read(languageProvider) == 'en';
+                    launchUrl(
+                      Uri.parse(
+                        isEn
+                            ? 'https://aihnatiev1.github.io/talking-cards/privacy-policy-en.html'
+                            : 'https://aihnatiev1.github.io/talking-cards/privacy-policy.html',
+                      ),
+                      mode: LaunchMode.externalApplication,
+                    );
+                  },
+                  icon: Icons.privacy_tip_outlined,
+                  label: s('Політика конфіденційності', 'Privacy Policy'),
+                ),
+                SettingsActionRow(
+                  onTap: () async {
+                    final uri = Uri.parse('mailto:skillar.app@gmail.com');
+                    final canLaunch = await canLaunchUrl(uri);
+                    if (canLaunch) {
+                      launchUrl(uri);
+                    } else if (ctx.mounted) {
+                      Navigator.of(ctx).pop();
+                      ScaffoldMessenger.of(ctx).showSnackBar(
+                        const SnackBar(content: Text('skillar.app@gmail.com')),
+                      );
+                    }
+                  },
+                  icon: Icons.mail_outline,
+                  label: s('Підтримка', 'Support'),
+                ),
+                const NotificationToggleTile(),
+                // Theme toggle intentionally NOT here: this dialog is one tap
+                // from the child's home screen — it moved behind the parental
+                // gate (parent dashboard → Settings).
+                SettingsActionRow(
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    _openParentArea(context);
+                  },
+                  icon: Icons.family_restroom,
+                  label: s('Батьківський режим', 'Parent area'),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    style: TextButton.styleFrom(
+                      backgroundColor: Theme.of(
+                        ctx,
+                      ).colorScheme.primaryContainer,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    child: Text(
+                      s('Закрити', 'Close'),
+                      style: TextStyle(
+                        color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -231,34 +267,34 @@ class _PacksTabState extends ConsumerState<PacksTab> {
     if (pack.isLocked &&
         RemoteConfigService.instance.lockedPackTapOpensPreview) {
       ref.read(lastOpenedPackProvider.notifier).record(pack.id);
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => CardsScreen(pack: pack)),
-      );
+      Navigator.of(context).push(KidRoutes.content(CardsScreen(pack: pack)));
       return;
     }
     if (pack.isLocked) {
-      final purchased =
-          await runPaywallFlow(context, ref, source: 'locked_tile');
+      final purchased = await runPaywallFlow(
+        context,
+        ref,
+        source: 'locked_tile',
+      );
       if (!context.mounted) return;
       if (purchased) {
         // After purchase, packsProvider rebuilds with isLocked=false.
         // Pull the unlocked version before navigating.
-        final unlocked = ref
+        final unlocked =
+            ref
                 .read(packsProvider)
                 .valueOrNull
                 ?.firstWhere((p) => p.id == pack.id, orElse: () => pack) ??
             pack;
         ref.read(lastOpenedPackProvider.notifier).record(unlocked.id);
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => CardsScreen(pack: unlocked)),
-        );
+        Navigator.of(
+          context,
+        ).push(KidRoutes.content(CardsScreen(pack: unlocked)));
         return;
       }
     }
     ref.read(lastOpenedPackProvider.notifier).record(pack.id);
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => CardsScreen(pack: pack)),
-    );
+    Navigator.of(context).push(KidRoutes.content(CardsScreen(pack: pack)));
   }
 
   void _showCardOfDayPopup(CardModel card) {
@@ -324,17 +360,27 @@ class _PacksTabState extends ConsumerState<PacksTab> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () => AudioService.instance
-                    .speakCard(card.audioKey, card.sound, card.text),
-                icon: const Icon(Icons.volume_up_rounded),
-                label: Text(ps('Слухати ще раз', 'Listen again'),
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                onPressed: () => AudioService.instance.speakCard(
+                  card.audioKey,
+                  card.sound,
+                  card.text,
+                ),
+                icon: const AppIconView(
+                  AppIcon.sound,
+                  size: 24,
+                  color: Colors.white,
+                ),
+                label: Text(
+                  ps('Слухати ще раз', 'Listen again'),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: card.colorAccent,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
               ),
             ),
@@ -348,7 +394,9 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                     Navigator.of(ctx).pop();
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(ps('Додано в улюблені ❤️', 'Added to favorites ❤️')),
+                        content: Text(
+                          ps('Додано в улюблені ❤️', 'Added to favorites ❤️'),
+                        ),
                         duration: const Duration(seconds: 2),
                       ),
                     );
@@ -360,7 +408,8 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                     side: BorderSide(color: Colors.red[300]!),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
                 ),
               ),
@@ -369,8 +418,10 @@ class _PacksTabState extends ConsumerState<PacksTab> {
               onPressed: () {
                 Navigator.of(ctx).pop();
               },
-              child: Text(ps('Закрити', 'Close'),
-                  style: TextStyle(color: Colors.grey[400])),
+              child: Text(
+                ps('Закрити', 'Close'),
+                style: TextStyle(color: Colors.grey[400]),
+              ),
             ),
           ],
         ),
@@ -417,15 +468,15 @@ class _PacksTabState extends ConsumerState<PacksTab> {
       }
     }
 
-    final listenDone =
-        questState.completed.contains(QuestTask.listenCardOfDay);
+    final listenDone = questState.completed.contains(QuestTask.listenCardOfDay);
     final viewDone = questState.completed.contains(QuestTask.viewCards3);
     // The Quest Map awards the daily card only after ALL five core tasks are
     // done (listen + view3 + play + view5 + reviewOldCard). The third strip
     // stone gates the celebration on those remaining hidden tasks too, so the
     // strip can't pretend the day is finished while the map still has steps
     // pending.
-    final playDone = questState.completed.contains(QuestTask.playQuiz) &&
+    final playDone =
+        questState.completed.contains(QuestTask.playQuiz) &&
         questState.completed.contains(QuestTask.viewCards5) &&
         questState.completed.contains(QuestTask.reviewOldCard);
 
@@ -439,15 +490,15 @@ class _PacksTabState extends ConsumerState<PacksTab> {
     final firstPending = !listenDone
         ? 1
         : !viewDone
-            ? 2
-            : !playDone
-                ? 3
-                : 0;
+        ? 2
+        : !playDone
+        ? 3
+        : 0;
 
     void openQuestMap() {
       Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => QuestMapScreen(
+        KidRoutes.content(
+          QuestMapScreen(
             showBackButton: true,
             cardOfDay: cotd,
             cardOfDayLocked: cotdLocked,
@@ -466,7 +517,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
     }
 
     final cardTask = DailyTask(
-      emoji: '🔊',
+      icon: AppIcon.stepListen,
       label: isEn ? "Today's Card" : 'Картка дня',
       isDone: listenDone,
       isActive: firstPending == 1,
@@ -480,7 +531,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
       },
     );
     final packTask = DailyTask(
-      emoji: '🃏',
+      icon: AppIcon.stepCards,
       label: isEn ? "Today's Pack" : 'Пак дня',
       isDone: viewDone,
       isActive: firstPending == 2,
@@ -495,7 +546,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
       },
     );
     final adventureTask = DailyTask(
-      emoji: '🗺️',
+      icon: AppIcon.stepQuest,
       label: isEn ? 'Adventure' : 'Пригода дня',
       isDone: playDone,
       isActive: firstPending == 3,
@@ -523,22 +574,26 @@ class _PacksTabState extends ConsumerState<PacksTab> {
       final reward = ref.read(dailyQuestProvider);
       if (reward.rewardClaimed && reward.rewardCardId != null) {
         for (final p in packs) {
-          final card = p.cards.where((c) => c.id == reward.rewardCardId).firstOrNull;
+          final card = p.cards
+              .where((c) => c.id == reward.rewardCardId)
+              .firstOrNull;
           if (card != null) {
-            Navigator.of(context).push(MaterialPageRoute(
-              builder: (_) => CardRevealScreen(
-                card: card,
-                pack: p,
-                newTotal: p.effectiveFreePreviewCount,
-                skipAnimation: true,
-                onShare: (_) {},
-                onGoToPack: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => CardsScreen(pack: p)),
-                  );
-                },
+            Navigator.of(context).push(
+              KidRoutes.content(
+                CardRevealScreen(
+                  card: card,
+                  pack: p,
+                  newTotal: p.effectiveFreePreviewCount,
+                  skipAnimation: true,
+                  onShare: (_) {},
+                  onGoToPack: () {
+                    Navigator.of(context).push(
+                      KidRoutes.content(CardsScreen(pack: p)),
+                    );
+                  },
+                ),
               ),
-            ));
+            );
             return;
           }
         }
@@ -564,13 +619,15 @@ class _PacksTabState extends ConsumerState<PacksTab> {
       final cp = continuePack;
       final total = cp.cards.length;
       return DailyHeroCard(
-        badge: isEn ? '▶ Continue' : '▶ Продовжити',
+        badge: isEn ? 'Continue' : 'Продовжити',
+        badgeIcon: AppIcon.play,
         title: cp.title,
         accent: cp.color,
         image: packThumb(cp),
         fallbackEmoji: cp.icon,
-        progress:
-            continueProgress > 0 && total > 0 ? continueProgress / total : null,
+        progress: continueProgress > 0 && total > 0
+            ? continueProgress / total
+            : null,
         heroDone: viewDone,
         onHeroTap: () {
           AnalyticsService.instance.logContinueHeroTap(cp.id);
@@ -585,7 +642,8 @@ class _PacksTabState extends ConsumerState<PacksTab> {
 
     if (cotd != null) {
       return DailyHeroCard(
-        badge: isEn ? '🔊 Card of the day' : '🔊 Картка дня',
+        badge: isEn ? 'Card of the day' : 'Картка дня',
+        badgeIcon: AppIcon.stepListen,
         title: cotd.sound,
         accent: cotd.colorAccent,
         image: cotd.image,
@@ -604,7 +662,8 @@ class _PacksTabState extends ConsumerState<PacksTab> {
     final rp = recommendedPack;
     if (rp == null) return const SizedBox.shrink();
     return DailyHeroCard(
-      badge: isEn ? '🃏 Start here' : '🃏 Почнемо',
+      badge: isEn ? 'Start here' : 'Почнемо',
+      badgeIcon: AppIcon.stepCards,
       title: rp.title,
       accent: rp.color,
       image: packThumb(rp),
@@ -632,15 +691,13 @@ class _PacksTabState extends ConsumerState<PacksTab> {
     final sErr = AppS(ref.read(languageProvider) == 'en');
 
     // Streak milestone celebration: trigger once when a new milestone unlocks.
-    final pending =
-        ref.read(streakProvider.notifier).pendingCelebration;
+    final pending = ref.read(streakProvider.notifier).pendingCelebration;
     if (pending != null && !_milestoneShowing) {
       _milestoneShowing = true;
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) return;
         final isEnNow = ref.read(languageProvider) == 'en';
-        final childName =
-            ref.read(profileProvider).active?.name ?? '';
+        final childName = ref.read(profileProvider).active?.name ?? '';
         AnalyticsService.instance.logStreakMilestone(pending.days);
         await showStreakMilestone(
           context,
@@ -669,338 +726,366 @@ class _PacksTabState extends ConsumerState<PacksTab> {
         behavior: HitTestBehavior.translucent,
         onTapUp: (details) => showBubblePop(context, details.globalPosition),
         child: packsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('🐢', style: TextStyle(fontSize: 64)),
-                const SizedBox(height: 16),
-                Text(
-                  sErr('Ой, щось не завантажилось', 'Oops, something didn\'t load'),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  sErr('Перевір інтернет і спробуй ще раз',
-                      'Check your connection and try again'),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 14, color: Colors.grey[600], height: 1.4),
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: () => ref.invalidate(packsProvider),
-                  icon: const Icon(Icons.refresh_rounded),
-                  label: Text(sErr('Спробувати ще раз', 'Try again')),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kAccent,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('🐢', style: TextStyle(fontSize: 64)),
+                  const SizedBox(height: 16),
+                  Text(
+                    sErr(
+                      'Ой, щось не завантажилось',
+                      'Oops, something didn\'t load',
+                    ),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  Text(
+                    sErr(
+                      'Перевір інтернет і спробуй ще раз',
+                      'Check your connection and try again',
+                    ),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () => ref.invalidate(packsProvider),
+                    icon: const AppIconView(
+                      AppIcon.replay,
+                      size: 22,
+                      color: Colors.white,
+                    ),
+                    label: Text(sErr('Спробувати ще раз', 'Try again')),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kAccent,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-        data: (packs) {
-          final allCards = packs.expand((p) => p.cards).toList();
-          final isEnMode = ref.read(languageProvider) == 'en';
-          final lastPackId = ref.watch(lastOpenedPackProvider);
-          PackModel? continuePack;
-          if (lastPackId != null) {
-            for (final p in packs) {
-              if (p.id == lastPackId) {
-                continuePack = p;
-                break;
+          data: (packs) {
+            final allCards = packs.expand((p) => p.cards).toList();
+            final isEnMode = ref.read(languageProvider) == 'en';
+            final lastPackId = ref.watch(lastOpenedPackProvider);
+            PackModel? continuePack;
+            if (lastPackId != null) {
+              for (final p in packs) {
+                if (p.id == lastPackId) {
+                  continuePack = p;
+                  break;
+                }
               }
             }
-          }
-          final continueProgress = continuePack != null
-              ? (packProgress[continuePack.id] ?? 0)
-              : 0;
-          final s = AppS(isEnMode);
-          final packCategories = isEnMode ? packCategoriesEn : packCategoriesUk;
-          final allCategories = isEnMode ? allCategoriesEn : allCategoriesUk;
+            final continueProgress = continuePack != null
+                ? (packProgress[continuePack.id] ?? 0)
+                : 0;
+            final s = AppS(isEnMode);
+            final packCategories = isEnMode
+                ? packCategoriesEn
+                : packCategoriesUk;
+            final allCategories = isEnMode ? allCategoriesEn : allCategoriesUk;
 
-          if (_selectedCategory.isEmpty ||
-              !allCategories.contains(_selectedCategory)) {
-            Future.microtask(() =>
-                setState(() => _selectedCategory = allCategories.first));
-          }
+            if (_selectedCategory.isEmpty ||
+                !allCategories.contains(_selectedCategory)) {
+              Future.microtask(
+                () => setState(() => _selectedCategory = allCategories.first),
+              );
+            }
 
-          final cotdResult = cardOfTheDay(packs);
-          final cotd = cotdResult?.$1;
-          final cotdLocked = cotdResult?.$2 ?? false;
-          if (cotd != null) {
-            WidgetService.instance.updateCardOfDay(cotd);
-          }
+            final cotdResult = cardOfTheDay(packs);
+            final cotd = cotdResult?.$1;
+            final cotdLocked = cotdResult?.$2 ?? false;
+            if (cotd != null) {
+              WidgetService.instance.updateCardOfDay(cotd);
+            }
 
-          final reviewCardIds =
-              ref.watch(reviewProvider.notifier).reviewCardIds;
+            final reviewCardIds = ref
+                .watch(reviewProvider.notifier)
+                .reviewCardIds;
 
-          PackModel? reviewPack;
-          if (reviewCardIds.length >= 5) {
-            final reviewCards = allCards
-                .where((c) => reviewCardIds.contains(c.id))
+            PackModel? reviewPack;
+            if (reviewCardIds.length >= 5) {
+              final reviewCards = allCards
+                  .where((c) => reviewCardIds.contains(c.id))
+                  .toList();
+              if (reviewCards.length >= 5) {
+                reviewPack = PackModel(
+                  id: '_review',
+                  title: s('Повторення', 'Review'),
+                  icon: '🔄',
+                  color: DT.teal,
+                  isLocked: false,
+                  isFree: true,
+                  cards: reviewCards,
+                );
+              }
+            }
+
+            // Filter by category
+            final filteredPacks = packs
+                .where((p) => packCategories[p.id] == _selectedCategory)
                 .toList();
-            if (reviewCards.length >= 5) {
-              reviewPack = PackModel(
-                id: '_review',
-                title: s('Повторення', 'Review'),
-                icon: '🔄',
-                color: const Color(0xFF45B7D1),
-                isLocked: false,
-                isFree: true,
-                cards: reviewCards,
-              );
+
+            // Favorites are scoped to the open category tab — each of
+            // Мовлення/Звуки/Світ shows its own hearts, first in the grid.
+            final favCards = filteredPacks
+                .expand((p) => p.cards)
+                .where((c) => favorites.contains(c.id))
+                .toList();
+            final favoritesPack = PackModel(
+              id: '_favorites',
+              title: s('Улюблені', 'Favorites'),
+              icon: '❤️',
+              color: kStreakOrange,
+              isLocked: false,
+              isFree: true,
+              cards: favCards,
+            );
+
+            // Build grid items
+            final gridItems = <_GridItem>[
+              for (final p in filteredPacks) _GridItem.pack(p),
+            ];
+            if (reviewPack != null) {
+              gridItems.add(_GridItem.pack(reviewPack));
             }
-          }
 
-          // Filter by category
-          final filteredPacks = packs
-              .where((p) => packCategories[p.id] == _selectedCategory)
-              .toList();
-
-          // Favorites are scoped to the open category tab — each of
-          // Мовлення/Звуки/Світ shows its own hearts, first in the grid.
-          final favCards = filteredPacks
-              .expand((p) => p.cards)
-              .where((c) => favorites.contains(c.id))
-              .toList();
-          final favoritesPack = PackModel(
-            id: '_favorites',
-            title: s('Улюблені', 'Favorites'),
-            icon: '❤️',
-            color: kStreakOrange,
-            isLocked: false,
-            isFree: true,
-            cards: favCards,
-          );
-
-          // Build grid items
-          final gridItems = <_GridItem>[
-            for (final p in filteredPacks) _GridItem.pack(p),
-          ];
-          if (reviewPack != null) {
-            gridItems.add(_GridItem.pack(reviewPack));
-          }
-
-          // Inject seasonal packs as highlighted first items — only in "World" tab
-          if (_selectedCategory == 'Світ' || _selectedCategory == 'World') {
-            final seasonalPacks =
-                ref.watch(activeSeasonalPacksProvider).valueOrNull ?? [];
-            for (int i = seasonalPacks.length - 1; i >= 0; i--) {
-              final sp = seasonalPacks[i];
-              gridItems.insert(
-                0,
-                _GridItem.pack(
-                  PackModel(
-                    id: sp.id,
-                    title: sp.localizedTitle(isEnMode),
-                    icon: sp.icon,
-                    color: sp.color,
-                    isLocked: false,
-                    isFree: true,
-                    cards: sp.cards,
+            // Inject seasonal packs as highlighted first items — only in "World" tab
+            if (_selectedCategory == 'Світ' || _selectedCategory == 'World') {
+              final seasonalPacks =
+                  ref.watch(activeSeasonalPacksProvider).valueOrNull ?? [];
+              for (int i = seasonalPacks.length - 1; i >= 0; i--) {
+                final sp = seasonalPacks[i];
+                gridItems.insert(
+                  0,
+                  _GridItem.pack(
+                    PackModel(
+                      id: sp.id,
+                      title: sp.localizedTitle(isEnMode),
+                      icon: sp.icon,
+                      color: sp.color,
+                      isLocked: false,
+                      isFree: true,
+                      cards: sp.cards,
+                    ),
+                    isSeasonal: true,
                   ),
-                  isSeasonal: true,
-                ),
-              );
+                );
+              }
             }
-          }
 
-          // Favorites go first — inserted after the seasonal loop so they
-          // beat even the highlighted seasonal pack to the top slot.
-          if (favCards.isNotEmpty) {
-            gridItems.insert(0, _GridItem.pack(favoritesPack));
-          }
+            // Favorites go first — inserted after the seasonal loop so they
+            // beat even the highlighted seasonal pack to the top slot.
+            if (favCards.isNotEmpty) {
+              gridItems.insert(0, _GridItem.pack(favoritesPack));
+            }
 
-          final topPadding = MediaQuery.of(context).padding.top;
+            final topPadding = MediaQuery.of(context).padding.top;
 
-          return Column(
-            children: [
-              SizedBox(height: topPadding),
-              // Top bar
-              Padding(
-                padding: EdgeInsets.only(top: 4 * scale, left: 12, right: 12),
-                child: Row(
-                  children: [
-                    // Title shares the row with streak/profile/info instead of
-                    // occupying a line of its own — ~15% less vertical chrome
-                    // before the first real content block.
-                    Expanded(
-                      // Reserve a gutter: StreakChip pulses (scales past its
-                      // layout box) and used to graze the title's last letter.
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 10),
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            s('🗣️ Картки-розмовлялки', '🗣️ FirstWords Cards'),
-                            maxLines: 1,
-                            style: TextStyle(
-                              fontSize: 19 * scale,
-                              fontWeight: FontWeight.bold,
+            return Column(
+              children: [
+                SizedBox(height: topPadding),
+                // Top bar
+                Padding(
+                  padding: EdgeInsets.only(top: 4 * scale, left: 12, right: 12),
+                  child: Row(
+                    children: [
+                      // Title shares the row with streak/profile/info instead of
+                      // occupying a line of its own — ~15% less vertical chrome
+                      // before the first real content block.
+                      Expanded(
+                        // Reserve a gutter: StreakChip pulses (scales past its
+                        // layout box) and used to graze the title's last letter.
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 10),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              s(
+                                '🗣️ Картки-розмовлялки',
+                                '🗣️ FirstWords Cards',
+                              ),
+                              maxLines: 1,
+                              style: TextStyle(
+                                fontSize: 19 * scale,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    // A "🔥 1" on the very first open is noise in the
-                    // header (audit #16); a streak becomes a thing to keep
-                    // on day two.
-                    if (streak.currentStreak >= 2) ...[
-                      StreakChip(
-                        streak: streak.currentStreak,
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const StatsScreen(),
+                      // A "🔥 1" on the very first open is noise in the
+                      // header (audit #16); a streak becomes a thing to keep
+                      // on day two.
+                      if (streak.currentStreak >= 2) ...[
+                        StreakChip(
+                          streak: streak.currentStreak,
+                          onTap: () => Navigator.of(context).push(
+                            KidRoutes.sheet(const StatsScreen()),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-                    const ProfileAvatarChip(),
-                    GestureDetector(
-                      onLongPress: () => _openParentArea(context),
-                      child: IconButton(
-                        tooltip: s('Про додаток', 'About'),
-                        icon: Icon(Icons.info_outline_rounded,
-                            color: Colors.grey[400], size: 26),
-                        // About opens the privacy policy and a mail
-                        // client — outside the app, so behind the gate
-                        // like every other parent action (audit #14).
-                        onPressed: () async {
-                          final ok = await showParentalGate(
-                            context,
-                            isEn: ref.read(languageProvider) == 'en',
-                          );
-                          if (ok && context.mounted) _showAbout(context);
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Streak/progress chip lives in the top header now (StreakChip);
-              // the inline subtitle here was a duplicate readout — removed.
-              const SizedBox(height: 6),
-
-              // One hero block: Continue / Card of the Day + the day's two
-              // remaining steps, all inside a single frame.
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                child: _buildDailyHero(
-                  context,
-                  packs: packs,
-                  cotd: cotd,
-                  cotdLocked: cotdLocked,
-                  questState: quest,
-                  completedPacks: completedPacks,
-                  continuePack: continuePack,
-                  continueProgress: continueProgress,
-                  isEn: isEnMode,
-                ),
-              ),
-
-              // First-launch coachmark for the strip — fades in on initial
-              // session and self-dismisses as soon as the kid taps any stone.
-              if (_todayPlanIntroVisible)
-                _TodayPlanIntroHint(
-                  isEn: isEnMode,
-                  isVisible: quest.completed.isEmpty,
-                  onDismiss: _dismissTodayPlanIntro,
-                ),
-
-              // Treasure box — kid-facing entry to learned-words collection.
-              // Hidden until at least one word is "learned" (SRS reps >= 2).
-              _TreasureBoxBanner(isEn: isEnMode),
-
-              // SRS review entry lives in the grid as the "Повторення"
-              // virtual pack — the extra banner here just stacked a third
-              // call-to-action above the fold.
-              const SizedBox(height: 8),
-
-              // Category filter — one segmented control instead of three
-              // separate buttons: a single light track, only the active
-              // segment carries brand colour.
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white.withValues(alpha: 0.07)
-                        : Colors.black.withValues(alpha: 0.04),
-                    borderRadius: BorderRadius.circular(22),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: Row(
-                  children: [
-                    for (int i = 0; i < allCategories.length; i++) ...[
-                      Expanded(
-                        child: _CategoryChip(
-                          label: allCategories[i],
-                          selected: allCategories[i] == _selectedCategory,
-                          onSelected: () {
-                            final newCat = allCategories[i];
-                            if (newCat != _selectedCategory) {
-                              AnalyticsService.instance
-                                  .logCategorySwitch(newCat);
-                            }
-                            setState(() {
-                              _selectedCategory = newCat;
-                              _lastCategory = newCat;
-                            });
+                        const SizedBox(width: 8),
+                      ],
+                      const ProfileAvatarChip(),
+                      GestureDetector(
+                        onLongPress: () => _openParentArea(context),
+                        child: IconButton(
+                          tooltip: s('Про додаток', 'About'),
+                          icon: Icon(
+                            Icons.info_outline_rounded,
+                            color: Colors.grey[400],
+                            size: 26,
+                          ),
+                          // About opens the privacy policy and a mail
+                          // client — outside the app, so behind the gate
+                          // like every other parent action (audit #14).
+                          onPressed: () async {
+                            final ok = await showParentalGate(
+                              context,
+                              isEn: ref.read(languageProvider) == 'en',
+                            );
+                            if (ok && context.mounted) _showAbout(context);
                           },
                         ),
                       ),
                     ],
-                  ],
+                  ),
+                ),
+
+                // Streak/progress chip lives in the top header now (StreakChip);
+                // the inline subtitle here was a duplicate readout — removed.
+                const SizedBox(height: 6),
+
+                // One hero block: Continue / Card of the Day + the day's two
+                // remaining steps, all inside a single frame.
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                  child: _buildDailyHero(
+                    context,
+                    packs: packs,
+                    cotd: cotd,
+                    cotdLocked: cotdLocked,
+                    questState: quest,
+                    completedPacks: completedPacks,
+                    continuePack: continuePack,
+                    continueProgress: continueProgress,
+                    isEn: isEnMode,
+                  ),
+                ),
+
+                // First-launch coachmark for the strip — fades in on initial
+                // session and self-dismisses as soon as the kid taps any stone.
+                if (_todayPlanIntroVisible)
+                  _TodayPlanIntroHint(
+                    isEn: isEnMode,
+                    isVisible: quest.completed.isEmpty,
+                    onDismiss: _dismissTodayPlanIntro,
+                  ),
+
+                // Treasure box — kid-facing entry to learned-words collection.
+                // Hidden until at least one word is "learned" (SRS reps >= 2).
+                _TreasureBoxBanner(isEn: isEnMode),
+
+                // SRS review entry lives in the grid as the "Повторення"
+                // virtual pack — the extra banner here just stacked a third
+                // call-to-action above the fold.
+                const SizedBox(height: 8),
+
+                // Category filter — one segmented control instead of three
+                // separate buttons: a single light track, only the active
+                // segment carries brand colour.
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white.withValues(alpha: 0.07)
+                          : Colors.black.withValues(alpha: 0.04),
+                      borderRadius: BorderRadius.circular(22),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: Row(
+                        children: [
+                          for (int i = 0; i < allCategories.length; i++) ...[
+                            Expanded(
+                              child: _CategoryChip(
+                                label: allCategories[i],
+                                selected: allCategories[i] == _selectedCategory,
+                                onSelected: () {
+                                  final newCat = allCategories[i];
+                                  if (newCat != _selectedCategory) {
+                                    AnalyticsService.instance.logCategorySwitch(
+                                      newCat,
+                                    );
+                                  }
+                                  setState(() {
+                                    _selectedCategory = newCat;
+                                    _lastCategory = newCat;
+                                  });
+                                },
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 8),
+                const SizedBox(height: 8),
 
-              // Grid
-              Expanded(
-                child: GridView.builder(
-                  padding: EdgeInsets.fromLTRB(16 * scale, 4, 16 * scale, 8),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    mainAxisSpacing: 10 * scale,
-                    crossAxisSpacing: 10 * scale,
-                    childAspectRatio: 0.95,
+                // Grid
+                Expanded(
+                  child: GridView.builder(
+                    padding: EdgeInsets.fromLTRB(16 * scale, 4, 16 * scale, 8),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      mainAxisSpacing: 10 * scale,
+                      crossAxisSpacing: 10 * scale,
+                      childAspectRatio: 0.95,
+                    ),
+                    itemCount: gridItems.length,
+                    itemBuilder: (context, index) {
+                      final item = gridItems[index];
+                      final pack = item.pack;
+                      return PackGridCard(
+                        key: ValueKey(pack.id),
+                        pack: pack,
+                        isCompleted: completedPacks.contains(pack.id),
+                        progress: packProgress[pack.id] ?? 0,
+                        isSeasonal: item.isSeasonal,
+                        onTap: () => _onPackTap(context, pack),
+                      );
+                    },
                   ),
-                  itemCount: gridItems.length,
-                  itemBuilder: (context, index) {
-                    final item = gridItems[index];
-                    final pack = item.pack;
-                    return PackGridCard(
-                      key: ValueKey(pack.id),
-                      pack: pack,
-                      isCompleted: completedPacks.contains(pack.id),
-                      progress: packProgress[pack.id] ?? 0,
-                      isSeasonal: item.isSeasonal,
-                      onTap: () => _onPackTap(context, pack),
-                    );
-                  },
                 ),
-              ),
-
-            ],
-          );
-        },
-      ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -1023,20 +1108,16 @@ class _TreasureBoxBanner extends ConsumerWidget {
         .length;
     if (count == 0) return const SizedBox.shrink();
 
-    final word = isEn
-        ? (count == 1 ? 'word' : 'words')
-        : _ukWord(count);
+    final word = isEn ? (count == 1 ? 'word' : 'words') : _ukWord(count);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: GestureDetector(
         onTap: () {
           HapticFeedback.lightImpact();
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => const KidWordWallScreen(),
-            ),
-          );
+          Navigator.of(
+            context,
+          ).push(KidRoutes.sheet(const KidWordWallScreen()));
         },
         child: Container(
           padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
@@ -1100,10 +1181,10 @@ class _TreasureBoxBanner extends ConsumerWidget {
                   ],
                 ),
               ),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: Colors.white.withValues(alpha: 0.85),
-                size: 28,
+              const AppIconView(
+                AppIcon.rewardChestClosed,
+                size: 36,
+                sticker: true,
               ),
             ],
           ),
@@ -1129,14 +1210,14 @@ class _GridItem {
   _GridItem.pack(this.pack, {this.isSeasonal = false});
 }
 
-const _categoryIcons = <String, String>{
-  'Мовлення': '💬',
-  'Звуки': '🔤',
-  'Світ': '🌍',
-  'Speaking': '💬',
-  'Sounds': '🔤',
-  'World': '🌍',
-};
+/// Category sticker by chip label (spec §5.1: Мовлення = violet speech
+/// bubble, Звуки = peach note, Світ = mint globe).
+AppIcon? _categoryIcon(String label) => switch (label) {
+      'Мовлення' || 'Speaking' => AppIcon.catSpeech,
+      'Звуки' || 'Sounds' => AppIcon.catSounds,
+      'Світ' || 'World' => AppIcon.catWorld,
+      _ => null,
+    };
 
 class _CategoryChip extends StatelessWidget {
   const _CategoryChip({
@@ -1151,7 +1232,7 @@ class _CategoryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final icon = _categoryIcons[label];
+    final icon = _categoryIcon(label);
     final dark = Theme.of(context).brightness == Brightness.dark;
     // A 40dp FilterChip was half the child's minimum target and chose by
     // word; a child chooses by the icon (audit #11). 56dp, icon first,
@@ -1166,32 +1247,41 @@ class _CategoryChip extends StatelessWidget {
           color: selected
               ? kAccent
               : dark
-                  ? Colors.white.withValues(alpha: 0.10)
-                  : Colors.grey.withValues(alpha: 0.18),
+              ? Colors.white.withValues(alpha: 0.10)
+              : Colors.grey.withValues(alpha: 0.18),
           borderRadius: BorderRadius.circular(28),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) ...[
-              Text(icon, style: const TextStyle(fontSize: 22)),
-              const SizedBox(width: 6),
-            ],
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-                // Explicit unselected color: the M3 default lands on a dim
-                // grey-on-dark that fails contrast in dark mode.
-                color: selected
-                    ? Colors.white
-                    : (dark
-                        ? Colors.white.withValues(alpha: 0.85)
-                        : DT.textPrimary),
+        // Each segment gets a third of the screen; on a 393dp phone the
+        // 22sp icon + bold «Мовлення» overflowed that by 14px (audit
+        // 2026-09-13). scaleDown keeps the pair on one line at any width.
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (icon != null) ...[
+                // Sticker edge on the selected (indigo) chip; plain on the
+                // grey rest state.
+                AppIconView(icon, size: 26, sticker: selected),
+                const SizedBox(width: 6),
+              ],
+              Text(
+                label,
+                maxLines: 1,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                  // Explicit unselected color: the M3 default lands on a dim
+                  // grey-on-dark that fails contrast in dark mode.
+                  color: selected
+                      ? Colors.white
+                      : (dark
+                            ? Colors.white.withValues(alpha: 0.85)
+                            : DT.textPrimary),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1249,4 +1339,3 @@ class _TodayPlanIntroHint extends StatelessWidget {
     );
   }
 }
-

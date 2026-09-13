@@ -19,8 +19,11 @@ import '../utils/app_startup.dart';
 import '../utils/confetti_overlay_mixin.dart';
 import '../utils/constants.dart';
 import '../utils/design_tokens.dart';
+import '../utils/kid_routes.dart';
+import '../widgets/ambient_loop.dart';
 import '../widgets/bloom_mascot.dart';
 import '../widgets/card_image.dart';
+import '../widgets/kid_tap.dart';
 import 'home_screen.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -142,14 +145,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     }
 
     if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      PageRouteBuilder(
-        pageBuilder: (_, __, ___) => const HomeScreen(),
-        transitionsBuilder: (_, anim, __, child) =>
-            FadeTransition(opacity: anim, child: child),
-        transitionDuration: const Duration(milliseconds: 400),
-      ),
-    );
+    Navigator.of(context).pushReplacement(KidRoutes.replace(const HomeScreen()));
   }
 
   /// The magic moment drives its own CTA: when it is the last step it wraps
@@ -244,24 +240,31 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             if (!hideCta)
               Padding(
                 padding: const EdgeInsets.fromLTRB(32, 12, 32, 24),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _canProceed ? _next : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: kAccent,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18)),
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      _selectedLang == 'en'
-                          ? (isLast ? "Let's start →" : 'Next →')
-                          : (isLast ? 'Почати →' : 'Далі →'),
-                      style: const TextStyle(
-                          fontSize: 17, fontWeight: FontWeight.w700),
+                child: KidTap(
+                  onTap: _canProceed ? _next : null,
+                  // The button keeps its look and disabled state; the tap
+                  // (squeeze, haptic, pop) belongs to the KidTap around it.
+                  child: IgnorePointer(
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _canProceed ? () {} : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kAccent,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18)),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          _selectedLang == 'en'
+                              ? (isLast ? "Let's start →" : 'Next →')
+                              : (isLast ? 'Почати →' : 'Далі →'),
+                          style: const TextStyle(
+                              fontSize: 17, fontWeight: FontWeight.w700),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -570,8 +573,6 @@ class _MagicMomentPage extends ConsumerStatefulWidget {
 
 class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
     with TickerProviderStateMixin, ConfettiOverlayMixin {
-  late final AnimationController _bounceCtrl;
-  Timer? _settleTimer;
   List<CardModel> _cards = const [];
   int _currentIndex = 0;
   bool _ready = false;
@@ -582,24 +583,11 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
   @override
   void initState() {
     super.initState();
-    _bounceCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    )..repeat(reverse: true);
-    // Two bobs to say hello, then hold still: the only thing moving on this
-    // screen must be the card the child is meant to tap (audit #1).
-    _settleTimer = Timer(const Duration(seconds: 2), () {
-      if (!mounted) return;
-      _bounceCtrl.animateTo(0,
-          duration: const Duration(milliseconds: 400), curve: Curves.easeOut);
-    });
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadStarterCards());
   }
 
   @override
   void dispose() {
-    _settleTimer?.cancel();
-    _bounceCtrl.dispose();
     disposeConfetti();
     super.dispose();
   }
@@ -732,7 +720,7 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
       child: Column(
         children: [
           const SizedBox(height: 4),
-          _BouncingMascot(controller: _bounceCtrl),
+          const _BouncingMascot(),
           const SizedBox(height: 8),
           _SpeechBubble(
             text: _bubbleText(),
@@ -799,22 +787,20 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
 //  Magic Moment — sub-widgets
 // ─────────────────────────────────────────────
 
+/// Two bobs to say hello, then still: the only thing moving on this screen
+/// must be the card the child is meant to tap (audit #1). Reduced motion:
+/// rests at offset 0 — the mascot is waving already, the bubble says hello.
 class _BouncingMascot extends StatelessWidget {
-  final AnimationController controller;
-  const _BouncingMascot({required this.controller});
+  const _BouncingMascot();
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: controller,
-      builder: (_, __) {
-        final t = Curves.easeInOut.transform(controller.value);
-        final dy = -8.0 * t; // bob up then reverse
-        return Transform.translate(
-          offset: Offset(0, dy),
-          child: const BloomMascot(size: 96, emotion: BloomEmotion.waving),
-        );
-      },
+    return AmbientLoop(
+      period: const Duration(milliseconds: 800),
+      settleAfter: const Duration(seconds: 2),
+      builder: (_, t, child) =>
+          Transform.translate(offset: Offset(0, -8.0 * t), child: child),
+      child: const BloomMascot(size: 96, emotion: BloomEmotion.waving),
     );
   }
 }
@@ -871,35 +857,17 @@ class _MagicCard extends StatefulWidget {
 /// breathing pulse invites the tap, a press-scale answers it, and the word
 /// pulses while the clip plays so a muted phone still shows "it worked".
 /// Before this the mascot moved and the card sat still (audit #1).
-class _MagicCardState extends State<_MagicCard>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _breath;
-  bool _pressed = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _breath = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1600),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _breath.dispose();
-    super.dispose();
-  }
-
+class _MagicCardState extends State<_MagicCard> {
   @override
   Widget build(BuildContext context) {
     final card = widget.card;
     final wordColor = DT.onTint(card.colorAccent);
-    return GestureDetector(
+    return KidTap(
       onTap: widget.onTap,
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) => setState(() => _pressed = false),
-      onTapCancel: () => setState(() => _pressed = false),
+      // The card speaks its word; the press itself stays quiet.
+      sound: KidSound.none,
+      // Only the card, not the empty space around it.
+      behavior: HitTestBehavior.deferToChild,
       child: LayoutBuilder(
         builder: (context, constraints) {
           // Fill the space it is given: ~85% of the width, but never so
@@ -908,18 +876,12 @@ class _MagicCardState extends State<_MagicCard>
           final byHeight = constraints.maxHeight * 0.92 * (280 / 320);
           final w = math.min(byWidth, byHeight).clamp(220.0, 340.0);
           final h = w * (320 / 280);
-          return AnimatedBuilder(
-            animation: _breath,
-            builder: (context, child) {
-              final breath = 1.0 + 0.04 * Curves.easeInOut.transform(_breath.value);
-              final scale = _pressed ? DT.pressScale : breath;
-              return AnimatedScale(
-                scale: scale,
-                duration: DT.pressMs,
-                curve: Curves.easeOut,
-                child: child,
-              );
-            },
+          // Reduced motion: rests at scale 1.0 — its 3dp accent border and
+          // being the only thing on screen still say "tap me".
+          return AmbientLoop(
+            period: const Duration(milliseconds: 1600),
+            builder: (context, t, child) =>
+                Transform.scale(scale: 1.0 + 0.04 * t, child: child),
             child: SizedBox(
               width: w,
               height: h,

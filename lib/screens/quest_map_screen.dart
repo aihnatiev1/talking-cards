@@ -12,62 +12,16 @@ import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../services/audio_service.dart';
 
-import '../utils/constants.dart';
+import '../widgets/quest_journey_map.dart';
+import '../widgets/kid_screen.dart';
+import '../widgets/kid_tap.dart';
+import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
+import '../utils/kid_routes.dart';
 import '../widgets/share_progress_card.dart';
 import 'card_reveal_screen.dart';
 import 'cards_screen.dart';
 import 'guess_screen.dart';
-
-// ─── Stop definitions ────────────────────────────────────────
-
-class _StopInfo {
-  final QuestTask task;
-  final String emoji;
-  final String label;
-  final Color color; // unique color per stop
-  const _StopInfo({
-    required this.task,
-    required this.emoji,
-    required this.label,
-    required this.color,
-  });
-}
-
-List<_StopInfo> _buildStops(bool isEn) => [
-  _StopInfo(task: QuestTask.listenCardOfDay, emoji: '👂',
-      label: isEn ? 'Listen!' : 'Послухай!', color: const Color(0xFFFF7043)),
-  _StopInfo(task: QuestTask.viewCards3, emoji: '🎴',
-      label: isEn ? 'Find 3\ncards!' : 'Знайди 3\nкартки!', color: const Color(0xFF42A5F5)),
-  _StopInfo(task: QuestTask.playQuiz, emoji: '🎵',
-      label: isEn ? 'Guess\nthe word!' : 'Вгадай\nзвук!', color: const Color(0xFFAB47BC)),
-  _StopInfo(task: QuestTask.viewCards5, emoji: '⭐',
-      label: isEn ? '5 more\ncards!' : 'Ще 5\nкарток!', color: const Color(0xFFFFCA28)),
-  _StopInfo(task: QuestTask.reviewOldCard, emoji: '🔁',
-      label: isEn ? 'Repeat\nafter me!' : 'Повтори\nза мною!', color: const Color(0xFF26A69A)),
-];
-
-// Stop positions — snake path left→right→left
-const _stopPositions = [
-  Offset(0.22, 0.04),  // Stop 0 — top left
-  Offset(0.72, 0.18),  // Stop 1 — right
-  Offset(0.22, 0.34),  // Stop 2 — left
-  Offset(0.72, 0.50),  // Stop 3 — right
-  Offset(0.22, 0.66),  // Stop 4 — left
-];
-const _treasurePos = Offset(0.50, 0.80);
-
-const _decorations = [
-  ('🌳', 0.88, 0.01, 30.0),
-  ('🌻', 0.02, 0.10, 26.0),
-  ('🍄', 0.90, 0.28, 22.0),
-  ('🌸', 0.01, 0.43, 24.0),
-  ('🦋', 0.90, 0.57, 24.0),
-  ('🌿', 0.02, 0.70, 24.0),
-  ('🌲', 0.50, 0.25, 26.0),
-  ('🍀', 0.48, 0.56, 20.0),
-  ('🌈', 0.50, 0.93, 26.0),
-];
 
 class QuestMapScreen extends ConsumerStatefulWidget {
   final bool showBackButton;
@@ -87,38 +41,16 @@ class QuestMapScreen extends ConsumerStatefulWidget {
   ConsumerState<QuestMapScreen> createState() => _QuestMapScreenState();
 }
 
-class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
-    with TickerProviderStateMixin {
+class _QuestMapScreenState extends ConsumerState<QuestMapScreen> {
   CardModel? _lastUnlockedCard;
   PackModel? _lastUnlockedPack;
-
-  late final AnimationController _floatCtrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _floatCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 3000),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _floatCtrl.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     final quest = ref.watch(dailyQuestProvider);
     final packsAsync = ref.watch(packsProvider);
     final packs = packsAsync.valueOrNull ?? [];
-    final done = quest.doneCount;
-    final total = quest.totalCount;
-    final isEn = ref.read(languageProvider) == 'en';
-    final s = AppS(isEn);
-    final stops = _buildStops(isEn);
+    final isEn = ref.watch(languageProvider) == 'en';
 
     // Restore unlocked card/pack from persisted IDs
     CardModel? rewardCard;
@@ -158,8 +90,7 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
             seenCards: progress.entries
                 .where((e) => !e.key.startsWith('_'))
                 .fold<int>(0, (s, e) => s + e.value),
-            totalCards:
-                allPacks.fold<int>(0, (s, p) => s + p.cards.length),
+            totalCards: allPacks.fold<int>(0, (s, p) => s + p.cards.length),
             streak: 0,
             isEn: ref.read(languageProvider) == 'en',
             badges: {},
@@ -167,128 +98,24 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
         },
         onGoToPack: () {
           Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => CardsScreen(pack: rewardPack!)),
+            KidRoutes.content(CardsScreen(pack: rewardPack!)),
           );
         },
       );
     }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFFFF8F0),
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: widget.showBackButton
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                    color: kStreakOrange, size: 22),
-                onPressed: () => Navigator.of(context).pop(),
-              )
-            : null,
-        title: Text(
-          s('🗺️ Пригода дня', '🗺️ Adventure'),
-          style: const TextStyle(
-            fontWeight: FontWeight.w800,
-            color: kStreakOrange,
-            fontSize: 19,
-          ),
-        ),
-        centerTitle: true,
+    // No text title — the map is the title. The journey widget paints its
+    // own heading and counter.
+    return KidScreen(
+      accent: DT.mint,
+      background: DT.mintTint,
+      showLeading: widget.showBackButton,
+      body: QuestJourneyMap(
+        quest: quest,
+        isEn: isEn,
+        onStopTap: (task) => _handleStopTap(context, task, packs),
+        onClaimTreasure: () => _showPackPicker(context, packs),
       ),
-      body: Stack(
-        children: [
-          // Gradient background
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFFFFF8F0),
-                  Color(0xFFFFEDD8),
-                  Color(0xFFFDE2C8),
-                ],
-              ),
-            ),
-          ),
-          // Content
-          SafeArea(
-            child: Column(
-              children: [
-                const SizedBox(height: 8),
-
-                // Progress bar
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: _buildProgress(done, total),
-                ),
-                const SizedBox(height: 8),
-
-                // The adventure map
-                Expanded(
-                  child: AnimatedBuilder(
-                    animation: _floatCtrl,
-                    builder: (_, child) {
-                      final dy = sin(_floatCtrl.value * pi) * 4;
-                      return Transform.translate(
-                        offset: Offset(0, -dy),
-                        child: child,
-                      );
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
-                      child: _AdventureMap(
-                        quest: quest,
-                        stops: stops,
-                        onStopTap: (task) =>
-                            _handleStopTap(context, task, packs),
-                        onClaimTreasure: () =>
-                            _showPackPicker(context, packs),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProgress(int done, int total) {
-    final s = AppS(ref.read(languageProvider) == 'en');
-    return Column(
-      children: [
-        Row(
-          children: [
-            Text(
-              s('$done з $total зупинок', '$done of $total stops'),
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: kStreakOrange.withValues(alpha: 0.7),
-              ),
-            ),
-            const Spacer(),
-            ...List.generate(total, (i) {
-              return Padding(
-                padding: const EdgeInsets.only(left: 3),
-                child: Icon(
-                  i < done ? Icons.star_rounded : Icons.star_border_rounded,
-                  size: 16,
-                  color: i < done
-                      ? const Color(0xFFFFB347)
-                      : Colors.orange.withValues(alpha: 0.25),
-                ),
-              );
-            }),
-          ],
-        ),
-        // No linear bar here — the star row above already shows the same
-        // progress; two indicators for one number read as clutter.
-      ],
     );
   }
 
@@ -306,8 +133,7 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
         // stop with an empty callback (`() {}`) used to insta-complete it.
         final card = widget.cardOfDay;
         if (card != null) {
-          AudioService.instance.speakCard(
-              card.audioKey, card.sound, card.text);
+          AudioService.instance.speakCard(card.audioKey, card.sound, card.text);
           ref
               .read(dailyQuestProvider.notifier)
               .completeTask(QuestTask.listenCardOfDay);
@@ -316,33 +142,31 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
       case QuestTask.viewCards5:
         // viewCards* is auto-completed by dailyQuestProvider once the child
         // has swiped through N cards — don't pre-complete here.
-        final openPacks =
-            packs.where((p) => !p.isLocked && !p.id.startsWith('_')).toList();
+        final openPacks = packs
+            .where((p) => !p.isLocked && !p.id.startsWith('_'))
+            .toList();
         if (openPacks.isNotEmpty) {
           final pack = openPacks[Random().nextInt(openPacks.length)];
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => CardsScreen(pack: pack)),
-          );
+          Navigator.of(context).push(KidRoutes.content(CardsScreen(pack: pack)));
         }
       case QuestTask.reviewOldCard:
         // Opening any pack counts as "repeat after me" — completeTask fires
         // inside CardsScreen via packs_tab._onPackTap path. Here we do the
         // same so the task is credited once the pack is actually opened.
-        final openPacks =
-            packs.where((p) => !p.isLocked && !p.id.startsWith('_')).toList();
+        final openPacks = packs
+            .where((p) => !p.isLocked && !p.id.startsWith('_'))
+            .toList();
         if (openPacks.isNotEmpty) {
           final pack = openPacks[Random().nextInt(openPacks.length)];
           Navigator.of(context)
-              .push(
-                MaterialPageRoute(builder: (_) => CardsScreen(pack: pack)),
-              )
+              .push(KidRoutes.content(CardsScreen(pack: pack)))
               .then((_) {
-            // Credit the task after the user returns from the pack, ensuring
-            // they at least navigated into it.
-            ref
-                .read(dailyQuestProvider.notifier)
-                .completeTask(QuestTask.reviewOldCard);
-          });
+                // Credit the task after the user returns from the pack, ensuring
+                // they at least navigated into it.
+                ref
+                    .read(dailyQuestProvider.notifier)
+                    .completeTask(QuestTask.reviewOldCard);
+              });
         }
       case QuestTask.playQuiz:
         // GuessScreen calls completeTask(playQuiz) on its own Results screen.
@@ -351,16 +175,18 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
         // Same sanitation as games_tab: real recorded audio + webp image.
         final playable = lang == 'en'
             ? allCards
-                .where((c) =>
-                    c.image != null &&
-                    AudioService.instance.hasSound(c.audioKey))
-                .toList()
+                  .where(
+                    (c) =>
+                        c.image != null &&
+                        AudioService.instance.hasSound(c.audioKey),
+                  )
+                  .toList()
             : allCards
-                .where((c) => c.audioKey != null && c.image != null)
-                .toList();
+                  .where((c) => c.audioKey != null && c.image != null)
+                  .toList();
         if (playable.length >= 4) {
           Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => GuessScreen(cards: playable)),
+            KidRoutes.game(GuessScreen(cards: playable)),
           );
         }
       case QuestTask.reviewSRSCards:
@@ -378,9 +204,12 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppS(ref.read(languageProvider) == 'en')(
+            content: Text(
+              AppS(ref.read(languageProvider) == 'en')(
                 '🎉 Усі паки вже відкрито — молодець!',
-                '🎉 All packs already unlocked — great job!')),
+                '🎉 All packs already unlocked — great job!',
+              ),
+            ),
             backgroundColor: const Color(0xFFFFB347),
             duration: const Duration(seconds: 3),
           ),
@@ -408,15 +237,16 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
   Future<void> _unlockAndReveal(PackModel pack) async {
     final bonus = ref.read(bonusCardsProvider)[pack.id] ?? 0;
     final newTotal = pack.effectiveFreePreviewCount + bonus + 1;
-    final cardIndex =
-        (pack.effectiveFreePreviewCount + bonus).clamp(0, pack.cards.length - 1);
+    final cardIndex = (pack.effectiveFreePreviewCount + bonus).clamp(
+      0,
+      pack.cards.length - 1,
+    );
     final card = pack.cards[cardIndex];
 
     await ref.read(bonusCardsProvider.notifier).unlockOne(pack.id);
-    await ref.read(dailyQuestProvider.notifier).claimReward(
-      cardId: card.id,
-      packId: pack.id,
-    );
+    await ref
+        .read(dailyQuestProvider.notifier)
+        .claimReward(cardId: card.id, packId: pack.id);
 
     setState(() {
       _lastUnlockedCard = card;
@@ -426,10 +256,8 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
     if (!mounted) return;
 
     await Navigator.of(context).push(
-      PageRouteBuilder(
-        opaque: true,
-        transitionDuration: const Duration(milliseconds: 400),
-        pageBuilder: (_, __, ___) => CardRevealScreen(
+      KidRoutes.content(
+        CardRevealScreen(
           card: card,
           pack: pack,
           newTotal: newTotal,
@@ -444,725 +272,20 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
               seenCards: progress.entries
                   .where((e) => !e.key.startsWith('_'))
                   .fold<int>(0, (s, e) => s + e.value),
-              totalCards:
-                  allPacks.fold<int>(0, (s, p) => s + p.cards.length),
+              totalCards: allPacks.fold<int>(0, (s, p) => s + p.cards.length),
               streak: 0,
               badges: {},
               isEn: ref.read(languageProvider) == 'en',
             );
           },
           onGoToPack: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => CardsScreen(pack: pack)),
-            );
+            Navigator.of(context).push(KidRoutes.content(CardsScreen(pack: pack)));
           },
         ),
-        transitionsBuilder: (_, anim, __, child) =>
-            FadeTransition(opacity: anim, child: child),
       ),
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════════════
-//  ADVENTURE MAP — the main visual piece
-// ═══════════════════════════════════════════════════════════════
-
-class _AdventureMap extends StatelessWidget {
-  final DailyQuestState quest;
-  final void Function(QuestTask) onStopTap;
-  final VoidCallback onClaimTreasure;
-  final List<_StopInfo> stops;
-
-  const _AdventureMap({
-    required this.quest,
-    required this.onStopTap,
-    required this.onClaimTreasure,
-    required this.stops,
-  });
-
-  bool _isCurrentStop(int index) {
-    if (quest.completed.contains(stops[index].task)) return false;
-    for (int i = 0; i < index; i++) {
-      if (!quest.completed.contains(stops[i].task)) return false;
-    }
-    return true;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final w = constraints.maxWidth;
-        final h = constraints.maxHeight;
-
-        // Scale factor: design baseline is 390×700 (iPhone 14 map area).
-        // On smaller screens everything shrinks proportionally so stops
-        // always sit over the image circles and never overflow.
-        final scale = (w / 390).clamp(0.6, 1.2);
-
-        final positions = _stopPositions
-            .map((p) => Offset(p.dx * w, p.dy * h))
-            .toList();
-        final treasureAbs = Offset(
-          _treasurePos.dx * w,
-          _treasurePos.dy * h,
-        );
-
-        // Half-sizes of waypoints after scaling
-        final stopHalf  = 44.0 * scale;
-        final stopHalfV = 38.0 * scale;
-        final chestHalf = 42.0 * scale;
-
-        return Stack(
-          clipBehavior: Clip.none,
-          children: [
-            // Winding path
-            CustomPaint(
-              size: Size(w, h),
-              painter: _PathPainter(
-                stops: positions,
-                treasure: treasureAbs,
-                completedCount: quest.doneCount,
-                allDone: quest.allDone,
-              ),
-            ),
-
-            // Decorative emoji
-            for (final d in _decorations)
-              Positioned(
-                left: d.$2 * w - d.$4 / 2,
-                top: d.$3 * h - d.$4 / 2,
-                child: Text(d.$1, style: TextStyle(fontSize: d.$4)),
-              ),
-
-            // Stop waypoints — scaled to screen size
-            for (int i = 0; i < stops.length; i++)
-              Positioned(
-                left: positions[i].dx - stopHalf,
-                top: positions[i].dy - stopHalfV,
-                child: Transform.scale(
-                  scale: scale,
-                  alignment: Alignment.topLeft,
-                  child: _StopWaypoint(
-                    info: stops[i],
-                    isDone: quest.completed.contains(stops[i].task),
-                    isCurrent: _isCurrentStop(i),
-                    index: i + 1,
-                    onTap: () => onStopTap(stops[i].task),
-                  ),
-                ),
-              ),
-
-            // Treasure — also scaled
-            Positioned(
-              left: treasureAbs.dx - chestHalf,
-              top: treasureAbs.dy - chestHalf,
-              child: Transform.scale(
-                scale: scale,
-                alignment: Alignment.topLeft,
-                child: _TreasureWaypoint(
-                  quest: quest,
-                  onClaim: onClaimTreasure,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  STOP WAYPOINT — a circle on the map path
-// ═══════════════════════════════════════════════════════════════
-
-class _StopWaypoint extends ConsumerStatefulWidget {
-  final _StopInfo info;
-  final bool isDone;
-  final bool isCurrent;
-  final int index;
-  final VoidCallback onTap;
-
-  const _StopWaypoint({
-    required this.info,
-    required this.isDone,
-    required this.isCurrent,
-    required this.index,
-    required this.onTap,
-  });
-
-  @override
-  ConsumerState<_StopWaypoint> createState() => _StopWaypointState();
-}
-
-class _StopWaypointState extends ConsumerState<_StopWaypoint>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _pulse;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulse = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    );
-    if (widget.isCurrent) _pulse.repeat(reverse: true);
-  }
-
-  @override
-  void didUpdateWidget(covariant _StopWaypoint old) {
-    super.didUpdateWidget(old);
-    if (widget.isCurrent && !_pulse.isAnimating) {
-      _pulse.repeat(reverse: true);
-    } else if (!widget.isCurrent && _pulse.isAnimating) {
-      _pulse.stop();
-      _pulse.value = 0;
-    }
-  }
-
-  @override
-  void dispose() {
-    _pulse.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final stopColor = widget.info.color;
-
-    final Color bg;
-    final Color border;
-    final Color labelColor;
-
-    if (widget.isDone) {
-      bg = Colors.white.withValues(alpha: 0.85);
-      border = const Color(0xFF66BB6A);
-      labelColor = const Color(0xFF2E7D32);
-    } else if (widget.isCurrent) {
-      bg = Colors.white.withValues(alpha: 0.92);
-      border = stopColor;
-      labelColor = stopColor;
-    } else {
-      bg = Colors.white.withValues(alpha: 0.65);
-      border = stopColor.withValues(alpha: 0.5);
-      labelColor = stopColor;
-    }
-
-    Widget circle = GestureDetector(
-      onTap: widget.isDone
-          ? null
-          : () {
-              HapticFeedback.lightImpact();
-              widget.onTap();
-            },
-      child: SizedBox(
-        width: 88,
-        height: 104,
-        child: Column(
-          children: [
-            Container(
-              width: 66,
-              height: 66,
-              decoration: BoxDecoration(
-                color: bg,
-                shape: BoxShape.circle,
-                border: Border.all(color: border, width: 3.5),
-                boxShadow: [
-                  BoxShadow(
-                    color: border.withValues(alpha: 0.3),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                  if (widget.isDone)
-                    BoxShadow(
-                      color: const Color(0xFF66BB6A).withValues(alpha: 0.2),
-                      blurRadius: 14,
-                      spreadRadius: 3,
-                    ),
-                ],
-              ),
-              child: Center(
-                child: widget.isDone
-                    ? const Icon(Icons.check_rounded,
-                        color: Color(0xFF43A047), size: 34)
-                    : Text(
-                        widget.info.emoji,
-                        style: TextStyle(
-                          fontSize: 30,
-                          color: widget.isCurrent
-                              ? null
-                              : Colors.grey[400],
-                        ),
-                      ),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              // Keep the stop's own label when done — the green check on the
-              // circle already says "done"; a wall of «Готово!» hides what
-              // the child actually accomplished.
-              widget.info.label,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-                color: labelColor,
-                height: 1.1,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    if (widget.isCurrent) {
-      circle = AnimatedBuilder(
-        animation: _pulse,
-        builder: (_, child) {
-          final scale = 1.0 + _pulse.value * 0.08;
-          final glowAlpha = 0.15 + _pulse.value * 0.15;
-          return Transform.scale(
-            scale: scale,
-            child: Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: kStreakOrange.withValues(alpha: glowAlpha),
-                    blurRadius: 20,
-                    spreadRadius: 4,
-                  ),
-                ],
-              ),
-              child: child,
-            ),
-          );
-        },
-        child: circle,
-      );
-    }
-
-    return circle;
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  TREASURE WAYPOINT — the goal at the end of the path
-// ═══════════════════════════════════════════════════════════════
-
-// ═══════════════════════════════════════════════════════════════
-//  PATH PAINTER
-// ═══════════════════════════════════════════════════════════════
-
-class _PathPainter extends CustomPainter {
-  final List<Offset> stops;
-  final Offset treasure;
-  final int completedCount;
-  final bool allDone;
-
-  _PathPainter({
-    required this.stops,
-    required this.treasure,
-    required this.completedCount,
-    required this.allDone,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final allPoints = [...stops, treasure];
-    for (int i = 0; i < allPoints.length - 1; i++) {
-      _drawSegment(canvas, allPoints[i], allPoints[i + 1], i < completedCount);
-    }
-  }
-
-  void _drawSegment(Canvas canvas, Offset from, Offset to, bool done) {
-    final midY = (from.dy + to.dy) / 2;
-    final path = Path()
-      ..moveTo(from.dx, from.dy)
-      ..cubicTo(from.dx, midY, to.dx, midY, to.dx, to.dy);
-
-    final metrics = path.computeMetrics().first;
-    final totalLen = metrics.length;
-    const dashLen = 10.0;
-    const gapLen = 7.0;
-
-    final paint = Paint()
-      ..color = done
-          ? const Color(0xFF81C784).withValues(alpha: 0.85)
-          : const Color(0xFFD7CFC4).withValues(alpha: 0.5)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = done ? 5.0 : 4.0
-      ..strokeCap = StrokeCap.round;
-
-    double distance = 0;
-    while (distance < totalLen) {
-      final end = (distance + dashLen).clamp(0.0, totalLen);
-      canvas.drawPath(metrics.extractPath(distance, end), paint);
-      distance += dashLen + gapLen;
-    }
-
-    if (done) {
-      final glowPaint = Paint()
-        ..color = const Color(0xFF81C784).withValues(alpha: 0.15)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 10
-        ..strokeCap = StrokeCap.round
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
-      canvas.drawPath(path, glowPaint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _PathPainter old) =>
-      old.completedCount != completedCount;
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  TREASURE WAYPOINT
-// ═══════════════════════════════════════════════════════════════
-
-class _TreasureWaypoint extends ConsumerStatefulWidget {
-  final DailyQuestState quest;
-  final VoidCallback onClaim;
-
-  const _TreasureWaypoint({required this.quest, required this.onClaim});
-
-  @override
-  ConsumerState<_TreasureWaypoint> createState() => _TreasureWaypointState();
-}
-
-class _TreasureWaypointState extends ConsumerState<_TreasureWaypoint>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _bounce;
-
-  bool get _canClaim =>
-      widget.quest.allDone && !widget.quest.rewardClaimed;
-
-  @override
-  void initState() {
-    super.initState();
-    _bounce = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    );
-    if (_canClaim) _bounce.repeat(reverse: true);
-  }
-
-  @override
-  void didUpdateWidget(covariant _TreasureWaypoint old) {
-    super.didUpdateWidget(old);
-    if (_canClaim && !_bounce.isAnimating) {
-      _bounce.repeat(reverse: true);
-    } else if (!_canClaim && _bounce.isAnimating) {
-      _bounce.stop();
-      _bounce.value = 0;
-    }
-  }
-
-  @override
-  void dispose() {
-    _bounce.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final canClaim = _canClaim;
-    final claimed = widget.quest.rewardClaimed;
-
-    Widget treasure = GestureDetector(
-      onTap: canClaim
-          ? () {
-              HapticFeedback.mediumImpact();
-              widget.onClaim();
-            }
-          : null,
-      child: SizedBox(
-        width: 84,
-        height: 118,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: canClaim
-                    ? const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Color(0xFFFFE082), Color(0xFFFFD700), Color(0xFFFFA000)],
-                      )
-                    : null,
-                color: canClaim
-                    ? null
-                    : claimed
-                        ? const Color(0xFFE8F5E9)
-                        : Colors.white.withValues(alpha: 0.5),
-                border: Border.all(
-                  color: canClaim
-                      ? const Color(0xFFFFAB00)
-                      : claimed
-                          ? const Color(0xFF66BB6A)
-                          : const Color(0xFFD0C8BE),
-                  width: 3,
-                ),
-                boxShadow: canClaim
-                    ? [
-                        BoxShadow(
-                          color: const Color(0xFFFFD700).withValues(alpha: 0.5),
-                          blurRadius: 20,
-                          spreadRadius: 4,
-                        ),
-                      ]
-                    : null,
-              ),
-              child: Center(
-                child: Text(
-                  claimed ? '✨' : '🎁',
-                  style: const TextStyle(fontSize: 34),
-                ),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              () {
-                final ts = AppS(ref.read(languageProvider) == 'en');
-                return claimed
-                    ? ts('Знайдено! 🎉', 'Found! 🎉')
-                    : canClaim
-                        ? ts('Відкрий\nскарб!', 'Claim\nreward!')
-                        : ts('Скарб 🔒', 'Reward 🔒');
-              }(),
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                height: 1.1,
-                color: canClaim
-                    ? const Color(0xFFF57C00)
-                    : claimed
-                        ? const Color(0xFF388E3C)
-                        : const Color(0xFFB0A898),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    if (canClaim) {
-      treasure = AnimatedBuilder(
-        animation: _bounce,
-        builder: (_, child) => Transform.scale(
-          scale: 1.0 + _bounce.value * 0.1,
-          child: child,
-        ),
-        child: treasure,
-      );
-    }
-
-    return treasure;
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  CONFETTI RAIN
-// ═══════════════════════════════════════════════════════════════
-
-class _ConfettiRain extends StatefulWidget {
-  @override
-  State<_ConfettiRain> createState() => _ConfettiRainState();
-}
-
-class _ConfettiRainState extends State<_ConfettiRain>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 4000),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _ctrl,
-      builder: (_, __) => CustomPaint(
-        size: MediaQuery.of(context).size,
-        painter: _ConfettiPainter(progress: _ctrl.value),
-      ),
-    );
-  }
-}
-
-class _ConfettiPainter extends CustomPainter {
-  final double progress;
-  _ConfettiPainter({required this.progress});
-
-  static final _colors = [
-    const Color(0xFFFF6B6B),
-    const Color(0xFFFFD93D),
-    const Color(0xFF6BCB77),
-    const Color(0xFF4D96FF),
-    const Color(0xFFFF9FF3),
-    const Color(0xFFFFA502),
-    const Color(0xFF7B68EE),
-  ];
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rng = Random(99);
-    final paint = Paint()..style = PaintingStyle.fill;
-
-    for (int i = 0; i < 40; i++) {
-      final x = rng.nextDouble() * size.width;
-      final speed = 0.3 + rng.nextDouble() * 0.7;
-      final phase = rng.nextDouble();
-      final color = _colors[rng.nextInt(_colors.length)];
-      final w = 3.0 + rng.nextDouble() * 5;
-      final h = rng.nextBool() ? (5.0 + rng.nextDouble() * 8) : w;
-
-      final yNorm = ((progress * speed + phase) % 1.0);
-      final y = yNorm * (size.height + 40) - 20;
-      final wobble = sin((progress * 6 + phase * pi * 2)) * 12;
-      final rotation = progress * pi * 4 * (rng.nextBool() ? 1 : -1);
-
-      paint.color = color.withValues(alpha: (1.0 - yNorm * 0.5).clamp(0.2, 0.7));
-
-      canvas.save();
-      canvas.translate(x + wobble, y);
-      canvas.rotate(rotation);
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromCenter(center: Offset.zero, width: w, height: h),
-          const Radius.circular(1),
-        ),
-        paint,
-      );
-      canvas.restore();
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _ConfettiPainter old) =>
-      old.progress != progress;
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  LEVITATING CARD (after reward)
-// ═══════════════════════════════════════════════════════════════
-
-class _LevitatingCard extends ConsumerStatefulWidget {
-  final CardModel card;
-  final PackModel pack;
-
-  const _LevitatingCard({required this.card, required this.pack});
-
-  @override
-  ConsumerState<_LevitatingCard> createState() => _LevitatingCardState();
-}
-
-class _LevitatingCardState extends ConsumerState<_LevitatingCard>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _float;
-
-  @override
-  void initState() {
-    super.initState();
-    _float = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2400),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _float.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _float,
-      builder: (_, child) {
-        final offset = sin(_float.value * pi) * 8;
-        final tilt = sin(_float.value * pi) * 0.015;
-        return Transform.translate(
-          offset: Offset(0, -offset),
-          child: Transform.rotate(angle: tilt, child: child),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: widget.card.colorBg,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: widget.card.colorAccent.withValues(alpha: 0.2),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: widget.pack.color.withValues(alpha: 0.2),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Text(widget.card.emoji, style: const TextStyle(fontSize: 32)),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppS(ref.read(languageProvider) == 'en')(
-                        'Сьогоднішній скарб', "Today's reward"),
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: widget.pack.color,
-                    ),
-                  ),
-                  Text(
-                    widget.card.sound,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: widget.card.colorAccent,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Text(widget.pack.icon, style: const TextStyle(fontSize: 22)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  PACK PICKER SHEET
-// ═══════════════════════════════════════════════════════════════
 
 class _PackPickerSheet extends ConsumerStatefulWidget {
   final List<PackModel> lockedPacks;
@@ -1228,7 +351,9 @@ class _PackPickerSheetState extends ConsumerState<_PackPickerSheet>
           const SizedBox(height: 4),
           Text(
             AppS(ref.read(languageProvider) == 'en')(
-                'Де відкрити нову картку?', 'Where to open the new card?'),
+              'Де відкрити нову картку?',
+              'Where to open the new card?',
+            ),
             style: TextStyle(fontSize: 14, color: Colors.grey[500]),
           ),
           const SizedBox(height: 20),
@@ -1248,22 +373,23 @@ class _PackPickerSheetState extends ConsumerState<_PackPickerSheet>
                 animation: _entryCtrl,
                 builder: (_, child) {
                   final delay = i * 0.1;
-                  final t = ((_entryCtrl.value - delay) / (1 - delay))
-                      .clamp(0.0, 1.0);
+                  final t = ((_entryCtrl.value - delay) / (1 - delay)).clamp(
+                    0.0,
+                    1.0,
+                  );
                   final scale = Curves.elasticOut.transform(t);
                   return Transform.scale(
                     scale: scale.clamp(0.0, 1.1),
                     child: child,
                   );
                 },
-                child: GestureDetector(
+                child: KidTap(
                   onTap: allUnlocked
                       ? null
                       : () {
                           HapticFeedback.selectionClick();
                           setState(() => _selectedIndex = i);
-                          Future.delayed(
-                              const Duration(milliseconds: 300), () {
+                          Future.delayed(const Duration(milliseconds: 300), () {
                             widget.onPick(pack);
                           });
                         },
@@ -1271,7 +397,9 @@ class _PackPickerSheetState extends ConsumerState<_PackPickerSheet>
                     duration: const Duration(milliseconds: 200),
                     width: 90,
                     padding: const EdgeInsets.symmetric(
-                        vertical: 12, horizontal: 6),
+                      vertical: 12,
+                      horizontal: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: isSelected
                           ? pack.color.withValues(alpha: 0.2)
@@ -1291,8 +419,10 @@ class _PackPickerSheetState extends ConsumerState<_PackPickerSheet>
                           AnimatedScale(
                             scale: isSelected ? 1.2 : 1.0,
                             duration: const Duration(milliseconds: 200),
-                            child: Text(pack.icon,
-                                style: const TextStyle(fontSize: 28)),
+                            child: Text(
+                              pack.icon,
+                              style: const TextStyle(fontSize: 28),
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Text(
@@ -1311,7 +441,9 @@ class _PackPickerSheetState extends ConsumerState<_PackPickerSheet>
                                 ? '✅'
                                 : '${pack.effectiveFreePreviewCount + bonus}/${pack.cards.length}',
                             style: TextStyle(
-                                fontSize: 10, color: Colors.grey[400]),
+                              fontSize: 10,
+                              color: Colors.grey[400],
+                            ),
                           ),
                         ],
                       ),

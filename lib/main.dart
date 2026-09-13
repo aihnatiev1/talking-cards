@@ -22,7 +22,7 @@ import 'services/notification_service.dart';
 import 'services/profile_service.dart';
 import 'services/purchase_service.dart';
 import 'utils/app_startup.dart';
-import 'utils/constants.dart';
+import 'utils/app_theme.dart';
 import 'screens/splash_screen.dart';
 
 void main() async {
@@ -191,21 +191,10 @@ class _TalkingCardsAppState extends ConsumerState<TalkingCardsApp>
         if (AnalyticsService.instance.observer != null)
           AnalyticsService.instance.observer!,
       ],
-      theme: ThemeData(
-        colorSchemeSeed: kAccent,
-        useMaterial3: true,
-        fontFamily: 'Roboto',
-        scaffoldBackgroundColor: const Color(0xFFFAF8F5),
-      ),
-      darkTheme: ThemeData(
-        colorSchemeSeed: kAccent,
-        useMaterial3: true,
-        fontFamily: 'Roboto',
-        brightness: Brightness.dark,
-        // Deep indigo instead of the M3 near-black default — keeps the
-        // brand's warm feel and lets the white content cards float.
-        scaffoldBackgroundColor: const Color(0xFF1E1B2A),
-      ),
+      // One light theme from DT (lib/utils/app_theme.dart); dark is kept
+      // only for the parent-zone toggle and mirrors the previous values.
+      theme: buildAppTheme(),
+      darkTheme: buildAppDarkTheme(),
       themeMode: themeMode,
       home: const SplashScreen(),
     );

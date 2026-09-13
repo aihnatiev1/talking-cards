@@ -50,6 +50,12 @@ class CardImage extends StatelessWidget {
   /// non-nullable precisely so there is always something to show.
   final String fallbackEmoji;
 
+  /// Drawn instead of [fallbackEmoji] when there is no picture — for a
+  /// stand-in that is art rather than a glyph (a sound pack's
+  /// `LetterStickerIcon`, a game's `AppIconView`). Same slot, same
+  /// padding, so the swap to the real picture does not move anything.
+  final Widget? fallback;
+
   final CardArtSize size;
   final BoxFit fit;
 
@@ -68,6 +74,7 @@ class CardImage extends StatelessWidget {
     this.fit = BoxFit.contain,
     this.background,
     this.padding = const EdgeInsets.all(12),
+    this.fallback,
   });
 
   /// The common case: a card knows both its picture and its emoji.
@@ -79,7 +86,8 @@ class CardImage extends StatelessWidget {
     this.background,
     this.padding = const EdgeInsets.all(12),
   })  : name = card.image,
-        fallbackEmoji = card.emoji;
+        fallbackEmoji = card.emoji,
+        fallback = null;
 
   /// Reported at most once per asset per session: a grid of twenty tiles
   /// waiting on the same pack is one problem, not twenty events.
@@ -133,6 +141,7 @@ class CardImage extends StatelessWidget {
               _report(name, 'decode_failed');
               return _Placeholder(
                 emoji: fallbackEmoji,
+                fallback: fallback,
                 background: background,
                 padding: padding,
               );
@@ -150,6 +159,7 @@ class CardImage extends StatelessWidget {
     _report(name, 'pending');
     return _Placeholder(
       emoji: fallbackEmoji,
+      fallback: fallback,
       background: background,
       padding: padding,
     );
@@ -160,6 +170,7 @@ class CardImage extends StatelessWidget {
     if (reason != ArtMissing.noName.reason) _report(name, reason);
     return _Placeholder(
       emoji: fallbackEmoji,
+      fallback: fallback,
       background: background,
       padding: padding,
     );
@@ -181,11 +192,13 @@ class CardImage extends StatelessWidget {
 /// needs something recognisable in the box.
 class _Placeholder extends StatelessWidget {
   final String emoji;
+  final Widget? fallback;
   final Color? background;
   final EdgeInsets padding;
 
   const _Placeholder({
     required this.emoji,
+    this.fallback,
     this.background,
     this.padding = const EdgeInsets.all(12),
   });
@@ -199,7 +212,8 @@ class _Placeholder extends StatelessWidget {
         padding: padding,
         child: FittedBox(
           fit: BoxFit.contain,
-          child: Text(emoji, style: const TextStyle(fontSize: 120)),
+          child: fallback ??
+              Text(emoji, style: const TextStyle(fontSize: 120)),
         ),
       ),
     );

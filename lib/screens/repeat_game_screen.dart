@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
@@ -10,13 +9,17 @@ import '../providers/daily_quest_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/profile_provider.dart';
 import '../services/audio_service.dart';
+import '../services/feedback_service.dart';
 import '../utils/confetti_overlay_mixin.dart';
 import '../utils/constants.dart';
+import '../utils/design_tokens.dart';
 import '../utils/game_state_mixin.dart';
+import '../utils/app_icons.dart';
 import '../utils/l10n.dart';
-import '../utils/shake_animation_mixin.dart';
 import '../widgets/card_image.dart';
 import '../widgets/game_celebration_overlay.dart';
+import '../widgets/kid_screen.dart';
+import '../widgets/kid_tap.dart';
 
 class RepeatGameScreen extends ConsumerStatefulWidget {
   final List<CardModel> cards;
@@ -29,8 +32,7 @@ class RepeatGameScreen extends ConsumerStatefulWidget {
 
 class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
     with
-        TickerProviderStateMixin,
-        ShakeAnimationMixin,
+        SingleTickerProviderStateMixin,
         ConfettiOverlayMixin,
         GameStateMixin {
   @override
@@ -70,14 +72,14 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
       vsync: this,
       duration: const Duration(milliseconds: 320),
     );
-    _exitSlide = Tween<double>(begin: 0, end: -40).animate(
-      CurvedAnimation(parent: _exitCtrl, curve: Curves.easeIn),
-    );
-    _exitFade = Tween<double>(begin: 1, end: 0).animate(
-      CurvedAnimation(parent: _exitCtrl, curve: Curves.easeIn),
-    );
-
-    initShake();
+    _exitSlide = Tween<double>(
+      begin: 0,
+      end: -40,
+    ).animate(CurvedAnimation(parent: _exitCtrl, curve: Curves.easeIn));
+    _exitFade = Tween<double>(
+      begin: 1,
+      end: 0,
+    ).animate(CurvedAnimation(parent: _exitCtrl, curve: Curves.easeIn));
 
     startGame();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -96,7 +98,6 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
   @override
   void dispose() {
     _exitCtrl.dispose();
-    disposeShake();
     disposeConfetti();
     super.dispose();
   }
@@ -111,7 +112,9 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
     if (_answered) return;
     setState(() => _answered = true);
 
-    HapticFeedback.lightImpact();
+    // Used to be a silent haptic; a right answer now dings like every
+    // other game.
+    FeedbackService.instance.event(FeedbackEvent.correct);
     scorePoint();
     showConfetti();
     ref.read(dailyQuestProvider.notifier).recordSpeechCorrect();
@@ -125,15 +128,11 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
     if (_answered) return;
     setState(() => _answered = true);
 
-    HapticFeedback.mediumImpact();
+    FeedbackService.instance.event(FeedbackEvent.wrong);
     // Remember the tricky word — after the main deck we run one gentle
-    // practice pass with just these before celebrating. No punishment UI.
+    // practice pass with just these before celebrating. No punishment UI:
+    // the card does not shake or change colour, it simply moves on.
     _missed.add(_current);
-
-    // Quick shake so the tap feels acknowledged, then move on.
-    await shakeController.forward();
-    shakeController.reset();
-    if (!mounted) return;
 
     await _advance();
   }
@@ -141,7 +140,8 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
   void _restart() {
     resetGame();
     setState(() {
-      _deck = List<CardModel>.from(widget.cards)..shuffle(Random());
+      final shuffled = List<CardModel>.from(widget.cards)..shuffle(Random());
+      _deck = shuffled.take(_sessionLength).toList();
       _index = 0;
       _answered = false;
       _practiceRound = false;
@@ -202,39 +202,26 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
 
     final card = _current;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFEAFFF5),
-      appBar: AppBar(
-        title: Text(
-          s('Повтори за мною', 'Repeat after me'),
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: SafeArea(
-        child: Padding(
+    // No text title — "Repeat after me" is the parent's cue, and it is
+    // already on the card ("Say: …"). Progress is the shell's pill.
+    return KidScreen.game(
+      accent: kAccent,
+      background: DT.mintTint,
+      progress: _deck.isEmpty ? null : _index / _deck.length,
+      body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
             children: [
               const SizedBox(height: 12),
 
-              // Progress dots
-              _buildProgressDots(),
-
-              const SizedBox(height: 24),
-
               // Card
               Expanded(
                 flex: 5,
                 child: AnimatedBuilder(
-                  animation: Listenable.merge([_exitCtrl, shakeController]),
+                  animation: _exitCtrl,
                   builder: (_, child) => Transform.translate(
-                    offset: Offset(shakeOffset.value, _exitSlide.value),
-                    child: Opacity(
-                      opacity: _exitFade.value,
-                      child: child,
-                    ),
+                    offset: Offset(0, _exitSlide.value),
+                    child: Opacity(opacity: _exitFade.value, child: child),
                   ),
                   child: GestureDetector(
                     onTap: _speakCurrent,
@@ -274,8 +261,9 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
                               child: Container(
                                 margin: const EdgeInsets.all(24),
                                 decoration: BoxDecoration(
-                                  color: card.colorAccent
-                                      .withValues(alpha: 0.25),
+                                  color: card.colorAccent.withValues(
+                                    alpha: 0.25,
+                                  ),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                               ),
@@ -297,13 +285,18 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.volume_up_rounded,
-                                  color: Colors.grey[400], size: 16),
+                              Icon(
+                                Icons.volume_up_rounded,
+                                color: Colors.grey[400],
+                                size: 16,
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 s('Натисни, щоб послухати', 'Tap to listen'),
                                 style: TextStyle(
-                                    fontSize: 11, color: Colors.grey[400]),
+                                  fontSize: 11,
+                                  color: Colors.grey[400],
+                                ),
                               ),
                             ],
                           ),
@@ -320,42 +313,36 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
               Text(
                 s('Скажи: «${card.sound}»', 'Say: «${card.sound}»'),
                 style: const TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.w600),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: 12),
 
+              // Two neutral pills for the parent: "again" and "got it".
+              // Neither is a verdict — no red, no cross (G10).
               Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton(
-                      onPressed: _answered ? null : _onWrong,
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 18),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16)),
-                      ),
-                      child: Text(
-                        s('Не вийшло ❌', 'Not quite ❌'),
-                        style: const TextStyle(fontSize: 15),
-                      ),
+                    child: _ParentPill(
+                      label: s('Ще раз', 'Again'),
+                      icon: AppIcon.replay,
+                      background: DT.surfaceWhite,
+                      foreground: kAccent,
+                      border: kAccent.withValues(alpha: 0.35),
+                      enabled: !_answered,
+                      onTap: _onWrong,
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: ElevatedButton(
-                      onPressed: _answered ? null : _onCorrect,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: kAccent,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 18),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16)),
-                      ),
-                      child: Text(
-                        s('Сказав! ✅', 'Said it! ✅'),
-                        style: const TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.bold),
-                      ),
+                    child: _ParentPill(
+                      label: s('Вийшло!', 'Got it!'),
+                      icon: AppIcon.check,
+                      background: DT.success,
+                      foreground: Colors.white,
+                      enabled: !_answered,
+                      onTap: _onCorrect,
                     ),
                   ),
                 ],
@@ -364,33 +351,69 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
               const SizedBox(height: 24),
             ],
           ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+//  Parent pill — 72 dp, icon + word, never a verdict colour
+// ─────────────────────────────────────────────
+
+class _ParentPill extends StatelessWidget {
+  final String label;
+  final AppIcon icon;
+  final Color background;
+  final Color foreground;
+  final Color? border;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  const _ParentPill({
+    required this.label,
+    required this.icon,
+    required this.background,
+    required this.foreground,
+    required this.enabled,
+    required this.onTap,
+    this.border,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final borderColor = border;
+    return KidTap(
+      onTap: enabled ? onTap : null,
+      child: AnimatedOpacity(
+        opacity: enabled ? 1 : 0.5,
+        duration: DT.motion.quick,
+        child: Container(
+          height: DT.size.tapMin,
+          decoration: BoxDecoration(
+            color: background,
+            borderRadius: BorderRadius.circular(DT.rLg),
+            border: borderColor == null
+                ? null
+                : Border.all(color: borderColor, width: 2),
+            boxShadow: DT.shadowSoft(background),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AppIconView(icon, size: DT.size.iconMd, color: foreground),
+              const SizedBox(width: DT.sp8),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: DT.tileTitle.copyWith(color: foreground),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
-
-  Widget _buildProgressDots() {
-    final count = min(_deck.length, 10);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(count, (i) {
-        final done = i < _index;
-        final active = i == _index;
-        return Container(
-          width: active ? 10 : 8,
-          height: active ? 10 : 8,
-          margin: const EdgeInsets.symmetric(horizontal: 3),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: done
-                ? kAccent.withValues(alpha: 0.35)
-                : active
-                    ? kAccent
-                    : Colors.grey[300],
-          ),
-        );
-      }),
-    );
-  }
-
 }
