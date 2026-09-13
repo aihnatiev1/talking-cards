@@ -36,7 +36,9 @@ void main() {
         bestPack: 'Звук Р',
       );
       expect(title, contains('з Картками'));
-      expect(body, 'Скарбничка: Софійка знає 23 слова. Найкраще іде: Звук Р. '
+      // "Знає" claimed knowledge the app cannot see; the chest is a count
+      // of collected words and says only that (audit §28).
+      expect(body, 'У скарбничці Софійка: 23 слова. Найкраще іде: Звук Р. '
           'Ще 2 дні безкоштовно.');
     });
 

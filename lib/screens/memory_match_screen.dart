@@ -12,6 +12,7 @@ import '../providers/daily_quest_provider.dart';
 import '../providers/game_stats_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/profile_provider.dart';
+import '../providers/word_evidence_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../services/feedback_service.dart';
@@ -380,6 +381,11 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
 
   void _onMatch(int a, int b) {
     FeedbackService.instance.event(FeedbackEvent.correct, step: _matched + 1);
+    // Finding the twin is a recognition of that word, same signal the quiz
+    // records — never confused with a plain card view.
+    ref
+        .read(wordEvidenceProvider.notifier)
+        .recordRecognized(_tiles[a].card.id);
     final dir = _towards(a, b);
     setState(() {
       _tiles[a].isMatched = true;

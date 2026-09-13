@@ -12,6 +12,7 @@ import 'review_provider.dart';
 import 'srs_provider.dart';
 import 'streak_provider.dart';
 import 'weak_words_provider.dart';
+import 'word_evidence_provider.dart';
 
 // ─────────────────────────────────────────────
 //  State
@@ -113,6 +114,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     _ref.invalidate(dailyStatsProvider);
     _ref.invalidate(srsProvider);
     _ref.invalidate(weakWordsProvider);
+    _ref.invalidate(wordEvidenceProvider);
   }
 }
 

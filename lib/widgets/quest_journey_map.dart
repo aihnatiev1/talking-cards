@@ -8,6 +8,7 @@ import '../utils/app_icons.dart';
 import '../utils/design_tokens.dart';
 import '../utils/motion.dart';
 import 'bloom_mascot.dart';
+import 'card_image.dart';
 import 'kid_tap.dart';
 
 const _ink = Color(0xFF254F49);
@@ -90,12 +91,26 @@ class QuestJourneyMap extends StatelessWidget {
   final ValueChanged<QuestTask> onStopTap;
   final VoidCallback onClaimTreasure;
 
+  /// The picture of the day's theme (a [CardImage] asset name), drawn in
+  /// the header medallion. Null keeps the old wordless header.
+  final String? themeImage;
+
+  /// What assistive tech reads for that medallion.
+  final String? themeLabel;
+
+  /// A stop that has just been finished elsewhere: it pops once when the
+  /// child comes back, so returning to the map shows her what changed.
+  final QuestTask? justCompleted;
+
   const QuestJourneyMap({
     super.key,
     required this.quest,
     required this.isEn,
     required this.onStopTap,
     required this.onClaimTreasure,
+    this.themeImage,
+    this.themeLabel,
+    this.justCompleted,
   });
 
   String s(String uk, String en) => isEn ? en : uk;
@@ -140,6 +155,8 @@ class QuestJourneyMap extends StatelessWidget {
                     _PawHeader(
                       done: [for (final t in _tasks) q.completed.contains(t)],
                       opened: q.allDone,
+                      themeImage: themeImage,
+                      themeLabel: themeLabel,
                       label: s(
                         'Кроків до скарбу: ${q.doneCount} з 5',
                         'Steps to the treasure: ${q.doneCount} of 5',
@@ -237,6 +254,8 @@ class QuestJourneyMap extends StatelessWidget {
                                         ? q.completed.contains(_tasks[i])
                                         : q.rewardClaimed,
                                     active: i == current,
+                                    celebrate:
+                                        i < 5 && _tasks[i] == justCompleted,
                                     opened: i == 5 && (q.allDone || q.rewardClaimed),
                                     onTap: i == 5
                                         ? (q.allDone && !q.rewardClaimed
@@ -298,10 +317,18 @@ class _PawHeader extends StatelessWidget {
   /// Spoken by assistive tech in place of the counter that used to be text.
   final String label;
 
+  /// The day's subject, as a picture. The five stops all work with it, and
+  /// this medallion is the only place that says so — in the one language a
+  /// two-year-old reads (п. 25 + rule 4).
+  final String? themeImage;
+  final String? themeLabel;
+
   const _PawHeader({
     required this.done,
     required this.opened,
     required this.label,
+    this.themeImage,
+    this.themeLabel,
   });
 
   @override
@@ -328,6 +355,14 @@ class _PawHeader extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              if (themeImage != null) ...[
+                _ThemeMedallion(
+                  key: const ValueKey('journey-theme'),
+                  image: themeImage!,
+                  label: themeLabel,
+                ),
+                const SizedBox(width: 10),
+              ],
               for (var i = 0; i < done.length; i++)
                 _Paw(key: ValueKey('journey-paw-$i'), index: i, done: done[i]),
               const SizedBox(width: 8),
@@ -336,6 +371,47 @@ class _PawHeader extends StatelessWidget {
                 size: 34,
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The day's picture in a white ring — a sticker of the theme, not a label.
+class _ThemeMedallion extends StatelessWidget {
+  final String image;
+  final String? label;
+  const _ThemeMedallion({super.key, required this.image, this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: label,
+      image: true,
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          border: Border.all(color: const Color(0xFFFFE2A8), width: 2.5),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x1A254F49),
+              offset: Offset(0, 3),
+              blurRadius: 6,
+            ),
+          ],
+        ),
+        child: ClipOval(
+          // Play may still be delivering the artwork; CardImage answers
+          // with a placeholder instead of throwing (CLAUDE.md).
+          child: CardImage(
+            name: image,
+            fallbackEmoji: '🗺️',
+            padding: const EdgeInsets.all(3),
+            fit: BoxFit.cover,
           ),
         ),
       ),
@@ -379,6 +455,11 @@ class _JourneyStop extends StatelessWidget {
   final String label;
   final TextStyle labelStyle;
   final bool done, active, opened;
+
+  /// This stop was finished on the screen the child has just come back
+  /// from: the plate hops once so the change has a place on the map
+  /// (п. 25). Purely visual — the host screen owns the sound.
+  final bool celebrate;
   final VoidCallback? onTap;
   const _JourneyStop({
     super.key,
@@ -388,6 +469,7 @@ class _JourneyStop extends StatelessWidget {
     required this.done,
     required this.active,
     required this.opened,
+    this.celebrate = false,
     this.onTap,
   });
 
@@ -411,7 +493,9 @@ class _JourneyStop extends StatelessWidget {
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  Container(
+                  _ArrivalPop(
+                    play: celebrate,
+                    child: Container(
                     width: _plate,
                     height: _plate,
                     decoration: BoxDecoration(
@@ -448,6 +532,7 @@ class _JourneyStop extends StatelessWidget {
                     // check says "something happened" but not what; the
                     // check rides as a small badge instead.
                     child: AppIconView(icon, size: 46, sticker: true),
+                  ),
                   ),
                   if (done || (index == 5 && onTap == null && !opened))
                     Positioned(
@@ -490,6 +575,73 @@ class _JourneyStop extends StatelessWidget {
 /// [DTMotion.journeyStep], with sparks on arrival. Under reduced motion the
 /// walk collapses to zero and he simply appears at the new stop; the
 /// success sound still plays, because that is feedback, not motion.
+/// One hop of a stop plate when the child comes back having finished it.
+///
+/// The map used to change silently: you left, you played, you returned and
+/// a plate was green — the moment of "I did that" happened on another
+/// screen. This gives it a place on the route. Reduced motion keeps the
+/// plate still; the check badge is the state, this is only its arrival.
+class _ArrivalPop extends StatefulWidget {
+  final bool play;
+  final Widget child;
+  const _ArrivalPop({required this.play, required this.child});
+
+  @override
+  State<_ArrivalPop> createState() => _ArrivalPopState();
+}
+
+class _ArrivalPopState extends State<_ArrivalPop>
+    with SingleTickerProviderStateMixin {
+  // Built in initState, not lazily: a stop that never pops is still
+  // disposed, and a `late` controller born inside dispose() looks up a
+  // deactivated ancestor.
+  late final AnimationController _c;
+
+  @override
+  void initState() {
+    super.initState();
+    _c = AnimationController(vsync: this, duration: DT.motion.celebrate);
+    if (widget.play) _c.forward();
+  }
+
+  @override
+  void didUpdateWidget(_ArrivalPop old) {
+    super.didUpdateWidget(old);
+    if (widget.play && !old.play) {
+      _c
+        ..reset()
+        ..forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (MotionPolicy.of(context).reduce) return widget.child;
+    return AnimatedBuilder(
+      animation: _c,
+      builder: (context, child) {
+        final t = _c.value;
+        if (t == 0 || t == 1) return child!;
+        final pop = math.sin(t * math.pi);
+        return Transform.scale(
+          scale: 1 + 0.18 * pop,
+          child: Transform.rotate(
+            angle: 0.08 * math.sin(t * math.pi * 2),
+            child: child,
+          ),
+        );
+      },
+      child: widget.child,
+    );
+  }
+}
+
 class _Traveller extends StatefulWidget {
   final int index;
   final Offset anchor;

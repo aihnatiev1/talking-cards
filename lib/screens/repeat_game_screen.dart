@@ -8,6 +8,7 @@ import '../models/card_model.dart';
 import '../providers/daily_quest_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/profile_provider.dart';
+import '../providers/word_evidence_provider.dart';
 import '../services/audio_service.dart';
 import '../services/feedback_service.dart';
 import '../utils/confetti_overlay_mixin.dart';
@@ -123,6 +124,10 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
     FeedbackService.instance.event(FeedbackEvent.correct);
     scorePoint();
     showConfetti();
+    // The grown-up's own judgement — the only signal in the app that comes
+    // from a human ear. Stored apart from views and game answers so the
+    // dashboard can show it as exactly that.
+    ref.read(wordEvidenceProvider.notifier).recordParentMark(_current.id);
     ref.read(dailyQuestProvider.notifier).recordSpeechCorrect();
 
     await Future.delayed(DT.motion.repeatPraiseHold);

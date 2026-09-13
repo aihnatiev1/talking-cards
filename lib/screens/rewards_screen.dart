@@ -52,12 +52,27 @@ class RewardsAlbum extends ConsumerWidget {
     final streak = ref.watch(streakProvider);
     final isEn = ref.watch(languageProvider) == 'en';
     final earned = streak.unlockedRewards;
+    // The first page still empty: the one goal worth naming today.
+    final nextGoal =
+        milestones.where((m) => !earned.contains(m.id)).firstOrNull;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(DT.sp16, DT.sp8, DT.sp16, DT.sp24),
       children: [
         if (showHeader) ...[
           _AlbumHeader(streak: streak.currentStreak, isEn: isEn),
+          const SizedBox(height: DT.sp16),
+        ],
+        // What the next short session is for. Only while the album has an
+        // empty page — a finished album ends on the stickers, not on a
+        // "there is always more" bar (п. 26).
+        if (nextGoal != null) ...[
+          _NextGoalCard(
+            key: const ValueKey('next-goal'),
+            milestone: nextGoal,
+            streak: streak.currentStreak,
+            isEn: isEn,
+          ),
           const SizedBox(height: DT.sp16),
         ],
         GridView.count(
@@ -68,10 +83,11 @@ class RewardsAlbum extends ConsumerWidget {
           crossAxisSpacing: DT.sp12,
           childAspectRatio: 0.92,
           children: [
-            for (final m in milestones)
+            for (final (i, m) in milestones.indexed)
               _StickerPage(
                 key: ValueKey('sticker_${m.days}'),
                 milestone: m,
+                index: i,
                 earned: earned.contains(m.id),
                 isEn: isEn,
               ),
@@ -164,6 +180,119 @@ class _AlbumHeader extends StatelessWidget {
   }
 }
 
+/// «Це відкриється за наступне коротке заняття» — the album's one goal.
+///
+/// The sheet said what the child *has*; nothing on it said what the next
+/// ten minutes are for, so the empty pages read as "someday, somehow"
+/// (experience audit п. 26). This is the same currency as the rest of the
+/// screen — the streak that already unlocks the stickers — shown as one
+/// filling track that ends on the sticker it opens. No new counter, no
+/// second collection.
+///
+/// The child reads the picture and how full the track is; the sentence
+/// («Ще 2 дні — і Веселка твоя») is a parent's, so it is the semantics
+/// label and the long-press, not a paragraph on the page (rule 4).
+class _NextGoalCard extends StatelessWidget {
+  const _NextGoalCard({
+    super.key,
+    required this.milestone,
+    required this.streak,
+    required this.isEn,
+  });
+
+  final Milestone milestone;
+  final int streak;
+  final bool isEn;
+
+  int get _left => math.max(1, milestone.days - streak);
+
+  /// Gender-free on purpose: «Веселка чекає» works for the unicorn, the
+  /// dragon and the butterfly alike, where «твоя/твій» would need a table.
+  String get _sentence {
+    final name = milestone.name(isEn);
+    return isEn
+        ? 'Play on $_left more ${_left == 1 ? 'day' : 'days'} — '
+            'and $name is waiting'
+        : 'Ще $_left ${dayWord(_left)} гри — і $name чекає';
+  }
+
+  void _explain(BuildContext context) {
+    FeedbackService.instance.event(FeedbackEvent.lockedHint);
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(SnackBar(content: Text(_sentence)));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = PackPalette.of(_pageAccent(milestone.sticker));
+    // Never a full or an empty track: a child who has just started still
+    // sees the road has a beginning.
+    final progress = (streak / milestone.days).clamp(0.06, 0.94);
+    return Semantics(
+      label: _sentence,
+      container: true,
+      child: KidTap(
+        sound: null,
+        haptic: false,
+        onTap: () => _explain(context),
+        onLongPress: () => _explain(context),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(DT.sp16, DT.sp12, DT.sp12, DT.sp12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(DT.rXl),
+            border: Border.all(color: palette.border, width: 1.5),
+            boxShadow: DT.shadowRest,
+          ),
+          child: Row(
+            children: [
+              // How many more days of play, in the same flame the streak
+              // is counted in everywhere else.
+              SizedBox(
+                width: 56,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const AppIconView(AppIcon.streakFlame, size: 34),
+                    Text(
+                      '+$_left',
+                      style: DT.h2.copyWith(color: palette.onTint),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: DT.sp8),
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(DT.rMd),
+                  child: LinearProgressIndicator(
+                    key: const ValueKey('next-goal-track'),
+                    value: progress,
+                    minHeight: 14,
+                    backgroundColor: palette.tint,
+                    valueColor: AlwaysStoppedAnimation<Color>(palette.accent),
+                  ),
+                ),
+              ),
+              const SizedBox(width: DT.sp12),
+              // The prize at the end of the track: the paper shape of the
+              // sticker that is about to become real — the same silhouette
+              // the album page shows, so the two read as one promise.
+              AppIconView(
+                milestone.sticker,
+                size: 56,
+                silhouette: palette.accent.withValues(alpha: 0.45),
+                semanticLabel: milestone.name(isEn),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// The page's tint and label colour. Mostly the sticker's own accent
 /// ([defaultColorOf]), except where that accent is a pale tint chosen for
 /// the drawing (the unicorn's coat) and would leave the page and its name
@@ -185,11 +314,17 @@ class _StickerPage extends StatefulWidget {
   const _StickerPage({
     super.key,
     required this.milestone,
+    required this.index,
     required this.earned,
     required this.isEn,
   });
 
   final Milestone milestone;
+
+  /// Position in the album — the sticker's note in the success row, so the
+  /// unicorn always answers with *its* pitch and the butterfly with its
+  /// own. Four stickers, four notes the child learns to recognise (п. 26).
+  final int index;
   final bool earned;
   final bool isEn;
 
@@ -217,7 +352,11 @@ class _StickerPageState extends State<_StickerPage>
       FeedbackService.instance.event(FeedbackEvent.lockedHint);
       return;
     }
-    FeedbackService.instance.event(FeedbackEvent.correct);
+    // The sticker's own note: one small step up the row per album page.
+    FeedbackService.instance.event(
+      FeedbackEvent.correct,
+      pitch: 0.94 + 0.07 * widget.index,
+    );
     if (MotionPolicy.of(context).reduce) return;
     _bounce
       ..reset()
@@ -270,13 +409,26 @@ class _StickerPageState extends State<_StickerPage>
             AnimatedBuilder(
               animation: _bounce,
               builder: (context, child) {
-                // One hop: up to 1.22 and back, with a small tilt — the
-                // sticker "peels" off the page and settles again.
+                // One hop up to 1.22 and back — and, on top of it, the
+                // sticker's own little move: the unicorn springs, the
+                // dragon shakes its head, the rainbow sways, the butterfly
+                // flutters sideways. A bounce says "you touched me"; this
+                // says *who* you touched (п. 26).
                 final t = _bounce.value;
                 final pop = math.sin(t * math.pi);
-                return Transform.rotate(
-                  angle: 0.12 * math.sin(t * math.pi * 2),
-                  child: Transform.scale(scale: 1 + 0.22 * pop, child: child),
+                final wave = math.sin(t * math.pi * 2);
+                final (tilt, slide, lift) = switch (m.sticker) {
+                  AppIcon.stickerUnicorn => (0.10 * wave, 0.0, -10.0 * pop),
+                  AppIcon.stickerDragon => (0.22 * math.sin(t * math.pi * 4), 0.0, 0.0),
+                  AppIcon.stickerRainbow => (0.06 * wave, 10.0 * wave, 0.0),
+                  _ => (0.14 * wave, 12.0 * math.sin(t * math.pi * 3), -6.0 * pop),
+                };
+                return Transform.translate(
+                  offset: Offset(slide * pop, lift),
+                  child: Transform.rotate(
+                    angle: tilt,
+                    child: Transform.scale(scale: 1 + 0.22 * pop, child: child),
+                  ),
                 );
               },
               child: widget.earned

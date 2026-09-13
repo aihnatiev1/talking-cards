@@ -14,11 +14,11 @@ import 'providers/bloom_reactions_provider.dart';
 import 'providers/language_provider.dart';
 import 'providers/packs_provider.dart';
 import 'providers/profile_provider.dart';
-import 'providers/srs_provider.dart';
-import 'providers/streak_provider.dart';
 import 'providers/theme_provider.dart';
+import 'providers/word_evidence_provider.dart';
 import 'services/analytics_service.dart';
 import 'services/audio_service.dart';
+import 'services/engage_service.dart';
 import 'services/notification_service.dart';
 import 'services/profile_service.dart';
 import 'services/purchase_service.dart';
@@ -148,6 +148,38 @@ class _TalkingCardsAppState extends ConsumerState<TalkingCardsApp>
     ref.read(isProProvider.notifier).state = isPro;
   }
 
+  /// Reminders speak from context, not from a counter: the pack the family
+  /// opened last and a few words the child actually recognises.
+  Future<void> _refreshEngagement() async {
+    final lang = ref.read(languageProvider);
+    final lastPack = await EngageService.instance.lastPackTitle();
+    if (!mounted) return;
+    NotificationService.instance.refreshEngagement(
+      lang: lang,
+      lastPackTitle: lastPack,
+      familiarWords: _familiarWords(limit: 3),
+    );
+  }
+
+  /// Words with real evidence behind them — recognised in a game or marked
+  /// by a grown-up. Never plain views: seeing a card is not knowing a word.
+  List<String> _familiarWords({required int limit}) {
+    final known = ref.read(wordEvidenceProvider).evidencedIds;
+    if (known.isEmpty) return const [];
+    final packs = ref.read(packsProvider).valueOrNull;
+    if (packs == null) return const [];
+    final words = <String>[];
+    for (final pack in packs) {
+      for (final card in pack.cards) {
+        if (known.contains(card.id) && !words.contains(card.sound)) {
+          words.add(card.sound);
+          if (words.length >= limit) return words;
+        }
+      }
+    }
+    return words;
+  }
+
   /// Keeps the day-5 trial report current with what the child has learned.
   /// Called when the app is put away — the numbers then reflect the session
   /// that just ended — and when it comes back, so the notification that
@@ -155,16 +187,13 @@ class _TalkingCardsAppState extends ConsumerState<TalkingCardsApp>
   void _refreshTrialReport() {
     final started = PurchaseService.instance.trialStartedAt;
     if (started == null) return;
-    final learned = ref
-        .read(srsProvider)
-        .cards
-        .values
-        .where((c) => c.repetitions >= 2)
-        .toList();
+    // Words with evidence — recognised in a game or marked by the grown-up.
+    // Views deliberately excluded: the report would otherwise claim the
+    // child "knows" every card that scrolled past.
+    final learnedIds = ref.read(wordEvidenceProvider).evidencedIds;
     String? bestPack;
     final packs = ref.read(packsProvider).valueOrNull;
-    if (packs != null && learned.isNotEmpty) {
-      final learnedIds = learned.map((c) => c.cardId).toSet();
+    if (packs != null && learnedIds.isNotEmpty) {
       int best = 0;
       for (final p in packs) {
         final n = p.cards.where((c) => learnedIds.contains(c.id)).length;
@@ -176,7 +205,7 @@ class _TalkingCardsAppState extends ConsumerState<TalkingCardsApp>
       trialStartedAt: started,
       lang: ref.read(languageProvider),
       childName: name.isEmpty || name == 'Малюк' ? null : name,
-      learnedWords: learned.length,
+      learnedWords: learnedIds.length,
       bestPack: bestPack,
     );
   }
@@ -205,10 +234,7 @@ class _TalkingCardsAppState extends ConsumerState<TalkingCardsApp>
           pausedAt == null ? Duration.zero : DateTime.now().difference(pausedAt),
         );
     // Refresh engagement reminders only on resume (never in build).
-    final lang = ref.read(languageProvider);
-    final streak = ref.read(streakProvider).currentStreak;
-    NotificationService.instance
-        .refreshEngagement(lang: lang, currentStreak: streak);
+    _refreshEngagement();
     _refreshTrialReport();
   }
 

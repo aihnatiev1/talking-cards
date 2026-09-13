@@ -10,6 +10,10 @@ import 'analytics_service.dart';
 import 'purchase_service.dart';
 import '../utils/uk_grammar.dart';
 
+/// How often the grown-up wants to hear from the app. There is no "more
+/// often" option on purpose.
+enum ReminderFrequency { daily, fewTimesAWeek }
+
 class NotificationService {
   NotificationService._();
   static final NotificationService instance = NotificationService._();
@@ -17,18 +21,27 @@ class NotificationService {
   final _plugin = FlutterLocalNotificationsPlugin();
   static const _enabledKey = 'notifications_enabled';
   static const _askedKey = 'notifications_permission_asked';
+  static const _hourKey = 'notifications_hour';
+  static const _frequencyKey = 'notifications_frequency';
+  static const defaultReminderHour = 10;
+
+  /// Extra daily ids used when the parent asked for three days a week.
+  static const _weeklyIds = [1, 2, 3];
+  static const _weeklyDays = [DateTime.monday, DateTime.wednesday, DateTime.friday];
   static const _paywallReminderId = 999;
   static const _paywallScheduledKey = 'paywall_reminder_scheduled';
   static const _winBackId = 100;
-  static const _streakSaveId = 101;
+  static const _inviteId = 101;
   static const _trialReportId = 102;
   static const paywallNotificationPayload = 'open_paywall';
+  static const paywallReminderBody =
+      '3 дні безкоштовно — 234 озвучені картки та всі ігри';
   static const trialReportPayload = 'trial_report';
   // Payload tags consumed by analytics on notification tap.
   static const _payloadDaily = 'daily';
   static const _payloadSeasonal = 'seasonal';
   static const _payloadWinBack = 'win_back';
-  static const _payloadStreakSave = 'streak_save';
+  static const _payloadInvite = 'gentle_invite';
 
   /// Set true on cold start when the OS launched the app via the paywall
   /// reminder notification. Splash reads this and routes through paywall.
@@ -39,7 +52,7 @@ class NotificationService {
   bool launchedFromTrialReport = false;
 
   // (title_emoji, body)
-  final _cards = [
+  static final cardsUk = [
     // Тваринки — звуки
     ('🐱', 'Кішка каже МЯУ! Повтори разом із малюком!'),
     ('🐶', 'Собака каже ГАВ-ГАВ! Час для карток!'),
@@ -48,7 +61,7 @@ class NotificationService {
     ('🐸', 'Жабка каже КВА! Вивчаємо нові слова?'),
     ('🦁', 'Лев каже Р-Р-Р! Тренуємо звук Р сьогодні?'),
     ('🐔', 'Курочка каже КО-КО! Нові картки чекають!'),
-    ('🦆', 'Качка каже КРЯ! 5 хвилин — і малюк вивчить нове слово!'),
+    ('🦆', 'Качка каже КРЯ! Послухайте кілька карток разом.'),
     ('🐝', 'Бджілка каже Ж-Ж-Ж! Час гратись з картками!'),
     ('🚗', 'Машина каже БІ-БІ! Вивчаємо транспорт?'),
     // Ігри
@@ -71,17 +84,18 @@ class NotificationService {
     // Протилежності
     ('↔️', 'ВЕЛИКИЙ і МАЛЕНЬКИЙ, ДЕНЬ і НІЧ — вчимо протилежності!'),
     ('🔥', 'ГАРЯЧИЙ чи ХОЛОДНИЙ? Відгадай протилежність!'),
-    // Мотиваційні
-    ('🔥', 'Продовжуйте серію! Малюк вже так добре знає слова!'),
-    ('🌟', 'Щоденні 5 хвилин — і мовлення розвивається!'),
-    ('⭐', 'Маленькі кроки щодня — великий результат!'),
-    ('🏆', 'Ви вже так далеко! Продовжуйте займатись щодня!'),
+    // Запрошення (без обіцянок про мовлення — апка рахує перегляди
+    // й відповіді в іграх, а не те, як дитина говорить)
+    ('🔥', 'Знайомі картки на місці. Оберіть одну разом із малюком.'),
+    ('🌟', 'Кілька хвилин карток — коли вам обом зручно.'),
+    ('⭐', 'Можна просто послухати улюблену картку разом.'),
+    ('🏆', 'Загляньте до скарбнички — там слова, які малюк уже впізнає.'),
     ('💪', 'Послухайте знайоме слово й спробуйте повторити разом.'),
   ];
 
-  // EN mirror of _cards — same thematic proportions: 10 animal sounds,
+  // EN mirror of cardsUk — same thematic proportions: 10 animal sounds,
   // 7 game invites, 4 speech sounds, 3 actions, 2 opposites, 5 motivational.
-  final _cardsEn = [
+  static final cardsEn = [
     // Animal sounds
     ('🐱', 'Cats say MEOW! Say it together with your little one.'),
     ('🐶', 'Dogs say WOOF-WOOF! Card time with your little one.'),
@@ -105,7 +119,7 @@ class NotificationService {
     ('🦁', 'R sound: RABBIT, ROCKET, RING! Practice together.'),
     ('🦋', 'L sound: LION, LEMON, LEAF! Play with the L sound.'),
     ('🐍', 'SH-SH-SH! Sound SH: SHIP, FISH, SHOES!'),
-    ('⭐', 'S sound: SUN, STAR, SNAKE! Speech pack is ready.'),
+    ('⭐', 'S sound: SUN, STAR, SNAKE! The S pack is open.'),
     // Actions
     ('🏃', 'Run, jump, eat — let\'s learn action words together.'),
     ('💃', 'DANCE, SING, DRAW — fresh action words to try.'),
@@ -113,70 +127,80 @@ class NotificationService {
     // Opposites
     ('↔️', 'BIG and SMALL, DAY and NIGHT — learning opposites.'),
     ('🔥', 'HOT or COLD? Guess the opposite!'),
-    // Motivational
-    (
-      '🔥',
-      'Keep the streak going! Your little one knows so many words already.',
-    ),
-    ('🌟', 'Daily 5 minutes — and speech keeps growing.'),
-    ('⭐', 'Small steps every day — big results.'),
-    ('🏆', 'You\'ve come so far! Keep practicing every day.'),
+    // Invitations (no promises about speech: the app counts views and
+    // in-game answers, not how a child talks)
+    ('🔥', 'Familiar cards are right where you left them. Pick one together.'),
+    ('🌟', 'A few minutes of cards — whenever it suits you both.'),
+    ('⭐', 'You can simply listen to a favorite card together.'),
+    ('🏆', 'Open the word chest — the words your little one already knows.'),
     ('💪', 'Listen to a familiar word and try saying it together.'),
   ];
 
-  // Win-back copy (T+48h inactivity).
-  final _winBackUk = [
-    ('👋', 'Скучили за картками! 3 хвилини — і нове слово вивчено.'),
-    ('🎈', 'Час для карток! Повертайся до малюка сьогодні.'),
-    ('📚', 'Нові картки чекають на малюка. Загляньте на 5 хвилин!'),
-    ('🌈', 'Пам\'ятаєш своїх друзів-тваринок? Вони скучили!'),
-    ('✨', 'Маленький перерив — і знову до нових слів!'),
-    ('🧸', 'Картки сумують без малюка. Пограємо сьогодні?'),
-    ('💬', 'Одне нове слово щодня — велика різниця за місяць.'),
+  // Win-back copy (T+48h inactivity). A pause costs nothing here: the
+  // collection, the stickers and the word chest are exactly where they
+  // were, so this deck greets and invites — it never mourns.
+  static final winBackUk = [
+    ('👋', 'Раді бачити! Картки чекають там, де ви їх залишили.'),
+    ('🎈', 'Раді бачити! Можна почати з улюбленої картки.'),
+    ('📚', 'Ваша скарбничка на місці. Заглянете разом?'),
+    ('🌈', 'Знайомі тваринки чекають на вас — коли буде зручно.'),
+    ('✨', 'Пауза нічого не змінила: усі картки на місці.'),
+    ('🧸', 'Можна просто послухати кілька знайомих слів разом.'),
+    ('💬', 'Кілька хвилин карток — коли вам зручно.'),
   ];
 
-  final _winBackEn = [
-    ('👋', 'We miss you! 3 minutes of cards — one new word learned.'),
-    ('🎈', 'Shall we learn a word with your little one today?'),
-    ('📚', 'Your cards are waiting. 5 minutes makes a difference.'),
-    ('🌈', 'Remember your animal friends? They miss you!'),
-    ('✨', 'A small break — and back to new words together!'),
-    ('🧸', 'The cards miss your little one. Shall we play today?'),
-    ('💬', 'One new word a day — a big difference in a month.'),
+  static final winBackEn = [
+    ('👋', 'Good to see you! Your cards are right where you left them.'),
+    ('🎈', 'Good to see you! Start with a favorite card.'),
+    ('📚', 'Your word chest is waiting. Take a look together?'),
+    ('🌈', 'The familiar animals are here whenever it suits you.'),
+    ('✨', 'The pause changed nothing — every card is still here.'),
+    ('🧸', 'You can simply listen to a few familiar words together.'),
+    ('💬', 'A few minutes of cards — whenever it suits you.'),
   ];
 
-  // Streak-save copy (day X+1 at 20:00). Must interpolate currentStreak.
-  List<(String, String)> _streakSaveUk(int currentStreak) => [
-    (
-      '🔥',
-      'Ви займалися $currentStreak днів поспіль. Пограємо ще, коли буде зручно?',
-    ),
-    (
-      '⭐',
-      '$currentStreak днів поспіль — чудово! Можна повернутися до улюбленої картки.',
-    ),
-    ('🎯', 'Малюк на серії $currentStreak днів. Трохи карток перед сном?'),
-    (
-      '🏅',
-      'Уже $currentStreak днів відкриттів разом. Яку картку оберете сьогодні?',
-    ),
-  ];
-
-  List<(String, String)> _streakSaveEn(int currentStreak) => [
-    (
-      '🔥',
-      'You explored together for $currentStreak days. Play again whenever it suits you.',
-    ),
-    ('⭐', '$currentStreak days in a row! Revisit a favorite card together.'),
-    (
-      '🎯',
-      'Your little one is on a $currentStreak-day roll. A quick card before bed?',
-    ),
-    (
-      '🏅',
-      'You shared $currentStreak days of discoveries. Which card will you choose today?',
-    ),
-  ];
+  /// A concrete invitation built from what this family actually did.
+  ///
+  /// This slot used to be the streak-save reminder: it counted days and
+  /// implied a number that could be broken. A child of two owes nobody a
+  /// daily streak, and the parent who reads "don't break it" at 20:00 gets
+  /// pressure instead of an idea. So the text now names the pack they had
+  /// open last, or words the child already recognises, and stops there.
+  ///
+  /// [familiarWords] — up to three words with real evidence behind them
+  /// (recognised in a game, or marked by the grown-up).
+  static (String, String) inviteCopy({
+    required String lang,
+    String? lastPackTitle,
+    List<String> familiarWords = const [],
+  }) {
+    final en = lang == 'en';
+    final title = en ? '🌤 Cards are waiting' : '🌤 Картки чекають';
+    final pack = lastPackTitle?.trim();
+    if (pack != null && pack.isNotEmpty) {
+      return (
+        title,
+        en
+            ? 'Today you could play the familiar "$pack" pack together.'
+            : 'Сьогодні можна пограти зі знайомим паком «$pack».',
+      );
+    }
+    if (familiarWords.isNotEmpty) {
+      final list = familiarWords.take(3).join(', ');
+      return (
+        title,
+        en
+            ? 'Familiar words to try together: $list.'
+            : 'Знайомі слова, які можна повторити разом: $list.',
+      );
+    }
+    return (
+      title,
+      en
+          ? 'A few minutes of cards together, whenever it suits you.'
+          : 'Кілька хвилин карток разом — коли вам зручно.',
+    );
+  }
 
   /// `tz.local` throws until [init] has run; every scheduler below checks
   /// this instead of racing the splash.
@@ -333,6 +357,39 @@ class NotificationService {
     return await android?.requestNotificationsPermission() ?? false;
   }
 
+  /// Hour of day the parent picked for reminders (0–23).
+  Future<int> get reminderHour async {
+    final prefs = await SharedPreferences.getInstance();
+    final h = prefs.getInt(_hourKey) ?? defaultReminderHour;
+    return h.clamp(0, 23);
+  }
+
+  Future<ReminderFrequency> get frequency async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_frequencyKey) == 'few'
+        ? ReminderFrequency.fewTimesAWeek
+        : ReminderFrequency.daily;
+  }
+
+  /// Parent-only control (lives behind the parental gate). Rewrites the
+  /// schedule immediately so the next reminder already obeys the choice.
+  Future<void> setReminderSchedule({
+    required int hour,
+    required ReminderFrequency frequency,
+    String lang = 'uk',
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_hourKey, hour.clamp(0, 23));
+    await prefs.setString(
+      _frequencyKey,
+      frequency == ReminderFrequency.fewTimesAWeek ? 'few' : 'daily',
+    );
+    if (!_tzReady) return;
+    if (prefs.getBool(_enabledKey) ?? false) {
+      await _scheduleDailyNotification(lang: lang);
+    }
+  }
+
   Future<bool> get isEnabled async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_enabledKey) ?? false;
@@ -453,7 +510,7 @@ class NotificationService {
     await _plugin.zonedSchedule(
       _paywallReminderId,
       '🎁 Подарунок для нової родини',
-      '3 дні безкоштовно — відкрий 234 картки для розвитку мовлення',
+      paywallReminderBody,
       atElevenAM,
       const NotificationDetails(
         android: AndroidNotificationDetails(
@@ -485,15 +542,23 @@ class NotificationService {
   Future<void> _scheduleDailyNotification({required String lang}) async {
     // Preserve the paywall reminder when re-scheduling daily/seasonal notifs.
     await _plugin.cancel(0);
+    for (final id in _weeklyIds) {
+      await _plugin.cancel(id);
+    }
+    final hour = await reminderHour;
+    if (await frequency == ReminderFrequency.fewTimesAWeek) {
+      await _scheduleThriceWeekly(lang: lang, hour: hour);
+      return;
+    }
     final random = Random();
-    final deck = lang == 'en' ? _cardsEn : _cards;
+    final deck = lang == 'en' ? cardsEn : cardsUk;
     final card = deck[random.nextInt(deck.length)];
     final title = lang == 'en'
         ? '${card.$1} Card time!'
         : '${card.$1} Час для карток!';
 
     final now = tz.TZDateTime.now(tz.local);
-    var scheduled = tz.TZDateTime(tz.local, now.year, now.month, now.day, 10);
+    var scheduled = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour);
     if (scheduled.isBefore(now)) {
       scheduled = scheduled.add(const Duration(days: 1));
     }
@@ -521,13 +586,62 @@ class NotificationService {
     );
   }
 
+  /// Mon / Wed / Fri at the chosen hour — the "less often" answer a parent
+  /// can give without switching reminders off entirely.
+  Future<void> _scheduleThriceWeekly({
+    required String lang,
+    required int hour,
+  }) async {
+    final random = Random();
+    final deck = lang == 'en' ? cardsEn : cardsUk;
+    final now = tz.TZDateTime.now(tz.local);
+
+    for (var i = 0; i < _weeklyIds.length; i++) {
+      final card = deck[random.nextInt(deck.length)];
+      final title = lang == 'en'
+          ? '${card.$1} Card time!'
+          : '${card.$1} Час для карток!';
+      var scheduled = tz.TZDateTime(
+        tz.local,
+        now.year,
+        now.month,
+        now.day,
+        hour,
+      );
+      while (scheduled.weekday != _weeklyDays[i] || !scheduled.isAfter(now)) {
+        scheduled = scheduled.add(const Duration(days: 1));
+      }
+      await _plugin.zonedSchedule(
+        _weeklyIds[i],
+        title,
+        card.$2,
+        scheduled,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'daily_card',
+            'Щоденна картка',
+            channelDescription: 'Нагадування про нові картки',
+            importance: Importance.defaultImportance,
+            priority: Priority.defaultPriority,
+          ),
+          iOS: DarwinNotificationDetails(),
+        ),
+        payload: _payloadDaily,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+      );
+    }
+  }
+
   /// Win-back reminder fired 48h after the most recent app resume. Rescheduled
   /// on every resume, so an active user never sees it.
   Future<void> scheduleWinBack({required String lang}) async {
     await _plugin.cancel(_winBackId);
     if (!(await isEnabled)) return;
 
-    final deck = lang == 'en' ? _winBackEn : _winBackUk;
+    final deck = lang == 'en' ? winBackEn : winBackUk;
     final card = deck[Random().nextInt(deck.length)];
     final title = lang == 'en'
         ? '${card.$1} Card time!'
@@ -557,43 +671,52 @@ class NotificationService {
     );
   }
 
-  /// Streak-save reminder at 20:00 tomorrow. Cancelled and rescheduled on
-  /// every resume so it always reflects the latest streak value.
-  Future<void> scheduleStreakSave({
-    required int currentStreak,
+  /// One gentle, concrete invitation tomorrow at the parent's chosen hour.
+  ///
+  /// Rescheduled on every resume so it always carries the freshest context
+  /// (last pack opened, words the child already recognises). It carries no
+  /// counter and no deadline: there is nothing here a family can lose.
+  Future<void> scheduleInvitation({
     required String lang,
+    String? lastPackTitle,
+    List<String> familiarWords = const [],
   }) async {
-    await _plugin.cancel(_streakSaveId);
+    await _plugin.cancel(_inviteId);
     if (!(await isEnabled)) return;
-    if (currentStreak < 3) return;
+    if (await frequency == ReminderFrequency.fewTimesAWeek) return;
 
+    final hour = await reminderHour;
     final now = tz.TZDateTime.now(tz.local);
-    final when = tz.TZDateTime(tz.local, now.year, now.month, now.day + 1, 20);
+    final when = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day + 1,
+      hour,
+    );
 
-    final deck = lang == 'en'
-        ? _streakSaveEn(currentStreak)
-        : _streakSaveUk(currentStreak);
-    final card = deck[Random().nextInt(deck.length)];
-    final title = lang == 'en'
-        ? '${card.$1} Streak day $currentStreak'
-        : '${card.$1} Серія $currentStreak днів';
+    final (title, body) = inviteCopy(
+      lang: lang,
+      lastPackTitle: lastPackTitle,
+      familiarWords: familiarWords,
+    );
 
     await _plugin.zonedSchedule(
-      _streakSaveId,
+      _inviteId,
       title,
-      card.$2,
+      body,
       when,
       const NotificationDetails(
         android: AndroidNotificationDetails(
-          'streak_save',
-          'Streak reminder',
-          channelDescription: 'Reminder to keep the daily streak alive',
-          importance: Importance.high,
-          priority: Priority.high,
+          'gentle_invite',
+          'Запрошення пограти',
+          channelDescription: 'Спокійне нагадування про картки',
+          importance: Importance.defaultImportance,
+          priority: Priority.defaultPriority,
         ),
         iOS: DarwinNotificationDetails(),
       ),
-      payload: _payloadStreakSave,
+      payload: _payloadInvite,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
@@ -648,8 +771,10 @@ class NotificationService {
     return (
       title,
       en
-          ? "$who's word chest: $learnedWords words.$best 2 free days left."
-          : 'Скарбничка: $who знає $learnedWords ${wordWord(learnedWords)}.$best Ще 2 дні безкоштовно.',
+          ? "$who's word chest: $learnedWords "
+                "${learnedWords == 1 ? 'word' : 'words'}.$best "
+                '2 free days left.'
+          : 'У скарбничці $who: $learnedWords ${wordWord(learnedWords)}.$best Ще 2 дні безкоштовно.',
     );
   }
 
@@ -696,12 +821,51 @@ class NotificationService {
     );
   }
 
+  /// Every user-visible line this service can send, both languages.
+  ///
+  /// Exists so `test/services/notification_copy_test.dart` can hold the
+  /// whole surface to one rule: invite, never frighten.
+  static List<String> allCopy() {
+    final out = <String>[];
+    for (final deck in [cardsUk, cardsEn, winBackUk, winBackEn]) {
+      for (final card in deck) {
+        out.add(card.$2);
+      }
+    }
+    for (final lang in ['uk', 'en']) {
+      final invites = [
+        inviteCopy(lang: lang, lastPackTitle: 'Тваринки'),
+        inviteCopy(lang: lang, familiarWords: const ['кіт', 'вода', 'м\'яч']),
+        inviteCopy(lang: lang),
+      ];
+      for (final (title, body) in invites) {
+        out..add(title)..add(body);
+      }
+      for (final learned in [0, 1, 12]) {
+        final (title, body) = trialReportCopy(
+          lang: lang,
+          childName: null,
+          learnedWords: learned,
+          bestPack: 'Тваринки',
+        );
+        out..add(title)..add(body);
+      }
+    }
+    out.add(paywallReminderBody);
+    return out;
+  }
+
   Future<void> refreshEngagement({
     required String lang,
-    required int currentStreak,
+    String? lastPackTitle,
+    List<String> familiarWords = const [],
   }) async {
     if (!_tzReady) return;
     await scheduleWinBack(lang: lang);
-    await scheduleStreakSave(currentStreak: currentStreak, lang: lang);
+    await scheduleInvitation(
+      lang: lang,
+      lastPackTitle: lastPackTitle,
+      familiarWords: familiarWords,
+    );
   }
 }

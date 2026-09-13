@@ -34,6 +34,13 @@ class EngageService {
     await prefs.setString(_keyLastPackTitle, packTitle);
   }
 
+  /// Title of the last pack the family opened — also the context the
+  /// gentle reminder uses instead of a streak counter.
+  Future<String?> lastPackTitle() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keyLastPackTitle);
+  }
+
   /// Publish current app state to Google Play Engage SDK (You tab).
   /// Only runs on Android; silently no-ops elsewhere.
   Future<void> publish(WidgetRef ref) async {

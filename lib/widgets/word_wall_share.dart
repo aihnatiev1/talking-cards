@@ -121,9 +121,12 @@ class WordWallShareContent extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
+            // Not "learned": these are words recognized in a game or
+            // marked by a grown-up. The share card must not claim more
+            // than the app can see.
             isEn
-                ? (learnedCount == 1 ? 'word learned' : 'words learned')
-                : 'вивчених слів',
+                ? (learnedCount == 1 ? 'word collected' : 'words collected')
+                : 'слів у скарбничці',
             style: const TextStyle(
               fontSize: 14,
               color: Colors.white,

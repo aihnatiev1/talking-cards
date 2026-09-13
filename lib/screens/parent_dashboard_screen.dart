@@ -8,16 +8,19 @@ import '../providers/game_stats_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../providers/profile_provider.dart';
-import '../providers/srs_provider.dart';
 import '../providers/streak_provider.dart';
 import '../providers/theme_provider.dart';
+import '../providers/practice_suggestion_provider.dart';
 import '../providers/weak_words_provider.dart';
+import '../providers/word_evidence_provider.dart';
 import '../screens/profile_selector_screen.dart';
+import '../services/notification_service.dart';
 import '../utils/app_icons.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../widgets/activity_chart.dart';
 import '../widgets/card_image.dart';
+import '../widgets/settings_action_row.dart';
 import '../widgets/word_wall_share.dart';
 
 class ParentDashboardScreen extends ConsumerWidget {
@@ -123,50 +126,92 @@ class _OverviewTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final streak = ref.watch(streakProvider);
     final packProgress = ref.watch(packProgressProvider);
-    final completedPacks = ref.watch(completedPacksProvider);
     final dailyStats = ref.watch(dailyStatsProvider);
+    final evidence = ref.watch(wordEvidenceProvider);
+    final suggestion = ref.watch(practiceSuggestionProvider);
     final isEn = ref.watch(languageProvider) == 'en';
     final s = AppS(isEn);
 
-    final wordsSeenTotal = packProgress.values.fold(0, (a, b) => a + b);
+    // Three different claims, kept apart on purpose. A view is the app
+    // showing a card; a recognition is the child choosing right in a game;
+    // a mark is a grown-up saying it came out. Only the last one is about
+    // speech, and only a human can make it.
+    final seen = packProgress.values.fold(0, (a, b) => a + b);
+    final recognized = evidence.recognizedIds.length;
+    final marked = evidence.parentMarkedIds.length;
     final activeDays = dailyStats.values.where((v) => v > 0).length;
 
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
+        _sectionTitle(s('Що показують дані', 'What the data shows')),
+        const SizedBox(height: 8),
         _statRow([
           _StatCard(
-            icon: AppIcon.streakFlame,
-            label: s('Серія', 'Streak'),
+            icon: AppIcon.stepCards,
+            label: s('Переглянули', 'Seen'),
             value: isEn
-                ? '${streak.currentStreak} d.'
-                : '${streak.currentStreak} дн.',
-            color: DT.streakOrange,
+                ? '$seen ${seen == 1 ? 'card' : 'cards'}'
+                : '$seen карток',
+            color: DT.brand,
           ),
           _StatCard(
-            icon: AppIcon.stepCards,
-            label: s('Переглянуто', 'Seen'),
+            icon: AppIcon.navGames,
+            label: s('Впізнали у грі', 'Recognized in a game'),
             value: isEn
-                ? '$wordsSeenTotal ${wordsSeenTotal == 1 ? 'card' : 'cards'}'
-                : '$wordsSeenTotal карток',
-            color: DT.brand,
+                ? '$recognized ${recognized == 1 ? 'word' : 'words'}'
+                : '$recognized слів',
+            color: DT.teal,
           ),
         ]),
         const SizedBox(height: 12),
         _statRow([
           _StatCard(
             icon: AppIcon.check,
-            label: s('Паки пройдено', 'Packs done'),
-            value: '${completedPacks.length}',
+            label: s('Позначили ви', 'You marked'),
+            value: isEn
+                ? '$marked ${marked == 1 ? 'word' : 'words'}'
+                : '$marked слів',
             color: DT.success,
           ),
           _StatCard(
             icon: AppIcon.calendar,
             label: s('Активних днів', 'Active days'),
             value: '$activeDays',
-            color: DT.teal,
+            color: DT.violet,
           ),
         ]),
+        const SizedBox(height: 10),
+        _HonestNote(
+          text: s(
+            'Переглянуте — це побачені картки. Впізнане — правильні '
+                'відповіді в іграх. Позначене — ваша оцінка у грі «Повтори '
+                'за мною». Застосунок не чує дитину й не оцінює мовлення.',
+            'Seen means cards shown. Recognized means correct answers in '
+                'games. Marked is your own call in "Repeat after me". The '
+                'app does not listen to your child and does not assess speech.',
+          ),
+        ),
+        const SizedBox(height: 24),
+        _sectionTitle(s('Цей тиждень', 'This week')),
+        const SizedBox(height: 8),
+        _WeeklySummaryCard(
+          views: ref.read(dailyStatsProvider.notifier).last7Days().fold(
+            0,
+            (sum, e) => sum + e.value,
+          ),
+          recognized: evidence.recognizedSince(7),
+          marked: evidence.parentMarkedSince(7),
+          streakDays: streak.currentStreak,
+          isEn: isEn,
+        ),
+        const SizedBox(height: 24),
+        _sectionTitle(s('Спробуйте разом', 'Try together')),
+        const SizedBox(height: 8),
+        _PracticeSuggestionCard(
+          words: [for (final card in suggestion) card.sound],
+          isEn: isEn,
+        ),
         const SizedBox(height: 24),
         _sectionTitle(s('Досягнення', 'Achievements')),
         const SizedBox(height: 8),
@@ -227,7 +272,12 @@ class _OverviewTab extends ConsumerWidget {
           title: Text(s('Темна тема', 'Dark theme')),
           contentPadding: EdgeInsets.zero,
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 8),
+        // Reminder time and frequency — this screen is behind the parental
+        // gate, which is where a setting that changes what the phone does
+        // at 10:00 belongs.
+        const _ReminderSettingsTile(),
+        const SizedBox(height: 16),
         _RateAppTile(
           label: s('Оцінити додаток', 'Rate the app'),
           onTap: () => ref.read(appReviewControllerProvider).requestReview(),
@@ -267,6 +317,315 @@ class _OverviewTab extends ConsumerWidget {
     text,
     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
   );
+}
+
+/// When reminders arrive — the grown-up decides, not the app.
+///
+/// Lives in the parent dashboard, which is only reachable through the
+/// parental gate — Material icons and an adult tone are correct here.
+///
+/// Two settings and nothing else: the hour of day and "every day" vs "a few
+/// times a week". There is deliberately no way to ask for *more* reminders.
+class _ReminderSettingsTile extends ConsumerStatefulWidget {
+  const _ReminderSettingsTile();
+
+  @override
+  ConsumerState<_ReminderSettingsTile> createState() =>
+      _ReminderSettingsTileState();
+}
+
+class _ReminderSettingsTileState extends ConsumerState<_ReminderSettingsTile> {
+  int _hour = NotificationService.defaultReminderHour;
+  ReminderFrequency _frequency = ReminderFrequency.daily;
+  bool _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final hour = await NotificationService.instance.reminderHour;
+    final frequency = await NotificationService.instance.frequency;
+    if (!mounted) return;
+    setState(() {
+      _hour = hour;
+      _frequency = frequency;
+      _loaded = true;
+    });
+  }
+
+  Future<void> _apply({int? hour, ReminderFrequency? frequency}) async {
+    setState(() {
+      _hour = hour ?? _hour;
+      _frequency = frequency ?? _frequency;
+    });
+    await NotificationService.instance.setReminderSchedule(
+      hour: _hour,
+      frequency: _frequency,
+      lang: ref.read(languageProvider),
+    );
+  }
+
+  Future<void> _pickHour() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: _hour, minute: 0),
+      helpText: AppS(ref.read(languageProvider) == 'en')(
+        'Коли надсилати нагадування',
+        'When to send reminders',
+      ),
+    );
+    if (picked == null) return;
+    await _apply(hour: picked.hour);
+  }
+
+  Future<void> _openSheet() async {
+    final s = AppS(ref.read(languageProvider) == 'en');
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        top: false,
+        child: StatefulBuilder(
+          builder: (_, setSheetState) => Padding(
+            padding: const EdgeInsets.fromLTRB(24, 4, 24, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  s('Нагадування', 'Reminders'),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  s(
+                    'Час і частоту обираєте ви. Нагадування — це запрошення, '
+                        'а не завдання.',
+                    'You choose the time and how often. A reminder is an '
+                        'invitation, not a task.',
+                  ),
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1.4,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ListTile(
+                  key: const ValueKey('reminder_hour_row'),
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.schedule_outlined),
+                  title: Text(s('Час', 'Time')),
+                  trailing: Text(
+                    _formatHour(_hour),
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  onTap: () async {
+                    await _pickHour();
+                    setSheetState(() {});
+                  },
+                ),
+                const SizedBox(height: 4),
+                for (final option in ReminderFrequency.values)
+                  ListTile(
+                    key: ValueKey('reminder_frequency_${option.name}'),
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(
+                      _frequency == option
+                          ? Icons.radio_button_checked
+                          : Icons.radio_button_unchecked,
+                      color: _frequency == option
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.outline,
+                    ),
+                    title: Text(_frequencyLabel(option, s)),
+                    onTap: () async {
+                      await _apply(frequency: option);
+                      setSheetState(() {});
+                    },
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  static String _formatHour(int hour) =>
+      '${hour.toString().padLeft(2, '0')}:00';
+
+  static String _frequencyLabel(ReminderFrequency f, AppS s) => switch (f) {
+    ReminderFrequency.daily => s('Щодня', 'Every day'),
+    ReminderFrequency.fewTimesAWeek => s(
+      'Три рази на тиждень',
+      'Three times a week',
+    ),
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final s = AppS(ref.watch(languageProvider) == 'en');
+    if (!_loaded) return const SizedBox.shrink();
+    final schedule = _frequency == ReminderFrequency.daily
+        ? s('щодня о ${_formatHour(_hour)}', 'every day at ${_formatHour(_hour)}')
+        : s(
+            'тричі на тиждень о ${_formatHour(_hour)}',
+            'three times a week at ${_formatHour(_hour)}',
+          );
+    return SettingsActionRow(
+      key: const ValueKey('reminder_settings_tile'),
+      icon: Icons.notifications_none_rounded,
+      label: s('Нагадування — $schedule', 'Reminders — $schedule'),
+      onTap: _openSheet,
+    );
+  }
+}
+
+/// One quiet paragraph that says what the numbers above are — and what
+/// they are not. Parents read "learned" as "my child can say it"; the app
+/// has no microphone and must not let that stand.
+class _HonestNote extends StatelessWidget {
+  final String text;
+
+  const _HonestNote({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: 12.5,
+        height: 1.45,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
+    );
+  }
+}
+
+/// Seven days in three numbers, plus days in a row stated as a fact and
+/// never as something at risk.
+class _WeeklySummaryCard extends StatelessWidget {
+  final int views;
+  final int recognized;
+  final int marked;
+  final int streakDays;
+  final bool isEn;
+
+  const _WeeklySummaryCard({
+    required this.views,
+    required this.recognized,
+    required this.marked,
+    required this.streakDays,
+    required this.isEn,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final s = AppS(isEn);
+    final colors = Theme.of(context).colorScheme;
+    final lines = <String>[
+      s('Переглянуто карток: $views', 'Cards seen: $views'),
+      s('Впізнано у грі: $recognized', 'Recognized in a game: $recognized'),
+      s('Ви позначили: $marked', 'You marked: $marked'),
+      if (streakDays > 0)
+        s('Днів поспіль: $streakDays', 'Days in a row: $streakDays'),
+    ];
+    return Container(
+      key: const ValueKey('weekly_summary_card'),
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final line in lines)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Text(
+                line,
+                style: TextStyle(
+                  fontSize: responsiveFont(context, 13.5),
+                  height: 1.35,
+                  color: colors.onSurface,
+                ),
+              ),
+            ),
+          if (views == 0 && recognized == 0 && marked == 0)
+            Text(
+              s(
+                'Цього тижня занять ще не було.',
+                'No sessions this week yet.',
+              ),
+              style: TextStyle(
+                fontSize: responsiveFont(context, 13),
+                color: colors.onSurfaceVariant,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One concrete thing to do together today — named words, not advice.
+class _PracticeSuggestionCard extends StatelessWidget {
+  final List<String> words;
+  final bool isEn;
+
+  const _PracticeSuggestionCard({required this.words, required this.isEn});
+
+  @override
+  Widget build(BuildContext context) {
+    final s = AppS(isEn);
+    final colors = Theme.of(context).colorScheme;
+    final text = words.isEmpty
+        ? s(
+            'Пограйте разом у будь-яку гру — і тут з’являться слова, які '
+                'варто повторити.',
+            'Play any game together and the words worth repeating will '
+                'appear here.',
+          )
+        : s(
+            'Спробуйте сьогодні повторити разом: ${words.join(', ')}.',
+            'Try repeating these together today: ${words.join(', ')}.',
+          );
+    return Container(
+      key: const ValueKey('practice_suggestion_card'),
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: DT.brand.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: DT.brand.withValues(alpha: 0.18)),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: responsiveFont(context, 14),
+          height: 1.4,
+          fontWeight: FontWeight.w600,
+          color: colors.onSurface,
+        ),
+      ),
+    );
+  }
 }
 
 class _StatCard extends StatelessWidget {
@@ -420,27 +779,25 @@ class _WeeklyTab extends ConsumerWidget {
 }
 
 // ─────────────────────────────────────────────
-//  Tab 3 — Word Wall (learned words)
+//  Tab 3 — Word Wall (words with evidence behind them)
 // ─────────────────────────────────────────────
 
 class _WordsTab extends ConsumerWidget {
   const _WordsTab();
 
-  static const _learnedThreshold = 2; // SM-2 repetitions for "learned"
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final srs = ref.watch(srsProvider);
+    final evidence = ref.watch(wordEvidenceProvider);
     final packsAsync = ref.watch(packsProvider);
     final profile = ref.watch(profileProvider);
     final isEn = ref.watch(languageProvider) == 'en';
     final s = AppS(isEn);
     final childName = profile.active?.name ?? s('Малюк', 'Kiddo');
 
-    final learnedIds = srs.cards.values
-        .where((c) => c.repetitions >= _learnedThreshold)
-        .map((c) => c.cardId)
-        .toSet();
+    // Words the child picked correctly in a game, plus words a grown-up
+    // marked as "came out". Views are not in here: a card that scrolled
+    // past is not a word in the chest.
+    final learnedIds = evidence.evidencedIds;
 
     if (learnedIds.isEmpty) {
       return Center(
@@ -453,8 +810,10 @@ class _WordsTab extends ConsumerWidget {
               const SizedBox(height: 16),
               Text(
                 s(
-                  'Поки немає вивчених слів.\nГрайте у вікторину — і вони з\'являться тут!',
-                  'No learned words yet.\nPlay the quiz and they\'ll show up here!',
+                  'Тут з’являться слова, які малюк упізнав у грі або які ви '
+                      'позначили в «Повтори за мною».',
+                  'Words your child recognized in a game — or that you '
+                      'marked in "Repeat after me" — will appear here.',
                 ),
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 15, height: 1.5),
@@ -495,6 +854,8 @@ class _WordsTab extends ConsumerWidget {
             _WordWallHeader(
               childName: childName,
               learnedCount: allLearnedCards.length,
+              recognizedCount: evidence.recognizedIds.length,
+              markedCount: evidence.parentMarkedIds.length,
               isEn: isEn,
               onShare: () => shareWordWall(
                 context: context,
@@ -556,12 +917,16 @@ class _WordsTab extends ConsumerWidget {
 class _WordWallHeader extends StatelessWidget {
   final String childName;
   final int learnedCount;
+  final int recognizedCount;
+  final int markedCount;
   final bool isEn;
   final VoidCallback onShare;
 
   const _WordWallHeader({
     required this.childName,
     required this.learnedCount,
+    required this.recognizedCount,
+    required this.markedCount,
     required this.isEn,
     required this.onShare,
   });
@@ -590,6 +955,18 @@ class _WordWallHeader extends StatelessWidget {
                     fontSize: responsiveFont(context, 14),
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  isEn
+                      ? '$recognizedCount recognized in a game · '
+                            '$markedCount marked by you'
+                      : '$recognizedCount впізнано у грі · '
+                            '$markedCount позначили ви',
+                  style: TextStyle(
+                    fontSize: responsiveFont(context, 11.5),
+                    color: Colors.white.withValues(alpha: 0.85),
                   ),
                 ),
                 const SizedBox(height: 4),

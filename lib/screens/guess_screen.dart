@@ -11,6 +11,7 @@ import '../providers/profile_provider.dart';
 import '../providers/quiz_provider.dart';
 import '../providers/srs_provider.dart';
 import '../providers/weak_words_provider.dart';
+import '../providers/word_evidence_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../services/feedback_service.dart';
@@ -137,6 +138,11 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
           ref.read(_provider.notifier).lastAnswerQuality,
         );
     if (isCorrect) {
+      // A correct pick is "recognized in a game" — a different, stronger
+      // signal than having seen the card, and it is counted separately.
+      ref
+          .read(wordEvidenceProvider.notifier)
+          .recordRecognized(state.correctCard.id);
       ref.read(dailyQuestProvider.notifier).recordSrsReview();
     } else {
       ref.read(weakWordsProvider.notifier).recordMistake(state.correctCard.id);

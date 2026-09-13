@@ -5,11 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
+import '../models/quest_theme.dart';
 import '../providers/bonus_cards_provider.dart';
 import '../providers/daily_quest_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../services/audio_service.dart';
+import '../services/feedback_service.dart';
+import '../services/profile_service.dart';
 
 import '../utils/app_icons.dart';
 import '../utils/motion.dart';
@@ -47,6 +50,73 @@ class QuestMapScreen extends ConsumerStatefulWidget {
 class _QuestMapScreenState extends ConsumerState<QuestMapScreen> {
   CardModel? _lastUnlockedCard;
   PackModel? _lastUnlockedPack;
+
+  /// The stop that finished while the child was away, so the map can show
+  /// her *what changed* when she walks back onto it (п. 25: «повернення до
+  /// конкретної зупинки з помітним оновленням стану»). Cleared as soon as
+  /// she sets off again.
+  QuestTask? _justCompleted;
+
+  /// The cards a themed day may be built from: unlocked, real packs only,
+  /// every card with a picture and a voice. A verse pack has neither a
+  /// single word nor a single picture, so it cannot carry a subject.
+  List<CardModel> _themeCandidates(List<PackModel> packs) {
+    final isEn = ref.read(languageProvider) == 'en';
+    return [
+      for (final pack in packs)
+        if (!pack.isLocked &&
+            !pack.id.startsWith('_') &&
+            !PackModel.nonWordPackIds.contains(pack.id))
+          for (final card in pack.cards)
+            if (card.image != null &&
+                (isEn
+                    ? AudioService.instance.hasSound(card.audioKey)
+                    : card.audioKey != null))
+              card,
+    ];
+  }
+
+  /// Memo of the last [_themeOf], keyed by what can change it. Picking the
+  /// theme buckets every unlocked card, and `build` runs on every tap of
+  /// the map — the work is done once a day, not once a frame.
+  (String, int, String?)? _themeKey;
+  QuestTheme? _theme;
+
+  /// The theme of the day, led by the card of the day whenever that card
+  /// belongs to a set with enough material.
+  QuestTheme? _themeOf(List<PackModel> packs) {
+    final profile = ProfileService.prefix;
+    final day = DateTime.now();
+    final key = (
+      '${day.year}-${day.month}-${day.day}$profile',
+      packs.fold<int>(packs.length, (h, p) => h * 31 + p.cards.length),
+      widget.cardOfDayLocked ? null : widget.cardOfDay?.id,
+    );
+    if (_themeKey == key) return _theme;
+    _themeKey = key;
+    return _theme = QuestThemes.of(
+      _themeCandidates(packs),
+      day: day,
+      profile: profile,
+      preferred: widget.cardOfDayLocked ? null : widget.cardOfDay,
+    );
+  }
+
+  /// Opens [screen] and, on the way back, notices which quest stop the trip
+  /// finished — the map then pops that stop instead of quietly turning it
+  /// green somewhere off screen.
+  Future<void> _travel(Widget screen, {required bool game}) async {
+    final before = ref.read(dailyQuestProvider).completed;
+    await Navigator.of(context).push(
+      game ? KidRoutes.game(screen) : KidRoutes.content(screen),
+    );
+    if (!mounted) return;
+    final after = ref.read(dailyQuestProvider).completed;
+    final fresh = after.difference(before);
+    if (fresh.isEmpty) return;
+    setState(() => _justCompleted = fresh.first);
+    FeedbackService.instance.event(FeedbackEvent.progressStep);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -109,6 +179,7 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen> {
 
     // No text title — the map is the title. The journey widget paints its
     // own heading and counter.
+    final theme = _themeOf(packs);
     return KidScreen(
       accent: DT.mint,
       background: DT.mintTint,
@@ -116,7 +187,12 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen> {
       body: QuestJourneyMap(
         quest: quest,
         isEn: isEn,
-        onStopTap: (task) => _handleStopTap(context, task, packs),
+        // One picture says what today is about — the child reads the cat,
+        // not the word «тварини» (rule 4).
+        themeImage: theme?.image,
+        themeLabel: theme?.semanticLabel(isEn),
+        justCompleted: _justCompleted,
+        onStopTap: (task) => _handleStopTap(context, task, packs, theme),
         onClaimTreasure: () => _showPackPicker(context, packs),
       ),
     );
@@ -128,13 +204,37 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen> {
     BuildContext context,
     QuestTask task,
     List<PackModel> packs,
+    QuestTheme? theme,
   ) {
+    // Setting off again: whatever was celebrated on the way back has been
+    // seen by now.
+    if (_justCompleted != null) setState(() => _justCompleted = null);
+
+    // The day's deck. Without a theme (a brand-new install with almost
+    // nothing unlocked) the stops fall back to what they always did — a
+    // random open pack — rather than refusing to open.
+    final themePack = theme?.asPack(
+      title: AppS(ref.read(languageProvider) == 'en')(
+        theme.title(false),
+        theme.title(true),
+      ),
+      color: DT.mint,
+    );
+    PackModel? anyOpenPack() {
+      final openPacks = packs
+          .where((p) => !p.isLocked && !p.id.startsWith('_'))
+          .toList();
+      if (openPacks.isEmpty) return null;
+      return openPacks[Random().nextInt(openPacks.length)];
+    }
+
     switch (task) {
       case QuestTask.listenCardOfDay:
-        // Play the Card of the Day audio here and let the dailyQuestProvider
-        // mark the task done only once the audio actually starts — tapping the
-        // stop with an empty callback (`() {}`) used to insta-complete it.
-        final card = widget.cardOfDay;
+        // The hero of the theme is the card of the day whenever the two can
+        // be the same; play it here and let the provider mark the task done
+        // only once the audio actually starts — tapping the stop with an
+        // empty callback (`() {}`) used to insta-complete it.
+        final card = theme?.hero ?? widget.cardOfDay;
         if (card != null) {
           AudioService.instance.speakCard(card.audioKey, card.sound, card.text);
           ref
@@ -145,34 +245,37 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen> {
       case QuestTask.viewCards5:
         // viewCards* is auto-completed by dailyQuestProvider once the child
         // has swiped through N cards — don't pre-complete here.
-        final openPacks = packs
-            .where((p) => !p.isLocked && !p.id.startsWith('_'))
-            .toList();
-        if (openPacks.isNotEmpty) {
-          final pack = openPacks[Random().nextInt(openPacks.length)];
-          Navigator.of(context).push(KidRoutes.content(CardsScreen(pack: pack)));
-        }
+        final pack = themePack ?? anyOpenPack();
+        if (pack != null) _travel(CardsScreen(pack: pack), game: false);
       case QuestTask.reviewOldCard:
-        // Opening any pack counts as "repeat after me" — completeTask fires
-        // inside CardsScreen via packs_tab._onPackTap path. Here we do the
-        // same so the task is credited once the pack is actually opened.
-        final openPacks = packs
-            .where((p) => !p.isLocked && !p.id.startsWith('_'))
-            .toList();
-        if (openPacks.isNotEmpty) {
-          final pack = openPacks[Random().nextInt(openPacks.length)];
-          Navigator.of(context)
-              .push(KidRoutes.content(CardsScreen(pack: pack)))
-              .then((_) {
-                // Credit the task after the user returns from the pack, ensuring
-                // they at least navigated into it.
-                ref
-                    .read(dailyQuestProvider.notifier)
-                    .completeTask(QuestTask.reviewOldCard);
-              });
-        }
+        // "Repeat after me" walks the same deck again — the whole point of
+        // a theme is that the third meeting with the cat is not the first
+        // meeting with a stranger. Opening a pack counts as the task; we
+        // credit it after the child comes back, so she at least went in.
+        final pack = themePack ?? anyOpenPack();
+        if (pack == null) return;
+        _travel(CardsScreen(pack: pack), game: false).then((_) {
+          if (!mounted) return;
+          ref
+              .read(dailyQuestProvider.notifier)
+              .completeTask(QuestTask.reviewOldCard);
+        });
       case QuestTask.playQuiz:
         // GuessScreen calls completeTask(playQuiz) on its own Results screen.
+        if (theme != null && theme.cards.length >= 4) {
+          _travel(
+            GuessScreen(
+              cards: theme.cards,
+              // Every tile of the round is already one subject; naming it
+              // keeps the distractor picker inside it.
+              cardGroups: {
+                for (final c in theme.cards) c.id: theme.group.name,
+              },
+            ),
+            game: true,
+          );
+          return;
+        }
         final allCards = packs.expand((p) => p.cards).toList();
         final lang = ref.read(languageProvider);
         // Same sanitation as games_tab: real recorded audio + webp image.
@@ -188,10 +291,9 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen> {
                   .where((c) => c.audioKey != null && c.image != null)
                   .toList();
         if (playable.length >= 4) {
-          Navigator.of(context).push(
-            KidRoutes.game(
-              GuessScreen(cards: playable, cardGroups: cardGroupsOf(packs)),
-            ),
+          _travel(
+            GuessScreen(cards: playable, cardGroups: cardGroupsOf(packs)),
+            game: true,
           );
         }
       case QuestTask.reviewSRSCards:
