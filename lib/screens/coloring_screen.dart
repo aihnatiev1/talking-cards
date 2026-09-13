@@ -586,26 +586,14 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
                   // strokes' local coordinates) never resize mid-drawing.
                   SizedBox(
                     height: _bottomBarHeight,
-                    child: AnimatedSwitcher(
-                      duration: motion.dur(DT.motion.coloringBarSwap),
-                      switchInCurve: Curves.easeOutBack,
-                      transitionBuilder: (w, a) => SlideTransition(
-                        position: Tween<Offset>(
-                                begin: const Offset(0, 0.4),
-                                end: Offset.zero)
-                            .animate(a),
-                        child: FadeTransition(opacity: a, child: w),
-                      ),
-                      child: _ColoringBar(
-                        // A new key when the picture is finished so the
-                        // switcher plays the rise-and-fade and Bloom
-                        // remounts into his cheer.
-                        key: ValueKey(_done ? 'done-${card.id}' : 'idle'),
-                        done: _done,
-                        onNext: _next,
-                        label: s('Нова картинка', 'New picture'),
-                        praise: _praise(s, card.id),
-                      ),
+                    // No `AnimatedSwitcher`: it is one bar in two moods,
+                    // and its Stack clipped Bloom's bubble at the bar's
+                    // edge. The bubble animates itself in instead.
+                    child: _ColoringBar(
+                      done: _done,
+                      onNext: _next,
+                      label: s('Нова картинка', 'New picture'),
+                      praise: _praise(s, card.id),
                     ),
                   ),
                 ],
@@ -854,7 +842,6 @@ class _NewPictureButton extends StatelessWidget {
 /// "press here now" for a two-year-old than any panel.
 class _ColoringBar extends StatelessWidget {
   const _ColoringBar({
-    super.key,
     required this.done,
     required this.onNext,
     required this.label,
@@ -875,9 +862,10 @@ class _ColoringBar extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(DT.sp16, DT.sp8, DT.sp16, DT.sp12),
       child: Center(
-        // Bloom plus a long word plus the pill can outgrow a small phone;
-        // scaling the row down keeps every part visible instead of
-        // clipping the bunny off the edge.
+        // Bloom plus the pill can outgrow a small phone; scaling the row
+        // down keeps both visible instead of clipping the bunny off the
+        // edge. The row is the same width in both moods — the praise is
+        // painted outside the layout — so nothing here ever moves.
         child: FittedBox(
           fit: BoxFit.scaleDown,
           child: Row(
@@ -896,6 +884,10 @@ class _ColoringBar extends StatelessWidget {
 
 /// Bloom and, when the picture is done, his bubble.
 ///
+/// The bubble is a `Positioned` in a non-clipping `Stack`, so it costs no
+/// width: Bloom's slot is the same 64 dp before and after, and the button
+/// never moves under a finger already on its way down.
+///
 /// Frozen states, not the shared brain: this screen never taught the
 /// reactions notifier about itself, and a bunny borrowing another route's
 /// mood would be worse than one with a mood of its own. `ambient:
@@ -908,39 +900,49 @@ class _BloomCue extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (done) ...[
-          _PraiseBubble(text: praise),
-          const SizedBox(width: DT.sp8),
+    return SizedBox(
+      width: _ColoringBar.bloomSize,
+      height: _ColoringBar.bloomSize,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          BloomMascot(
+            size: _ColoringBar.bloomSize,
+            // Facing the button he is pointing the child at.
+            facing: BloomFacing.right,
+            interactive: false,
+            semanticsLabel: 'Bloom',
+            state: done
+                ? const BloomState(
+                    emotion: BloomEmotion.cheer,
+                    hops: 3,
+                    ambient: BloomAmbient.breathe,
+                    lookAt: Alignment.centerRight,
+                  )
+                : const BloomState(
+                    emotion: BloomEmotion.idle,
+                    hops: 0,
+                    ambient: BloomAmbient.breathe,
+                    lookAt: Alignment.centerRight,
+                  ),
+          ),
+          if (done)
+            // Above him, negatively inset on both sides so a long word
+            // ("Так тримати!") stays centred over the bunny and spills
+            // into the empty bar instead of widening his slot.
+            Positioned(
+              top: -40,
+              left: -80,
+              right: -80,
+              child: Center(child: _PraiseBubble(text: praise)),
+            ),
         ],
-        BloomMascot(
-          size: _ColoringBar.bloomSize,
-          // Facing the button he is pointing the child at.
-          facing: BloomFacing.right,
-          interactive: false,
-          semanticsLabel: 'Bloom',
-          state: done
-              ? const BloomState(
-                  emotion: BloomEmotion.cheer,
-                  hops: 3,
-                  ambient: BloomAmbient.breathe,
-                  lookAt: Alignment.centerRight,
-                )
-              : const BloomState(
-                  emotion: BloomEmotion.idle,
-                  hops: 0,
-                  ambient: BloomAmbient.breathe,
-                  lookAt: Alignment.centerRight,
-                ),
-        ),
-      ],
+      ),
     );
   }
 }
 
-/// The praise beside Bloom. A bubble, not a banner: it belongs to him.
+/// The praise above Bloom. A bubble, not a banner: it belongs to him.
 class _PraiseBubble extends StatelessWidget {
   const _PraiseBubble({required this.text});
 
@@ -948,20 +950,30 @@ class _PraiseBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DT.sp16,
-        vertical: DT.sp8,
+    final motion = MotionPolicy.of(context);
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: motion.dur(DT.motion.coloringBarSwap),
+      curve: Curves.easeOutBack,
+      builder: (_, t, child) => Transform.scale(
+        scale: 0.6 + 0.4 * t,
+        child: Opacity(opacity: t.clamp(0.0, 1.0), child: child),
       ),
-      decoration: BoxDecoration(
-        color: DT.surfaceWhite,
-        borderRadius: BorderRadius.circular(DT.rLg),
-        boxShadow: DT.shadowSoft(DT.violet),
-      ),
-      child: Text(
-        text,
-        maxLines: 1,
-        style: DT.h2.copyWith(color: DT.violet),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: DT.sp16,
+          vertical: DT.sp8,
+        ),
+        decoration: BoxDecoration(
+          color: DT.surfaceWhite,
+          borderRadius: BorderRadius.circular(DT.rLg),
+          boxShadow: DT.shadowSoft(DT.violet),
+        ),
+        child: Text(
+          text,
+          maxLines: 1,
+          style: DT.h2.copyWith(color: DT.violet),
+        ),
       ),
     );
   }
