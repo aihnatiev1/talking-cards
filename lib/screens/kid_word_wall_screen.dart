@@ -179,7 +179,10 @@ class _Header extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const BloomMascot(size: 64, emotion: BloomEmotion.waving),
+          const BloomMascot(
+            size: 64,
+            state: BloomState.still(BloomEmotion.wave),
+          ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(

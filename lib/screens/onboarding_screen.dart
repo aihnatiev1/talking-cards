@@ -800,7 +800,10 @@ class _BouncingMascot extends StatelessWidget {
       settleAfter: const Duration(seconds: 2),
       builder: (_, t, child) =>
           Transform.translate(offset: Offset(0, -8.0 * t), child: child),
-      child: const BloomMascot(size: 96, emotion: BloomEmotion.waving),
+      child: const BloomMascot(
+        size: 96,
+        state: BloomState.still(BloomEmotion.wave),
+      ),
     );
   }
 }

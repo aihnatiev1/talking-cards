@@ -65,7 +65,6 @@ void main() {
     'lib/tabs/games_tab.dart',
     'lib/tabs/packs_tab.dart',
     'lib/widgets/activity_chart.dart',
-    'lib/widgets/bloom_mascot.dart',
     'lib/widgets/bubble_pop.dart',
     'lib/widgets/daily_hero_card.dart',
     'lib/widgets/flash_card.dart',

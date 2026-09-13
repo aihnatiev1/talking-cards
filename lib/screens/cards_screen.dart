@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,6 +12,7 @@ import '../models/pack_model.dart';
 import '../providers/bonus_cards_provider.dart';
 import '../providers/content_pack_provider.dart';
 import '../providers/app_review_provider.dart';
+import '../providers/bloom_reactions_provider.dart';
 import '../providers/daily_quest_provider.dart';
 import '../providers/daily_stats_provider.dart';
 import '../providers/packs_provider.dart';
@@ -24,6 +26,7 @@ import '../services/engage_service.dart';
 import '../services/feedback_service.dart';
 import '../utils/l10n.dart';
 import '../services/paywall_flow.dart';
+import '../widgets/bloom_mascot.dart';
 import '../widgets/celebration.dart';
 import '../widgets/content_download_view.dart';
 import '../widgets/flash_card.dart';
@@ -37,6 +40,7 @@ import '../widgets/card_image.dart';
 import '../widgets/pack_cover_hero.dart';
 import '../utils/design_tokens.dart';
 import '../utils/kid_routes.dart';
+import '../utils/motion.dart';
 
 /// The pack's picture in the header — the landing spot of the Hero that
 /// takes off from the home tile. Same picture rule as the tile (cover, else
@@ -127,6 +131,26 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   VoidCallback? _speakingListener;
   VoidCallback? _muteListener;
 
+  /// This screen's stage in Bloom's brain; left in [dispose] so the home
+  /// Bloom takes over again (bloom_character.md §5.4).
+  final Object _bloomScene = Object();
+  BloomReactions get _bloom => ref.read(bloomReactionsProvider.notifier);
+
+  /// From the shelf, the card is up and to the right.
+  static const _cardDirection = Alignment(0.7, -0.8);
+
+  /// What this screen allows Bloom to do right now: hints and the nap are
+  /// off while auto-advance turns the pages (a parent set up passive
+  /// viewing); `listen` still follows every word.
+  void _syncBloomScene() {
+    _bloom.sceneEntered(
+      _bloomScene,
+      _autoPlayTimer
+          ? BloomScene.cards.copyWith(hintsEnabled: false, clearSleep: true)
+          : BloomScene.cards,
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -165,6 +189,9 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
 
     AnalyticsService.instance.logPackOpen(widget.pack.id);
     EngageService.instance.saveLastPack(widget.pack.id, widget.pack.title);
+    _syncBloomScene();
+    _bloom.hintTargetChanged(_cardDirection);
+    _bloom.packOpened();
     _loadPrefs();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // updateProgress only ever raises, so re-recording the resumed index
@@ -269,12 +296,14 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
       setState(() {
         _autoPlayTimer = prefs.getBool('auto_play_timer') ?? false;
       });
+      _syncBloomScene();
     }
   }
 
   void _toggleAutoPlayTimer() async {
     final newValue = !_autoPlayTimer;
     setState(() => _autoPlayTimer = newValue);
+    _syncBloomScene();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('auto_play_timer', newValue);
     if (newValue) {
@@ -511,7 +540,9 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   }
 
   void _showCelebration() {
-    _celebrating = true;
+    // The overlay brings its own Bloom M; the one on the shelf fades out
+    // so there is one character on screen (bloom_character.md §4.2).
+    setState(() => _celebrating = true);
     // Cut the narrator's tail; the tada + praise are the Celebration's
     // (FeedbackEvent.packDone), so nothing is played here.
     AudioService.instance.stop();
@@ -655,6 +686,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
 
   @override
   void dispose() {
+    _bloom.sceneLeft(_bloomScene);
     _cancelAutoPlayCountdown();
     if (_muteListener != null) {
       AudioService.instance.autoSpeak.removeListener(_muteListener!);
@@ -710,6 +742,15 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     return KidScreen(
       accent: widget.pack.color,
       progress: progress,
+      // Back: Bloom waves goodbye (no sound — the button pops) while the
+      // route slides out.
+      leading: KidBackButton(
+        accent: widget.pack.color,
+        onTap: () {
+          _bloom.sessionEnding();
+          Navigator.of(context).maybePop();
+        },
+      ),
       title: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onLongPress: _showParentTools,
@@ -733,7 +774,12 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
           ),
         ),
       ),
-      body: Column(
+      // Any finger on the screen is activity for Bloom: it resets his idle
+      // clock and wakes him. Translucent, so nothing under it changes.
+      body: Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: (_) => _bloom.userTouch(),
+        child: Column(
         children: [
           Expanded(
             child: Stack(
@@ -775,6 +821,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                       _precacheAround(index);
                       // Track only forward progress
                       if (index > prev) {
+                        _bloom.cardAdvanced(index);
                         AnalyticsService.instance.logCardView(
                           cards[index].id,
                           widget.pack.id,
@@ -795,6 +842,11 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                       }
                       // Last card reached
                       if (index == cards.length - 1) {
+                        // Bloom cheers on the shelf right away — the child
+                        // sees a friend react before the modal arrives. Not
+                        // for a locked preview: Bloom takes no part in the
+                        // unlock dialog (bloom_character.md §3.2).
+                        if (!widget.pack.isLocked) _bloom.packCompleted();
                         _showCelebrationAfterSound();
                       }
                     },
@@ -898,6 +950,10 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
               ],
             ),
           ),
+          _BloomShelf(
+            hidden: _celebrating,
+            semanticsLabel: s('Блум', 'Bloom'),
+          ),
           if (widget.pack.isLocked)
             Container(
               width: double.infinity,
@@ -946,8 +1002,52 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
               ),
             ),
         ],
+        ),
       ),
     );
   }
 }
 
+/// The shelf under the `PageView` Bloom S sits on (bloom_character.md
+/// §4.2): its own `Column` row, so he can never overlap a card; 64 dp on a
+/// phone, 80 on a tablet, 56 when the screen is short. Bloom is flush with
+/// the card's left edge and looks up at it. He fades out while the pack
+/// celebration — which brings its own Bloom — is up.
+class _BloomShelf extends StatelessWidget {
+  final bool hidden;
+  final String semanticsLabel;
+
+  const _BloomShelf({required this.hidden, required this.semanticsLabel});
+
+  /// Left edge of the drawing from the screen edge.
+  static const double _inset = 32;
+
+  @override
+  Widget build(BuildContext context) {
+    final shelf = DT.size.bloomShelfOf(context);
+    final size = DT.size.mascotCompanionOf(context);
+    final hit = math.max(size, DT.size.tapMin);
+    // The hit zone is centred on the drawing; pull it back so the *drawing*
+    // starts at [_inset].
+    final left = _inset - (hit - size) / 2;
+    return SizedBox(
+      height: shelf,
+      child: OverflowBox(
+        alignment: Alignment.bottomLeft,
+        minHeight: 0,
+        maxHeight: shelf + BloomMascot.hopClearance,
+        child: Padding(
+          padding: EdgeInsets.only(left: left),
+          child: AnimatedOpacity(
+            opacity: hidden ? 0 : 1,
+            duration: MotionPolicy.of(context).dur(DT.motion.bloomFade),
+            child: IgnorePointer(
+              ignoring: hidden,
+              child: BloomMascot(size: size, semanticsLabel: semanticsLabel),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

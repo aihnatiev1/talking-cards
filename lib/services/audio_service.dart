@@ -817,16 +817,46 @@ class AudioService {
   /// Random recorded praise clip ("Молодець!" / "Great job!"). Rate-limited
   /// to every other call so it stays special; pass [always] for game-final
   /// celebrations. Expects assets/audio_mp3/praise_{uk|en}_1..5.mp3.
-  Future<void> playPraise({required bool isEn, bool always = false}) async {
+  ///
+  /// Returns `true` when a clip actually played, `false` when rate-limited
+  /// or when no praise file is bundled — the caller (`BloomReactions`) then
+  /// knows Bloom's own `bloom_yay` will not talk over a narrator.
+  Future<bool> playPraise({required bool isEn, bool always = false}) async {
     _praiseCounter++;
-    if (!always && _praiseCounter.isOdd) return;
+    if (!always && _praiseCounter.isOdd) return false;
     final src = await _getFx(
         'assets/audio_mp3/praise_${isEn ? 'en' : 'uk'}_${_rng.nextInt(5) + 1}.mp3');
-    if (src == null) return;
+    if (src == null) {
+      _praiseKnownMissing = true;
+      return false;
+    }
     try {
       await _soloud.play(src);
-    } catch (_) {}
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
+
+  bool _praiseKnownMissing = false;
+
+  /// `true` once a praise clip was asked for and found missing. Bloom's
+  /// `bloom_yay` stands in for the narrator's cheer only then
+  /// (docs/design/bloom_character.md §6).
+  bool get praiseKnownMissing => _praiseKnownMissing;
+
+  /// One of Bloom's own sounds (`assets/audio_sfx/bloom_*.wav`, §6).
+  ///
+  /// Same lazy `_getFx` path as [playSfx]; while the files are not yet
+  /// recorded this is a silent no-op, exactly like [playPraise] — so the
+  /// mascot can be wired now and sound later. Never plays over a word: the
+  /// caller checks [isSpeaking] and *drops* the sound, it does not queue it.
+  Future<void> playBloom(
+    String name, {
+    double volume = 0.6,
+    double pitch = 1.0,
+  }) =>
+      playSfx(name, volume: volume, pitch: pitch);
 
   /// Per-game voice instruction played on entry ("Лопай бульбашки!").
   /// Expects assets/audio_mp3/instr_{uk|en}_{gameId}.mp3.

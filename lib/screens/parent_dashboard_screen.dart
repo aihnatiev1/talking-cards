@@ -17,7 +17,6 @@ import '../utils/constants.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../widgets/activity_chart.dart';
-import '../widgets/bloom_mascot.dart';
 import '../widgets/card_image.dart';
 import '../widgets/word_wall_share.dart';
 
@@ -452,7 +451,7 @@ class _WordsTab extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const BloomMascot(size: 88),
+              const Text('📚', style: TextStyle(fontSize: 56)),
               const SizedBox(height: 16),
               Text(
                 s(

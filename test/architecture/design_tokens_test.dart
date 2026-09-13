@@ -44,7 +44,6 @@ void main() {
     'lib/screens/quest_map_screen.dart',
     'lib/screens/rewards_screen.dart',
     'lib/services/whatsnew_service.dart',
-    'lib/widgets/bloom_mascot.dart',
     'lib/widgets/bubble_pop.dart',
     'lib/widgets/playful_navigation_bar.dart',
     'lib/widgets/quest_journey_map.dart',

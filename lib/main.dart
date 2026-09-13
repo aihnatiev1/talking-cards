@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'firebase_options.dart';
+import 'providers/bloom_reactions_provider.dart';
 import 'providers/language_provider.dart';
 import 'providers/packs_provider.dart';
 import 'providers/profile_provider.dart';
@@ -156,6 +157,10 @@ class _TalkingCardsAppState extends ConsumerState<TalkingCardsApp>
     );
   }
 
+  /// When the app last left the foreground — Bloom greets a child who has
+  /// been away more than five minutes (bloom_character.md §3.1).
+  DateTime? _pausedAt;
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // Stop voiceover the moment the app leaves the foreground (screen lock,
@@ -164,10 +169,17 @@ class _TalkingCardsAppState extends ConsumerState<TalkingCardsApp>
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden) {
       AudioService.instance.stop();
+      _pausedAt ??= DateTime.now();
+      ref.read(bloomReactionsProvider.notifier).appPaused();
       _refreshTrialReport();
       return;
     }
     if (state != AppLifecycleState.resumed) return;
+    final pausedAt = _pausedAt;
+    _pausedAt = null;
+    ref.read(bloomReactionsProvider.notifier).appResumed(
+          pausedAt == null ? Duration.zero : DateTime.now().difference(pausedAt),
+        );
     // Refresh engagement reminders only on resume (never in build).
     final lang = ref.read(languageProvider);
     final streak = ref.read(streakProvider).currentStreak;

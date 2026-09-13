@@ -11,6 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
 import '../providers/app_review_provider.dart';
+import '../providers/bloom_reactions_provider.dart';
 import '../providers/daily_quest_provider.dart';
 import '../providers/favorites_provider.dart';
 import '../providers/language_provider.dart';
@@ -982,16 +983,19 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                 // remaining steps, all inside a single frame.
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                  child: _buildDailyHero(
-                    context,
-                    packs: packs,
-                    cotd: cotd,
-                    cotdLocked: cotdLocked,
-                    questState: quest,
-                    completedPacks: completedPacks,
-                    continuePack: continuePack,
-                    continueProgress: continueProgress,
-                    isEn: isEnMode,
+                  child: _HeroWithBloom(
+                    semanticsLabel: isEnMode ? 'Bloom' : 'Блум',
+                    hero: _buildDailyHero(
+                      context,
+                      packs: packs,
+                      cotd: cotd,
+                      cotdLocked: cotdLocked,
+                      questState: quest,
+                      completedPacks: completedPacks,
+                      continuePack: continuePack,
+                      continueProgress: continueProgress,
+                      isEn: isEnMode,
+                    ),
                   ),
                 ),
 
@@ -1091,6 +1095,101 @@ class _PacksTabState extends ConsumerState<PacksTab> {
   }
 }
 
+/// The daily hero with Bloom S peeking over its top-right corner
+/// (bloom_character.md §4.2): head and ears above the edge, body behind the
+/// card, so the hero gets [DTSize.bloomPeek] of extra top room. Bloom sits
+/// *under* the hero in z and never covers the illustration (left 45 %) or
+/// the badge.
+///
+/// This widget is also the home tab's stage in Bloom's brain: it enters
+/// the `home` scene on mount, leaves it while the tab is hidden
+/// (`TickerMode` off under `IndexedStack` or an opaque route) and tells
+/// Bloom he may breathe once the hero has stopped pulsing (`heroDone`).
+class _HeroWithBloom extends ConsumerStatefulWidget {
+  final Widget hero;
+  final String semanticsLabel;
+
+  const _HeroWithBloom({required this.hero, required this.semanticsLabel});
+
+  @override
+  ConsumerState<_HeroWithBloom> createState() => _HeroWithBloomState();
+}
+
+class _HeroWithBloomState extends ConsumerState<_HeroWithBloom> {
+  static final Object _sceneKey = Object();
+  bool _onStage = false;
+
+  BloomReactions get _bloom => ref.read(bloomReactionsProvider.notifier);
+
+  bool get _heroDone {
+    final hero = widget.hero;
+    return hero is DailyHeroCard && hero.heroDone;
+  }
+
+  BloomScene get _scene => BloomScene.home.copyWith(
+        ambient: _heroDone ? BloomAmbient.breathe : BloomAmbient.blinkOnly,
+      );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final visible = TickerMode.valuesOf(context).enabled;
+    if (visible == _onStage) return;
+    _onStage = visible;
+    // Not during build: the provider must not change while widgets are
+    // being built.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (_onStage) {
+        _bloom.sceneEntered(_sceneKey, _scene);
+      } else {
+        _bloom.sceneLeft(_sceneKey);
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(_HeroWithBloom old) {
+    super.didUpdateWidget(old);
+    final was = old.hero is DailyHeroCard && (old.hero as DailyHeroCard).heroDone;
+    if (was == _heroDone || !_onStage) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _onStage) _bloom.sceneEntered(_sceneKey, _scene);
+    });
+  }
+
+  @override
+  void dispose() {
+    if (_onStage) _bloom.sceneLeft(_sceneKey);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.hero is! DailyHeroCard) return widget.hero;
+    final size = DT.size.mascotCompanionOf(context);
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // Bloom first, so the hero paints over his body.
+        Positioned(
+          top: 0,
+          right: DT.sp24,
+          child: BloomMascot(
+            size: size,
+            facing: BloomFacing.right,
+            semanticsLabel: widget.semanticsLabel,
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.only(top: DT.size.bloomPeek),
+          child: widget.hero,
+        ),
+      ],
+    );
+  }
+}
+
 /// Compact home banner that mirrors the kid Word Wall stat: count + Bloom.
 /// Hidden when the child has zero "learned" cards (SRS reps >= 2) to avoid
 /// teasing an empty treasure box.
@@ -1132,11 +1231,10 @@ class _TreasureBoxBanner extends ConsumerWidget {
           ),
           child: Row(
             children: [
-              const BloomMascot(
-                size: 44,
-                emotion: BloomEmotion.waving,
-                interactive: false,
-              ),
+              // Placeholder until the treasure-box icon lands (F5): the
+              // second character on a screen that already has Bloom by the
+              // hero was unreadable at 44 dp (bloom_character.md §3.3).
+              const Text('🎁', style: TextStyle(fontSize: 30)),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(

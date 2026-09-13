@@ -120,6 +120,18 @@ class FeedbackService {
   /// Events recorded while [debugMute] is on. Clear it in `setUp`.
   static final List<FeedbackEvent> debugLog = [];
 
+  /// Observers of the event stream — `BloomReactions` is one. Notified for
+  /// every [event], muted or not, *before* anything is played, so the
+  /// mascot reacts to the same events the child hears and nothing has to
+  /// subscribe to analytics a second time (architecture audit F3/F4).
+  final List<void Function(FeedbackEvent)> _listeners = [];
+
+  void addListener(void Function(FeedbackEvent) listener) =>
+      _listeners.add(listener);
+
+  void removeListener(void Function(FeedbackEvent) listener) =>
+      _listeners.remove(listener);
+
   final Random _rng = Random();
 
   /// The table. One row per event, documented inline; a new event gets a
@@ -220,6 +232,9 @@ class FeedbackService {
     bool haptic = true,
     bool sound = true,
   }) {
+    for (final l in List.of(_listeners)) {
+      l(e);
+    }
     if (debugMute) {
       debugLog.add(e);
       return;

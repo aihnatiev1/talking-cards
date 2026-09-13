@@ -65,6 +65,22 @@ class DT {
   static const warning = Color(0xFFE17055);
   static const error = Color(0xFFE53935);
 
+  // ── Bloom (the mascot) ───────────────────────
+  /// Bloom's own palette (docs/design/bloom_character.md §2.1). Brand cream,
+  /// pink and warm ink — never repainted to a pack accent. `bloomBody` is a
+  /// shade deeper than the old `#FFF1E0` so the figure separates from
+  /// [bgWarm] at 56 dp; the ink outline sits at [bloomInkAlpha].
+  static const bloomBody = Color(0xFFFFEBD2);
+  static const bloomShade = Color(0xFFF5E2C7);
+  static const bloomEarInside = Color(0xFFFFB7C5);
+  static const bloomCheek = Color(0xFFFFC4D0);
+  static const bloomNose = Color(0xFFE38DA8);
+  static const bloomInk = Color(0xFF3A2E2A);
+  static const bloomShadow = Color(0x14000000);
+  static const bloomHighlight = Color(0x22FFFFFF);
+  static const bloomEyeShine = Colors.white;
+  static const double bloomInkAlpha = 0.45;
+
   // ── Overlay barriers ────────────────────────
   /// Behind celebrations and full-screen overlays: dark enough to lift the
   /// mascot, light enough that the scene the child was in stays legible.
@@ -309,6 +325,60 @@ class DTMotion {
   /// …and calms down (static glow + sticker stay) after this long.
   final Duration hintSettle = const Duration(milliseconds: 3000);
 
+  // Bloom (docs/design/bloom_character.md §2.2). The mascot's every beat
+  // is a token here; `BloomMascot` and `BloomReactions` read them and the
+  // widget never spells a millisecond.
+  /// Pose-to-pose lerp (160–220 in the spec; one value).
+  final Duration bloomPose = const Duration(milliseconds: 180);
+
+  /// Squash on entering `listen`, and the mask under a discrete face swap.
+  final Duration bloomSquash = const Duration(milliseconds: 120);
+
+  /// One blink: two frames, eyes shut for this long.
+  final Duration bloomBlink = const Duration(milliseconds: 120);
+
+  /// Random gap between blinks — a discrete event, not a loop.
+  final Duration bloomBlinkMin = const Duration(seconds: 3);
+  final Duration bloomBlinkMax = const Duration(seconds: 6);
+
+  /// The "heard you" nod when a word ends; also how long the pupils follow
+  /// a swipe before settling back.
+  final Duration bloomNod = const Duration(milliseconds: 200);
+
+  /// `speaking → false` is honoured only after this gap (a phrase has
+  /// tiny silences inside it).
+  final Duration bloomListenRelease = const Duration(milliseconds: 150);
+
+  /// `wave`: two paw swings.
+  final Duration bloomWave = const Duration(milliseconds: 700);
+
+  /// `cheer` with one hop, and with three.
+  final Duration bloomCheer = const Duration(milliseconds: 900);
+  final Duration bloomCheerBig = const Duration(milliseconds: 1400);
+
+  /// The happy face Bloom keeps after a cheer, before idle.
+  final Duration bloomAfterglow = const Duration(milliseconds: 600);
+
+  /// `curious`: lean towards the object and back.
+  final Duration bloomCurious = const Duration(milliseconds: 700);
+
+  /// `point`: paw out, two nods, paw back.
+  final Duration bloomPoint = const Duration(milliseconds: 900);
+
+  /// `blow`: one exhale.
+  final Duration bloomBlow = const Duration(milliseconds: 300);
+
+  /// Idle breathing — one half-cycle (rest → peak); `AmbientLoop` reverses,
+  /// so the full period is 3.0 s. Asleep it is twice as slow.
+  final Duration bloomBreath = const Duration(milliseconds: 1500);
+  final Duration bloomSleepBreath = const Duration(milliseconds: 3000);
+
+  /// `happy` debounce: a hop already in the air is not restarted.
+  final Duration bloomHappyDebounce = const Duration(milliseconds: 350);
+
+  /// Host Bloom fades out when an overlay brings its own.
+  final Duration bloomFade = const Duration(milliseconds: 150);
+
   // Curves
   final Curve standard = Curves.easeOutCubic;
   final Curve emphasized = Curves.easeOutBack;
@@ -335,6 +405,39 @@ class DTSize {
   final double mascotSm = 64;
   final double mascotMd = 96;
   final double mascotLg = 140;
+
+  /// Bloom **S**, the companion (docs/design/bloom_character.md §4.1):
+  /// 56 on a phone, 72 on a tablet, 48 when the screen is under 600 dp tall.
+  /// Whatever the drawing, the hit zone is [tapMin].
+  final double mascotCompanion = 56;
+  final double mascotCompanionCompact = 48;
+  final double mascotCompanionTablet = 72;
+
+  /// The shelf Bloom sits on under the cards `PageView`: 64 phone / 80
+  /// tablet / 56 on a short screen (§4.2).
+  final double bloomShelf = 64;
+  final double bloomShelfCompact = 56;
+  final double bloomShelfTablet = 80;
+
+  /// How much of Bloom peeks over the home hero's top edge (§4.2).
+  final double bloomPeek = 28;
+
+  /// Bloom S for [context]: tablet / compact / phone by the shortest and
+  /// the vertical extent of the screen.
+  double mascotCompanionOf(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    if (size.shortestSide >= kLargeScreen) return mascotCompanionTablet;
+    if (size.height < 600) return mascotCompanionCompact;
+    return mascotCompanion;
+  }
+
+  /// The cards shelf height for [context] — see [mascotCompanionOf].
+  double bloomShelfOf(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    if (size.shortestSide >= kLargeScreen) return bloomShelfTablet;
+    if (size.height < 600) return bloomShelfCompact;
+    return bloomShelf;
+  }
 }
 
 /// Colour roles derived from one pack accent.

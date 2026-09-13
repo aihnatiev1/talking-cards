@@ -1,7 +1,9 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../providers/bloom_reactions_provider.dart';
 import '../services/feedback_service.dart';
 import '../utils/design_tokens.dart';
 import '../utils/kid_routes.dart';
@@ -84,8 +86,8 @@ Future<void> celebrate(
 ///    `milestone`; the praise in those rows follows at [DTMotion.slow]);
 ///  * 0 — confetti: burst of 24 ([round]) or rain of 32 ([pack]); none for
 ///    [milestone];
-///  * [DTMotion.celebrationCue] — Bloom hops ([DTMotion.celebrationBounce])
-///    in `waving`, drops to `happy` when the controller completes;
+///  * [DTMotion.celebrationCue] — Bloom M hops ([DTMotion.celebrationBounce])
+///    in `cheer` and stays in it; `wave` when Home / Done is tapped;
 ///  * [DTMotion.celebrationCoverIn] — pack cover scale .8→1 ([pack]);
 ///  * [DTMotion.celebrate] (600 ms) — pills become tappable; opacity .6→1.
 ///
@@ -155,6 +157,10 @@ class _CelebrationState extends State<Celebration>
   /// Set by the first pill that fires; the overlay pops exactly once.
   bool _closing = false;
 
+  /// "Back to home" was tapped: Bloom waves goodbye while the overlay
+  /// fades (bloom_character.md §3.2).
+  bool _leaving = false;
+
   FeedbackEvent get _event => switch (widget.tier) {
     CelebrationTier.round => FeedbackEvent.roundDone,
     CelebrationTier.pack => FeedbackEvent.packDone,
@@ -210,6 +216,22 @@ class _CelebrationState extends State<Celebration>
     _closing = true;
     Navigator.of(context).pop();
     action?.call();
+  }
+
+  /// Home / Done: the goodbye wave and `bloom_bye`, then [_close]. The
+  /// overlay may be pushed outside the app's `ProviderScope` (tests,
+  /// marketing shells) — then only the pose changes.
+  void _leave(VoidCallback? action) {
+    if (_closing) return;
+    setState(() => _leaving = true);
+    try {
+      ProviderScope.containerOf(context, listen: false)
+          .read(bloomReactionsProvider.notifier)
+          .sessionEnding(withSound: true);
+    } on StateError {
+      // No scope: a frozen Bloom still waves.
+    }
+    _close(action);
   }
 
   @override
@@ -270,18 +292,22 @@ class _CelebrationState extends State<Celebration>
 
   Widget _hero() {
     final bounce = _mascotAnim;
+    // Bloom M leads the pack and round celebrations in `cheer`; the streak
+    // milestone is a parent-facing tier and keeps him small. A frozen
+    // state: the overlay is the one Bloom on screen, the host's fades.
+    final emotion = _leaving ? BloomEmotion.wave : BloomEmotion.cheer;
     final bloom = _Hopping(
       progress: bounce,
       hops: widget.tier == CelebrationTier.milestone ? 1 : 2,
-      child: _BloomIdle(
-        master: _master,
-        reduce: _reduce,
-        size: widget.tier == CelebrationTier.round
-            ? DT.size.mascotMd
-            : DT.size.mascotSm,
-        celebrateEmotion: widget.tier == CelebrationTier.milestone
-            ? BloomEmotion.happy
-            : BloomEmotion.waving,
+      child: BloomMascot(
+        size: widget.tier == CelebrationTier.milestone
+            ? DT.size.mascotSm
+            : DT.size.mascotMd,
+        state: BloomState.still(
+          emotion,
+          hops: widget.tier == CelebrationTier.milestone ? 1 : 3,
+        ),
+        interactive: false,
       ),
     );
     return switch (widget.tier) {
@@ -290,6 +316,8 @@ class _CelebrationState extends State<Celebration>
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
+          bloom,
+          const SizedBox(width: DT.sp12),
           ScaleTransition(
             scale: _coverAnim,
             child: SizedBox.square(
@@ -301,8 +329,6 @@ class _CelebrationState extends State<Celebration>
               ),
             ),
           ),
-          const SizedBox(width: DT.sp12),
-          bloom,
         ],
       ),
       CelebrationTier.milestone => Column(
@@ -360,7 +386,7 @@ class _CelebrationState extends State<Celebration>
         _Pill.outlined(
           label: s('Готово', 'Done'),
           accent: accent,
-          onTap: () => _close(widget.onDone),
+          onTap: () => _leave(widget.onDone),
         ),
       ],
       CelebrationTier.pack => [
@@ -380,7 +406,7 @@ class _CelebrationState extends State<Celebration>
         _Pill.outlined(
           label: s('На головну', 'Back to home'),
           accent: accent,
-          onTap: () => _close(widget.onDone),
+          onTap: () => _leave(widget.onDone),
         ),
       ],
       CelebrationTier.milestone => [
@@ -552,35 +578,6 @@ class _Card extends StatelessWidget {
           const SizedBox(height: DT.sp20),
           buttons,
         ],
-      ),
-    );
-  }
-}
-
-/// Bloom in the celebrate pose while the master runs, idle when it is done.
-/// Under reduced motion the pose is static — no drop to idle either.
-class _BloomIdle extends StatelessWidget {
-  final Animation<double> master;
-  final bool reduce;
-  final double size;
-  final BloomEmotion celebrateEmotion;
-
-  const _BloomIdle({
-    required this.master,
-    required this.reduce,
-    required this.size,
-    required this.celebrateEmotion,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: master,
-      builder: (_, __) => BloomMascot(
-        size: size,
-        emotion: reduce || !master.isCompleted
-            ? celebrateEmotion
-            : BloomEmotion.happy,
       ),
     );
   }

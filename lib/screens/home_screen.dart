@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../providers/bloom_reactions_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../providers/profile_provider.dart';
@@ -108,6 +109,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   Future<void> _runFirstFrameFlow() async {
     await _showWelcomeIfNeeded();
     if (!mounted) return;
+    // The intro-modal queue is empty: Bloom says hello
+    // (bloom_character.md §3.1). Nothing blocks on it.
+    ref.read(bloomReactionsProvider.notifier).appEntered();
     // Not in the first session: the child has just tapped three cards and
     // the parent has just closed the paywall — a permission ask here was the
     // fifth modal before the first real card (audit #5). The next launch is
