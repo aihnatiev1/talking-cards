@@ -163,9 +163,17 @@ class _StaggeredEntranceState extends State<StaggeredEntrance>
     final fade = _fade;
     final scale = _scale;
     if (fade == null || scale == null) return widget.child;
+    // Only on the animating branch, and only because the whole point of a
+    // stagger is that up to twenty tiles fade and scale at once, on the
+    // frames right after a screen opens — the least affordable moment on a
+    // weak tablet. The boundary rasterises each tile once and lets the
+    // compositor do the fade instead of a `saveLayer` per tile per frame.
     return FadeTransition(
       opacity: fade,
-      child: ScaleTransition(scale: scale, child: widget.child),
+      child: ScaleTransition(
+        scale: scale,
+        child: RepaintBoundary(child: widget.child),
+      ),
     );
   }
 }

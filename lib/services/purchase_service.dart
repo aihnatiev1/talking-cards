@@ -382,6 +382,10 @@ class PurchaseService {
   String? _pendingPurchaseId;
   Timer? _pendingTimer;
 
+  /// The SKU whose Ask-to-Buy request is still out with a parent. Separate
+  /// from [_pendingPurchaseId]: that window is closed, this banner is not.
+  String? _awaitingApprovalId;
+
   /// Face ID, a password or an Ask-to-Buy approval can take minutes; this is
   /// only a backstop so an outcome that never arrives is still visible.
   static const _pendingBudget = Duration(minutes: 3);
@@ -464,6 +468,16 @@ class PurchaseService {
   /// and is deliberately not reported as a sale.
   void _logOutcome(PurchaseDetails purchase) {
     final id = purchase.productID;
+    // The Ask-to-Buy wait outlives the checkout window on purpose (see
+    // the `pending` branch), so the decision, whenever it lands, has to be
+    // able to take the banner down even though no pending id is left. A
+    // declined request that left "waiting for approval" on screen forever
+    // would be the same dead end in a different costume.
+    if (id == _awaitingApprovalId &&
+        purchase.status != PurchaseStatus.pending) {
+      _awaitingApprovalId = null;
+      awaitingApproval.value = false;
+    }
     if (id != _pendingPurchaseId) return;
     final analytics = AnalyticsService.instance;
     switch (purchase.status) {
@@ -474,16 +488,25 @@ class PurchaseService {
         // parent. The approval, when it comes, arrives on this same stream,
         // possibly in a later session, and `_verifyAndDeliver` handles it
         // without a pending id.
-        _pendingTimer?.cancel();
-        awaitingApproval.value = true;
         // The checkout has left our hands: no sheet is up and nothing here
-        // is going to move it. Holding the CTA past this point is how a
-        // paywall dies — `pending` clears no pending id, so an approval
-        // that never comes would leave every later open of this screen
-        // with a dead Buy button until the app is restarted. The line
-        // above says what is happening; the button does not have to.
-        purchaseInFlight.value = false;
-        analytics.logPurchasePending(id);
+        // is going to move it. So the window closes completely — timer,
+        // pending id and the busy CTA all go — rather than half of it.
+        //
+        // Holding only the button was worse than holding nothing: the id
+        // stayed set, `_beginPurchase` refuses to open a second checkout
+        // while one is pending, and so every later Buy tap returned false
+        // with no sheet and the "couldn't start, try again" snack — advice
+        // that could not work until the app was restarted. Ask to Buy is
+        // common in a 1-to-4 app, and that is the family most likely to
+        // pay.
+        //
+        // Letting go is safe: the approval arrives on this same stream,
+        // possibly in a later session, and `_verifyAndDeliver` grants it
+        // without a pending id. `awaitingApproval` keeps saying what is
+        // happening on screen.
+        _resolvePurchase(id, () => analytics.logPurchasePending(id));
+        _awaitingApprovalId = id;
+        awaitingApproval.value = true;
         return;
       case PurchaseStatus.purchased:
       case PurchaseStatus.restored:

@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'dart:ui' show PathMetric;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../providers/daily_quest_provider.dart';
 import '../services/feedback_service.dart';
@@ -932,6 +933,6 @@ class _LandscapePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _LandscapePainter old) =>
       old.wide != wide ||
-      old.positions.toString() != positions.toString() ||
-      old.completed.toString() != completed.toString();
+      !listEquals(old.positions, positions) ||
+      !listEquals(old.completed, completed);
 }

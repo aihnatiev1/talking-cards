@@ -230,9 +230,16 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
                 flex: 5,
                 child: AnimatedBuilder(
                   animation: _exitCtrl,
+                  // The card is a static picture for the whole exit: the
+                  // boundary inside the `Opacity` turns a full-card
+                  // `saveLayer` per frame into one retained layer the
+                  // compositor slides and fades (motion_language.md §7.1).
                   builder: (_, child) => Transform.translate(
                     offset: Offset(0, _exitSlide.value),
-                    child: Opacity(opacity: _exitFade.value, child: child),
+                    child: Opacity(
+                      opacity: _exitFade.value,
+                      child: RepaintBoundary(child: child),
+                    ),
                   ),
                   child: KidTap(
                     onTap: _speakCurrent,

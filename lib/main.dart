@@ -32,6 +32,7 @@ void main() async {
   await runZonedGuarded<Future<void>>(() async {
     AppStartup.begin();
     WidgetsFlutterBinding.ensureInitialized();
+    _capImageCache();
     await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
     // Disable collection in debug so dev crashes don't pollute prod dashboards.
@@ -87,6 +88,29 @@ void main() async {
   }, (error, stack) {
     FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
   });
+}
+
+/// Flutter's default image cache is 100 MB / 1000 entries — a ceiling
+/// sized for a phone with plenty of headroom, not for the 2016 tablet a
+/// family hands the child (rule 10). Card art ships at 640 px wide, so one
+/// full-screen decode is 640x858 RGBA ~ 2.2 MB and one grid tile ~ 0.55 MB.
+///
+/// What the app actually needs warm at any moment:
+///   * the swiper: current card plus the three `_precacheAround` neighbours
+///     at hero width ~ 9 MB;
+///   * a 21-tile pack grid ~ 12 MB;
+///   * the screen the child just came from, so going back is instant.
+///
+/// 40 MB holds all three with room to spare and still leaves the rest of a
+/// 1 GB device to the engine. The cap only bounds images nothing is
+/// painting right now — anything on screen is kept alive by its own
+/// `ImageStream` regardless — so a smaller cache costs a re-decode on a
+/// return trip, never a blank card. The entry cap stops a long session of
+/// small thumbnails from filling the cache with bookkeeping.
+void _capImageCache() {
+  PaintingBinding.instance.imageCache
+    ..maximumSizeBytes = 40 << 20
+    ..maximumSize = 150;
 }
 
 class TalkingCardsApp extends ConsumerStatefulWidget {

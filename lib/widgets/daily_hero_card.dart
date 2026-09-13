@@ -101,51 +101,58 @@ class DailyHeroCard extends StatelessWidget {
     return AmbientLoop(
       period: DT.motion.ambientBreath,
       enabled: !heroDone,
-      builder: (_, t, child) => Transform.scale(
-        scale: 1.0 + 0.02 * t,
-        child: child,
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          color: DT.surfaceWhite,
-          borderRadius: BorderRadius.circular(DT.rLg),
-          border: Border.all(color: accent.withValues(alpha: 0.22), width: 1.5),
-          boxShadow: DT.shadowSoft(accent),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(DT.rLg - 2),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _HeroPane(
-                title: title,
-                accent: accent,
-                image: image,
-                fallbackEmoji: fallbackEmoji,
-                progress: progress,
-                heroDone: heroDone,
-                mascot: mascot,
-                onTap: onHeroTap,
-                onLongPress: onHeroLongPress,
-              ),
-              // Hairline instead of a second frame: the stones belong to
-              // the hero, they are not a separate card.
-              Container(
-                height: 1,
-                margin: const EdgeInsets.symmetric(horizontal: DT.sp12),
-                color: DT.textPrimary.withValues(alpha: 0.06),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  DT.sp12,
-                  DT.sp8,
-                  DT.sp12,
-                  DT.sp12,
+      builder: (_, t, child) =>
+          Transform.scale(scale: 1.0 + 0.02 * t, child: child),
+      // The widest card on the home screen — illustration, soft shadow,
+      // two rows of text — under an endless breath. Without the boundary
+      // every frame of that loop re-records the whole subtree; with it the
+      // breath is one layer being scaled.
+      child: RepaintBoundary(
+        child: Container(
+          decoration: BoxDecoration(
+            color: DT.surfaceWhite,
+            borderRadius: BorderRadius.circular(DT.rLg),
+            border: Border.all(
+              color: accent.withValues(alpha: 0.22),
+              width: 1.5,
+            ),
+            boxShadow: DT.shadowSoft(accent),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(DT.rLg - 2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _HeroPane(
+                  title: title,
+                  accent: accent,
+                  image: image,
+                  fallbackEmoji: fallbackEmoji,
+                  progress: progress,
+                  heroDone: heroDone,
+                  mascot: mascot,
+                  onTap: onHeroTap,
+                  onLongPress: onHeroLongPress,
                 ),
-                child: footer,
-              ),
-            ],
+                // Hairline instead of a second frame: the stones belong to
+                // the hero, they are not a separate card.
+                Container(
+                  height: 1,
+                  margin: const EdgeInsets.symmetric(horizontal: DT.sp12),
+                  color: DT.textPrimary.withValues(alpha: 0.06),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    DT.sp12,
+                    DT.sp8,
+                    DT.sp12,
+                    DT.sp12,
+                  ),
+                  child: footer,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -547,10 +554,8 @@ class _StoneState extends State<_Stone> with SingleTickerProviderStateMixin {
     Widget body = AmbientLoop(
       period: DT.motion.ambientPulse,
       enabled: active,
-      builder: (_, pulse, child) => Transform.scale(
-        scale: 1.0 + 0.04 * pulse,
-        child: child,
-      ),
+      builder: (_, pulse, child) =>
+          Transform.scale(scale: 1.0 + 0.04 * pulse, child: child),
       child: AnimatedBuilder(
         animation: _sparkle,
         builder: (_, child) {

@@ -116,19 +116,41 @@ void main() {
       });
     });
 
-    test('an Ask to Buy wait gives the CTA back, and says why', () {
+    test('an Ask to Buy wait leaves the family able to buy again', () {
       FakeAsync().run((async) {
         service.debugBeginPurchase('yearly_premium');
         service.debugHandlePurchaseUpdate(
             [update('yearly_premium', PurchaseStatus.pending)]);
         async.elapse(const Duration(minutes: 4));
 
-        // The wait is real and the paywall says so, but it must not hold
-        // the button: `pending` keeps the pending id, so an approval that
-        // never arrives would otherwise leave every later open of the
-        // paywall unable to sell until the app restarts.
+        // The wait is real and the paywall says so.
         expect(service.awaitingApproval.value, true);
         expect(service.purchaseInFlight.value, false);
+
+        // And the checkout window is actually open again — the thing the
+        // flag exists for. Asserting only the flag passed while every Buy
+        // tap returned false with no sheet: `pending` used to keep the
+        // pending id, and `_beginPurchase` refuses a second checkout while
+        // one is pending. A live button over a closed service is worse
+        // than a disabled one.
+        expect(service.debugBeginPurchase('yearly_premium'), isTrue);
+        expect(service.purchaseInFlight.value, true);
+      });
+    });
+
+    test('an approval that lands after the window closed still grants Pro',
+        () {
+      FakeAsync().run((async) {
+        service.debugBeginPurchase('yearly_premium');
+        service.debugHandlePurchaseUpdate(
+            [update('yearly_premium', PurchaseStatus.pending)]);
+        // Hours later, in this or a later session, the parent approves.
+        async.elapse(const Duration(hours: 2));
+        service.debugHandlePurchaseUpdate(
+            [update('yearly_premium', PurchaseStatus.purchased)]);
+        async.flushMicrotasks();
+
+        expect(service.isPro.value, true);
       });
     });
 

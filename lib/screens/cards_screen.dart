@@ -863,8 +863,9 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                 // maxScrollExtent instead — handle both.
                 NotificationListener<ScrollNotification>(
                   onNotification: (n) {
-                    if (n is ScrollStartNotification)
+                    if (n is ScrollStartNotification) {
                       _userSwiping = n.dragDetails != null;
+                    }
                     if (n is ScrollEndNotification) {
                       _userSwiping = false;
                       _onPageLanded();
@@ -947,13 +948,22 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                               ..setEntry(3, 2, 0.001)
                               ..rotateY(angle)
                               ..scaleByDouble(scale, scale, scale, 1),
+                            // The boundary is *inside* the Transform on
+                            // purpose (motion_language.md §7.3.1): the card
+                            // — art, shadow, rounded clip — rasterises once
+                            // and the swipe becomes pure compositing. It
+                            // also turns the `Opacity` above it from a
+                            // per-frame `saveLayer` over a full-screen card
+                            // into an opacity layer the compositor applies
+                            // for free, which is what made the neighbour
+                            // fade expensive (§7.1, first row).
                             child: Opacity(
                               opacity: lerpDouble(
                                 1,
                                 0.5,
                                 value.abs(),
                               )!.clamp(0.0, 1.0),
-                              child: child,
+                              child: RepaintBoundary(child: child),
                             ),
                           );
                         },

@@ -6,9 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
 import '../providers/favorites_provider.dart';
+import '../providers/language_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../services/feedback_service.dart';
+import '../utils/l10n.dart';
 import 'ambient_loop.dart';
 import 'card_image.dart';
 import 'kid_tap.dart';
@@ -335,6 +337,7 @@ class FlashCardState extends ConsumerState<FlashCard>
   }
 
   Widget _buildBack(Color cardBg, ThemeData theme) {
+    final s = AppS(ref.watch(languageProvider) == 'en');
     return Column(
       children: [
         Expanded(
@@ -395,7 +398,10 @@ class FlashCardState extends ConsumerState<FlashCard>
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const Text('↺ натисніть щоб повернути', style: DT.caption),
+                  Text(
+                    s('↺ натисніть щоб повернути', '↺ tap to turn back'),
+                    style: DT.caption,
+                  ),
                 ],
               ),
             ),
