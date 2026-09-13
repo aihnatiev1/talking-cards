@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 /// Shared design tokens for the kid-facing UI.
@@ -139,6 +141,49 @@ class DT {
   static Color onTint(Color accent) =>
       Color.lerp(accent, textPrimary, 0.35) ?? accent;
 
+  /// WCAG AA for body text and for icons/controls at large sizes.
+  static const double aaContrast = 4.5;
+
+  /// [accent] darkened until **white on it** clears [aaContrast].
+  ///
+  /// The kid zone paints text dark-on-white almost everywhere (see
+  /// `KidCountPill`), but a primary button still wants to be a block of the
+  /// pack's colour. Raw accents cannot carry white: mint is 2.0:1 and
+  /// sunBurst 1.4:1 — a yellow "Unlock" button with a white label is, for
+  /// practical purposes, blank. This walks the accent's lightness down in
+  /// HSL — hue and saturation untouched, so the pack still looks like
+  /// itself — until the pair is legible. Deterministic and total: every
+  /// colour in, a usable fill out (mint → `#2E8339`, sunBurst → `#8F7300`).
+  ///
+  /// Use for filled surfaces under white; for text *on* a tint use
+  /// [onTint], and for text on white use [textPrimary].
+  static Color solid(Color accent) {
+    var hsl = HSLColor.fromColor(accent);
+    // ~45 steps at most, each one a handful of `pow` calls — cheap enough
+    // for a build, and there is nowhere earlier to cache it per pack.
+    while (hsl.lightness > 0.10 &&
+        contrastRatio(surfaceWhite, hsl.toColor()) < aaContrast) {
+      hsl = hsl.withLightness(hsl.lightness - 0.02);
+    }
+    return hsl.toColor();
+  }
+
+  /// WCAG 2.x contrast ratio of two opaque colours, `1.0…21.0`.
+  static double contrastRatio(Color a, Color b) {
+    final la = _relativeLuminance(a);
+    final lb = _relativeLuminance(b);
+    return (math.max(la, lb) + 0.05) / (math.min(la, lb) + 0.05);
+  }
+
+  static double _relativeLuminance(Color c) {
+    double channel(double v) => v <= 0.03928
+        ? v / 12.92
+        : math.pow((v + 0.055) / 1.055, 2.4).toDouble();
+    return 0.2126 * channel(c.r) +
+        0.7152 * channel(c.g) +
+        0.0722 * channel(c.b);
+  }
+
   /// Three elevation levels: rest (flat), soft (tiles at rest), lift
   /// (pressed / hero), float (overlays and sheets above the scene).
   static const List<BoxShadow> shadowRest = [];
@@ -193,6 +238,8 @@ class DT {
   static const kidFont = 'Nunito';
   static List<FontVariation> kidWeight(double wght) =>
       [FontVariation('wght', wght)];
+  static const _kid600 = [FontVariation('wght', 600)];
+  static const _kid700 = [FontVariation('wght', 700)];
   static const _kid800 = [FontVariation('wght', 800)];
   static const _kid900 = [FontVariation('wght', 900)];
 
@@ -256,17 +303,27 @@ class DT {
     height: 1.15,
   );
 
+  /// Body copy in the child's half of the app.
+  ///
+  /// Nunito like every other kid style: these two were left on the system
+  /// face when the headings moved, so a screen read as one voice at the
+  /// top and a different, cheaper one underneath. The parent zone wraps
+  /// itself in its own Roboto theme and does not use these.
   static const body = TextStyle(
-    fontSize: 14,
-    fontWeight: FontWeight.w500,
+    fontFamily: kidFont,
+    fontVariations: _kid600,
+    fontSize: 15,
+    fontWeight: FontWeight.w600,
     color: textSecondary,
     height: 1.35,
   );
 
   static const caption = TextStyle(
-    fontSize: 12,
-    fontWeight: FontWeight.w600,
-    color: textMuted,
+    fontFamily: kidFont,
+    fontVariations: _kid700,
+    fontSize: 13,
+    fontWeight: FontWeight.w700,
+    color: textSecondary,
     height: 1.2,
   );
 }
@@ -284,7 +341,31 @@ const _kEnter = Duration(milliseconds: 260);
 /// of overshoot, `playful` for reward moments only (elastic reads as
 /// "broken" on ordinary layout), `exit` for leaving — fast out, no bounce.
 class DTMotion {
-  const DTMotion._();
+
+
+  /// From the page crossing to the landing sound. `onPageChanged` fires as
+  /// the card passes the halfway mark; this is roughly when it arrives.
+  ///
+  /// The sound used to hang off `ScrollEndNotification`, which for a
+  /// critically damped spring means *fully settled* — one to two seconds
+  /// after the card visually stopped, long after the word had spoken. The
+  /// crossing is late enough to be a landing and early enough to still be
+  /// the swipe.
+  final Duration landingAfterCrossing = const Duration(milliseconds: 150);
+
+  /// From the landing sound to the word. `card_land` is ~200 ms; the word
+  /// starts once it has cleared, so the two read as cause and effect
+  /// rather than as a collision.
+  final Duration wordAfterLanding = const Duration(milliseconds: 220);
+
+  /// From opening a pack to its first word. `pack_open` runs ~510 ms and
+  /// the route fade is ~280; the word waited only for the route, so the
+  /// lid was still creaking when the card started talking.
+  final Duration wordAfterPackOpen = const Duration(milliseconds: 560);
+
+  /// Gap between the tap transient and the word it triggers. `card_touch`
+  /// is 30 ms; without this the click sat on the word's first consonant.
+  final Duration wordAfterTap = const Duration(milliseconds: 60);  const DTMotion._();
 
   // Content
   final Duration instant = const Duration(milliseconds: 80);

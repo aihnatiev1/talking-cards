@@ -224,35 +224,17 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
       // Speak once the route has finished fading in. The pack cover's Hero
       // flight (tile → header) runs on the same route animation, so the
       // first word lands right as the picture settles.
-      _afterRouteTransition(() {
-        if (mounted && AudioService.instance.autoSpeak.value) {
-          _speakCurrentCard();
-        }
-        if (mounted && _autoPlayTimer) {
-          _startAutoPlayCountdown();
-        }
+      // Not just the route fade: `pack_open` is half a second of lid, and
+      // the word used to start while it was still creaking.
+      _landingBeat?.cancel();
+      _landingBeat = Timer(DT.motion.wordAfterPackOpen, () {
+        if (!mounted) return;
+        if (AudioService.instance.autoSpeak.value) _speakCurrentCard();
+        if (_autoPlayTimer) _startAutoPlayCountdown();
       });
     });
   }
 
-  /// Runs [action] when the enclosing route's entrance animation completes
-  /// (or right away if there is none / it already finished).
-  void _afterRouteTransition(VoidCallback action) {
-    final animation = ModalRoute.of(context)?.animation;
-    if (animation == null || animation.isCompleted) {
-      action();
-      return;
-    }
-    late final AnimationStatusListener listener;
-    listener = (status) {
-      if (status == AnimationStatus.completed ||
-          status == AnimationStatus.dismissed) {
-        animation.removeStatusListener(listener);
-        if (mounted) action();
-      }
-    };
-    animation.addStatusListener(listener);
-  }
 
   @override
   void didChangeDependencies() {
@@ -395,14 +377,30 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   /// The swiped page came to rest: the card lies on the table. Lower on
   /// the way back (sound_palette §6.9). Fires once per landing — a drag
   /// that snaps back to the same page stays quiet.
-  void _onPageLanded() {
-    if (_currentIndex == _lastLandedIndex) return;
-    final back = _currentIndex < _lastLandedIndex;
-    _lastLandedIndex = _currentIndex;
-    FeedbackService.instance.event(
-      FeedbackEvent.pageLanded,
-      pitch: back ? 0.80 : null,
-    );
+  Timer? _landingBeat;
+
+  /// The card has crossed into place: sound, then word, in that order.
+  ///
+  /// Scheduled from `onPageChanged` rather than `ScrollEndNotification`.
+  /// The swiper runs a critically damped spring, and "scroll ended" means
+  /// fully settled — one to two seconds after the card has visibly
+  /// stopped. The landing sound arrived long after the word it was meant
+  /// to introduce, which is not a late sound, it is a different sound.
+  void _onPageLanded(int index) {
+    if (index == _lastLandedIndex) return;
+    final back = index < _lastLandedIndex;
+    _lastLandedIndex = index;
+    _landingBeat?.cancel();
+    _landingBeat = Timer(DT.motion.landingAfterCrossing, () {
+      if (!mounted || _currentIndex != index) return;
+      FeedbackService.instance.event(
+        FeedbackEvent.pageLanded,
+        pitch: back ? 0.80 : null,
+      );
+      if (AudioService.instance.autoSpeak.value) {
+        _speakCardDebounced(index);
+      }
+    });
   }
 
   /// Arm `success_medium` for progress step [step]: after the end of this
@@ -471,9 +469,10 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
 
   void _speakCardDebounced(int index) {
     _speakDebounce?.cancel();
-    // Small breather after the swipe settles so the word doesn't start
-    // playing while the card is still moving into place.
-    _speakDebounce = Timer(const Duration(milliseconds: 500), () {
+    // Long enough for the landing sound to clear, short enough that the
+    // word still feels like the answer to the swipe. The old 500 ms was a
+    // guess made from mid-scroll; this one is measured from the landing.
+    _speakDebounce = Timer(DT.motion.wordAfterLanding, () {
       if (!mounted) return;
       _speakCard(_cards[index]);
       if (_autoPlayTimer) _startAutoPlayCountdown();
@@ -696,10 +695,14 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                   'Enjoying ${widget.pack.title}?',
                 ),
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                // On the dialog's white card the pack colour was the
+                // headline: mint 2.0:1, sunBurst 1.3:1. The heading is
+                // charcoal (11.7:1) and the pack speaks through the icon
+                // above it and the button below.
+                style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: widget.pack.color,
+                  color: DT.textPrimary,
                 ),
               ),
               const SizedBox(height: 10),
@@ -725,8 +728,8 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                     _handleUnlock();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: widget.pack.color,
-                    foregroundColor: Colors.white,
+                    backgroundColor: DT.solid(widget.pack.color),
+                    foregroundColor: DT.surfaceWhite,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -766,6 +769,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     }
     if (!_celebrating) AudioService.instance.stop();
     _speakDebounce?.cancel();
+    _landingBeat?.cancel();
     _pageController.dispose();
     super.dispose();
   }
@@ -832,10 +836,12 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
       // The counter is the same pill as in the games: dark on white, ringed
       // in the pack colour. It used to be pack-coloured text on `DT.bgWarm`,
       // which put mint at 1.9:1 — below AA; the pill is 11.7:1 on every pack.
+      // Only the card count: the auto-play seconds used to be appended
+      // here *and* drawn on the card, and two live numbers for one timer
+      // is one too many. They now live in the `KidActionPill` on the card,
+      // next to the tap that pauses them.
       trailing: KidCountPill(
-        label: _autoPlayTimer && _countdownSeconds > 0
-            ? '${_currentIndex + 1}/${cards.length} · $_countdownSeconds'
-            : '${_currentIndex + 1}/${cards.length}',
+        label: '${_currentIndex + 1}/${cards.length}',
         semanticsLabel: s(
           'Картка ${_currentIndex + 1} з ${cards.length}',
           'Card ${_currentIndex + 1} of ${cards.length}',
@@ -859,11 +865,13 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                   onNotification: (n) {
                     if (n is ScrollStartNotification) {
                       _userSwiping = n.dragDetails != null;
+                      // A swipe means "next": cut the current word now,
+                      // not when the next one is ready to start. Waiting
+                      // let the old word run under the new card and, on a
+                      // cold load, into the start of the next word.
+                      if (_userSwiping) AudioService.instance.stop();
                     }
-                    if (n is ScrollEndNotification) {
-                      _userSwiping = false;
-                      _onPageLanded();
-                    }
+                    if (n is ScrollEndNotification) _userSwiping = false;
                     final pastEnd = n is OverscrollNotification
                         ? n.overscroll > 0
                         : n is ScrollUpdateNotification &&
@@ -908,9 +916,9 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                             .read(reviewProvider.notifier)
                             .markSeen(cards[index].id);
                       }
-                      if (AudioService.instance.autoSpeak.value) {
-                        _speakCardDebounced(index);
-                      } else if (_autoPlayTimer) {
+                      _onPageLanded(index);
+                      if (!AudioService.instance.autoSpeak.value &&
+                          _autoPlayTimer) {
                         _startAutoPlayCountdown();
                       }
                       // Last card reached
@@ -984,47 +992,22 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                 // "next card coming". Single tap pauses (toggles auto-play off).
                 if (_autoPlayTimer && _countdownSeconds > 0)
                   Positioned(
-                    top: 36,
+                    top: 20,
                     left: 0,
                     right: 0,
                     child: Center(
-                      child: GestureDetector(
+                      // Tap = pause, so the seconds live here rather than
+                      // in the header pill. White with an accent ring and
+                      // an accent-derived glyph: white-on-mint was 2.0:1,
+                      // on sunBurst 1.3:1.
+                      child: KidActionPill(
+                        label: '$_countdownSeconds',
+                        icon: Icons.pause_rounded,
+                        accent: widget.pack.color,
                         onTap: _toggleAutoPlayTimer,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: widget.pack.color,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: widget.pack.color.withValues(alpha: 0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.pause_rounded,
-                                color: Colors.white,
-                                size: 18,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                '$_countdownSeconds',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
+                        semanticsLabel: s(
+                          'Пауза, $_countdownSeconds',
+                          'Pause, $_countdownSeconds',
                         ),
                       ),
                     ),
@@ -1040,12 +1023,12 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-              color: widget.pack.color.withValues(alpha: 0.1),
+              color: PackPalette.of(widget.pack.color).tint,
               child: Row(
                 children: [
                   Icon(
                     Icons.lock_open_rounded,
-                    color: widget.pack.color,
+                    color: DT.solid(widget.pack.color),
                     size: 22,
                   ),
                   const SizedBox(width: 10),
@@ -1055,8 +1038,12 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                         'Превʼю ${cards.length} з ${allCards.length} карток',
                         'Preview ${cards.length} of ${allCards.length} cards',
                       ),
-                      style: TextStyle(
-                        color: widget.pack.color,
+                      // Pack-coloured text on a pack-coloured wash was
+                      // 1.9:1 on mint; charcoal on the tint is ≥ 8.9:1 on
+                      // every pack, and the colour stays in the icon and
+                      // the button.
+                      style: const TextStyle(
+                        color: DT.textPrimary,
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                       ),
@@ -1065,8 +1052,8 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                   ElevatedButton(
                     onPressed: _handleUnlock,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: widget.pack.color,
-                      foregroundColor: Colors.white,
+                      backgroundColor: DT.solid(widget.pack.color),
+                      foregroundColor: DT.surfaceWhite,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),

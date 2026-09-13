@@ -336,12 +336,13 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
               const SizedBox(height: 24),
 
               // Parent controls
+              // The instruction the grown-up reads out loud — the point of
+              // the screen, not a footnote. It was 16 sp of the system face
+              // in the default grey and disappeared under the picture.
               Text(
                 s('Скажи: «${card.sound}»', 'Say: «${card.sound}»'),
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
+                textAlign: TextAlign.center,
+                style: DT.h2.copyWith(color: DT.textPrimary),
               ),
               const SizedBox(height: 12),
 

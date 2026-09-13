@@ -25,39 +25,80 @@ void main() {
   useTestMotion();
 
   setUp(() {
-    AssetPackService.instance
-        .debugConfigure(padAssets: const {}, bundled: true);
+    AssetPackService.instance.debugConfigure(
+      padAssets: const {},
+      bundled: true,
+    );
   });
 
   Widget mascot() => BloomMascot(
-        size: DT.size.mascotCompanion,
-        state: const BloomState.still(
-          BloomEmotion.idle,
-          lookAt: Alignment(1, -0.2),
-        ),
-      );
+    size: DT.size.mascotCompanion,
+    state: const BloomState.still(
+      BloomEmotion.idle,
+      lookAt: Alignment(1, -0.2),
+    ),
+  );
 
-  DailyTask task(AppIcon icon, String label,
-          {required bool done, bool active = false}) =>
-      DailyTask(
-        icon: icon,
-        label: label,
-        isDone: done,
-        isActive: active,
-        onTap: () {},
-      );
+  DailyTask task(
+    AppIcon icon,
+    String label, {
+    required bool done,
+    bool active = false,
+  }) => DailyTask(
+    icon: icon,
+    label: label,
+    isDone: done,
+    isActive: active,
+    onTap: () {},
+  );
 
-  const size = Size(390, 300);
+  const size = Size(390, 420);
 
   Future<void> pumpHero(WidgetTester tester, Widget hero) => pumpGolden(
-        tester,
-        Padding(
-          padding: const EdgeInsets.all(DT.sp16),
-          child: Align(alignment: Alignment.topCenter, child: hero),
+    tester,
+    Padding(
+      padding: const EdgeInsets.all(DT.sp16),
+      child: Align(alignment: Alignment.topCenter, child: hero),
+    ),
+    size: size,
+    wrap: (host) => ProviderScope(child: host),
+  );
+
+  testWidgets('tablet invitation with artwork', (tester) async {
+    await pumpGolden(
+      tester,
+      Padding(
+        padding: const EdgeInsets.all(24),
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: DailyHeroCard(
+            title: 'Протилежності',
+            accent: Colors.purple,
+            image: 'big',
+            progress: .18,
+            onHeroTap: () {},
+            mascot: mascot(),
+            tasks: [
+              task(AppIcon.stepListen, 'Картка дня', done: true),
+              task(AppIcon.stepQuest, 'Пригода дня', done: false),
+            ],
+            isEn: false,
+          ),
         ),
-        size: size,
-        wrap: (host) => ProviderScope(child: host),
-      );
+      ),
+      size: const Size(700, 400),
+      wrap: (host) => ProviderScope(child: host),
+    );
+    await tester.runAsync(() async {
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+    });
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await expectLater(
+      find.byKey(goldenKey),
+      matchesGoldenFile('images/daily_hero_card_tablet.png'),
+    );
+  });
 
   group('DailyHeroCard', () {
     testWidgets('nothing done', (tester) async {

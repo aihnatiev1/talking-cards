@@ -12,12 +12,37 @@ import '../utils/design_tokens.dart';
 /// Kept deliberately friction-light (no PIN to forget) — the goal is to
 /// stop random toddler taps from reaching the parent area, per Apple's
 /// parental-gate guidance for kids-oriented apps.
+/// How long one solved gate keeps the parent area open.
+///
+/// A gate on every door meant a grown-up answering the same sum twice on
+/// one path: once on the ⓘ button, again on «Parent area» inside the sheet
+/// that the first gate had already opened. The point is to stop a toddler's
+/// random taps, and a toddler does not hand the tablet back and forth
+/// inside five minutes — a parent does.
+const _gateWindow = Duration(minutes: 5);
+
+DateTime? _lastPassed;
+
+/// Whether a gate solved a moment ago is still good.
+bool get parentalGateIsOpen {
+  final at = _lastPassed;
+  return at != null && DateTime.now().difference(at) < _gateWindow;
+}
+
+@visibleForTesting
+void debugResetParentalGate() => _lastPassed = null;
+
 Future<bool> showParentalGate(BuildContext context, {required bool isEn}) async {
+  if (parentalGateIsOpen) return true;
   final ok = await showDialog<bool>(
     context: context,
     builder: (_) => _ParentalGateDialog(isEn: isEn),
   );
-  return ok ?? false;
+  if (ok ?? false) {
+    _lastPassed = DateTime.now();
+    return true;
+  }
+  return false;
 }
 
 const _ukWords = [

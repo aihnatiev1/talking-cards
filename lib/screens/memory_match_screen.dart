@@ -340,7 +340,16 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
     final wanted = _difficulty.pairs;
     final playable = widget.cards.where((c) => c.audioKey != null).toList();
     // Prefer cards with audio; fall back to all cards if not enough.
-    final pool = playable.length >= wanted ? playable : widget.cards;
+    final source = playable.length >= wanted ? playable : widget.cards;
+    // One pair per illustration. The same picture lives in several packs
+    // under different card ids, and two pairs wearing the same face make a
+    // board that cannot be solved — the child turns the right card and is
+    // told no.
+    final seen = <String>{};
+    final pool = [
+      for (final c in source)
+        if (c.image == null || seen.add(c.image!)) c,
+    ];
     final pairs = min(wanted, pool.length);
     final picks = (List<CardModel>.from(
       pool,
@@ -949,35 +958,35 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
         );
         final spareW = box.maxWidth - full.width;
 
-        // Bloom always on the left: the hand reaching for the cards is
-        // usually the right one, and the counter pill is the diagonal
-        // opposite corner.
+        // The board is centred on the screen and Bloom sits in a corner —
+        // the same arrangement as Bubble Pop, and the one an eye expects.
+        //
+        // Laying them out as a row looked right on paper and wrong on a
+        // tablet: the board is sized by its own height, so the row was
+        // narrower than the screen, and centring the row pushed the board
+        // off-centre by half of Bloom. The child saw a board shoved to the
+        // right and a rabbit stranded in empty space.
         if (spareW >= _sideModeSpare) {
           final size = tablet && box.maxWidth < 900 ? 112.0 : 160.0;
-          // The board only ever grows to what its own height allows, so
-          // handing it the whole remaining width pushed it against the
-          // right edge and left Bloom marooned in empty space. Measure the
-          // board for the narrowed box and give the pair exactly the room
-          // they use, centred together.
+          // Measured against a box short by a Bloom on each side, so the
+          // centred board keeps symmetric margins and never reaches him.
           final side = _BoardMetrics.of(
-            box: Size(box.maxWidth - size - 40, box.maxHeight - 12),
+            box: Size(box.maxWidth - (size + 32) * 2, box.maxHeight - 12),
             pairs: _activePairs,
             tiles: _tiles.length,
           );
-          return Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          return Stack(
             children: [
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _bloomZone(policy, size: size),
+              Center(
+                child: SizedBox(
+                  width: side.width + 24,
+                  child: _board(tablet: tablet, beside: true),
                 ),
               ),
-              const SizedBox(width: 16),
-              SizedBox(
-                width: side.width + 24,
-                child: _board(tablet: tablet, beside: true),
+              Positioned(
+                left: 16,
+                bottom: 12,
+                child: _bloomZone(policy, size: size),
               ),
             ],
           );

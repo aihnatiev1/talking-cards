@@ -643,16 +643,27 @@ class AudioService {
 
   Future<void> speakCard(String? audioKey, String sound, String fullText) async {
     if (audioKey == null) return;
+
+    // Silence first, load second. `_getSource` reads from disk — and on
+    // Android copies the asset to temp before decoding — so a stop that
+    // waits for it leaves the previous word playing for the length of that
+    // load. Swipe through cards on a cold cache and two words speak over
+    // each other; the child hears neither. Claiming the generation here
+    // also means a load that loses the race cannot start its word at all.
+    // Silence first, then claim the generation — `stop()` bumps it too, so
+    // claiming before would hand this call a number that is already stale
+    // and every word would abandon itself on the line below.
+    stop();
+    final gen = _speakGeneration;
+
     final source = await _getSource(audioKey);
     if (source == null) {
       if (kDebugMode) debugPrint('AudioService: no source for "$audioKey"');
       return;
     }
+    if (_speakGeneration != gen) return;
 
-    final gen = ++_speakGeneration;
     try {
-      // Stop previous sound before playing new one
-      stop();
       isSpeaking.value = true;
       _currentHandle = await _soloud.play(source);
       final handle = _currentHandle;
@@ -708,12 +719,18 @@ class AudioService {
     // No TTS fallback: if there's no recorded audio for this card, stay
     // silent (user opted out of TTS entirely).
     if (audioKey == null) return;
+
+    // Same order as [speakCard]: silence first, load second. A stop that
+    // waits on the disk read lets the previous word keep playing through
+    // it, and two words speak at once.
+    stop();
+    final gen = _speakGeneration;
+
     final source = await _getSource(audioKey);
     if (source == null) return;
+    if (_speakGeneration != gen) return;
 
-    final gen = ++_speakGeneration;
     try {
-      stop();
       isSpeaking.value = true;
       _currentHandle = await _soloud.play(source);
       final handle = _currentHandle;
@@ -1001,6 +1018,12 @@ class AudioService {
   SoundHandle? _currentHandle;
 
   void stop() {
+    // Bumping the generation is the half that was missing: `stop()` only
+    // ever silenced what was already playing, so a `speakCard` still
+    // waiting on its disk read sailed past it and started speaking after.
+    // That is why leaving a pack kept talking into the menu — dispose
+    // called stop, the pending load did not care.
+    _speakGeneration++;
     if (_currentHandle != null) {
       _soloud.stop(_currentHandle!);
       _currentHandle = null;

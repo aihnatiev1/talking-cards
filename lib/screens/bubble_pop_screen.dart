@@ -851,7 +851,12 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
 
     setState(() {
       _mode = newMode;
-      _pool = pool;
+      // One bubble per illustration. The same picture lives in several
+      // packs under different card ids, so a bag that only avoided
+      // repeating an *id* floated the same rocket four times in one round
+      // — a child does not see ids. With 400+ pictures there is no reason
+      // to ever show one twice.
+      _pool = _byPicture(pool);
       _targetPool = targets;
       _tuning = tuning;
     });
@@ -1289,6 +1294,16 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
       at: Offset(bloom.left + bloom.width * 0.1, bloom.top),
     );
     _population.value++;
+  }
+
+  /// One card per illustration, keeping the first of each picture. Cards
+  /// without art keep their own identity — they have nothing to repeat.
+  static List<CardModel> _byPicture(List<CardModel> cards) {
+    final seen = <String>{};
+    return [
+      for (final c in cards)
+        if (c.image == null || seen.add(c.image!)) c,
+    ];
   }
 
   /// Next card from the shuffle-bag: no repeats until [_pool] is exhausted.

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -43,6 +44,10 @@ class FlashCard extends ConsumerStatefulWidget {
 
 class FlashCardState extends ConsumerState<FlashCard>
     with TickerProviderStateMixin {
+  /// Holds the word back until the tap transient has finished (see the
+  /// tap handler). Cancelled on dispose so a card left mid-tap is silent.
+  Timer? _speakDelay;
+
   late final AnimationController _entranceCtrl;
   late final Animation<double> _entranceAnim;
 
@@ -90,6 +95,7 @@ class FlashCardState extends ConsumerState<FlashCard>
 
   @override
   void dispose() {
+    _speakDelay?.cancel();
     _entranceCtrl.dispose();
     _flipCtrl.dispose();
     super.dispose();
@@ -133,11 +139,19 @@ class FlashCardState extends ConsumerState<FlashCard>
             _toggleFlip();
           } else {
             AnalyticsService.instance.logCardListen(widget.card.id);
-            AudioService.instance.speakCard(
-              widget.card.audioKey,
-              widget.card.sound,
-              widget.card.text,
-            );
+            // `card_touch` already fired on pointer down. Let its 30 ms
+            // transient clear before the word starts: on top of the first
+            // consonant it does not read as two sounds, it reads as a
+            // word that begins badly.
+            _speakDelay?.cancel();
+            _speakDelay = Timer(DT.motion.wordAfterTap, () {
+              if (!mounted) return;
+              AudioService.instance.speakCard(
+                widget.card.audioKey,
+                widget.card.sound,
+                widget.card.text,
+              );
+            });
           }
         },
         // Favourite = long-press on the card itself. The 56dp heart in the
