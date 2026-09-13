@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../utils/app_icons.dart';
-import '../utils/constants.dart';
 import '../utils/design_tokens.dart';
 import 'ambient_loop.dart';
 import 'kid_tap.dart';
@@ -45,7 +44,7 @@ class StreakChip extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  kStreakOrange.withValues(alpha: 0.95),
+                  DT.streakOrange.withValues(alpha: 0.95),
                   DT.coral,
                 ],
                 begin: Alignment.topLeft,
@@ -54,7 +53,7 @@ class StreakChip extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: kStreakOrange.withValues(alpha: glow),
+                  color: DT.streakOrange.withValues(alpha: glow),
                   blurRadius: 10 + 4 * t,
                   spreadRadius: 1 + 0.5 * t,
                 ),

@@ -10,7 +10,7 @@ import '../services/audio_service.dart';
 import '../services/engage_service.dart';
 import '../services/remote_config_service.dart';
 import '../services/widget_service.dart';
-import '../utils/constants.dart';
+import '../utils/design_tokens.dart';
 import '../utils/guarded_init.dart';
 import '../utils/kid_routes.dart';
 import '../services/notification_service.dart';
@@ -255,7 +255,7 @@ class _SplashScreenState extends State<SplashScreen>
                   height: 32,
                   child: CircularProgressIndicator(
                     strokeWidth: 3,
-                    color: kAccent,
+                    color: DT.brand,
                   ),
                 ),
               ],

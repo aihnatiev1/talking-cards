@@ -17,7 +17,6 @@ import '../services/paywall_flow.dart';
 import '../services/remote_config_service.dart';
 import '../utils/app_startup.dart';
 import '../utils/confetti_overlay_mixin.dart';
-import '../utils/constants.dart';
 import '../utils/design_tokens.dart';
 import '../utils/kid_routes.dart';
 import '../widgets/ambient_loop.dart';
@@ -217,8 +216,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   height: 8,
                   decoration: BoxDecoration(
                     color: i == _page
-                        ? kAccent
-                        : kAccent.withValues(alpha: 0.2),
+                        ? DT.brand
+                        : DT.brand.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 )),
@@ -250,7 +249,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       child: ElevatedButton(
                         onPressed: _canProceed ? () {} : null,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: kAccent,
+                          backgroundColor: DT.brand,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
@@ -368,11 +367,11 @@ class _ChildSetupPage extends StatelessWidget {
                   duration: const Duration(milliseconds: 150),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? kAccent.withValues(alpha: 0.15)
+                        ? DT.brand.withValues(alpha: 0.15)
                         : Colors.grey.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
                     border: isSelected
-                        ? Border.all(color: kAccent, width: 2)
+                        ? Border.all(color: DT.brand, width: 2)
                         : null,
                   ),
                   child: Center(
@@ -506,11 +505,11 @@ class _AgeCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
         decoration: BoxDecoration(
           color: selected
-              ? kAccent.withValues(alpha: 0.1)
+              ? DT.brand.withValues(alpha: 0.1)
               : Colors.grey.withValues(alpha: 0.07),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: selected ? kAccent : Colors.grey.shade300,
+            color: selected ? DT.brand : Colors.grey.shade300,
             width: selected ? 2.5 : 1.5,
           ),
         ),
@@ -522,7 +521,7 @@ class _AgeCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: responsiveFont(context, 36),
                 fontWeight: FontWeight.w900,
-                color: selected ? kAccent : const Color(0xFF3F3635),
+                color: selected ? DT.brand : const Color(0xFF3F3635),
                 height: 1.0,
               ),
             ),
@@ -533,14 +532,14 @@ class _AgeCard extends StatelessWidget {
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: selected
-                    ? kAccent.withValues(alpha: 0.8)
+                    ? DT.brand.withValues(alpha: 0.8)
                     : Colors.grey[600],
               ),
             ),
             if (selected) ...[
               const SizedBox(height: 6),
               const Icon(Icons.check_circle_rounded,
-                  color: kAccent, size: 20),
+                  color: DT.brand, size: 20),
             ],
           ],
         ),
@@ -707,7 +706,7 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
   @override
   Widget build(BuildContext context) {
     if (!_ready) {
-      return const Center(child: CircularProgressIndicator(color: kAccent));
+      return const Center(child: CircularProgressIndicator(color: DT.brand));
     }
 
     return _buildContent();
@@ -954,9 +953,9 @@ class _ProgressDots extends StatelessWidget {
         final done = i < current;
         final active = i == current;
         final color = done
-            ? kAccent.withValues(alpha: 0.6)
+            ? DT.brand.withValues(alpha: 0.6)
             : active
-                ? kAccent
+                ? DT.brand
                 : Colors.grey.withValues(alpha: 0.3);
         return AnimatedContainer(
           key: ValueKey('mm-dot-$i'),

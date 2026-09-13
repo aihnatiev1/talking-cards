@@ -5,7 +5,7 @@ import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/notification_service.dart';
-import '../utils/constants.dart';
+import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 
 /// Asks the parent about daily reminders — once, in the app, with a reason.
@@ -95,7 +95,7 @@ class _NotificationOptInDialog extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(true),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: kAccent,
+                  backgroundColor: DT.brand,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(

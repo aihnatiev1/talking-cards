@@ -35,7 +35,6 @@ import '../services/paywall_flow.dart';
 import '../services/profile_service.dart';
 import '../services/purchase_service.dart';
 import '../services/widget_service.dart';
-import '../utils/constants.dart';
 import '../utils/app_icons.dart';
 import '../utils/design_tokens.dart';
 import '../utils/kid_routes.dart';
@@ -774,7 +773,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                     ),
                     label: Text(sErr('Спробувати ще раз', 'Try again')),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: kAccent,
+                      backgroundColor: DT.brand,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 24,
@@ -862,7 +861,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
               id: '_favorites',
               title: s('Улюблені', 'Favorites'),
               icon: '❤️',
-              color: kStreakOrange,
+              color: DT.streakOrange,
               isLocked: false,
               isFree: true,
               cards: favCards,
@@ -1226,12 +1225,12 @@ class _TreasureBoxBanner extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [kAccent.withValues(alpha: 0.92), kTeal],
+              colors: [DT.brand.withValues(alpha: 0.92), DT.teal],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(18),
-            boxShadow: DT.shadowSoft(kAccent),
+            boxShadow: DT.shadowSoft(DT.brand),
           ),
           child: Row(
             children: [
@@ -1347,7 +1346,7 @@ class _CategoryChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(
           color: selected
-              ? kAccent
+              ? DT.brand
               : dark
               ? Colors.white.withValues(alpha: 0.10)
               : Colors.grey.withValues(alpha: 0.18),

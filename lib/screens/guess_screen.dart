@@ -14,7 +14,7 @@ import '../providers/weak_words_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../services/feedback_service.dart';
-import '../utils/constants.dart';
+import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../widgets/ambient_loop.dart';
 import '../widgets/answer_feedback.dart';
@@ -210,7 +210,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
     super.dispose();
   }
 
-  static const _accent = kAccent;
+  static const _accent = DT.brand;
 
   @override
   Widget build(BuildContext context) {

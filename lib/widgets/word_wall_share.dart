@@ -5,7 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../models/card_model.dart';
-import '../utils/constants.dart';
+import '../utils/design_tokens.dart';
 import 'card_image.dart';
 import 'share_progress_card.dart' show renderWidgetToImage;
 
@@ -93,7 +93,7 @@ class WordWallShareContent extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [kAccent, kTeal],
+          colors: [DT.brand, DT.teal],
         ),
         borderRadius: BorderRadius.circular(24),
       ),

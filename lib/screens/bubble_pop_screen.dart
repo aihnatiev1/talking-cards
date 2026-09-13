@@ -15,7 +15,6 @@ import '../providers/weak_words_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../services/feedback_service.dart';
-import '../utils/constants.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../widgets/card_image.dart';
@@ -510,7 +509,7 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     // Shell: close top-left, wordless fill-up pill under the header, the
     // count as the one piece of text a three-year-old can already read.
     return KidScreen.game(
-      accent: kAccent,
+      accent: DT.brand,
       background: DT.skyTint,
       progress: (_popped / _kRoundTargetPops).clamp(0.0, 1.0),
       trailing: _CountPill(popped: _popped, target: _kRoundTargetPops),
@@ -586,7 +585,7 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
                   child: _PraiseFlash(
                     key: ValueKey(_praiseSeq),
                     text: _praise!,
-                    color: kAccent,
+                    color: DT.brand,
                     onDone: () {
                       if (mounted) setState(() => _praise = null);
                     },
@@ -930,9 +929,9 @@ class _CountPill extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: kAccent,
+            color: DT.brand,
             borderRadius: BorderRadius.circular(20),
-            boxShadow: DT.shadowSoft(kAccent),
+            boxShadow: DT.shadowSoft(DT.brand),
           ),
           child: Text(
             '$popped/$target',

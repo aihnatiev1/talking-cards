@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../utils/constants.dart';
+import '../utils/design_tokens.dart';
 
 /// Simple parental gate: an addition question written in WORDS (so a
 /// pre-reading child can't parse it) answered on a numeric keypad.
@@ -106,7 +106,7 @@ class _ParentalGateDialogState extends State<_ParentalGateDialog> {
               style: const TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.w900,
-                color: kAccent,
+                color: DT.brand,
                 letterSpacing: 4,
               ),
             ),
@@ -147,7 +147,7 @@ class _ParentalGateDialogState extends State<_ParentalGateDialog> {
         height: 56,
         child: TextButton(
           style: TextButton.styleFrom(
-            backgroundColor: kAccent.withValues(alpha: 0.08),
+            backgroundColor: DT.brand.withValues(alpha: 0.08),
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14)),
           ),
@@ -157,7 +157,7 @@ class _ParentalGateDialogState extends State<_ParentalGateDialog> {
             style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: kAccent,
+              color: DT.brand,
             ),
           ),
         ),

@@ -128,16 +128,20 @@ void main() {
     });
   });
 
-  test('constants.dart only aliases DT', () {
-    // kAccent & co. predate DT and are read at ~130 call sites. They stay as
-    // names, but the values must come from DT so the brand indigo has one
-    // definition — not one in the theme seed and another in a chip.
-    final source = File('lib/utils/constants.dart').readAsStringSync();
-    expect(source, isNot(contains('Color(0x')),
-        reason: 'constants.dart is legacy aliases only: `const kAccent = '
-            'DT.brand;`. Define new colours in DT.');
-    expect(source, contains('DT.'),
-        reason: 'Aliases must resolve to DT tokens.');
+  test('constants.dart is gone and nothing spells its aliases', () {
+    // kAccent & co. were legacy aliases of DT tokens (road-to-9 F1: "влити
+    // constants.dart у DT"). One name per colour now — a second spelling
+    // is where a second value creeps in.
+    expect(File('lib/utils/constants.dart').existsSync(), isFalse);
+    final offenders = [
+      for (final f in Directory('lib').listSync(recursive: true))
+        if (f is File &&
+            f.path.endsWith('.dart') &&
+            RegExp(r'\b(kAccent|kSoundRed|kTeal|kStreakOrange)\b')
+                .hasMatch(f.readAsStringSync()))
+          f.path,
+    ];
+    expect(offenders, isEmpty, reason: 'Use DT.brand / DT.soundRed / DT.teal / DT.streakOrange.');
   });
 
   test('main.dart takes its theme from app_theme.dart', () {

@@ -7,7 +7,7 @@ import '../providers/packs_provider.dart';
 import '../providers/streak_provider.dart';
 import '../screens/cards_screen.dart';
 import '../screens/rewards_screen.dart';
-import '../utils/constants.dart';
+import '../utils/design_tokens.dart';
 import '../utils/kid_routes.dart';
 import '../utils/l10n.dart';
 import '../utils/uk_grammar.dart';
@@ -32,7 +32,7 @@ class StatsScreen extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: kAccent),
+          icon: const Icon(Icons.arrow_back_ios, color: DT.brand),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
@@ -42,7 +42,7 @@ class StatsScreen extends ConsumerWidget {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.share_rounded, color: kAccent),
+            icon: const Icon(Icons.share_rounded, color: DT.brand),
             onPressed: () {
               final packs = packsAsync.valueOrNull ?? [];
               shareProgress(
@@ -85,7 +85,7 @@ class StatsScreen extends ConsumerWidget {
                       vertical: 20, horizontal: 20),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [kAccent, kTeal],
+                      colors: [DT.brand, DT.teal],
                     ),
                     borderRadius: BorderRadius.circular(20),
                   ),
@@ -166,11 +166,11 @@ class StatsScreen extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     decoration: BoxDecoration(
                       color:
-                          kAccent.withValues(alpha: 0.1),
+                          DT.brand.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color:
-                            kAccent.withValues(alpha: 0.2),
+                            DT.brand.withValues(alpha: 0.2),
                       ),
                     ),
                     child: Column(
@@ -183,7 +183,7 @@ class StatsScreen extends ConsumerWidget {
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: kAccent,
+                            color: DT.brand,
                           ),
                         ),
                         Text(

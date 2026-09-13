@@ -10,7 +10,6 @@ import '../providers/profile_provider.dart';
 import '../services/audio_service.dart';
 import '../services/feedback_service.dart';
 import '../utils/game_state_mixin.dart';
-import '../utils/constants.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../widgets/answer_feedback.dart';
@@ -164,7 +163,7 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
 
     // No text title — the ↔️ row under the question card is the prompt.
     return KidScreen.game(
-      accent: kAccent,
+      accent: DT.brand,
       background: DT.violetTint,
       body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),

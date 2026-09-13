@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/streak_provider.dart';
 import '../providers/language_provider.dart';
-import '../utils/constants.dart';
+import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../utils/uk_grammar.dart';
 import '../widgets/kid_screen.dart';
@@ -11,7 +11,7 @@ import '../widgets/kid_screen.dart';
 class RewardsScreen extends ConsumerWidget {
   const RewardsScreen({super.key});
 
-  static const _accent = kAccent;
+  static const _accent = DT.brand;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -182,12 +182,12 @@ class _BonusCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: earned
-            ? kTeal.withValues(alpha: 0.15)
+            ? DT.teal.withValues(alpha: 0.15)
             : Colors.grey.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: earned
-              ? kTeal.withValues(alpha: 0.3)
+              ? DT.teal.withValues(alpha: 0.3)
               : Colors.grey.withValues(alpha: 0.15),
         ),
       ),

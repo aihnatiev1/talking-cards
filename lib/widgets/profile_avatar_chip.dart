@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/profile_provider.dart';
 import '../screens/profile_selector_screen.dart';
-import '../utils/constants.dart';
+import '../utils/design_tokens.dart';
 
 /// Tappable avatar chip shown in the HomeScreen top bar.
 /// Displays active profile emoji + name; opens profile selector on tap.
@@ -25,10 +25,10 @@ class ProfileAvatarChip extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: kAccent.withValues(alpha: 0.1),
+          color: DT.brand.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-              color: kAccent.withValues(alpha: 0.25), width: 1),
+              color: DT.brand.withValues(alpha: 0.25), width: 1),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -46,13 +46,13 @@ class ProfileAvatarChip extends ConsumerWidget {
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: kAccent,
+                  color: DT.brand,
                 ),
               ),
             ],
             const SizedBox(width: 3),
             const Icon(Icons.keyboard_arrow_down_rounded,
-                size: 16, color: kAccent),
+                size: 16, color: DT.brand),
           ],
         ),
       ),

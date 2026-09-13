@@ -8,7 +8,6 @@ import '../providers/packs_provider.dart';
 import '../providers/profile_provider.dart';
 import '../providers/srs_provider.dart';
 import '../services/audio_service.dart';
-import '../utils/constants.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../widgets/bloom_mascot.dart';
@@ -46,7 +45,7 @@ class _KidWordWallScreenState extends ConsumerState<KidWordWallScreen> {
     // No text title: the body's own header greets the child by name and
     // shows the count — that is the "Treasure box" a non-reader gets.
     return KidScreen(
-      accent: kAccent,
+      accent: DT.brand,
       body: packsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, __) =>
@@ -171,7 +170,7 @@ class _Header extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [kAccent, kTeal],
+          colors: [DT.brand, DT.teal],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

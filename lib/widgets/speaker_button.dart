@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/audio_service.dart';
 import '../services/feedback_service.dart';
 import '../utils/app_icons.dart';
-import '../utils/constants.dart';
+import '../utils/design_tokens.dart';
 import 'ambient_loop.dart';
 import 'kid_tap.dart';
 
@@ -15,8 +15,8 @@ class SpeakerButton extends StatelessWidget {
 
   const SpeakerButton({super.key, this.onActivated});
 
-  static const _onColor = kTeal;
-  static const _offColor = kSoundRed;
+  static const _onColor = DT.teal;
+  static const _offColor = DT.soundRed;
 
   @override
   Widget build(BuildContext context) {

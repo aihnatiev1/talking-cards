@@ -11,7 +11,7 @@ import '../services/paywall_flow.dart';
 import '../services/analytics_service.dart';
 import '../services/whatsnew_service.dart';
 import '../utils/app_startup.dart';
-import '../utils/constants.dart';
+import '../utils/design_tokens.dart';
 import '../utils/kid_routes.dart';
 import '../utils/l10n.dart';
 import '../utils/motion.dart';
@@ -238,7 +238,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 child: ElevatedButton(
                   onPressed: () => Navigator.of(ctx).pop(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: kAccent,
+                    backgroundColor: DT.brand,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(

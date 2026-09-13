@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../utils/constants.dart';
+import '../utils/design_tokens.dart';
 
 class WhatsNewService {
   WhatsNewService._();
@@ -99,7 +99,7 @@ class _WhatsNewSheet extends StatelessWidget {
             child: ElevatedButton(
               onPressed: () => Navigator.of(context).pop(),
               style: ElevatedButton.styleFrom(
-                backgroundColor: kAccent,
+                backgroundColor: DT.brand,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16)),

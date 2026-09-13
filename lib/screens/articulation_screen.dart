@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/language_provider.dart';
-import '../utils/constants.dart';
 import '../utils/design_tokens.dart';
 import '../utils/kid_routes.dart';
 import '../utils/l10n.dart';
@@ -188,7 +187,7 @@ class ArticulationScreen extends ConsumerWidget {
     // The header carries no text; the exercise names are read by a parent,
     // so they live in the body as content.
     return KidScreen(
-      accent: kAccent,
+      accent: DT.brand,
       background: DT.violetTint,
       body: Column(
         children: [
@@ -259,10 +258,10 @@ class _ExerciseCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: kAccent.withValues(alpha: 0.05),
+          color: DT.brand.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-              color: kAccent.withValues(alpha: 0.15), width: 1.5),
+              color: DT.brand.withValues(alpha: 0.15), width: 1.5),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -285,7 +284,7 @@ class _ExerciseCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: kAccent.withValues(alpha: 0.1),
+                          color: DT.brand.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -293,7 +292,7 @@ class _ExerciseCard extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            color: kAccent,
+                            color: DT.brand,
                           ),
                         ),
                       ))
@@ -437,7 +436,7 @@ class _ExercisePlayerScreenState extends State<_ExercisePlayerScreen>
     final name = widget.isEn ? widget.exercise.nameEn : widget.exercise.name;
 
     return KidScreen.game(
-      accent: kAccent,
+      accent: DT.brand,
       background: DT.violetTint,
       progress: _maxReps == 0 ? null : _reps / _maxReps,
       body: Padding(
@@ -453,7 +452,7 @@ class _ExercisePlayerScreenState extends State<_ExercisePlayerScreen>
                 padding: const EdgeInsets.symmetric(
                     horizontal: 14, vertical: 6),
                 decoration: BoxDecoration(
-                  color: kAccent.withValues(alpha: 0.1),
+                  color: DT.brand.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -462,7 +461,7 @@ class _ExercisePlayerScreenState extends State<_ExercisePlayerScreen>
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 12,
-                    color: kAccent,
+                    color: DT.brand,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -491,7 +490,7 @@ class _ExercisePlayerScreenState extends State<_ExercisePlayerScreen>
                     width: done ? 22 : 10,
                     height: 10,
                     decoration: BoxDecoration(
-                      color: done ? kAccent : kAccent.withValues(alpha: 0.2),
+                      color: done ? DT.brand : DT.brand.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(5),
                     ),
                   );
@@ -514,12 +513,12 @@ class _ExercisePlayerScreenState extends State<_ExercisePlayerScreen>
                           horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
                         color: isCurrent
-                            ? kAccent.withValues(alpha: 0.12)
+                            ? DT.brand.withValues(alpha: 0.12)
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
                           color: isCurrent
-                              ? kAccent.withValues(alpha: 0.4)
+                              ? DT.brand.withValues(alpha: 0.4)
                               : Colors.transparent,
                           width: 1.5,
                         ),
@@ -534,7 +533,7 @@ class _ExercisePlayerScreenState extends State<_ExercisePlayerScreen>
                               color: isDone
                                   ? const Color(0xFF43A047)
                                   : isCurrent
-                                      ? kAccent
+                                      ? DT.brand
                                       : Colors.grey[300],
                             ),
                             child: Center(
@@ -581,10 +580,10 @@ class _ExercisePlayerScreenState extends State<_ExercisePlayerScreen>
                                   value: _holdCtrl.value,
                                   strokeWidth: 4,
                                   backgroundColor:
-                                      kAccent.withValues(alpha: 0.2),
+                                      DT.brand.withValues(alpha: 0.2),
                                   valueColor:
                                       const AlwaysStoppedAnimation<Color>(
-                                          kAccent),
+                                          DT.brand),
                                 ),
                               ),
                             ),
@@ -604,9 +603,9 @@ class _ExercisePlayerScreenState extends State<_ExercisePlayerScreen>
                   child: ElevatedButton(
                     onPressed: _isLastStep && _holding ? null : _nextStep,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: kAccent,
+                      backgroundColor: DT.brand,
                       disabledBackgroundColor:
-                          kAccent.withValues(alpha: 0.3),
+                          DT.brand.withValues(alpha: 0.3),
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20)),
@@ -669,7 +668,7 @@ class _ExercisePlayerScreenState extends State<_ExercisePlayerScreen>
                           _holdCtrl.reset();
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: kAccent,
+                          backgroundColor: DT.brand,
                           foregroundColor: Colors.white,
                           padding:
                               const EdgeInsets.symmetric(vertical: 14),

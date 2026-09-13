@@ -13,7 +13,6 @@ import '../providers/streak_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/weak_words_provider.dart';
 import '../screens/profile_selector_screen.dart';
-import '../utils/constants.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../widgets/activity_chart.dart';
@@ -141,7 +140,7 @@ class _OverviewTab extends ConsumerWidget {
             value: isEn
                 ? '${streak.currentStreak} d.'
                 : '${streak.currentStreak} дн.',
-            color: kStreakOrange,
+            color: DT.streakOrange,
           ),
           _StatCard(
             emoji: '📚',
@@ -149,7 +148,7 @@ class _OverviewTab extends ConsumerWidget {
             value: isEn
                 ? '$wordsSeenTotal ${wordsSeenTotal == 1 ? 'card' : 'cards'}'
                 : '$wordsSeenTotal карток',
-            color: kAccent,
+            color: DT.brand,
           ),
         ]),
         const SizedBox(height: 12),
@@ -164,7 +163,7 @@ class _OverviewTab extends ConsumerWidget {
             emoji: '📅',
             label: s('Активних днів', 'Active days'),
             value: '$activeDays',
-            color: kTeal,
+            color: DT.teal,
           ),
         ]),
         const SizedBox(height: 24),
@@ -211,7 +210,7 @@ class _OverviewTab extends ConsumerWidget {
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: kAccent.withValues(alpha: 0.1),
+                    color: DT.brand.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(e, style: const TextStyle(fontSize: 24)),
@@ -335,7 +334,7 @@ class _RateAppTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: kAccent.withValues(alpha: 0.06),
+      color: DT.brand.withValues(alpha: 0.06),
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
@@ -576,7 +575,7 @@ class _WordWallHeader extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [kAccent, kTeal],
+          colors: [DT.brand, DT.teal],
         ),
         borderRadius: BorderRadius.circular(20),
       ),
@@ -630,7 +629,7 @@ class _WordWallHeader extends StatelessWidget {
             label: Text(isEn ? 'Share' : 'Поділитись'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
-              foregroundColor: kAccent,
+              foregroundColor: DT.brand,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
@@ -853,7 +852,7 @@ class _GamesTab extends ConsumerWidget {
                     emoji: '🎮',
                     label: s('Всього сесій', 'Total sessions'),
                     value: '$totalPlays',
-                    color: kAccent,
+                    color: DT.brand,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -896,12 +895,12 @@ class _GameStatRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: hasPlays
-              ? kAccent.withValues(alpha: 0.05)
+              ? DT.brand.withValues(alpha: 0.05)
               : Colors.grey.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: hasPlays
-                ? kAccent.withValues(alpha: 0.15)
+                ? DT.brand.withValues(alpha: 0.15)
                 : Colors.grey.withValues(alpha: 0.12),
           ),
         ),
@@ -931,7 +930,7 @@ class _GameStatRow extends StatelessWidget {
                     style: TextStyle(
                       fontSize: responsiveFont(context, 13),
                       fontWeight: FontWeight.w700,
-                      color: kAccent,
+                      color: DT.brand,
                     ),
                   ),
                   if (stat.bestScore > 0)

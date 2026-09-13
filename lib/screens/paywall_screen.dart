@@ -9,7 +9,6 @@ import '../providers/srs_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/purchase_service.dart';
 import '../services/remote_config_service.dart';
-import '../utils/constants.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../utils/uk_grammar.dart';
@@ -366,7 +365,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              kAccent.withValues(alpha: 0.06),
+              DT.brand.withValues(alpha: 0.06),
               Theme.of(context).scaffoldBackgroundColor,
             ],
           ),
@@ -510,7 +509,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               borderRadius: BorderRadius.circular(22),
               boxShadow: [
                 BoxShadow(
-                  color: kAccent.withValues(alpha: 0.35),
+                  color: DT.brand.withValues(alpha: 0.35),
                   blurRadius: 18,
                   offset: const Offset(0, 6),
                 ),
@@ -521,7 +520,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   ? null
                   : (_storeReady! ? _purchase : _loadStore),
               style: ElevatedButton.styleFrom(
-                backgroundColor: kAccent,
+                backgroundColor: DT.brand,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 shape: RoundedRectangleBorder(
@@ -657,7 +656,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   Widget _planTile(int index, List<_Plan> plans) {
     final plan = plans[index];
     final selected = plan.productId == _selectedProductId;
-    const tileColor = kAccent;
+    const tileColor = DT.brand;
 
     return GestureDetector(
       onTap: () {
@@ -811,12 +810,12 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            kAccent.withValues(alpha: 0.18),
+            DT.brand.withValues(alpha: 0.18),
             const Color(0xFFF9A825).withValues(alpha: 0.18),
           ],
         ),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: kAccent.withValues(alpha: 0.30), width: 1.5),
+        border: Border.all(color: DT.brand.withValues(alpha: 0.30), width: 1.5),
       ),
       child: Column(
         children: [
@@ -844,7 +843,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
             style: TextStyle(
               fontSize: responsiveFont(context, 24),
               fontWeight: FontWeight.w900,
-              color: kAccent,
+              color: DT.brand,
               letterSpacing: 0.5,
             ),
           ),
@@ -983,10 +982,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           width: 34,
           height: 34,
           decoration: BoxDecoration(
-            color: kAccent.withValues(alpha: 0.12),
+            color: DT.brand.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, color: kAccent, size: 18),
+          child: Icon(icon, color: DT.brand, size: 18),
         ),
         const SizedBox(width: 12),
         Expanded(

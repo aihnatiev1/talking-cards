@@ -87,6 +87,9 @@ class DailyHeroCard extends StatelessWidget {
 
     final hero = KidTap(
       onTap: onHeroTap,
+      // CardsScreen plays pack_open on entry; a tap here too is two sounds
+      // for one gesture.
+      sound: null,
       child: SizedBox(
         height: heroHeight,
         child: Row(

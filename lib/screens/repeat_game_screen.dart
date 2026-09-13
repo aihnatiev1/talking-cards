@@ -11,7 +11,6 @@ import '../providers/profile_provider.dart';
 import '../services/audio_service.dart';
 import '../services/feedback_service.dart';
 import '../utils/confetti_overlay_mixin.dart';
-import '../utils/constants.dart';
 import '../utils/design_tokens.dart';
 import '../utils/game_state_mixin.dart';
 import '../utils/app_icons.dart';
@@ -205,7 +204,7 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
     // No text title — "Repeat after me" is the parent's cue, and it is
     // already on the card ("Say: …"). Progress is the shell's pill.
     return KidScreen.game(
-      accent: kAccent,
+      accent: DT.brand,
       background: DT.mintTint,
       progress: _deck.isEmpty ? null : _index / _deck.length,
       body: Padding(
@@ -328,8 +327,8 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
                       label: s('Ще раз', 'Again'),
                       icon: AppIcon.replay,
                       background: DT.surfaceWhite,
-                      foreground: kAccent,
-                      border: kAccent.withValues(alpha: 0.35),
+                      foreground: DT.brand,
+                      border: DT.brand.withValues(alpha: 0.35),
                       enabled: !_answered,
                       onTap: _onWrong,
                     ),

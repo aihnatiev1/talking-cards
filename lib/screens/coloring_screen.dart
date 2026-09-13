@@ -15,7 +15,6 @@ import '../services/audio_service.dart';
 import '../services/feedback_service.dart';
 import '../services/paywall_flow.dart';
 import '../utils/confetti_overlay_mixin.dart';
-import '../utils/constants.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../services/asset_pack_service.dart';
@@ -406,7 +405,7 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
 
     // No text title: the finger on the picture is the whole instruction.
     return KidScreen.game(
-      accent: kAccent,
+      accent: DT.brand,
       background: DT.violetTint,
       body: _paywallGated
           ? _PaywallGate(
@@ -415,7 +414,7 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
           : _contentUnavailable
           ? ContentDownloadView(
               state: ref.watch(contentPackProvider),
-              accent: kAccent,
+              accent: DT.brand,
               isEn: isEn,
             )
           : card == null
@@ -855,7 +854,7 @@ class _PaywallGate extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(22),
                 boxShadow: [
                   BoxShadow(
-                    color: kAccent.withValues(alpha: 0.35),
+                    color: DT.brand.withValues(alpha: 0.35),
                     blurRadius: 16,
                     offset: const Offset(0, 5),
                   ),
@@ -866,7 +865,7 @@ class _PaywallGate extends ConsumerWidget {
                 icon: const Text('💎', style: TextStyle(fontSize: 18)),
                 label: Text(s('Розблокувати', 'Unlock')),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: kAccent,
+                  backgroundColor: DT.brand,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(
                       horizontal: 28, vertical: 14),

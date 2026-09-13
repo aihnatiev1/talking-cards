@@ -36,11 +36,11 @@ class DT {
 
   // ── Brand ───────────────────────────────────
   /// Indigo seed of the Material colour scheme and the parent-zone accent.
-  /// Formerly `kAccent` in constants.dart; those names are now aliases.
+  /// Formerly `DT.brand` in constants.dart; those names are now aliases.
   static const brand = Color(0xFF6C63FF);
-  static const teal = Color(0xFF4ECDC4); // formerly kTeal
-  static const soundRed = Color(0xFFD63031); // formerly kSoundRed
-  static const streakOrange = Color(0xFFE17055); // formerly kStreakOrange
+  static const teal = Color(0xFF4ECDC4); // formerly DT.teal
+  static const soundRed = Color(0xFFD63031); // formerly DT.soundRed
+  static const streakOrange = Color(0xFFE17055); // formerly DT.streakOrange
 
   // ── Brand accents ───────────────────────────
   static const coral = Color(0xFFFF6B6B);
