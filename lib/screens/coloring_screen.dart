@@ -21,6 +21,7 @@ import '../utils/l10n.dart';
 import '../utils/motion.dart';
 import '../services/asset_pack_service.dart';
 import '../widgets/content_download_view.dart';
+import '../widgets/bloom_mascot.dart';
 import '../widgets/kid_screen.dart';
 import '../widgets/kid_tap.dart';
 
@@ -454,6 +455,22 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
     _pickCardAndLoad();
   }
 
+  /// The word Bloom says when a picture is finished.
+  ///
+  /// Chosen from the picture's own id, not at random: the same picture
+  /// always earns the same word, so a child who comes back to the fish
+  /// hears the fish's praise again — and across pictures it still varies.
+  String _praise(AppS s, String cardId) {
+    final words = [
+      s('Молодець!', 'Well done!'),
+      s('Круто!', 'Awesome!'),
+      s('Так тримати!', 'Keep it up!'),
+      s('Гарно!', 'Lovely!'),
+      s('Ого!', 'Wow!'),
+    ];
+    return words[cardId.hashCode.abs() % words.length];
+  }
+
   // ─────────────────────────────────────────────
   //  UI
   // ─────────────────────────────────────────────
@@ -579,19 +596,16 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
                             .animate(a),
                         child: FadeTransition(opacity: a, child: w),
                       ),
-                      child: _done
-                          ? _DoneBar(
-                              key: ValueKey(card.id),
-                              word: card.sound,
-                              accent: card.colorAccent,
-                              onNext: _next,
-                              label: s('Нова картинка', 'New picture'),
-                            )
-                          : _IdleBar(
-                              key: const ValueKey('idle'),
-                              onNext: _next,
-                              label: s('Нова картинка', 'New picture'),
-                            ),
+                      child: _ColoringBar(
+                        // A new key when the picture is finished so the
+                        // switcher plays the rise-and-fade and Bloom
+                        // remounts into his cheer.
+                        key: ValueKey(_done ? 'done-${card.id}' : 'idle'),
+                        done: _done,
+                        onNext: _next,
+                        label: s('Нова картинка', 'New picture'),
+                        praise: _praise(s, card.id),
+                      ),
                     ),
                   ),
                 ],
@@ -779,17 +793,6 @@ class _ColoringPainter extends CustomPainter {
 //  "New picture" button + bottom bars
 // ─────────────────────────────────────────────
 
-/// Permanent 72×72dp round "new picture" button (design audit #25). Lives
-/// in the same bottom-right spot before and after completion so the child
-/// learns a single control; [_DoneBar] reuses it instead of a text button.
-/// The two controls under the picture.
-///
-/// They were icon-only circles — a Material shuffle glyph and a book with a
-/// number — and the words that explain them ("Нова картинка", "Мої
-/// картинки") lived in a `Tooltip`, which means a long press. Nobody long-
-/// presses a toddler app. An unlabelled icon is not minimal, it is mute:
-/// the rule about keeping text out of the child's way is about the play
-/// area, not about the controls a grown-up uses to steer it.
 /// The one control under the picture: a new picture.
 ///
 /// It was two icon-only circles whose words lived in a `Tooltip` — a long
@@ -831,7 +834,7 @@ class _NewPictureButton extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 // Big enough to read across a room: this is the only text
                 // on the screen and a parent reads it from a lap.
-                style: DT.h2.copyWith(color: DT.surfaceWhite),
+                style: DT.kidButton.copyWith(color: DT.surfaceWhite),
               ),
             ),
           ],
@@ -841,23 +844,125 @@ class _NewPictureButton extends StatelessWidget {
   }
 }
 
-/// Bottom bar while the child is still revealing: one button, in the same
-/// place it sits in [_DoneBar], so finishing a picture does not move it.
-class _IdleBar extends StatelessWidget {
-  const _IdleBar({
+/// The bottom bar, in both of its states.
+///
+/// Bloom sits beside the button the whole time, facing it — a companion
+/// who is already there, not a reward that appears. When the picture is
+/// finished he cheers and a small bubble above him says so, and that is
+/// the whole "you are done" signal: the white plate that used to fence
+/// the button off is gone. A bunny who starts jumping is a clearer
+/// "press here now" for a two-year-old than any panel.
+class _ColoringBar extends StatelessWidget {
+  const _ColoringBar({
     super.key,
+    required this.done,
     required this.onNext,
     required this.label,
+    required this.praise,
   });
 
+  final bool done;
   final VoidCallback onNext;
   final String label;
+
+  /// The word in Bloom's bubble once the picture is finished.
+  final String praise;
+
+  static const double bloomSize = 64;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(DT.sp16, DT.sp8, DT.sp16, DT.sp12),
-      child: Center(child: _NewPictureButton(onTap: onNext, label: label)),
+      child: Center(
+        // Bloom plus a long word plus the pill can outgrow a small phone;
+        // scaling the row down keeps every part visible instead of
+        // clipping the bunny off the edge.
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _BloomCue(done: done, praise: praise),
+              const SizedBox(width: DT.sp12),
+              _NewPictureButton(onTap: onNext, label: label),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Bloom and, when the picture is done, his bubble.
+///
+/// Frozen states, not the shared brain: this screen never taught the
+/// reactions notifier about itself, and a bunny borrowing another route's
+/// mood would be worse than one with a mood of its own. `ambient:
+/// breathe` keeps him alive (breath + blink) under `MotionPolicy`.
+class _BloomCue extends StatelessWidget {
+  const _BloomCue({required this.done, required this.praise});
+
+  final bool done;
+  final String praise;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (done) ...[
+          _PraiseBubble(text: praise),
+          const SizedBox(width: DT.sp8),
+        ],
+        BloomMascot(
+          size: _ColoringBar.bloomSize,
+          // Facing the button he is pointing the child at.
+          facing: BloomFacing.right,
+          interactive: false,
+          semanticsLabel: 'Bloom',
+          state: done
+              ? const BloomState(
+                  emotion: BloomEmotion.cheer,
+                  hops: 3,
+                  ambient: BloomAmbient.breathe,
+                  lookAt: Alignment.centerRight,
+                )
+              : const BloomState(
+                  emotion: BloomEmotion.idle,
+                  hops: 0,
+                  ambient: BloomAmbient.breathe,
+                  lookAt: Alignment.centerRight,
+                ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The praise beside Bloom. A bubble, not a banner: it belongs to him.
+class _PraiseBubble extends StatelessWidget {
+  const _PraiseBubble({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DT.sp16,
+        vertical: DT.sp8,
+      ),
+      decoration: BoxDecoration(
+        color: DT.surfaceWhite,
+        borderRadius: BorderRadius.circular(DT.rLg),
+        boxShadow: DT.shadowSoft(DT.violet),
+      ),
+      child: Text(
+        text,
+        maxLines: 1,
+        style: DT.h2.copyWith(color: DT.violet),
+      ),
     );
   }
 }
@@ -998,49 +1103,6 @@ class _GhostFingerPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_GhostFingerPainter old) => old.t != t;
-}
-
-// ─────────────────────────────────────────────
-//  Done bar (word + next)
-// ─────────────────────────────────────────────
-
-class _DoneBar extends StatelessWidget {
-  final String word;
-  final Color accent;
-  final VoidCallback onNext;
-  final String label;
-
-  const _DoneBar({
-    super.key,
-    required this.word,
-    required this.accent,
-    required this.onNext,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: accent.withValues(alpha: 0.4), width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: accent.withValues(alpha: 0.22),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      // The word used to sit between the two buttons and squeezed them off
-      // a phone. It is already on the picture and was just spoken — two
-      // controls that say what they do are worth more here than a third
-      // repetition of the word.
-      child: Center(child: _NewPictureButton(onTap: onNext, label: label)),
-    );
-  }
 }
 
 class _PaywallGate extends ConsumerWidget {

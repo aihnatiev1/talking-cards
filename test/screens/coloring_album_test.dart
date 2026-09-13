@@ -9,6 +9,7 @@ import 'package:talking_cards/providers/packs_provider.dart';
 import 'package:talking_cards/screens/coloring_screen.dart';
 import 'package:talking_cards/services/asset_pack_service.dart';
 import 'package:talking_cards/services/feedback_service.dart';
+import 'package:talking_cards/widgets/bloom_mascot.dart';
 
 import '../helpers/motion.dart';
 
@@ -184,6 +185,19 @@ void main() {
       expect(find.byKey(const ValueKey('ghost-finger')), findsNothing);
     });
 
+    testWidgets('Bloom waits by the button before anything is finished',
+        (tester) async {
+      final container = await open(tester);
+      addTearDown(container.dispose);
+
+      expect(find.byType(BloomMascot), findsOneWidget,
+          reason: 'a companion who is already there, not a reward');
+      expect(find.text('Нова картинка'), findsOneWidget);
+      // Nothing is praised yet.
+      expect(find.text('Молодець!'), findsNothing);
+      expect(find.text('Так тримати!'), findsNothing);
+    });
+
     testWidgets('a real finger interrupts it', (tester) async {
       final container = await open(tester);
       addTearDown(container.dispose);
@@ -238,6 +252,22 @@ void main() {
       // One control, centred, with its word on it — no icon-only twin.
       expect(find.text('Нова картинка'), findsOneWidget);
       expect(find.textContaining('Мої картинки'), findsNothing);
+      // Bloom was beside the button all along and now says something.
+      // The praise is the whole "done" signal: no plate fences the bar off.
+      expect(find.byType(BloomMascot), findsOneWidget);
+      expect(
+        find.byWidgetPredicate((w) =>
+            w is Text &&
+            const [
+              'Молодець!',
+              'Круто!',
+              'Так тримати!',
+              'Гарно!',
+              'Ого!',
+            ].contains(w.data)),
+        findsOneWidget,
+        reason: 'Bloom praises the finished picture',
+      );
       // Let the celebration's confetti timer run out before the tree goes.
       await tester.pump(const Duration(seconds: 2));
     });
