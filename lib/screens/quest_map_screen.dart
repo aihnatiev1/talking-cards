@@ -189,7 +189,9 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen> {
                   .toList();
         if (playable.length >= 4) {
           Navigator.of(context).push(
-            KidRoutes.game(GuessScreen(cards: playable)),
+            KidRoutes.game(
+              GuessScreen(cards: playable, cardGroups: cardGroupsOf(packs)),
+            ),
           );
         }
       case QuestTask.reviewSRSCards:

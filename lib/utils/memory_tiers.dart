@@ -9,13 +9,15 @@
 /// session** quietly hand the smaller board back. Nothing is announced and
 /// nothing is spoken — the next deal is simply a different size. No timer
 /// is involved: nothing under five years old is measured in seconds.
+///
+/// The bookkeeping itself (runs, the ceiling, what may be given back) is
+/// [ConfidenceLadder] — «Вгадай звук» sizes its board of pictures with the
+/// same arithmetic. This file owns only what a calm *memory* round is.
 library;
 
-/// The verdict on one round.
-enum RoundConfidence { calm, neutral, struggle }
+import 'confidence_ladder.dart';
 
-/// What the verdict did to the board.
-enum TierChange { up, stay, back }
+export 'confidence_ladder.dart' show RoundConfidence, TierChange;
 
 /// The ladder of board sizes and the per-level windows on it.
 abstract final class MemoryTiers {
@@ -81,72 +83,31 @@ abstract final class MemoryTiers {
 /// the screen feeds it rounds and asks it how many pairs to deal.
 class MemoryDifficulty {
   MemoryDifficulty({required this.level, int? fixedPairs})
-    : _floor = MemoryTiers.startFor(level),
-      _ceiling = MemoryTiers.ceilingFor(level),
-      _pairs = fixedPairs ?? MemoryTiers.startFor(level),
-      _fixed = fixedPairs != null;
+    : _ladder = ConfidenceLadder(
+        steps: MemoryTiers.steps,
+        floor: MemoryTiers.startFor(level),
+        ceiling: MemoryTiers.ceilingFor(level),
+        calmNeeded: MemoryTiers.calmNeeded(level),
+        struggleForStepBack: MemoryTiers.struggleForStepBack,
+        value: fixedPairs,
+        fixed: fixedPairs != null,
+      );
 
   final int level;
-  final int _floor;
-  final int _ceiling;
-  final bool _fixed;
-
-  int _pairs;
-  int _calmRun = 0;
-  int _struggleRun = 0;
-
-  /// Sizes this session has climbed to — only those may be given back, so
-  /// a child never drops below the board their age starts on.
-  final Set<int> _raisedTo = {};
+  final ConfidenceLadder _ladder;
 
   /// Pairs for the next deal.
-  int get pairs => _pairs;
+  int get pairs => _ladder.value;
 
   /// An explicit `pairCount` (tests, a parent's choice) turns the ladder
   /// off for the session.
-  bool get isFixed => _fixed;
+  bool get isFixed => _ladder.fixed;
 
-  int get calmRun => _calmRun;
+  int get calmRun => _ladder.calmRun;
 
   /// Records a finished round and returns what it did to the board.
-  TierChange applyRound({required int misses, required int hints}) {
-    final verdict = MemoryTiers.confidenceOf(
-      pairs: _pairs,
-      misses: misses,
-      hints: hints,
-    );
-    if (_fixed) return TierChange.stay;
-
-    switch (verdict) {
-      case RoundConfidence.calm:
-        _struggleRun = 0;
-        _calmRun++;
-        if (_calmRun < MemoryTiers.calmNeeded(level)) return TierChange.stay;
-        final next = MemoryTiers.up(_pairs, _ceiling);
-        if (next == _pairs) return TierChange.stay;
-        _calmRun = 0;
-        _pairs = next;
-        _raisedTo.add(next);
-        return TierChange.up;
-
-      case RoundConfidence.neutral:
-        _calmRun = 0;
-        _struggleRun = 0;
-        return TierChange.stay;
-
-      case RoundConfidence.struggle:
-        _calmRun = 0;
-        _struggleRun++;
-        if (_struggleRun < MemoryTiers.struggleForStepBack ||
-            !_raisedTo.contains(_pairs)) {
-          return TierChange.stay;
-        }
-        final back = MemoryTiers.down(_pairs, _floor);
-        if (back == _pairs) return TierChange.stay;
-        _struggleRun = 0;
-        _raisedTo.remove(_pairs);
-        _pairs = back;
-        return TierChange.back;
-    }
-  }
+  TierChange applyRound({required int misses, required int hints}) =>
+      _ladder.apply(
+        MemoryTiers.confidenceOf(pairs: pairs, misses: misses, hints: hints),
+      );
 }

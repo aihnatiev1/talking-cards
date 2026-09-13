@@ -615,23 +615,26 @@ void _compose(_Sheet s, AppIcon icon) {
       s.dot(31, 11.5, 1.7);
 
     case AppIcon.gameRepeat:
-      s.fat(
-        Path()
-          ..addArc(
-            Rect.fromCircle(center: const Offset(24, 24), radius: 11),
-            0.35,
-            math.pi - 0.7,
-          )
-          ..moveTo(24, 35)
-          ..lineTo(24, 40)
-          ..moveTo(17, 40.5)
-          ..lineTo(31, 40.5),
-        3.5,
+      // «Повтори за мною» is two people and one word between them.
+      // It used to be a microphone on a stand — a promise that something
+      // is listening to the child's pronunciation and grading it. Nothing
+      // in this app listens (experience audit 2026-09-13 §21), so the
+      // badge shows the truth: a grown-up and a child, saying it together.
+      s.shape(_rr(13, 3, 22, 12, 5.5), color: _lit(s.accent));
+      s.line(_poly(const [Offset(18, 9), Offset(30, 9)]));
+      s.shape(
+        _roundPoly(
+          const [Offset(20, 14), Offset(27, 14), Offset(20.5, 20.5)],
+          1.5,
+        ),
         color: _lit(s.accent),
       );
-      s.shape(_rr(17, 6, 14, 25, 7));
-      s.line(_poly(const [Offset(20, 14), Offset(28, 14)]));
-      s.line(_poly(const [Offset(20, 20), Offset(28, 20)]));
+      s.shape(_rr(3, 38, 20, 10, 5));
+      s.shape(_rr(25, 36, 20, 12, 6));
+      s.shape(_circle(13, 30, 6.5));
+      s.shape(_circle(35, 27, 7.5));
+      s.dot(11, 29, 1.6);
+      s.dot(33, 26, 1.8);
 
     case AppIcon.gameOdd:
       s.fat(_poly(const [Offset(30, 30), Offset(41, 41)]), 6);

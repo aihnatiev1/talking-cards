@@ -49,7 +49,14 @@ class _GamesTabState extends ConsumerState<GamesTab> {
           .toList();
     }
     if (cards.length < 4) return;
-    _openGame(KidRoutes.game(GuessScreen(cards: cards)));
+    // The packs are still here — hand the game the semantics the flat
+    // card list lost, so its distractors can come from one set (§19).
+    final packs = ref.read(packsProvider).valueOrNull ?? [];
+    _openGame(
+      KidRoutes.game(
+        GuessScreen(cards: cards, cardGroups: cardGroupsOf(packs)),
+      ),
+    );
   }
 
   /// Every game goes through here so the one automatic review ask a

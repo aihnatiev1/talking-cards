@@ -27,7 +27,18 @@ import '../widgets/quiz_option.dart';
 class GuessScreen extends ConsumerStatefulWidget {
   final List<CardModel> cards;
 
-  const GuessScreen({super.key, required this.cards});
+  /// Card id → the set it belongs to (its pack). The distractors of a
+  /// three- or four-picture question are drawn from the answer's own set,
+  /// so the child is choosing between animals and not between an animal
+  /// and a bus (experience audit §19). Empty is legal — the question then
+  /// falls back to the whole pool.
+  final Map<String, String> cardGroups;
+
+  const GuessScreen({
+    super.key,
+    required this.cards,
+    this.cardGroups = const {},
+  });
 
   @override
   ConsumerState<GuessScreen> createState() => _GuessScreenState();
@@ -59,7 +70,13 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
     _provider = StateNotifierProvider.autoDispose<QuizNotifier, QuizState?>((
       ref,
     ) {
-      return QuizNotifier(soundCards);
+      // Age only says where the board of pictures starts; how many
+      // pictures the next question shows is decided by how this one went.
+      return QuizNotifier(
+        soundCards,
+        level: ref.read(profileProvider).active?.level ?? 2,
+        groups: widget.cardGroups,
+      );
     });
 
     AnalyticsService.instance.logQuizStart();
@@ -87,7 +104,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
         'guess',
         isEn: ref.read(languageProvider) == 'en',
       );
-      Future.delayed(const Duration(milliseconds: 400), () {
+      Future.delayed(DT.motion.gameInstructionGap, () {
         if (mounted) _playCurrentSound();
       });
     });
@@ -133,7 +150,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
       );
       setState(() => _showCorrect = true);
       _waitingNext = true;
-      Timer(const Duration(milliseconds: 900), () {
+      Timer(DT.motion.quizAnswerHold, () {
         if (!mounted) return;
         setState(() {
           _showCorrect = false;
@@ -142,7 +159,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
           _nudges.clear();
         });
         ref.read(_provider.notifier).next();
-        Future.delayed(const Duration(milliseconds: 300), () {
+        Future.delayed(DT.motion.quizQuestionGap, () {
           if (mounted) _playCurrentSound();
         });
       });
@@ -155,10 +172,10 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
         _nudges[cardId] = (_nudges[cardId] ?? 0) + 1;
         _misses.miss();
       });
-      if (_misses.justCrossed) {
+      if (_misses.misses == state.hintAfterMisses) {
         FeedbackService.instance.event(FeedbackEvent.lockedHint);
       }
-      Timer(const Duration(milliseconds: 600), () {
+      Timer(DT.motion.quizRetell, () {
         if (mounted) _playCurrentSound();
       });
     }
@@ -174,7 +191,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
       _misses.reset();
       _nudges.clear();
     });
-    Future.delayed(const Duration(milliseconds: 300), () {
+    Future.delayed(DT.motion.quizQuestionGap, () {
       if (mounted) _playCurrentSound();
     });
   }
@@ -256,7 +273,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
             child: ValueListenableBuilder<bool>(
               valueListenable: AudioService.instance.isSpeaking,
               builder: (_, speaking, speaker) => AmbientLoop(
-                period: const Duration(milliseconds: 800),
+                period: DT.motion.speakerPulse,
                 enabled: speaking,
                 builder: (_, t, child) => Transform.scale(
                   scale: 1.0 + 0.15 * t,
@@ -287,28 +304,27 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          // 4 options in 2x2 grid — takes remaining space
+          // Two, three or four pictures — the board is sized by how the
+          // last questions actually went, never by the round number
+          // (experience audit §19). The tiles keep their shape at every
+          // size, so a two-picture question is two *big* pictures and not
+          // two stretched ones.
           Expanded(
             child: StaggerScope(
-              child: GridView.count(
-                crossAxisCount: 2,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: 0.85,
-                physics: const NeverScrollableScrollPhysics(),
-                children: state.options.indexed.map((entry) {
-                  final (index, card) = entry;
+              child: _OptionsBoard(
+                options: state.options,
+                tileBuilder: (index, card) {
                   final isTarget = card.id == state.correctCard.id;
                   final mark = !isTarget
                       ? AnswerMark.none
                       : _showCorrect
                           ? AnswerMark.correct
-                          : _misses.showHint
+                          : _misses.misses >= state.hintAfterMisses
                               ? AnswerMark.hint
                               : AnswerMark.none;
-                  // The four options land one after another (G11) so the
-                  // child's eye is walked across them instead of being met
-                  // by a full board.
+                  // The options land one after another (G11) so the
+                  // child's eye is walked across them instead of being
+                  // met by a full board.
                   return StaggeredEntrance(
                     key: ValueKey(card.id),
                     index: index,
@@ -319,12 +335,79 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
                       onTap: () => _onAnswer(card.id),
                     ),
                   );
-                }).toList(),
+                },
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+//  The board of pictures: 2 in a row, 3 as 2 + 1, 4 as 2 × 2
+// ─────────────────────────────────────────────
+
+/// Lays out the question's options at a constant tile shape.
+///
+/// A `GridView` stretched two tiles across the whole remaining height the
+/// moment the board dropped from four pictures to two; here the tile keeps
+/// its 0.85 ratio and the board is centred in whatever space is left, so
+/// the youngest child — the one who gets two options — gets the biggest
+/// pictures in the app.
+class _OptionsBoard extends StatelessWidget {
+  const _OptionsBoard({required this.options, required this.tileBuilder});
+
+  final List<CardModel> options;
+  final Widget Function(int index, CardModel card) tileBuilder;
+
+  static const double _gap = 12;
+  static const double _aspect = 0.85; // width / height
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = <List<CardModel>>[
+      options.take(2).toList(),
+      if (options.length > 2) options.sublist(2),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, box) {
+        var tileW = (box.maxWidth - _gap) / 2;
+        var tileH = tileW / _aspect;
+        final stack = tileH * rows.length + _gap * (rows.length - 1);
+        if (stack > box.maxHeight && stack > 0) {
+          final k = (box.maxHeight - _gap * (rows.length - 1)) /
+              (tileH * rows.length);
+          tileW *= k;
+          tileH *= k;
+        }
+
+        var index = 0;
+        final children = <Widget>[];
+        for (final row in rows) {
+          if (children.isNotEmpty) children.add(const SizedBox(height: _gap));
+          final tiles = <Widget>[];
+          for (final card in row) {
+            if (tiles.isNotEmpty) tiles.add(const SizedBox(width: _gap));
+            tiles.add(
+              SizedBox(
+                width: tileW,
+                height: tileH,
+                child: tileBuilder(index++, card),
+              ),
+            );
+          }
+          children.add(
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: tiles),
+          );
+        }
+
+        return Center(
+          child: Column(mainAxisSize: MainAxisSize.min, children: children),
+        );
+      },
     );
   }
 }

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
+import '../models/semantic_group.dart';
 import '../providers/language_provider.dart';
 import '../providers/profile_provider.dart';
 import '../services/audio_service.dart';
@@ -12,6 +13,7 @@ import '../services/feedback_service.dart';
 import '../utils/game_state_mixin.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
+import '../utils/motion.dart';
 import '../widgets/answer_feedback.dart';
 import '../widgets/card_image.dart';
 import '../widgets/game_celebration_overlay.dart';
@@ -41,7 +43,8 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
   // miss in a round the odd card starts to glow (G10).
   final _misses = MissTracker();
   final Map<String, int> _nudges = {};
-  late List<_Slot> _slots;
+  final Random _rng = Random();
+  late _Round _round;
 
   @override
   void initState() {
@@ -57,29 +60,55 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
     });
   }
 
+  /// Builds a question the child can *see*: three cards of one semantic
+  /// group and one from another (experience audit п. 22). Only when the
+  /// available cards cannot make one — a profile with nothing but sound
+  /// packs open — does it fall back to the old "three from one pack, one
+  /// from another", which is right by catalogue and not always by picture.
   void _buildRound() {
-    final rng = Random();
-    final pool = List<PackModel>.from(widget.packs)..shuffle(rng);
-    final majority = pool[0];
-    final oddPack = pool[1];
-
-    final majorityCards = List<CardModel>.from(majority.cards)..shuffle(rng);
-    final oddCards = List<CardModel>.from(oddPack.cards)..shuffle(rng);
-
-    final three = majorityCards.take(3).toList();
-    final one = oddCards.first;
-
-    final slots = [
-      ...three.map((c) => _Slot(card: c, pack: majority, isOdd: false)),
-      _Slot(card: one, pack: oddPack, isOdd: true),
-    ]..shuffle(rng);
+    final task = SemanticGroups.task(
+      widget.packs.expand((p) => p.cards),
+      _rng,
+    );
+    final _Round round = task != null ? _semantic(task) : _byPack();
 
     setState(() {
-      _slots = slots;
+      _round = round;
       _answered = false;
       _misses.reset();
       _nudges.clear();
     });
+  }
+
+  _Round _semantic(OddOneOutTask task) => _Round(
+        slots: [
+          ...task.majority.map((c) => _Slot(card: c, isOdd: false)),
+          _Slot(card: task.odd, isOdd: true),
+        ]..shuffle(_rng),
+        key: task.majorityGroup.name,
+      );
+
+  _Round _byPack() {
+    final pool = [
+      for (final p in widget.packs)
+        if (p.cards.isNotEmpty) p,
+    ]..shuffle(_rng);
+    final majority = pool.first;
+    final oddPack = pool.length > 1 ? pool[1] : pool.first;
+
+    final majorityCards = List<CardModel>.from(majority.cards)..shuffle(_rng);
+    final oddCards = [
+      for (final c in oddPack.cards)
+        if (!majorityCards.take(3).any((m) => m.id == c.id)) c,
+    ]..shuffle(_rng);
+
+    return _Round(
+      slots: [
+        ...majorityCards.take(3).map((c) => _Slot(card: c, isOdd: false)),
+        _Slot(card: oddCards.first, isOdd: true),
+      ]..shuffle(_rng),
+      key: majority.id,
+    );
   }
 
   void _onTap(_Slot slot) {
@@ -93,19 +122,21 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
       FeedbackService.instance.event(FeedbackEvent.correct);
       AudioService.instance
           .playPraise(isEn: ref.read(languageProvider) == 'en');
-      // The card itself pops, frames in success and bursts (AnswerFrame).
+      // The card itself pops, frames in success and bursts (AnswerFrame) —
+      // and `_answered` also starts the wordless demonstration: the three
+      // that belong together close ranks, the odd one drifts off the board.
       setState(() {
         _answered = true;
         scorePoint();
       });
       if (score >= maxRounds) {
-        Future.delayed(const Duration(milliseconds: 900), () {
+        Future.delayed(DT.motion.sortRoundGap, () {
           if (!mounted) return;
           completeGame();
           _showCelebration();
         });
       } else {
-        Future.delayed(const Duration(milliseconds: 900), () {
+        Future.delayed(DT.motion.sortRoundGap, () {
           if (mounted) _buildRound();
         });
       }
@@ -139,11 +170,10 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
   @override
   Widget build(BuildContext context) {
     final s = AppS(ref.read(languageProvider) == 'en');
+    final motion = MotionPolicy.of(context);
 
-    // Determine majority pack for the hint header
-    final majorityPack = _slots.firstWhere((sl) => !sl.isOdd).pack;
-    final majorityCards =
-        _slots.where((sl) => !sl.isOdd).map((sl) => sl.card).toList();
+    final majorityCards = _round.majority;
+    final hintColor = majorityCards.first.colorAccent;
 
     // No text title — "Odd one out" is for the parent; the hint row of
     // thumbnails + ❓ below is the child's question.
@@ -158,9 +188,9 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
 
               // Hint — small thumbnails of the actual majority cards + "?"
               AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
+                duration: motion.dur(DT.motion.enter),
                 child: Column(
-                  key: ValueKey(majorityPack.id),
+                  key: ValueKey(_round.key),
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -180,7 +210,7 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
-                        color: majorityPack.color,
+                        color: hintColor,
                       ),
                     ),
                   ],
@@ -193,13 +223,14 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
               Expanded(
                 child: GridView.count(
                   physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 2,
+                  crossAxisCount: _columns,
                   mainAxisSpacing: 16,
                   crossAxisSpacing: 16,
                   childAspectRatio: 0.88,
-                  children: _slots
-                      .map((sl) => _buildCard(sl, s))
-                      .toList(),
+                  children: [
+                    for (var i = 0; i < _round.slots.length; i++)
+                      _buildCard(_round.slots[i], i),
+                  ],
                 ),
               ),
 
@@ -210,7 +241,9 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
     );
   }
 
-  Widget _buildCard(_Slot sl, AppS s) {
+  static const _columns = 2;
+
+  Widget _buildCard(_Slot sl, int index) {
     final card = sl.card;
     final mark = !sl.isOdd
         ? AnswerMark.none
@@ -220,16 +253,22 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
                 ? AnswerMark.hint
                 : AnswerMark.none;
 
-    return KidTap(
+    return _SortDemo(
       key: ValueKey(card.id),
-      onTap: () => _onTap(sl),
-      child: AnswerFrame(
-        background: card.colorBg,
-        accent: card.colorAccent,
-        mark: mark,
-        nudge: _nudges[card.id] ?? 0,
-        radius: 20,
-        child: _CardChip(card: card),
+      playing: _answered,
+      isOdd: sl.isOdd,
+      column: index % _columns,
+      row: index ~/ _columns,
+      child: KidTap(
+        onTap: () => _onTap(sl),
+        child: AnswerFrame(
+          background: card.colorBg,
+          accent: card.colorAccent,
+          mark: mark,
+          nudge: _nudges[card.id] ?? 0,
+          radius: 20,
+          child: _CardChip(card: card),
+        ),
       ),
     );
   }
@@ -242,9 +281,92 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
 
 class _Slot {
   final CardModel card;
-  final PackModel pack;
   final bool isOdd;
-  _Slot({required this.card, required this.pack, required this.isOdd});
+  const _Slot({required this.card, required this.isOdd});
+}
+
+class _Round {
+  final List<_Slot> slots;
+
+  /// What the hint row is keyed on for its cross-fade — the semantic group
+  /// name, or the pack id in the fallback.
+  final String key;
+
+  const _Round({required this.slots, required this.key});
+
+  List<CardModel> get majority => [
+        for (final s in slots)
+          if (!s.isOdd) s.card,
+      ];
+}
+
+// ─────────────────────────────────────────────
+//  The answer's short explanation (п. 22)
+// ─────────────────────────────────────────────
+
+/// Wordless "why": once the odd card is found, the three that belong
+/// together lean in towards each other and the odd one slides off the board
+/// and dims. [DT.motion.sortDemo] long, inside the [DT.motion.sortRoundGap]
+/// that was already there — the next question does not wait for it.
+///
+/// Under reduced motion nothing travels; the success frame and sticker on
+/// the odd tile still carry the answer.
+class _SortDemo extends StatelessWidget {
+  final bool playing;
+  final bool isOdd;
+  final int column;
+  final int row;
+  final Widget child;
+
+  const _SortDemo({
+    super.key,
+    required this.playing,
+    required this.isOdd,
+    required this.column,
+    required this.row,
+    required this.child,
+  });
+
+  /// How far the group closes in, and how far the odd one leaves — both as
+  /// a fraction of a tile.
+  static const _closeIn = 0.05;
+  static const _leaveX = 0.42;
+  static const _leaveY = 0.22;
+
+  @override
+  Widget build(BuildContext context) {
+    final motion = MotionPolicy.of(context);
+    final away = column == 0 ? -_leaveX : _leaveX;
+    final awayY = row == 0 ? -_leaveY : _leaveY;
+    final offset = !playing
+        ? Offset.zero
+        : isOdd
+            ? Offset(away, awayY)
+            : Offset(
+                column == 0 ? _closeIn : -_closeIn,
+                row == 0 ? _closeIn : -_closeIn,
+              );
+
+    return AnimatedSlide(
+      offset: motion.reduce ? Offset.zero : offset,
+      duration: motion.dur(DT.motion.sortDemo),
+      curve: DT.motion.standard,
+      child: AnimatedOpacity(
+        opacity: playing && isOdd && !motion.reduce ? 0.55 : 1,
+        duration: motion.dur(DT.motion.sortDemo),
+        child: AnimatedScale(
+          scale: !playing || motion.reduce
+              ? 1
+              : isOdd
+                  ? 0.86
+                  : 1.03,
+          duration: motion.dur(DT.motion.sortDemo),
+          curve: DT.motion.standard,
+          child: child,
+        ),
+      ),
+    );
+  }
 }
 
 // ─────────────────────────────────────────────

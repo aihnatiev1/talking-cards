@@ -454,6 +454,33 @@ class DTMotion {
         _ => const Duration(milliseconds: 800),
       };
 
+  // «Вгадай звук» and «Повтори за мною» (experience audit 2026-09-13
+  // §19, §21). Both games are a loop of word → answer → word, so their
+  // beats are gaps between sounds rather than transitions: they exist so
+  // two voice lines never talk over each other.
+  /// Between the entry instruction and the first word of a game.
+  final Duration gameInstructionGap = const Duration(milliseconds: 400);
+
+  /// The right tile keeps its success frame this long before the next
+  /// question is dealt.
+  final Duration quizAnswerHold = const Duration(milliseconds: 900);
+
+  /// The big speaker breathes at this period while a word is playing.
+  final Duration speakerPulse = const Duration(milliseconds: 800);
+
+  /// Silence between a dealt question and its word.
+  final Duration quizQuestionGap = const Duration(milliseconds: 300);
+
+  /// After a miss the word is said again — not immediately, or it lands
+  /// on top of the miss cue.
+  final Duration quizRetell = const Duration(milliseconds: 600);
+
+  /// The repeat-game card sliding out on its way to the next word.
+  final Duration repeatCardExit = const Duration(milliseconds: 320);
+
+  /// How long «Вийшло!» is celebrated before the next word arrives.
+  final Duration repeatPraiseHold = const Duration(milliseconds: 1400);
+
   /// Idle breathing — one half-cycle (rest → peak); `AmbientLoop` reverses,
   /// so the full period is 3.0 s. Asleep it is twice as slow.
   final Duration bloomBreath = const Duration(milliseconds: 1500);
@@ -464,6 +491,43 @@ class DTMotion {
 
   /// Host Bloom fades out when an overlay brings its own.
   final Duration bloomFade = const Duration(milliseconds: 150);
+
+  // «Зайвий» / «Протилежності» (experience audit 2026-09-13, п. 22). The
+  // answer is not the end of the question: the board spends one short beat
+  // showing *why* — the group closes ranks, the odd one drifts off; the two
+  // opposites come to stand side by side. Wordless, and never long enough
+  // to feel like a wait for the next question.
+  /// The sort demonstration: three cards move together, one moves away.
+  final Duration sortDemo = const Duration(milliseconds: 760);
+
+  /// From a right answer to the next question — the demo's whole window.
+  final Duration sortRoundGap = const Duration(milliseconds: 900);
+
+  /// The pair sliding together under the question.
+  final Duration pairReveal = const Duration(milliseconds: 320);
+
+  /// The second word of the pair, so the child hears both in order.
+  final Duration pairEcho = const Duration(milliseconds: 350);
+
+  /// How long the pair stays side by side before the next question.
+  final Duration pairHold = const Duration(milliseconds: 1300);
+
+  /// Gap before a new question's word, so an instruction can finish.
+  final Duration questionCue = const Duration(milliseconds: 400);
+
+  // Colouring (experience audit 2026-09-13, п. 24).
+  /// The last stubborn contour bits melting away at completion.
+  final Duration coloringMelt = const Duration(milliseconds: 550);
+
+  /// Idle bar ↔ done bar.
+  final Duration coloringBarSwap = const Duration(milliseconds: 250);
+
+  /// One pass of the ghost finger that shows what to do — once per profile,
+  /// and any real touch cuts it short.
+  final Duration coloringHandTrace = const Duration(milliseconds: 2400);
+
+  /// …and how long it takes to disappear when it does.
+  final Duration coloringHandFade = const Duration(milliseconds: 260);
 
   // Bubbles (docs/design/bubble_pop_redesign.md §3, §5). The pop is the
   // L2 base; `BubbleTuning` stretches it ×1.2 for L1 and ×0.9 for L3+,

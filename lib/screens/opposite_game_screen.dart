@@ -12,6 +12,7 @@ import '../services/feedback_service.dart';
 import '../utils/game_state_mixin.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
+import '../utils/motion.dart';
 import '../widgets/answer_feedback.dart';
 import '../widgets/card_image.dart';
 import '../widgets/game_celebration_overlay.dart';
@@ -102,7 +103,7 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
     // Small gap so the entry instruction (first round) or the previous
     // round's feedback can finish before the new question word plays.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(milliseconds: 400), () {
+      Future.delayed(DT.motion.questionCue, () {
         if (!mounted) return;
         AudioService.instance.playWordOnly(question.audioKey, question.sound);
       });
@@ -134,10 +135,12 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
           .playPraise(isEn: ref.read(languageProvider) == 'en');
       scorePoint();
       // Play the opposite word so child hears both words of the pair
-      Future.delayed(const Duration(milliseconds: 350), () {
+      Future.delayed(DT.motion.pairEcho, () {
         if (mounted) AudioService.instance.playWordOnly(card.audioKey, card.sound);
       });
-      Future.delayed(const Duration(milliseconds: 1000), () {
+      // The pair now stands side by side under the question (п. 22); the
+      // next question waits for that to be seen, not just heard.
+      Future.delayed(DT.motion.pairHold, () {
         if (mounted) _buildRound();
       });
     } else {
@@ -157,6 +160,7 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
   @override
   Widget build(BuildContext context) {
     final s = AppS(ref.read(languageProvider) == 'en');
+    final motion = MotionPolicy.of(context);
 
     final question = _round.question;
     final correct = _round.correct;
@@ -172,15 +176,28 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
               const SizedBox(height: 8),
 
               // Question card — large, tappable for audio (word only — kids
-              // get confused if the full example sentence plays each tap)
+              // get confused if the full example sentence plays each tap).
+              // Once answered it makes room for the pair: the two opposites
+              // stand next to each other, which is the thing to understand
+              // (experience audit п. 22) — the tap was only the way there.
               KidTap(
                 onTap: () => AudioService.instance
                     .playWordOnly(question.audioKey, question.sound),
                 // The word itself is the answer to this tap.
                 sound: null,
                 child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: _QuestionCard(key: ValueKey(question.id), card: question, s: s),
+                  duration: motion.dur(DT.motion.pairReveal),
+                  child: _answered
+                      ? _PairReveal(
+                          key: ValueKey('pair-${question.id}'),
+                          question: question,
+                          answer: correct,
+                        )
+                      : _QuestionCard(
+                          key: ValueKey(question.id),
+                          card: question,
+                          s: s,
+                        ),
                 ),
               ),
 
@@ -334,6 +351,94 @@ class _QuestionCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+//  Pair reveal — the answer explained, without a word of text
+// ─────────────────────────────────────────────
+
+/// After a right answer the question card becomes the pair: «великий» and
+/// «маленький» next to each other, with the ↔ between them (experience
+/// audit 2026-09-13, п. 22). The point of the game is the relation, and a
+/// relation cannot be shown by one card at a time.
+///
+/// It occupies the question card's slot, so nothing moves on the screen
+/// except the cross-fade [AnimatedSwitcher] already runs.
+class _PairReveal extends StatelessWidget {
+  final CardModel question;
+  final CardModel answer;
+
+  const _PairReveal({
+    super.key,
+    required this.question,
+    required this.answer,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: DT.success.withValues(alpha: 0.35),
+          width: 2,
+        ),
+        boxShadow: DT.shadowSoft(DT.success),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Expanded(child: _PairHalf(card: question)),
+          const Text('↔️', style: TextStyle(fontSize: 26)),
+          Expanded(child: _PairHalf(card: answer)),
+        ],
+      ),
+    );
+  }
+}
+
+class _PairHalf extends StatelessWidget {
+  final CardModel card;
+
+  const _PairHalf({required this.card});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (card.image != null)
+          SizedBox(
+            height: 92,
+            child: CardImage.forCard(card, padding: EdgeInsets.zero),
+          )
+        else
+          Container(
+            width: 92,
+            height: 92,
+            decoration: BoxDecoration(
+              color: card.colorAccent.withValues(alpha: 0.25),
+              borderRadius: BorderRadius.circular(18),
+            ),
+          ),
+        const SizedBox(height: 6),
+        Text(
+          card.sound,
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: card.colorAccent,
+          ),
+        ),
+      ],
     );
   }
 }

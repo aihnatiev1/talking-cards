@@ -23,6 +23,16 @@ import '../widgets/kid_tap.dart';
 class RepeatGameScreen extends ConsumerStatefulWidget {
   final List<CardModel> cards;
 
+  /// A set is five words, not ten (experience audit §21). Ten words of
+  /// "say it after me" is a lesson; five is something a parent and a
+  /// two-year-old finish together, and finishing is the point — the
+  /// celebration comes to everyone who reaches the end of the set.
+  static const sessionLength = 5;
+
+  /// The gentle second pass over the words the grown-up tapped
+  /// «Спробуємо ще» on. Capped so the set cannot double in length.
+  static const practiceLength = 3;
+
   const RepeatGameScreen({super.key, required this.cards});
 
   @override
@@ -57,19 +67,16 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
   late Animation<double> _exitSlide;
   late Animation<double> _exitFade;
 
-  static const _sessionLength = 10;
 
   @override
   void initState() {
     super.initState();
-    // Cap the session so a pack of 200+ cards doesn't become an endless loop.
-    // 10 is the sweet spot for toddler attention span (30-60s each).
     final shuffled = List<CardModel>.from(widget.cards)..shuffle(Random());
-    _deck = shuffled.take(_sessionLength).toList();
+    _deck = shuffled.take(RepeatGameScreen.sessionLength).toList();
 
     _exitCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 320),
+      duration: DT.motion.repeatCardExit,
     );
     _exitSlide = Tween<double>(
       begin: 0,
@@ -88,7 +95,7 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
         'repeat',
         isEn: ref.read(languageProvider) == 'en',
       );
-      Future.delayed(const Duration(milliseconds: 400), () {
+      Future.delayed(DT.motion.gameInstructionGap, () {
         if (mounted) _speakCurrent();
       });
     });
@@ -118,7 +125,7 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
     showConfetti();
     ref.read(dailyQuestProvider.notifier).recordSpeechCorrect();
 
-    await Future.delayed(const Duration(milliseconds: 1400));
+    await Future.delayed(DT.motion.repeatPraiseHold);
     if (!mounted) return;
     await _advance();
   }
@@ -140,7 +147,7 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
     resetGame();
     setState(() {
       final shuffled = List<CardModel>.from(widget.cards)..shuffle(Random());
-      _deck = shuffled.take(_sessionLength).toList();
+      _deck = shuffled.take(RepeatGameScreen.sessionLength).toList();
       _index = 0;
       _answered = false;
       _practiceRound = false;
@@ -149,12 +156,14 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
     _speakCurrent();
   }
 
-  /// One automatic re-run of only the words the child struggled with —
-  /// the speech-therapy core of this game.
+  /// One short, automatic second go at the words the grown-up tapped
+  /// «Спробуємо ще» on — the speech-therapy core of this game. It is never
+  /// announced as a retry and it never grows: at most [practiceLength]
+  /// words, then the celebration, whichever way they went.
   void _startMissedRound() {
     final missed = List<CardModel>.from(_missed)..shuffle(Random());
     setState(() {
-      _deck = missed;
+      _deck = missed.take(RepeatGameScreen.practiceLength).toList();
       _index = 0;
       _answered = false;
       _practiceRound = true;
@@ -201,11 +210,14 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
 
     final card = _current;
 
-    // No text title — "Repeat after me" is the parent's cue, and it is
-    // already on the card ("Say: …"). Progress is the shell's pill.
+    // The one sentence on this screen is for the grown-up, and it says
+    // what the game actually is: the two of you play it, the phone only
+    // says the word (§21). It lives small in the header, out of the
+    // child's field of play (CLAUDE.md rule 4).
     return KidScreen.game(
       accent: DT.brand,
       background: DT.mintTint,
+      title: _TogetherChip(label: s('Разом із дорослим', 'With a grown-up')),
       progress: _deck.isEmpty ? null : _index / _deck.length,
       body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -321,13 +333,15 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
               ),
               const SizedBox(height: 12),
 
-              // Two neutral pills for the parent: "again" and "got it".
-              // Neither is a verdict — no red, no cross (G10).
+              // Two supportive pills for the grown-up. Neither is a
+              // verdict and neither claims to have *heard* anything: the
+              // app cannot listen, so it never pretends to (§21). One says
+              // "that came out", the other "let's try that one again".
               Row(
                 children: [
                   Expanded(
                     child: _ParentPill(
-                      label: s('Ще раз', 'Again'),
+                      label: s('Спробуємо ще', 'Try again'),
                       icon: AppIcon.replay,
                       background: DT.surfaceWhite,
                       foreground: DT.brand,
@@ -339,7 +353,7 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
                   const SizedBox(width: 12),
                   Expanded(
                     child: _ParentPill(
-                      label: s('Вийшло!', 'Got it!'),
+                      label: s('Вийшло!', 'Nice!'),
                       icon: AppIcon.check,
                       background: DT.success,
                       foreground: Colors.white,
@@ -353,6 +367,49 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
               const SizedBox(height: 24),
             ],
           ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+//  «Разом із дорослим» — the header note, for the grown-up
+// ─────────────────────────────────────────────
+
+/// A small two-together badge and one quiet line.
+///
+/// The game used to wear a microphone, which promises a machine listening
+/// to a child's pronunciation — this app does no such thing, and a parent
+/// who believed it would read every «Вийшло!» as a verdict about their
+/// child's speech (§21). Two figures side by side is the honest picture of
+/// what happens here.
+class _TogetherChip extends StatelessWidget {
+  const _TogetherChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DT.sp12,
+        vertical: DT.sp4 + 2,
+      ),
+      decoration: BoxDecoration(
+        color: DT.surfaceWhite.withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(DT.rMd),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AppIconView(
+            AppIcon.gameRepeat,
+            size: DT.size.iconSm,
+            semanticLabel: label,
+          ),
+          const SizedBox(width: DT.sp4 + 2),
+          Text(label, style: DT.caption),
+        ],
       ),
     );
   }

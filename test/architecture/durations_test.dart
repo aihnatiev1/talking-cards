@@ -34,7 +34,8 @@ void main() {
   ];
 
   /// Files that still build `Duration(milliseconds: …)` literals
-  /// (35 on 2026-09-13, 26 after G13).
+  /// (35 on 2026-09-13, 26 after G13, 24 after the guess/repeat rework,
+  /// 21 after the sort / opposites / colouring rework).
   ///
   /// shrink-only: remove an entry when the file is clean, never add.
   ///
@@ -50,13 +51,8 @@ void main() {
     'lib/screens/articulation_screen.dart',
     'lib/screens/card_reveal_screen.dart',
     'lib/screens/cards_screen.dart',
-    'lib/screens/coloring_screen.dart',
-    'lib/screens/guess_screen.dart',
     'lib/screens/home_screen.dart',
-    'lib/screens/odd_one_out_screen.dart',
     'lib/screens/onboarding_screen.dart',
-    'lib/screens/opposite_game_screen.dart',
-    'lib/screens/repeat_game_screen.dart',
     'lib/screens/splash_screen.dart',
     'lib/tabs/games_tab.dart',
     'lib/tabs/packs_tab.dart',

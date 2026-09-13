@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
+import '../providers/coloring_album_provider.dart';
 import '../providers/content_pack_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
@@ -14,10 +15,13 @@ import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../services/feedback_service.dart';
 import '../services/paywall_flow.dart';
+import '../utils/app_icons.dart';
 import '../utils/confetti_overlay_mixin.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
+import '../utils/motion.dart';
 import '../services/asset_pack_service.dart';
+import '../widgets/card_image.dart';
 import '../widgets/content_download_view.dart';
 import '../widgets/kid_screen.dart';
 import '../widgets/kid_tap.dart';
@@ -103,6 +107,15 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
 
   Rect? _imageRect;
   bool _done = false;
+
+  /// The ghost finger (п. 24) runs once per profile, on the first picture of
+  /// the visit, and any real touch ends it early. This flag is the "already
+  /// over" half; the "never again" half lives in [coloringAlbumProvider].
+  bool _handHintOver = false;
+
+  /// The first pick of this visit may resume the picture the child left
+  /// unfinished; every later pick is a new one.
+  bool _mayResume = true;
   int _completedCount = 0;
   bool _paywallGated = false;
 
@@ -116,7 +129,7 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
   /// stubborn contour bits melt away on their own.
   late final AnimationController _revealCtrl = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 550),
+    duration: DT.motion.coloringMelt,
     value: 1.0,
   );
 
@@ -200,7 +213,13 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
   //  Card selection & image loading
   // ─────────────────────────────────────────────
 
-  void _pickCardAndLoad() {
+  Future<void> _pickCardAndLoad() async {
+    // The album knows which picture was left half-revealed last time; the
+    // canvas waits that one read rather than dealing a stranger over it.
+    final album = ref.read(coloringAlbumProvider.notifier);
+    await album.ready;
+    if (!mounted) return;
+
     final packs = ref.read(packsProvider).valueOrNull ?? [];
     final pool = ColoringScreen.coloringPool(packs);
     if (pool.isEmpty) {
@@ -211,9 +230,25 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
       }
       return;
     }
-    final chosen = ColoringScreen.pickNext(pool, _card, _rng);
+    final chosen = _resume(pool) ?? ColoringScreen.pickNext(pool, _card, _rng);
+    _mayResume = false;
     _card = chosen;
+    // Remembered before the first stroke: a child who leaves mid-picture
+    // comes back to it, which is what makes it *theirs* rather than a
+    // stream of pictures the app hands out (п. 24).
+    album.setUnfinished(chosen.id);
     _loadImage(chosen);
+  }
+
+  /// The unfinished picture from the last visit, if it is still colourable.
+  CardModel? _resume(List<CardModel> pool) {
+    if (!_mayResume) return null;
+    final id = ref.read(coloringAlbumProvider).unfinishedCardId;
+    if (id == null) return null;
+    for (final card in pool) {
+      if (card.id == id) return card;
+    }
+    return null;
   }
 
   /// A read can fail even after the pool filter — Play may evict the pack
@@ -285,6 +320,7 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
       (math.min(r.width, r.height) * 0.085).clamp(24.0, 56.0);
 
   void _onStart(Offset p) {
+    _endHandHint();
     _current
       ..clear()
       ..add(p);
@@ -340,6 +376,15 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
     }
   }
 
+  /// The demonstration is over the moment the child's own finger lands —
+  /// forgiving input (CLAUDE.md rule 3): the hint never competes for the
+  /// stroke that interrupted it.
+  void _endHandHint() {
+    if (_handHintOver) return;
+    setState(() => _handHintOver = true);
+    ref.read(coloringAlbumProvider.notifier).markHandHintSeen();
+  }
+
   void _checkDone() {
     if (_done) return;
     final ratio = _revealedCells.length / (_gridCols * _gridRows);
@@ -351,6 +396,11 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
     FeedbackService.instance.event(FeedbackEvent.correct);
     _revealCtrl.animateTo(0.0, curve: Curves.easeOutCubic);
     _incrementCompletedCount();
+    if (card != null) {
+      // Into the album — the result of colouring is a collection, not just
+      // the picture currently on screen (п. 24).
+      ref.read(coloringAlbumProvider.notifier).record(card);
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       showConfetti();
@@ -388,9 +438,48 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
       _image = null;
       _contentUnavailable = false;
       _loadFailures = 0;
+      _mayResume = false;
     });
     _revealCtrl.value = 1.0;
     _pickCardAndLoad();
+  }
+
+  /// Opens the album: every picture this child has revealed, biggest first
+  /// touch target the sheet can give them. Tapping one brings it back to
+  /// the canvas.
+  void _openAlbum() {
+    FeedbackService.instance.event(FeedbackEvent.tap);
+    final packs = ref.read(packsProvider).valueOrNull ?? const <PackModel>[];
+    final pool = ColoringScreen.coloringPool(packs);
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      barrierColor: DT.barrierSheet,
+      builder: (_) => _AlbumSheet(
+        pool: pool,
+        onPick: (card) {
+          Navigator.of(context).pop();
+          _openFromAlbum(card);
+        },
+      ),
+    );
+  }
+
+  void _openFromAlbum(CardModel card) {
+    setState(() {
+      _strokes.clear();
+      _current.clear();
+      _revealedCells.clear();
+      _done = false;
+      _image = null;
+      _contentUnavailable = false;
+      _loadFailures = 0;
+      _mayResume = false;
+      _card = card;
+    });
+    _revealCtrl.value = 1.0;
+    ref.read(coloringAlbumProvider.notifier).setUnfinished(card.id);
+    _loadImage(card);
   }
 
   // ─────────────────────────────────────────────
@@ -402,6 +491,22 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
     final isEn = ref.watch(languageProvider) == 'en';
     final s = AppS(isEn);
     final card = _card;
+    final album = ref.watch(coloringAlbumProvider);
+    final motion = MotionPolicy.of(context);
+    // Once per profile, and never over a picture that is already being
+    // revealed: a ghost finger draws one line to show what this screen wants
+    // (п. 24). Checked against `reduced` rather than `reduce` on purpose —
+    // the OS flag means "do not animate a hand at me", while the *test*
+    // override only freezes idle loops, and this hint is the thing under
+    // test. Under real reduced motion it simply stays unseen and waits.
+    final showHand = album.loaded &&
+        !album.handHintSeen &&
+        !_handHintOver &&
+        !_done &&
+        motion.mode != MotionMode.reduced &&
+        _image != null &&
+        _strokes.isEmpty &&
+        _current.isEmpty;
 
     // No text title: the finger on the picture is the whole instruction.
     return KidScreen.game(
@@ -430,7 +535,7 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
                     child: Text(
                       s('Проведи пальцем по картинці — проявляться кольори',
-                          'Drag your finger — colors appear'),
+                          'Drag your finger — the colors appear'),
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 14,
@@ -459,18 +564,28 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(24),
-                              child: AnimatedBuilder(
-                                animation: _revealCtrl,
-                                builder: (_, __) => _ColoringCanvas(
-                                  image: _image,
-                                  strokes: _strokes,
-                                  current: _current,
-                                  overlayOpacity: _revealCtrl.value,
-                                  onRectChanged: (r) => _imageRect = r,
-                                  onStart: _onStart,
-                                  onMove: _onMove,
-                                  onEnd: _onEnd,
-                                ),
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  AnimatedBuilder(
+                                    animation: _revealCtrl,
+                                    builder: (_, __) => _ColoringCanvas(
+                                      image: _image,
+                                      strokes: _strokes,
+                                      current: _current,
+                                      overlayOpacity: _revealCtrl.value,
+                                      onRectChanged: (r) => _imageRect = r,
+                                      onStart: _onStart,
+                                      onMove: _onMove,
+                                      onEnd: _onEnd,
+                                    ),
+                                  ),
+                                  if (showHand)
+                                    _GhostFinger(
+                                      key: const ValueKey('ghost-finger'),
+                                      onDone: _endHandHint,
+                                    ),
+                                ],
                               ),
                             ),
                           );
@@ -483,7 +598,7 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
                   SizedBox(
                     height: _bottomBarHeight,
                     child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 250),
+                      duration: motion.dur(DT.motion.coloringBarSwap),
                       switchInCurve: Curves.easeOutBack,
                       transitionBuilder: (w, a) => SlideTransition(
                         position: Tween<Offset>(
@@ -499,11 +614,17 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
                               accent: card.colorAccent,
                               onNext: _next,
                               label: s('Нова картинка', 'New picture'),
+                              album: album.entries.length,
+                              onAlbum: _openAlbum,
+                              albumLabel: s('Мої картинки', 'My pictures'),
                             )
                           : _IdleBar(
                               key: const ValueKey('idle'),
                               onNext: _next,
                               label: s('Нова картинка', 'New picture'),
+                              album: album.entries.length,
+                              onAlbum: _openAlbum,
+                              albumLabel: s('Мої картинки', 'My pictures'),
                             ),
                     ),
                   ),
@@ -735,19 +856,333 @@ class _NewPictureButton extends StatelessWidget {
 class _IdleBar extends StatelessWidget {
   final VoidCallback onNext;
   final String label;
+  final int album;
+  final VoidCallback onAlbum;
+  final String albumLabel;
 
-  const _IdleBar({super.key, required this.onNext, required this.label});
+  const _IdleBar({
+    super.key,
+    required this.onNext,
+    required this.label,
+    required this.album,
+    required this.onAlbum,
+    required this.albumLabel,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: _NewPictureButton(onTap: onNext, label: label),
+      child: Row(
+        children: [
+          if (album > 0)
+            _AlbumButton(count: album, onTap: onAlbum, label: albumLabel),
+          const Spacer(),
+          _NewPictureButton(onTap: onNext, label: label),
+        ],
       ),
     );
   }
+}
+
+/// The way into the child's own collection (п. 24). Only appears once there
+/// is something in it — an empty shelf is not an invitation, and the kid
+/// zone gets no control that does nothing.
+class _AlbumButton extends StatelessWidget {
+  final int count;
+  final VoidCallback onTap;
+  final String label;
+
+  const _AlbumButton({
+    required this.count,
+    required this.onTap,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: label,
+      child: KidTap(
+        onTap: onTap,
+        child: SizedBox(
+          width: _NewPictureButton.size,
+          height: _NewPictureButton.size,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: _NewPictureButton.size,
+                height: _NewPictureButton.size,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: DT.violet.withValues(alpha: 0.45),
+                    width: 2,
+                  ),
+                  boxShadow: DT.shadowSoft(DT.violet),
+                ),
+                child: const Center(
+                  child: AppIconView(AppIcon.stickerAlbum, size: 38),
+                ),
+              ),
+              Positioned(
+                right: -2,
+                top: -2,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: DT.sp8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: DT.violet,
+                    borderRadius: BorderRadius.circular(DT.rSm),
+                  ),
+                  child: Text(
+                    '$count',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The album itself: every picture this child has brought to full colour,
+/// newest first. Pictures only — the sheet says what it is by being full of
+/// the child's own work (rule 4). Tapping one puts it back on the canvas.
+class _AlbumSheet extends ConsumerWidget {
+  final List<CardModel> pool;
+  final ValueChanged<CardModel> onPick;
+
+  const _AlbumSheet({required this.pool, required this.onPick});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final entries = ref.watch(coloringAlbumProvider).entries;
+    final byImage = {for (final c in pool) c.image: c};
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: DT.bgWarm,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(DT.rXl)),
+      ),
+      padding: const EdgeInsets.fromLTRB(DT.sp16, DT.sp12, DT.sp16, DT.sp24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 44,
+            height: 5,
+            decoration: BoxDecoration(
+              color: DT.textMuted.withValues(alpha: 0.35),
+              borderRadius: BorderRadius.circular(DT.rSm),
+            ),
+          ),
+          const SizedBox(height: DT.sp16),
+          Flexible(
+            child: GridView.count(
+              shrinkWrap: true,
+              crossAxisCount: 3,
+              mainAxisSpacing: DT.sp12,
+              crossAxisSpacing: DT.sp12,
+              children: [
+                for (final entry in entries)
+                  _AlbumTile(
+                    key: ValueKey(entry.image),
+                    image: entry.image,
+                    card: byImage[entry.image],
+                    onTap: onPick,
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AlbumTile extends StatelessWidget {
+  final String image;
+
+  /// Null when the picture is no longer in the pool (locked again, or the
+  /// language switched away from it): it still shows, it just cannot be
+  /// reopened — the collection does not lose entries behind the child's back.
+  final CardModel? card;
+  final ValueChanged<CardModel> onTap;
+
+  const _AlbumTile({
+    super.key,
+    required this.image,
+    required this.card,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tile = Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(DT.rLg),
+        boxShadow: DT.shadowSoft(DT.violet),
+      ),
+      padding: const EdgeInsets.all(DT.sp8),
+      child: CardImage(
+        name: image,
+        fallbackEmoji: card?.emoji ?? '🖼️',
+        padding: EdgeInsets.zero,
+      ),
+    );
+    final target = card;
+    if (target == null) return tile;
+    return KidTap(onTap: () => onTap(target), child: tile);
+  }
+}
+
+// ─────────────────────────────────────────────
+//  The ghost finger (п. 24)
+// ─────────────────────────────────────────────
+
+/// One wordless demonstration on the first visit: a translucent finger
+/// draws a line across the picture and a pale trail follows it. It runs
+/// once per profile, it is `IgnorePointer` so it can never steal the
+/// child's first stroke, and [onDone] fires whether it finished or was
+/// interrupted.
+class _GhostFinger extends StatefulWidget {
+  final VoidCallback onDone;
+
+  const _GhostFinger({super.key, required this.onDone});
+
+  @override
+  State<_GhostFinger> createState() => _GhostFingerState();
+}
+
+class _GhostFingerState extends State<_GhostFinger>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl = AnimationController(
+    vsync: this,
+    duration: DT.motion.coloringHandTrace,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl
+      ..addStatusListener((status) {
+        if (status == AnimationStatus.completed) widget.onDone();
+      })
+      ..forward();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: AnimatedBuilder(
+        animation: _ctrl,
+        builder: (_, __) => CustomPaint(
+          size: Size.infinite,
+          painter: _GhostFingerPainter(_ctrl.value),
+        ),
+      ),
+    );
+  }
+}
+
+class _GhostFingerPainter extends CustomPainter {
+  _GhostFingerPainter(this.t);
+
+  /// 0 → 1 through one pass.
+  final double t;
+
+  /// Fade in, hold, fade out — as fractions of the pass.
+  static const _fadeIn = 0.08;
+  static const _fadeOut = 0.85;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final opacity = t < _fadeIn
+        ? t / _fadeIn
+        : t > _fadeOut
+            ? (1 - t) / (1 - _fadeOut)
+            : 1.0;
+    if (opacity <= 0) return;
+
+    final path = Path()
+      ..moveTo(size.width * 0.18, size.height * 0.66)
+      ..cubicTo(
+        size.width * 0.34,
+        size.height * 0.28,
+        size.width * 0.64,
+        size.height * 0.86,
+        size.width * 0.84,
+        size.height * 0.40,
+      );
+    final metric = path.computeMetrics().first;
+    final travelled = metric.length * t;
+    final trail = metric.extractPath(0, travelled);
+
+    canvas.drawPath(
+      trail,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..strokeWidth = 30
+        ..color = Colors.white.withValues(alpha: 0.42 * opacity),
+    );
+
+    final tangent = metric.getTangentForOffset(travelled);
+    final at = tangent?.position;
+    if (at == null) return;
+
+    // The finger: a pad on the line and a tapered tip leaving it — enough
+    // to read as a hand without pretending to be an illustration.
+    canvas.drawCircle(
+      at,
+      18,
+      Paint()..color = Colors.white.withValues(alpha: 0.85 * opacity),
+    );
+    canvas.drawCircle(
+      at,
+      18,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..color = DT.bloomInk.withValues(alpha: 0.30 * opacity),
+    );
+    final tip = RRect.fromRectAndRadius(
+      Rect.fromLTWH(at.dx + 6, at.dy - 58, 22, 52),
+      const Radius.circular(11),
+    );
+    canvas.drawRRect(
+      tip,
+      Paint()..color = Colors.white.withValues(alpha: 0.70 * opacity),
+    );
+    canvas.drawRRect(
+      tip,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..color = DT.bloomInk.withValues(alpha: 0.22 * opacity),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_GhostFingerPainter old) => old.t != t;
 }
 
 // ─────────────────────────────────────────────
@@ -759,6 +1194,9 @@ class _DoneBar extends StatelessWidget {
   final Color accent;
   final VoidCallback onNext;
   final String label;
+  final int album;
+  final VoidCallback onAlbum;
+  final String albumLabel;
 
   const _DoneBar({
     super.key,
@@ -766,13 +1204,16 @@ class _DoneBar extends StatelessWidget {
     required this.accent,
     required this.onNext,
     required this.label,
+    required this.album,
+    required this.onAlbum,
+    required this.albumLabel,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      padding: const EdgeInsets.fromLTRB(20, 0, 0, 0),
+      padding: EdgeInsets.fromLTRB(album > 0 ? 8 : 20, 0, 0, 0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -787,7 +1228,10 @@ class _DoneBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Text('🎉', style: TextStyle(fontSize: 28)),
+          if (album > 0)
+            _AlbumButton(count: album, onTap: onAlbum, label: albumLabel)
+          else
+            const Text('🎉', style: TextStyle(fontSize: 28)),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -831,16 +1275,19 @@ class _PaywallGate extends ConsumerWidget {
             const Text('🎨', style: TextStyle(fontSize: 96)),
             const SizedBox(height: 16),
             Text(
-              s('Понад $hundreds малюнків чекають!',
-                  '$hundreds+ drawings waiting!'),
+              s('Понад $hundreds картинок чекають!',
+                  '$hundreds+ pictures waiting!'),
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             Text(
+              // Honest about what this is: colours appear under a finger.
+              // No brush, no palette — do not promise free drawing (п. 24).
               s(
-                  'Розблокуй усі картинки одразу — і фарбуй щодня.',
-                  'Unlock all pictures — and color every day.'),
+                  'Розблокуй усі картинки — проявляй кольори пальчиком щодня.',
+                  'Unlock all pictures — reveal the colors with a finger, '
+                      'every day.'),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 15,

@@ -84,3 +84,15 @@ class PackModel {
     );
   }
 }
+
+/// Card id → the id of the pack it came from.
+///
+/// Games are handed a flat list of cards drawn from every unlocked pack,
+/// which loses the one piece of semantics the catalogue has: what a card is
+/// *about*. «Вгадай звук» needs it back to build a question out of one set
+/// (experience audit 2026-09-13 §19), so the call site that still has the
+/// packs builds this map alongside the list.
+Map<String, String> cardGroupsOf(Iterable<PackModel> packs) => {
+      for (final p in packs)
+        for (final c in p.cards) c.id: p.id,
+    };
