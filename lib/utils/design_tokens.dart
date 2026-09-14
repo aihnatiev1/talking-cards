@@ -69,6 +69,15 @@ class DT {
 
   // ── Semantic ────────────────────────────────
   static const success = Color(0xFF43A047);
+
+  /// "Look here" — the hint glow and its lightbulb, in every choice game.
+  ///
+  /// It used to be the card's own accent, which meant the hint on a card
+  /// called ЧЕРВОНИЙ was a red frame: the one colour a child (and a
+  /// parent) reads as "you got it wrong", on the tile that is in fact the
+  /// right answer. One warm amber for every card instead — the colour of
+  /// the bulb sitting on it.
+  static const hint = Color(0xFFF2A93B);
   static const warning = Color(0xFFE17055);
   static const error = Color(0xFFE53935);
 

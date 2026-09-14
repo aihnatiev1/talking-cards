@@ -20,8 +20,9 @@ enum AnswerMark {
   correct,
 
   /// The right answer, *not yet* tapped, after the second miss: the tile
-  /// glows in its pack accent and wears a hint sticker so the child knows
-  /// where to look. Never named "wrong" anywhere.
+  /// glows [DT.hint] amber and wears a lightbulb so the child knows where
+  /// to look. Never named "wrong" anywhere — and never in the card's own
+  /// colour, which on a red card said exactly that.
   hint,
 }
 
@@ -57,7 +58,9 @@ class MissTracker {
 ///   1 → 1.10 → 1 ([DT.motion.successPop], [DTMotion.emphasized]), shows a
 ///   white [AppIcon.check] sticker and fires a 12-piece [ConfettiBurst]
 ///   from the tile's own centre. Reduced motion: frame + check only.
-/// * [AnswerMark.hint] glows in [accent] on an [AmbientLoop] of
+/// * [AnswerMark.hint] glows in [DT.hint] — one amber for every card, so
+///   the nudge never arrives as a red frame on a red card — on an
+///   [AmbientLoop] of
 ///   [DT.motion.hintPulse] that settles after [DT.motion.hintSettle], and
 ///   shows an [AppIcon.hint] sticker. Reduced motion: static glow + sticker.
 ///
@@ -69,7 +72,8 @@ class AnswerFrame extends StatefulWidget {
   /// Tile surface — usually the card's `colorBg`.
   final Color background;
 
-  /// Pack / card accent — the rest border and the hint glow.
+  /// Pack / card accent — the resting border. The hint has its own colour
+  /// ([DT.hint]); see [AnswerMark.hint].
   final Color accent;
 
   final AnswerMark mark;
@@ -231,7 +235,7 @@ class _AnswerFrameState extends State<AnswerFrame>
               color: switch (mark) {
                 AnswerMark.none => widget.accent.withValues(alpha: 0.3),
                 AnswerMark.correct => DT.success,
-                AnswerMark.hint => widget.accent,
+                AnswerMark.hint => DT.hint,
               },
               width: mark == AnswerMark.none ? 1.5 : 3,
             ),
@@ -254,7 +258,7 @@ class _AnswerFrameState extends State<AnswerFrame>
               // reduced motion and after the loop settles.
               AnswerMark.hint => [
                   BoxShadow(
-                    color: widget.accent.withValues(alpha: 0.28 + 0.32 * t),
+                    color: DT.hint.withValues(alpha: 0.28 + 0.32 * t),
                     blurRadius: 14 + 10 * t,
                     spreadRadius: 1 + 3 * t,
                   ),
