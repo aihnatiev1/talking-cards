@@ -306,9 +306,16 @@ class _Round {
 // ─────────────────────────────────────────────
 
 /// Wordless "why": once the odd card is found, the three that belong
-/// together lean in towards each other and the odd one slides off the board
-/// and dims. [DT.motion.sortDemo] long, inside the [DT.motion.sortRoundGap]
-/// that was already there — the next question does not wait for it.
+/// together lean in towards each other and the odd one stays where it is,
+/// dimming and shrinking a little. [DT.motion.sortDemo] long, inside the
+/// [DT.motion.sortRoundGap] that was already there — the next question
+/// does not wait for it.
+///
+/// The odd card used to travel 42 % of a tile outwards, which on a phone
+/// walked it into the screen edge and read as the card the child had just
+/// chosen running away — or worse, as a bug. The card the child pressed
+/// stays under their finger; the answer is carried by the three that
+/// close ranks around the gap it leaves.
 ///
 /// Under reduced motion nothing travels; the success frame and sticker on
 /// the odd tile still carry the answer.
@@ -328,25 +335,19 @@ class _SortDemo extends StatelessWidget {
     required this.child,
   });
 
-  /// How far the group closes in, and how far the odd one leaves — both as
-  /// a fraction of a tile.
+  /// How far the group closes in, as a fraction of a tile. The odd one
+  /// does not move at all.
   static const _closeIn = 0.05;
-  static const _leaveX = 0.42;
-  static const _leaveY = 0.22;
 
   @override
   Widget build(BuildContext context) {
     final motion = MotionPolicy.of(context);
-    final away = column == 0 ? -_leaveX : _leaveX;
-    final awayY = row == 0 ? -_leaveY : _leaveY;
-    final offset = !playing
+    final offset = !playing || isOdd
         ? Offset.zero
-        : isOdd
-            ? Offset(away, awayY)
-            : Offset(
-                column == 0 ? _closeIn : -_closeIn,
-                row == 0 ? _closeIn : -_closeIn,
-              );
+        : Offset(
+            column == 0 ? _closeIn : -_closeIn,
+            row == 0 ? _closeIn : -_closeIn,
+          );
 
     return AnimatedSlide(
       offset: motion.reduce ? Offset.zero : offset,
