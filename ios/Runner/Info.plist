@@ -29,11 +29,15 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
-	<!-- Required by Apple's static analyzer (90683) because audio_session
-	     pulls AVAudioSession APIs whose category bit covers microphone use.
-	     The app does not record audio — string is intentionally explicit. -->
+	<!-- Was here for Apple's static analyzer (90683) alone, with a string
+	     saying the app never records. It now has a real use: "Say it with
+	     me" opens the microphone to notice whether the child took a turn.
+	     Nothing is written to disk and nothing leaves the device, and the
+	     feature is off until a grown-up turns it on — the string says
+	     exactly that, because a permission prompt is the one place a
+	     parent reads us carefully. -->
 	<key>NSMicrophoneUsageDescription</key>
-	<string>FirstWords Cards plays audio cards and never records from the microphone.</string>
+	<string>Used only while “Say it with me” is on, which a grown-up turns on in settings. The app listens for whether your child spoke — audio is never recorded, saved or sent anywhere.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>
