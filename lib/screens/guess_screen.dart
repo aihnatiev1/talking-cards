@@ -24,6 +24,7 @@ import '../widgets/entrance_stagger.dart';
 import '../widgets/game_celebration_overlay.dart';
 import '../widgets/kid_screen.dart';
 import '../widgets/kid_tap.dart';
+import '../widgets/meadow_scene.dart';
 import '../widgets/quiz_option.dart';
 
 class GuessScreen extends ConsumerStatefulWidget {
@@ -245,11 +246,21 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
     // "Guess the word"; the instruction is spoken (`instr_guess`).
     return KidScreen.game(
       accent: _accent,
+      // The same meadow Bubble Pop is played in. The board only ever
+      // fills part of the screen — two pictures fill less than four — and
+      // the rest was cream nothing, which reads as a screen that failed
+      // to load. Now it is sky, and the pictures stand on the grass.
+      background: DT.sceneSkyTop,
       title: const Text('🎧', style: TextStyle(fontSize: 28)),
       progress: state == null || state.finished
           ? null
           : state.round / state.totalRounds,
-      body: _buildBody(state),
+      body: Stack(
+        children: [
+          const Positioned.fill(child: MeadowScene()),
+          Positioned.fill(child: _buildBody(state)),
+        ],
+      ),
     );
   }
 
