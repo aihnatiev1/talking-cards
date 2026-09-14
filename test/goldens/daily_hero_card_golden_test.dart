@@ -101,13 +101,20 @@ void main() {
   });
 
   group('DailyHeroCard', () {
-    testWidgets('nothing done', (tester) async {
+    // Release A, state 1 of 3. A profile that has never started is not a
+    // profile at 0 %: no bar, a shorter first session, and Bloom inviting
+    // rather than reporting.
+    testWidgets('day one is an invitation, not a progress report', (
+      tester,
+    ) async {
       await pumpHero(
         tester,
         DailyHeroCard(
-          title: 'Кіт',
+          title: 'Перша пригода',
           accent: DT.coral,
           fallbackEmoji: '🐱',
+          firstVisit: true,
+          bloomLine: 'Ходімо, я покажу',
           onHeroTap: () {},
           mascot: mascot(),
           tasks: [
@@ -117,9 +124,43 @@ void main() {
           isEn: false,
         ),
       );
+      expect(find.text('Починаємо'), findsOneWidget);
+      expect(find.text('3 хв · 4 слова'), findsOneWidget);
+      expect(find.byType(LinearProgressIndicator), findsNothing);
       await expectLater(
         find.byKey(goldenKey),
         matchesGoldenFile('images/daily_hero_card_fresh.png'),
+      );
+    });
+
+    // State 2 of 3: steps are the fact, minutes are the aside.
+    testWidgets('in progress counts steps, not minutes', (tester) async {
+      await pumpHero(
+        tester,
+        DailyHeroCard(
+          title: 'Тварини',
+          accent: DT.coral,
+          fallbackEmoji: '🐱',
+          progress: 2 / 5,
+          stepsDone: 2,
+          minutesLeft: 3,
+          bloomLine: 'Далі: скажи «жаба»',
+          onHeroTap: () {},
+          mascot: mascot(),
+          tasks: [
+            task(AppIcon.stepCards, 'Пак дня', done: true),
+            task(AppIcon.stepQuest, 'Пригода дня', done: false, active: true),
+          ],
+          isEn: false,
+        ),
+      );
+      expect(find.text('Сьогодні'), findsOneWidget);
+      expect(find.text('2 з 5 виконано'), findsOneWidget);
+      expect(find.text('~3 хв залишилось'), findsOneWidget);
+      expect(find.text('Далі: скажи «жаба»'), findsOneWidget);
+      await expectLater(
+        find.byKey(goldenKey),
+        matchesGoldenFile('images/daily_hero_card_in_progress.png'),
       );
     });
 
@@ -162,10 +203,16 @@ void main() {
             task(AppIcon.stepQuest, 'Пригода дня', done: true),
           ],
           allDone: true,
+          stepsDone: 5,
+          bloomLine: 'Завтра: нові слова',
           onAllDoneTap: () {},
           isEn: false,
         ),
       );
+      // Finished means finished: the control goes to the library, it does
+      // not offer another lesson.
+      expect(find.text('Обрати гру'), findsOneWidget);
+      expect(find.textContaining('Завтра'), findsOneWidget);
       await expectLater(
         find.byKey(goldenKey),
         matchesGoldenFile('images/daily_hero_card_all_done.png'),

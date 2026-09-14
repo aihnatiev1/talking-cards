@@ -59,6 +59,27 @@ class DailyHeroCard extends StatelessWidget {
   final bool allDone;
   final VoidCallback? onAllDoneTap;
 
+  /// Steps of today's route, as `2 з 5 виконано`. This is the line that
+  /// answers "how much is left" — minutes are a guess, steps are a fact.
+  /// Null on the first visit, where there is no progress to show yet.
+  final int? stepsDone;
+  final int stepsTotal;
+
+  /// Rough minutes left, shown small under the steps. Secondary on
+  /// purpose: a parent plans by it, a child does not read it.
+  final int? minutesLeft;
+
+  /// Nothing has been done on this profile yet: the card stops being a
+  /// progress report and becomes an invitation — a shorter first session
+  /// (3 minutes, 4 words) and no progress bar, because a bar at 0 % is a
+  /// worse greeting than no bar at all.
+  final bool firstVisit;
+
+  /// The one short line Bloom says inside the card, and it always names
+  /// the next action ("Далі: скажи «жаба»"), never motivation for its own
+  /// sake. Null hides the line.
+  final String? bloomLine;
+
   final bool isEn;
 
   const DailyHeroCard({
@@ -76,6 +97,11 @@ class DailyHeroCard extends StatelessWidget {
     this.heroDone = false,
     this.allDone = false,
     this.onAllDoneTap,
+    this.stepsDone,
+    this.stepsTotal = 5,
+    this.minutesLeft,
+    this.firstVisit = false,
+    this.bloomLine,
   });
 
   @override
@@ -123,6 +149,11 @@ class DailyHeroCard extends StatelessWidget {
                   mascot: mascot,
                   onTap: onHeroTap,
                   onLongPress: onHeroLongPress,
+                  stepsDone: stepsDone,
+                  stepsTotal: stepsTotal,
+                  minutesLeft: minutesLeft,
+                  firstVisit: firstVisit,
+                  bloomLine: bloomLine,
                 ),
                 // Hairline instead of a second frame: the stones belong to
                 // the hero, they are not a separate card.
@@ -162,6 +193,11 @@ class _HeroPane extends StatefulWidget {
   final Widget? mascot;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
+  final int? stepsDone;
+  final int stepsTotal;
+  final int? minutesLeft;
+  final bool firstVisit;
+  final String? bloomLine;
 
   const _HeroPane({
     required this.title,
@@ -174,6 +210,11 @@ class _HeroPane extends StatefulWidget {
     required this.mascot,
     required this.onTap,
     required this.onLongPress,
+    required this.stepsDone,
+    required this.stepsTotal,
+    required this.minutesLeft,
+    required this.firstVisit,
+    required this.bloomLine,
   });
 
   @override
@@ -209,11 +250,29 @@ class _HeroPaneState extends State<_HeroPane>
       builder: (context, bounds) {
         final compact = bounds.maxWidth < 400;
         final artWidth = math.min(bounds.maxWidth * .36, 225.0);
-        final heading = widget.heroDone
+        final heading = widget.firstVisit
+            ? (widget.isEn ? 'Starting out' : 'Починаємо')
+            : widget.heroDone
             ? (widget.isEn ? 'Well done!' : 'Молодець!')
-            : progress != null
-            ? (widget.isEn ? 'Let’s continue' : 'Продовжимо гру')
-            : (widget.isEn ? 'Discover today' : 'Відкриваємо світ');
+            : (widget.isEn ? 'Today' : 'Сьогодні');
+
+        // The line under the title. First visit sells how small the first
+        // session is; after that, steps — a fact — carry it, and minutes
+        // ride underneath in a smaller, quieter size.
+        final done = widget.stepsDone;
+        final String? factLine = widget.firstVisit
+            ? (widget.isEn ? '3 min · 4 words' : '3 хв · 4 слова')
+            : done == null
+            ? null
+            : (widget.isEn
+                  ? '$done of ${widget.stepsTotal} done'
+                  : '$done з ${widget.stepsTotal} виконано');
+        final minutes = widget.minutesLeft;
+        final String? minutesLine = widget.firstVisit || minutes == null
+            ? null
+            : (widget.isEn ? '~$minutes min left' : '~$minutes хв залишилось');
+        // A bar at 0 % is a worse greeting than no bar.
+        final showBar = !widget.firstVisit && progress != null;
         double textHeight(String text, TextStyle style) {
           final painter =
               TextPainter(
@@ -240,7 +299,10 @@ class _HeroPaneState extends State<_HeroPane>
               7 +
               16 +
               76 +
-              (progress == null ? 0 : 18) +
+              (showBar ? 18 : 0) +
+              (factLine == null ? 0 : 22) +
+              (minutesLine == null ? 0 : 18) +
+              (widget.bloomLine == null ? 0 : 24) +
               textHeight(heading, DT.caption.copyWith(fontSize: 12)) +
               textHeight(
                 widget.title,
@@ -274,7 +336,25 @@ class _HeroPaneState extends State<_HeroPane>
                   height: 1.15,
                 ),
               ),
-              if (progress != null) ...[
+              if (factLine != null) ...[
+                const SizedBox(height: 6),
+                Text(
+                  factLine,
+                  style: DT.tileTitle.copyWith(
+                    fontSize: 13,
+                    color: DT.onTint(accent),
+                  ),
+                ),
+              ],
+              if (minutesLine != null)
+                Text(
+                  minutesLine,
+                  style: DT.caption.copyWith(
+                    fontSize: 11,
+                    color: DT.textSecondary,
+                  ),
+                ),
+              if (showBar) ...[
                 const SizedBox(height: 12),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(6),
@@ -326,6 +406,21 @@ class _HeroPaneState extends State<_HeroPane>
                   ],
                 ],
               ),
+              // Bloom's line lives inside the card, under the button he is
+              // pointing at: one sentence naming the next action. It is
+              // where Speak & Repeat will speak from.
+              if (widget.bloomLine != null) ...[
+                const SizedBox(height: 6),
+                Text(
+                  widget.bloomLine!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: DT.caption.copyWith(
+                    fontSize: 12,
+                    color: DT.textSecondary,
+                  ),
+                ),
+              ],
             ],
           ),
         );
@@ -644,6 +739,13 @@ class _SparklePainter extends CustomPainter {
   bool shouldRepaint(_SparklePainter old) => old.t != t;
 }
 
+/// The end of the day: what was done, a quiet way into the library, and
+/// what waits tomorrow.
+///
+/// It used to be one green bar saying "All done today!" and it is still
+/// that shape — but the control is now secondary and named ("Обрати гру"),
+/// because a card that says "finished" and then pushes another lesson is
+/// arguing with itself.
 class _AllDoneRow extends StatelessWidget {
   final bool isEn;
   final VoidCallback? onTap;
@@ -664,11 +766,11 @@ class _AllDoneRow extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const AppIconView(AppIcon.rewardGift, size: 26),
+            const AppIconView(AppIcon.navGames, size: 26),
             const SizedBox(width: DT.sp8),
             Flexible(
               child: Text(
-                isEn ? 'All done today!' : 'Все на сьогодні готово!',
+                isEn ? 'Pick a game' : 'Обрати гру',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 // One green: the done-tint's own ink, not the brand indigo.

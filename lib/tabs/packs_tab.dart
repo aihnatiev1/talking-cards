@@ -508,6 +508,33 @@ class _PacksTabState extends ConsumerState<PacksTab> {
         questState.completed.contains(QuestTask.reviewOldCard);
 
     final allDone = questState.allDone;
+    // Release A — the card answers one question: what now?
+    //
+    //  * steps, not minutes, carry the progress line (`2 з 5 виконано`);
+    //  * a profile that has done nothing at all gets an invitation, not a
+    //    progress report at 0 %, and a shorter first session;
+    //  * Bloom says one line and it always names the next action.
+    final stepsDone = questState.doneCount;
+    final stepsTotal = questState.totalCount;
+    final sHero = AppS(isEn);
+    // Nothing done today, nothing finished ever, nothing in progress: a
+    // profile that has not started, not one that is at 0 % of today.
+    final firstVisit = questState.completed.isEmpty &&
+        completedPacks.isEmpty &&
+        continueProgress == 0;
+    // One step ≈ a minute of a child's attention; rounded up so the card
+    // never promises less than it asks for.
+    final remaining = stepsTotal - stepsDone;
+    final minutesLeft = allDone ? null : (remaining < 1 ? 1 : remaining);
+    final bloomLine = firstVisit
+        ? sHero('Ходімо, я покажу', 'Come on, I will show you')
+        : allDone
+        ? sHero('Завтра: нові слова', 'Tomorrow: new words')
+        : !listenDone
+        ? sHero('Далі: послухай картку', 'Next: listen to the card')
+        : !viewDone
+        ? sHero('Далі: погортай картки', 'Next: swipe some cards')
+        : sHero('Далі: пограємо', 'Next: a game');
     if (allDone) {
       // Fire-and-forget; internal guard prevents duplicate logs per day.
       unawaited(_maybeLogTodayPlanComplete(allDone));
@@ -666,6 +693,11 @@ class _PacksTabState extends ConsumerState<PacksTab> {
         tasks: [cardTask, adventureTask],
         allDone: allDone,
         onAllDoneTap: allDone ? onAllDone : null,
+        stepsDone: firstVisit ? null : stepsDone,
+        stepsTotal: stepsTotal,
+        minutesLeft: minutesLeft,
+        firstVisit: firstVisit,
+        bloomLine: bloomLine,
         isEn: isEn,
       );
     }
@@ -683,6 +715,11 @@ class _PacksTabState extends ConsumerState<PacksTab> {
         tasks: [packTask, adventureTask],
         allDone: allDone,
         onAllDoneTap: allDone ? onAllDone : null,
+        stepsDone: firstVisit ? null : stepsDone,
+        stepsTotal: stepsTotal,
+        minutesLeft: minutesLeft,
+        firstVisit: firstVisit,
+        bloomLine: bloomLine,
         isEn: isEn,
       );
     }
@@ -702,6 +739,11 @@ class _PacksTabState extends ConsumerState<PacksTab> {
       tasks: [adventureTask],
       allDone: allDone,
       onAllDoneTap: allDone ? onAllDone : null,
+      stepsDone: firstVisit ? null : stepsDone,
+      stepsTotal: stepsTotal,
+      minutesLeft: minutesLeft,
+      firstVisit: firstVisit,
+      bloomLine: bloomLine,
       isEn: isEn,
     );
   }
