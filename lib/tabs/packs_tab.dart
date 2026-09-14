@@ -312,6 +312,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
       }
     }
     ref.read(lastOpenedPackProvider.notifier).record(pack.id);
+    AnalyticsService.instance.logFirstAction('library_pack');
     Navigator.of(context).push(KidRoutes.content(CardsScreen(pack: pack)));
   }
 
@@ -568,6 +569,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
     void openCardOfDay() {
       if (cotd == null) return;
       AnalyticsService.instance.logCardOfDayTap(cotd.id);
+      AnalyticsService.instance.logFirstAction('hero_cta');
       AudioService.instance.speakCard(cotd.audioKey, cotd.sound, cotd.text);
       ref
           .read(dailyQuestProvider.notifier)
@@ -688,6 +690,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
         mascot: mascot,
         onHeroTap: () {
           AnalyticsService.instance.logContinueHeroTap(cp.id);
+          AnalyticsService.instance.logFirstAction('hero_cta');
           _onPackTap(context, cp);
         },
         tasks: [cardTask, adventureTask],
@@ -735,7 +738,10 @@ class _PacksTabState extends ConsumerState<PacksTab> {
       fallbackEmoji: rp.icon,
       heroDone: viewDone,
       mascot: mascot,
-      onHeroTap: () => _onPackTap(context, rp),
+      onHeroTap: () {
+        AnalyticsService.instance.logFirstAction('hero_cta');
+        _onPackTap(context, rp);
+      },
       tasks: [adventureTask],
       allDone: allDone,
       onAllDoneTap: allDone ? onAllDone : null,

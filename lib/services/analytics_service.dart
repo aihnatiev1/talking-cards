@@ -166,6 +166,33 @@ class AnalyticsService {
 
   Future<void> logOnboardingComplete() => _safeLog('tutorial_complete');
 
+  // --- Release A: where a session actually starts ---
+
+  /// The source recorded for this launch, or null before the first one.
+  String? _firstActionSource;
+
+  /// The first thing the child was taken into this launch, and what sent
+  /// them there: `hero_cta`, `library_pack`, `games_tab`, `coloring_tab`,
+  /// `quest_map`.
+  ///
+  /// This is the one number Release A is judged by — a home built around a
+  /// single "what now?" either gets sessions started from that card or it
+  /// does not, and a per-screen open count cannot tell us. Fires at most
+  /// once per launch, so a long session counts as one answer.
+  Future<void> logFirstAction(String source) {
+    if (_firstActionSource != null) return Future.value();
+    _firstActionSource = source;
+    return _safeLog('session_first_action', {'source': source});
+  }
+
+  /// Tests only.
+  @visibleForTesting
+  String? get debugFirstActionSource => _firstActionSource;
+
+  /// Tests only: forget that this launch already answered.
+  @visibleForTesting
+  void debugResetFirstAction() => _firstActionSource = null;
+
   // --- Home / Today's Plan ---
 
   Future<void> logContinueHeroTap(String packId) =>

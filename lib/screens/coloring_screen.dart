@@ -216,6 +216,7 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
   // ─────────────────────────────────────────────
 
   Future<void> _pickCardAndLoad() async {
+    AnalyticsService.instance.logFirstAction('coloring_tab');
     // The album knows which picture was left half-revealed last time; the
     // canvas waits that one read rather than dealing a stranger over it.
     final album = ref.read(coloringAlbumProvider.notifier);

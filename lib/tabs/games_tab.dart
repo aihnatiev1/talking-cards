@@ -13,6 +13,7 @@ import '../screens/memory_match_screen.dart';
 import '../screens/odd_one_out_screen.dart';
 import '../screens/opposite_game_screen.dart';
 import '../screens/repeat_game_screen.dart';
+import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../services/paywall_flow.dart';
 import '../utils/app_icons.dart';
@@ -63,6 +64,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
   /// first-time family gets lands on the games list, after the screen and
   /// its celebration are gone — never over a dialog a toddler is tapping.
   Future<void> _openGame(Route<void> route) async {
+    AnalyticsService.instance.logFirstAction('games_tab');
     await Navigator.of(context).push(route);
     if (!mounted) return;
     await ref.read(appReviewControllerProvider).askIfFirstGamePending();
