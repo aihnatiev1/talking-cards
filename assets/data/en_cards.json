@@ -2928,7 +2928,7 @@
     "title": "Sound R",
     "icon": "R",
     "color": "#E53935",
-    "isLocked": false,
+    "isLocked": true,
     "cards": [
       {
         "id": "en_sr01",
