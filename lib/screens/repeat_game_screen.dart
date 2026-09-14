@@ -221,7 +221,8 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
     // child's field of play (CLAUDE.md rule 4).
     return KidScreen.game(
       accent: DT.brand,
-      background: DT.mintTint,
+      // Played in the games' meadow, like every other game.
+      meadow: true,
       title: _TogetherChip(label: s('Разом із дорослим', 'With a grown-up')),
       progress: _deck.isEmpty ? null : _index / _deck.length,
       body: Padding(

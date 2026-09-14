@@ -190,16 +190,20 @@ void main() {
     });
   });
 
-  group('BubbleStage — spawn zone keeps clear of Bloom', () {
+  group('BubbleStage — bubbles rise from the whole floor', () {
     for (final (name, body, device) in const [
       ('phone', Size(390, 700), BubbleDeviceClass.phone),
       ('iPad landscape', Size(1194, 690), BubbleDeviceClass.tabletL),
     ]) {
-      test('100 spawns on $name never overlap his box (+24 dp)', () {
+      test('100 spawns on $name use the width, not a lane', () {
+        // The old rule clamped every spawn left of Bloom's column, which
+        // on a phone is a ~90 dp band: every bubble rose from one spot and
+        // a child aiming at one hit its neighbour.
         final rng = Random(7);
         final bloom = BubbleStage.bloomRect(body, device);
-        final keepOut = bloom.inflate(BubbleStage.bloomMargin);
         final t = BubbleTuning.forLevel(1, device); // the biggest bubbles
+        final xs = <double>[];
+        var overBloom = 0;
         for (var i = 0; i < 100; i++) {
           final size =
               t.minDiameter + rng.nextDouble() * (t.maxDiameter - t.minDiameter);
@@ -211,13 +215,29 @@ void main() {
             amplitude: amp,
             bloom: bloom,
           );
-          // The whole swing, as a horizontal span at any height.
           final left = x - size / 2 - amp;
           final right = x + size / 2 + amp;
-          expect(right, lessThanOrEqualTo(keepOut.left),
-              reason: 'spawn $i: [$left, $right] vs Bloom $keepOut');
-          expect(left, greaterThanOrEqualTo(0));
+          // Still never off the screen.
+          expect(left, greaterThanOrEqualTo(-0.001), reason: 'spawn $i');
+          expect(right, lessThanOrEqualTo(body.width + 0.001), reason: 'spawn $i');
+          xs.add(x);
+          if (right > bloom.left - BubbleStage.bloomMargin &&
+              left < bloom.right + BubbleStage.bloomMargin) {
+            overBloom++;
+          }
         }
+
+        // The floor, both halves of it. Under the old rule nothing was
+        // ever born past ~45 % of a phone's width.
+        expect(xs.reduce(min), lessThan(body.width * 0.35),
+            reason: 'nothing born on the left');
+        expect(xs.reduce(max), greaterThan(body.width * 0.65),
+            reason: 'nothing born on the right — this is the lane bug');
+        // His ears stay mostly clear — a preference, not a wall. With
+        // level-1 bubbles (the biggest in the game) on a phone the clear
+        // window is narrow, so a fifth of them passing over him is the
+        // price of using the whole floor. He is painted under them.
+        expect(overBloom, lessThan(25), reason: '$overBloom/100 over Bloom');
       });
     }
 

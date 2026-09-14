@@ -179,7 +179,8 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
     // thumbnails + ❓ below is the child's question.
     return KidScreen.game(
       accent: DT.brand,
-      background: DT.violetTint,
+      // Played in the games' meadow, like every other game.
+      meadow: true,
       body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(

@@ -8,6 +8,7 @@ import '../utils/design_tokens.dart';
 import '../utils/kid_routes.dart';
 import '../utils/motion.dart';
 import 'kid_tap.dart';
+import 'meadow_scene.dart';
 
 /// The one scaffold for every child-facing screen (architecture-gap-audit
 /// 2026-09-13 §1.7 / F6; ux-gap-audit G6).
@@ -52,6 +53,7 @@ class KidScreen extends StatelessWidget {
     this.bottom,
     this.mascotCorner,
     this.background = DT.bgWarm,
+    this.meadow = false,
     this.resizeToAvoidBottomInset,
   }) : _close = false;
 
@@ -68,6 +70,7 @@ class KidScreen extends StatelessWidget {
     this.bottom,
     this.mascotCorner,
     this.background = DT.bgWarm,
+    this.meadow = false,
     this.resizeToAvoidBottomInset,
   }) : _close = true;
 
@@ -102,6 +105,16 @@ class KidScreen extends StatelessWidget {
   final Widget? mascotCorner;
 
   final Color background;
+
+  /// Paints [MeadowScene] behind everything — header included, so a cloud
+  /// can pass under the close button — and takes over [background].
+  ///
+  /// A game screen with nothing behind it reads as one that failed to
+  /// load, and the emptiness grows the moment a board is small. The sky
+  /// is the games' room; only screens that are a room of their own (a
+  /// table of face-down cards) keep their own colour.
+  final bool meadow;
+
   final bool? resizeToAvoidBottomInset;
 
   /// Header band: a 72 dp control plus [DT.sp8] above and below.
@@ -131,9 +144,11 @@ class KidScreen extends StatelessWidget {
     return _KidScreenScope(
       accent: accent,
       child: Scaffold(
-        backgroundColor: background,
+        backgroundColor: meadow ? DT.sceneSkyTop : background,
         resizeToAvoidBottomInset: resizeToAvoidBottomInset,
-        body: SafeArea(
+        body: _behindTheGame(
+          meadow: meadow,
+          child: SafeArea(
           child: Column(
             children: [
               // An empty band is not a header. `showLeading: false` keeps
@@ -175,10 +190,22 @@ class KidScreen extends StatelessWidget {
               if (bottom != null) bottom!, // guarded by the `if` above
             ],
           ),
+          ),
         ),
       ),
     );
   }
+}
+
+/// The sky, when a screen asked for one.
+Widget _behindTheGame({required bool meadow, required Widget child}) {
+  if (!meadow) return child;
+  return Stack(
+    children: [
+      const Positioned.fill(child: MeadowScene()),
+      Positioned.fill(child: child),
+    ],
+  );
 }
 
 class _KidScreenScope extends InheritedWidget {

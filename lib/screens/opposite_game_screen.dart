@@ -168,7 +168,8 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
     // No text title — the ↔️ row under the question card is the prompt.
     return KidScreen.game(
       accent: DT.brand,
-      background: DT.violetTint,
+      // Played in the games' meadow, like every other game.
+      meadow: true,
       body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(

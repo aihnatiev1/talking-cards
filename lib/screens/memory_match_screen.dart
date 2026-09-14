@@ -904,7 +904,10 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
     return KidScreen.game(
       accent: color,
       // The room, not the objects: a dark tablet at bedtime dims the table
-      // the cards lie on, never the cards.
+      // the cards lie on, never the cards — so the meadow stays out of
+      // dark mode, where a bright sky would be the one thing shouting in
+      // a room deliberately turned down.
+      meadow: !isDark,
       background: isDark ? DT.bgDark : _theme.bg,
       // No title: cards may come from several packs, so naming one would be
       // wrong, and "Find the pair" is spoken, not read.

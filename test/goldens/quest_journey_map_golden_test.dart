@@ -18,18 +18,30 @@ void main() {
   const size = Size(390, 844);
 
   Widget map(DailyQuestState quest) => SafeArea(
-        child: QuestJourneyMap(
-          quest: quest,
-          isEn: false,
-          onStopTap: (_) {},
-          onClaimTreasure: () {},
-        ),
-      );
+    child: QuestJourneyMap(
+      quest: quest,
+      isEn: false,
+      onStopTap: (_) {},
+      onClaimTreasure: () {},
+    ),
+  );
+
+  Future<void> loadArtwork(WidgetTester tester) async {
+    final art = find.byKey(const ValueKey('journey-storybook'));
+    await tester.runAsync(
+      () => precacheImage(tester.widget<Image>(art).image, tester.element(art)),
+    );
+    await tester.pumpAndSettle();
+  }
 
   group('QuestJourneyMap', () {
     testWidgets('fresh day — first stop active', (tester) async {
-      await pumpGolden(tester, map(const DailyQuestState(date: 'test')),
-          size: size);
+      await pumpGolden(
+        tester,
+        map(const DailyQuestState(date: 'test')),
+        size: size,
+      );
+      await loadArtwork(tester);
       await expectLater(
         find.byKey(goldenKey),
         matchesGoldenFile('images/quest_journey_map_fresh.png'),
@@ -39,12 +51,15 @@ void main() {
     testWidgets('two stops done — third active', (tester) async {
       await pumpGolden(
         tester,
-        map(const DailyQuestState(
-          date: 'test',
-          completed: {QuestTask.listenCardOfDay, QuestTask.viewCards3},
-        )),
+        map(
+          const DailyQuestState(
+            date: 'test',
+            completed: {QuestTask.listenCardOfDay, QuestTask.viewCards3},
+          ),
+        ),
         size: size,
       );
+      await loadArtwork(tester);
       await expectLater(
         find.byKey(goldenKey),
         matchesGoldenFile('images/quest_journey_map_midway.png'),
@@ -54,12 +69,15 @@ void main() {
     testWidgets('all done — treasure ready to open', (tester) async {
       await pumpGolden(
         tester,
-        map(DailyQuestState(
-          date: 'test',
-          completed: QuestTask.values.take(5).toSet(),
-        )),
+        map(
+          DailyQuestState(
+            date: 'test',
+            completed: QuestTask.values.take(5).toSet(),
+          ),
+        ),
         size: size,
       );
+      await loadArtwork(tester);
       await expectLater(
         find.byKey(goldenKey),
         matchesGoldenFile('images/quest_journey_map_done.png'),

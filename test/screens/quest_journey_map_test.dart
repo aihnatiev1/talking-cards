@@ -52,7 +52,11 @@ void main() {
           expect(rects[i].left, greaterThanOrEqualTo(0));
           expect(rects[i].right, lessThanOrEqualTo(size.width));
           for (var j = i + 1; j < 6; j++) {
-            expect(rects[i].overlaps(rects[j]), isFalse);
+            expect(
+              rects[i].overlaps(rects[j]),
+              isFalse,
+              reason: 'Stops $i and $j overlap at $size',
+            );
           }
         }
         await tester.ensureVisible(
@@ -112,6 +116,11 @@ void main() {
             ),
           ),
         ),
+      );
+      final art = find.byKey(const ValueKey('journey-storybook'));
+      await tester.runAsync(
+        () =>
+            precacheImage(tester.widget<Image>(art).image, tester.element(art)),
       );
       await tester.pumpAndSettle();
     }

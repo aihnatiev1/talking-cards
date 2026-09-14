@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 import 'dart:ui' show PathMetric;
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../providers/daily_quest_provider.dart';
 import '../services/feedback_service.dart';
@@ -39,14 +38,14 @@ const _icons = [
   AppIcon.rewardChestClosed,
 ];
 
-/// Half the stop plate, and the plate itself: a 80×80 target (G12).
-const double _plate = 80;
+/// A child-sized icon plate inside an 80×80 touch target.
+const double _plate = 72;
 
 /// Where the trail runs relative to a stop's [Positioned] box — the plate
-/// sits at the top of that box, so its centre is 40 dp down. Shared by the
-/// landscape painter and by Bloom, so the walker's feet stay on the path.
-List<Offset> _centresOf(List<Offset> positions) =>
-    [for (final p in positions) p + const Offset(0, _plate / 2)];
+/// sits at the top of that box. The artwork and Bloom use the same anchors.
+List<Offset> _centresOf(List<Offset> positions) => [
+  for (final p in positions) p + const Offset(0, _plate / 2),
+];
 
 /// One segment of the sand path. [arch] is the wide-layout flyover; the
 /// phone layout switchbacks down the meadow.
@@ -66,7 +65,14 @@ Path _trailSegment(Offset a, Offset b, double w, {required bool arch}) {
   final direction = b.dx > a.dx ? 1.0 : -1.0;
   final mid = (a.dy + b.dy) / 2;
   final bend = (b.dx + direction * w * .13).clamp(28.0, w - 28);
-  path.cubicTo(a.dx + direction * w * .12, a.dy - 15, bend, mid - 45, bend, mid);
+  path.cubicTo(
+    a.dx + direction * w * .12,
+    a.dy - 15,
+    bend,
+    mid - 45,
+    bend,
+    mid,
+  );
   path.cubicTo(
     bend,
     mid + 48,
@@ -144,12 +150,11 @@ class QuestJourneyMap extends StatelessWidget {
       ),
       child: LayoutBuilder(
         builder: (context, viewport) {
-          final wide = viewport.maxWidth > viewport.maxHeight * 1.25;
           return SingleChildScrollView(
             key: const ValueKey('journey-scroll'),
             child: Center(
               child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: wide ? 1100 : 800),
+                constraints: const BoxConstraints(maxWidth: 720),
                 child: Column(
                   children: [
                     _PawHeader(
@@ -165,56 +170,27 @@ class QuestJourneyMap extends StatelessWidget {
                     LayoutBuilder(
                       builder: (context, bounds) {
                         final width = bounds.maxWidth;
-                        final nodeWidth = math.min(
-                          wide ? width / 3 - 24 : width * .46,
-                          180.0,
-                        );
-                        double measure(String text) {
-                          final painter = TextPainter(
-                            text: TextSpan(
-                              text: text,
-                              style: DefaultTextStyle.of(
-                                context,
-                              ).style.merge(labelStyle),
+                        // Keep the complete book visible at its original aspect ratio.
+                        // Only the icon targets sit on the artwork; the current
+                        // instruction lives below it so large text cannot collide.
+                        const nodeWidth = 80.0;
+                        const rowHeight = 80.0;
+                        final height = width * 1.5;
+                        const anchors = [
+                          Offset(.26, .27),
+                          Offset(.60, .40),
+                          Offset(.28, .53),
+                          Offset(.76, .60),
+                          Offset(.30, .74),
+                          Offset(.78, .81),
+                        ];
+                        final positions = [
+                          for (final anchor in anchors)
+                            Offset(
+                              width * anchor.dx,
+                              height * anchor.dy - _plate / 2,
                             ),
-                            textDirection: Directionality.of(context),
-                            textScaler: MediaQuery.textScalerOf(context),
-                          )..layout(maxWidth: nodeWidth);
-                          final result = painter.height;
-                          painter.dispose();
-                          return result;
-                        }
-
-                        final labelHeight = labels.map(measure).reduce(math.max);
-                        final rowHeight = math.max(
-                          112.0,
-                          _plate + 12 + labelHeight,
-                        );
-                        // Unequal clearances and lateral offsets make a real trail,
-                        // while measured text keeps every waypoint in its own space.
-                        final height = math.max(
-                          wide ? rowHeight * 2.7 + 80 : rowHeight * 8.1 + 100,
-                          viewport.maxHeight - 108,
-                        );
-                        final cell = wide
-                            ? (height - 80) / 2.7
-                            : (height - 100) / 8.1;
-                        const xs = [.24, .71, .35, .76, .23, .59];
-                        const ys = [0.0, 1.25, 2.9, 4.35, 5.9, 7.05];
-                        final positions = List.generate(6, (i) {
-                          if (wide) {
-                            final col = i < 3 ? i : 5 - i;
-                            return Offset(
-                              width * (col + .5) / 3,
-                              34 +
-                                  (i < 3
-                                          ? (i == 1 ? .25 : 0)
-                                          : (i == 4 ? 1.55 : 1.4)) *
-                                      cell,
-                            );
-                          }
-                          return Offset(width * xs[i], 40 + ys[i] * cell);
-                        });
+                        ];
                         final centres = _centresOf(positions);
                         // Bloom stands beside the plate, on whichever side
                         // keeps him inside the map.
@@ -228,14 +204,11 @@ class QuestJourneyMap extends StatelessWidget {
                             children: [
                               Positioned.fill(
                                 child: RepaintBoundary(
-                                  child: CustomPaint(
-                                    painter: _LandscapePainter(
-                                      positions: positions,
-                                      completed: _tasks
-                                          .map(q.completed.contains)
-                                          .toList(),
-                                      wide: wide,
-                                    ),
+                                  child: Image.asset(
+                                    'assets/images/journey_storybook.webp',
+                                    key: const ValueKey('journey-storybook'),
+                                    fit: BoxFit.contain,
+                                    excludeFromSemantics: true,
                                   ),
                                 ),
                               ),
@@ -249,14 +222,15 @@ class QuestJourneyMap extends StatelessWidget {
                                     key: ValueKey('journey-stop-$i'),
                                     index: i,
                                     label: labels[i],
-                                    labelStyle: labelStyle,
                                     done: i < 5
                                         ? q.completed.contains(_tasks[i])
                                         : q.rewardClaimed,
                                     active: i == current,
                                     celebrate:
                                         i < 5 && _tasks[i] == justCompleted,
-                                    opened: i == 5 && (q.allDone || q.rewardClaimed),
+                                    opened:
+                                        i == 5 &&
+                                        (q.allDone || q.rewardClaimed),
                                     onTap: i == 5
                                         ? (q.allDone && !q.rewardClaimed
                                               ? onClaimTreasure
@@ -280,7 +254,7 @@ class QuestJourneyMap extends StatelessWidget {
                                               centres[current - 1],
                                               centres[current],
                                               width,
-                                              arch: wide && current - 1 != 2,
+                                              arch: false,
                                             ),
                                       fromShift: current == 0
                                           ? Offset.zero
@@ -296,6 +270,18 @@ class QuestJourneyMap extends StatelessWidget {
                           ),
                         );
                       },
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+                      child: AnimatedSwitcher(
+                        duration: MotionPolicy.of(context).dur(DT.motion.base),
+                        child: Text(
+                          labels[current],
+                          key: ValueKey(labels[current]),
+                          textAlign: TextAlign.center,
+                          style: labelStyle,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -352,25 +338,32 @@ class _PawHeader extends StatelessWidget {
               ),
             ],
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (themeImage != null) ...[
-                _ThemeMedallion(
-                  key: const ValueKey('journey-theme'),
-                  image: themeImage!,
-                  label: themeLabel,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (themeImage != null) ...[
+                  _ThemeMedallion(
+                    key: const ValueKey('journey-theme'),
+                    image: themeImage!,
+                    label: themeLabel,
+                  ),
+                  const SizedBox(width: 10),
+                ],
+                for (var i = 0; i < done.length; i++)
+                  _Paw(
+                    key: ValueKey('journey-paw-$i'),
+                    index: i,
+                    done: done[i],
+                  ),
+                const SizedBox(width: 8),
+                AppIconView(
+                  opened ? AppIcon.rewardChestOpen : AppIcon.rewardChestClosed,
+                  size: 34,
                 ),
-                const SizedBox(width: 10),
               ],
-              for (var i = 0; i < done.length; i++)
-                _Paw(key: ValueKey('journey-paw-$i'), index: i, done: done[i]),
-              const SizedBox(width: 8),
-              AppIconView(
-                opened ? AppIcon.rewardChestOpen : AppIcon.rewardChestClosed,
-                size: 34,
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -453,7 +446,6 @@ class _Paw extends StatelessWidget {
 class _JourneyStop extends StatelessWidget {
   final int index;
   final String label;
-  final TextStyle labelStyle;
   final bool done, active, opened;
 
   /// This stop was finished on the screen the child has just come back
@@ -465,7 +457,6 @@ class _JourneyStop extends StatelessWidget {
     super.key,
     required this.index,
     required this.label,
-    required this.labelStyle,
     required this.done,
     required this.active,
     required this.opened,
@@ -496,43 +487,46 @@ class _JourneyStop extends StatelessWidget {
                   _ArrivalPop(
                     play: celebrate,
                     child: Container(
-                    width: _plate,
-                    height: _plate,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(26),
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Color.lerp(color, Colors.white, .48)!, color],
-                      ),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: .95),
-                        width: 3,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Color.lerp(color, _ink, .3)!,
-                          offset: const Offset(0, 6),
+                      width: _plate,
+                      height: _plate,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(26),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color.lerp(color, Colors.white, .48)!,
+                            color,
+                          ],
                         ),
-                        BoxShadow(
-                          color: _ink.withValues(alpha: .18),
-                          offset: const Offset(0, 11),
-                          blurRadius: 10,
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: .95),
+                          width: 3,
                         ),
-                        if (active)
+                        boxShadow: [
                           BoxShadow(
-                            color: color.withValues(alpha: .4),
-                            blurRadius: 22,
-                            spreadRadius: 5,
+                            color: Color.lerp(color, _ink, .3)!,
+                            offset: const Offset(0, 6),
                           ),
-                      ],
+                          BoxShadow(
+                            color: _ink.withValues(alpha: .18),
+                            offset: const Offset(0, 11),
+                            blurRadius: 10,
+                          ),
+                          if (active)
+                            BoxShadow(
+                              color: color.withValues(alpha: .4),
+                              blurRadius: 22,
+                              spreadRadius: 5,
+                            ),
+                        ],
+                      ),
+                      alignment: Alignment.center,
+                      // The landmark stays when the stop is finished — a bare
+                      // check says "something happened" but not what; the
+                      // check rides as a small badge instead.
+                      child: AppIconView(icon, size: 46, sticker: true),
                     ),
-                    alignment: Alignment.center,
-                    // The landmark stays when the stop is finished — a bare
-                    // check says "something happened" but not what; the
-                    // check rides as a small badge instead.
-                    child: AppIconView(icon, size: 46, sticker: true),
-                  ),
                   ),
                   if (done || (index == 5 && onTap == null && !opened))
                     Positioned(
@@ -555,10 +549,6 @@ class _JourneyStop extends StatelessWidget {
                     ),
                 ],
               ),
-            ),
-            const SizedBox(height: 6),
-            Flexible(
-              child: Text(label, textAlign: TextAlign.center, style: labelStyle),
             ),
           ],
         ),
@@ -784,307 +774,4 @@ class _SparkPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _SparkPainter old) => old.t != t;
-}
-
-class _LandscapePainter extends CustomPainter {
-  final List<Offset> positions;
-  final List<bool> completed;
-  final bool wide;
-  _LandscapePainter({
-    required this.positions,
-    required this.completed,
-    required this.wide,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final p = Paint()..isAntiAlias = true;
-    void oval(Offset c, double w, double h, Color color) {
-      p
-        ..style = PaintingStyle.fill
-        ..color = color;
-      canvas.drawOval(Rect.fromCenter(center: c, width: w, height: h), p);
-    }
-
-    void circle(Offset c, double r, Color color) =>
-        oval(c, r * 2, r * 2, color);
-    void line(Offset a, Offset b, Color color, double width) {
-      p
-        ..style = PaintingStyle.stroke
-        ..color = color
-        ..strokeWidth = width
-        ..strokeCap = StrokeCap.round;
-      canvas.drawLine(a, b, p);
-      p.style = PaintingStyle.fill;
-    }
-
-    final w = size.width;
-    // Distinct storybook regions: sky, apricot meadow, lavender hills.
-    oval(
-      Offset(w * .05, size.height * .16),
-      w * 1.08,
-      size.height * .33,
-      const Color(0xFFFCE4A5),
-    );
-    oval(
-      Offset(w * .94, size.height * .48),
-      w * .94,
-      size.height * .36,
-      const Color(0xFFE1D8F7),
-    );
-    oval(
-      Offset(w * .12, size.height * .77),
-      w * 1.0,
-      size.height * .31,
-      const Color(0xFFBFE5C1),
-    );
-    oval(
-      Offset(w * .84, size.height * .96),
-      w * 1.1,
-      size.height * .29,
-      const Color(0xFFF7D0BF),
-    );
-
-    final decoScale = (w / 430).clamp(.8, 1.5);
-    void cloud(Offset c) {
-      oval(
-        c,
-        76 * decoScale,
-        19 * decoScale,
-        Colors.white.withValues(alpha: .88),
-      );
-      circle(
-        c + Offset(-17 * decoScale, -8 * decoScale),
-        15 * decoScale,
-        Colors.white,
-      );
-      circle(
-        c + Offset(7 * decoScale, -14 * decoScale),
-        21 * decoScale,
-        Colors.white,
-      );
-    }
-
-    final sun = Offset(w * .81, 45);
-    circle(sun, 32 * decoScale, const Color(0xFFFFEAA3));
-    circle(sun, 23 * decoScale, const Color(0xFFFFCD5F));
-    for (var i = 0; i < 10; i++) {
-      final a = i * math.pi / 5;
-      line(
-        sun + Offset(math.cos(a), math.sin(a)) * 37 * decoScale,
-        sun + Offset(math.cos(a), math.sin(a)) * 42 * decoScale,
-        const Color(0xFFF7C557),
-        3,
-      );
-    }
-    cloud(Offset(w * .48, 43));
-
-    final centers = _centresOf(positions);
-    final riverY = (centers[1].dy + centers[2].dy) / 2;
-    final river = Path()
-      ..moveTo(-40, riverY - 42)
-      ..cubicTo(
-        w * .28,
-        riverY + 65,
-        w * .58,
-        riverY - 75,
-        w + 40,
-        riverY + 36,
-      );
-    p
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..color = const Color(0xFFFDF5D9)
-      ..strokeWidth = 76;
-    canvas.drawPath(river, p);
-    p
-      ..color = const Color(0xFF61C5DD)
-      ..strokeWidth = 57;
-    canvas.drawPath(river, p);
-    p
-      ..color = const Color(0xFF9BE4EF)
-      ..strokeWidth = 3;
-    canvas.drawPath(river.shift(const Offset(0, -13)), p);
-    canvas.drawPath(river.shift(const Offset(0, 13)), p);
-
-    // Broad winding sand path with rounded bends and a dotted centre — the
-    // very path Bloom walks, built by the shared `_trailSegment`.
-    for (var i = 0; i < 5; i++) {
-      final path = _trailSegment(
-        centers[i],
-        centers[i + 1],
-        w,
-        arch: wide && i != 2,
-      );
-      p
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 29
-        ..color = const Color(0xFFCBAB7B);
-      canvas.drawPath(path.shift(const Offset(0, 5)), p);
-      p
-        ..strokeWidth = 27
-        ..color = const Color(0xFFFFF8DE);
-      canvas.drawPath(path, p);
-      p
-        ..strokeWidth = 3
-        ..color = completed[i]
-            ? const Color(0xFFEAA453)
-            : const Color(0xFFD9BE8D);
-      for (final metric in path.computeMetrics()) {
-        for (double d = 0; d < metric.length; d += 17) {
-          canvas.drawPath(
-            metric.extractPath(d, math.min(d + 5, metric.length)),
-            p,
-          );
-        }
-      }
-    }
-    p.style = PaintingStyle.fill;
-    // A little footbridge exactly where the trail intersects the stream.
-    if (!wide) {
-      final b = centers[2];
-      final x = (b.dx - w * .13).clamp(28.0, w - 28);
-      final c = Offset(x, riverY);
-      canvas.save();
-      canvas.translate(c.dx, c.dy);
-      canvas.rotate(-.14);
-      for (var j = -3; j <= 3; j++) {
-        p.color = j.isEven ? const Color(0xFFDAA363) : const Color(0xFFECC18A);
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(
-            Rect.fromLTWH(-23, j * 11.0 - 4, 46, 10),
-            const Radius.circular(3),
-          ),
-          p,
-        );
-      }
-      line(
-        const Offset(-25, -39),
-        const Offset(-25, 39),
-        const Color(0xFFA97142),
-        4,
-      );
-      line(
-        const Offset(25, -39),
-        const Offset(25, 39),
-        const Color(0xFFA97142),
-        4,
-      );
-      canvas.restore();
-    }
-    void flower(Offset c, Color color, double r) {
-      line(c, c + Offset(0, r * 2.2), const Color(0xFF629F73), 2.5);
-      for (var k = 0; k < 5; k++) {
-        final a = k * math.pi * 2 / 5;
-        circle(c + Offset(math.cos(a), math.sin(a)) * r * .7, r * .55, color);
-      }
-      circle(c, r * .4, const Color(0xFFFFD365));
-    }
-
-    void tree(Offset c, bool pink) {
-      oval(c + const Offset(0, 36), 57, 13, const Color(0x22805A35));
-      line(
-        c + const Offset(0, 3),
-        c + const Offset(0, 34),
-        const Color(0xFFAD7D53),
-        8,
-      );
-      circle(c, 25, pink ? const Color(0xFFE68CAA) : const Color(0xFF56AB83));
-      circle(
-        c + const Offset(-12, -9),
-        18,
-        pink ? const Color(0xFFFFB6C8) : const Color(0xFF86CD9A),
-      );
-      circle(
-        c + const Offset(8, -17),
-        16,
-        pink ? const Color(0xFFFAC5D1) : const Color(0xFFA9DE9B),
-      );
-      if (!pink) {
-        for (final delta in [
-          const Offset(-9, 9),
-          const Offset(12, 1),
-          const Offset(0, -14),
-        ]) {
-          circle(c + delta, 4, const Color(0xFFEF8871));
-        }
-      }
-    }
-
-    for (var i = 0; i < positions.length; i++) {
-      final c = positions[i];
-      final color = _colors[i];
-      oval(
-        c + const Offset(0, 68),
-        115,
-        28,
-        Color.lerp(color, const Color(0xFF916C55), .3)!,
-      );
-      oval(
-        c + const Offset(0, 61),
-        120,
-        27,
-        Color.lerp(color, Colors.white, .45)!,
-      );
-      if (!wide) {
-        final d = Offset(w * (i.isEven ? .83 : .12), c.dy + 55);
-        if (i == 0 || i == 3) {
-          tree(d, i == 3);
-        } else if (i == 1 || i == 4) {
-          flower(d, const Color(0xFFF186AB), 12 * decoScale);
-          flower(
-            d + Offset(23 * decoScale, 22),
-            const Color(0xFFAF91D9),
-            9 * decoScale,
-          );
-          flower(
-            d + const Offset(-18, 30),
-            const Color(0xFFFFFAE3),
-            8 * decoScale,
-          );
-        } else if (i == 2) {
-          p.color = const Color(0xFFFFF2D6);
-          canvas.drawRRect(
-            RRect.fromRectAndRadius(
-              Rect.fromLTWH(d.dx - 5, d.dy, 10, 24),
-              const Radius.circular(4),
-            ),
-            p,
-          );
-          oval(d, 47, 27, const Color(0xFFEF8A73));
-          circle(d + const Offset(-10, -2), 4, Colors.white);
-          circle(d + const Offset(9, -6), 5, Colors.white);
-        } else {
-          // Rainbow beside the treasure meadow.
-          for (var k = 0; k < 3; k++) {
-            p
-              ..style = PaintingStyle.stroke
-              ..strokeWidth = 7
-              ..color = [
-                const Color(0xFFF49BA6),
-                const Color(0xFFFFD174),
-                const Color(0xFF9ABCE7),
-              ][k];
-            canvas.drawArc(
-              Rect.fromCircle(
-                center: d + const Offset(0, 14),
-                radius: 35 - k * 8,
-              ),
-              math.pi,
-              math.pi,
-              false,
-              p,
-            );
-          }
-          p.style = PaintingStyle.fill;
-        }
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _LandscapePainter old) =>
-      old.wide != wide ||
-      !listEquals(old.positions, positions) ||
-      !listEquals(old.completed, completed);
 }

@@ -27,7 +27,6 @@ import '../widgets/bloom_mascot.dart';
 import '../widgets/card_image.dart';
 import '../widgets/celebration.dart';
 import '../widgets/confetti_burst.dart';
-import '../widgets/meadow_scene.dart';
 import '../widgets/kid_screen.dart';
 
 /// «Лопай бульбашки» — a sensory toy (docs/design/bubble_pop_redesign.md).
@@ -298,8 +297,9 @@ abstract final class BubbleStage {
   static const double bloomInsetRight = DT.sp16;
   static const double bloomInsetBottom = DT.sp24;
 
-  /// The spawn zone keeps this far from Bloom's box, so a bubble is never
-  /// born behind him or slides out from under his ears.
+  /// How far a spawn prefers to stay from Bloom's box, so a bubble does
+  /// not slide out from under his ears. A preference — see
+  /// [spawnAnchorX] — not a boundary.
   static const double bloomMargin = DT.sp24;
 
   static Rect bloomRect(Size body, BubbleDeviceClass device) {
@@ -319,15 +319,19 @@ abstract final class BubbleStage {
   static const double spreadMargin = DT.sp24;
   static const int spreadAttempts = 4;
 
-  /// Anchor X for a new bubble of [size] swinging ±[amplitude]: the whole
-  /// swing stays inside the width and left of Bloom's column. When the
-  /// screen is too narrow for that (a 320 dp phone with an L1 bubble),
-  /// the width wins — the bubble may pass over Bloom rather than not
-  /// exist; he is under the bubbles anyway.
+  /// Anchor X for a new bubble of [size] swinging ±[amplitude].
   ///
-  /// [avoid] are the anchors of bubbles still in the lower part of the
-  /// screen: two bubbles born on top of each other read as one object and
-  /// a toddler's finger cannot choose between them.
+  /// The whole floor, not a lane. This used to hard-clamp every spawn to
+  /// the left of Bloom's column, which on a 390 dp phone left a band of
+  /// about 90 dp: every bubble rose out of the same spot, and a child
+  /// aiming at one hit its neighbour. Bloom is painted *under* the
+  /// bubbles anyway, so passing over him costs nothing.
+  ///
+  /// What is left is a preference, not a wall: a few re-rolls try to find
+  /// an X that is both clear of his box and not on top of a bubble still
+  /// low on the screen (two bubbles born together read as one object).
+  /// Whatever the last roll gives is accepted — a round must never stall
+  /// because the sky is crowded.
   static double spawnAnchorX({
     required Random rng,
     required double width,
@@ -338,14 +342,19 @@ abstract final class BubbleStage {
   }) {
     final half = size / 2 + amplitude;
     final minX = half;
-    var maxX = width - half;
-    final leftOfBloom = bloom.left - bloomMargin - half;
-    if (leftOfBloom > minX) maxX = min(maxX, leftOfBloom);
+    final maxX = width - half;
     if (maxX <= minX) return width / 2;
+
     final keep = size / 2 + spreadMargin;
+    bool clearOfBloom(double x) =>
+        x + half <= bloom.left - bloomMargin ||
+        x - half >= bloom.right + bloomMargin;
+    bool clearOfOthers(double x) =>
+        avoid.every((other) => (other - x).abs() >= keep);
+
     var x = minX + rng.nextDouble() * (maxX - minX);
-    for (var i = 0; i < spreadAttempts && avoid.isNotEmpty; i++) {
-      if (avoid.every((other) => (other - x).abs() >= keep)) break;
+    for (var i = 0; i < spreadAttempts; i++) {
+      if (clearOfBloom(x) && clearOfOthers(x)) break;
       x = minX + rng.nextDouble() * (maxX - minX);
     }
     return x;
@@ -1674,7 +1683,7 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     // one line and off the sky (spec §8, 2.9).
     return KidScreen.game(
       accent: DT.brand,
-      background: DT.sceneSkyTop,
+      meadow: true,
       title: _ProgressTube(value: (_popped / _goal).clamp(0.0, 1.0)),
       trailing: KidCountPill(label: '$_popped/$_goal'),
       body: LayoutBuilder(
@@ -1688,9 +1697,6 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
 
           return Stack(
             children: [
-              // Scene: sky, clouds, meadow — static, rasterised once.
-              const Positioned.fill(child: MeadowScene()),
-
               // Miss detector: everything the bubbles and Bloom do not
               // catch lands here.
               Positioned.fill(

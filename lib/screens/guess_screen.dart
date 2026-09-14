@@ -24,7 +24,6 @@ import '../widgets/entrance_stagger.dart';
 import '../widgets/game_celebration_overlay.dart';
 import '../widgets/kid_screen.dart';
 import '../widgets/kid_tap.dart';
-import '../widgets/meadow_scene.dart';
 import '../widgets/quiz_option.dart';
 
 class GuessScreen extends ConsumerStatefulWidget {
@@ -250,17 +249,12 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
       // fills part of the screen — two pictures fill less than four — and
       // the rest was cream nothing, which reads as a screen that failed
       // to load. Now it is sky, and the pictures stand on the grass.
-      background: DT.sceneSkyTop,
+      meadow: true,
       title: const Text('🎧', style: TextStyle(fontSize: 28)),
       progress: state == null || state.finished
           ? null
           : state.round / state.totalRounds,
-      body: Stack(
-        children: [
-          const Positioned.fill(child: MeadowScene()),
-          Positioned.fill(child: _buildBody(state)),
-        ],
-      ),
+      body: _buildBody(state),
     );
   }
 
