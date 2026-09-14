@@ -520,19 +520,57 @@ class AudioService {
   final ValueNotifier<bool> autoSpeak = ValueNotifier(true);
   int _speakGeneration = 0;
 
+  /// The session the app plays cards through: playback, which ignores the
+  /// silent switch and is what a picture card is for.
+  static const _playbackSession = AudioSessionConfiguration(
+    avAudioSessionCategory: AVAudioSessionCategory.playback,
+    avAudioSessionMode: AVAudioSessionMode.defaultMode,
+    androidAudioAttributes: AndroidAudioAttributes(
+      contentType: AndroidAudioContentType.sonification,
+      usage: AndroidAudioUsage.media,
+    ),
+    androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
+  );
+
+  /// The session while «Скажи за мною» has the microphone open. It must
+  /// still play — the game says the word, listens, and says it again —
+  /// so it is playAndRecord, routed to the speaker rather than the tiny
+  /// earpiece receiver playAndRecord defaults to.
+  static const _listeningSession = AudioSessionConfiguration(
+    avAudioSessionCategory: AVAudioSessionCategory.playAndRecord,
+    avAudioSessionCategoryOptions: AVAudioSessionCategoryOptions.defaultToSpeaker,
+    avAudioSessionMode: AVAudioSessionMode.defaultMode,
+    androidAudioAttributes: AndroidAudioAttributes(
+      contentType: AndroidAudioContentType.sonification,
+      usage: AndroidAudioUsage.media,
+    ),
+    androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
+  );
+
+  /// Hand the session to the microphone, and take it back afterwards.
+  ///
+  /// A recorder left to configure the shared session on its own switches
+  /// iOS to a record category and never switches it back: the cards go
+  /// silent for the rest of the launch, which is exactly what turning the
+  /// microphone on did on the first device build. One owner — this
+  /// service — and the borrow is explicit and always returned.
+  Future<void> beginListening() => _applySession(_listeningSession);
+
+  Future<void> endListening() => _applySession(_playbackSession);
+
+  Future<void> _applySession(AudioSessionConfiguration config) async {
+    try {
+      final session = await AudioSession.instance;
+      await session.configure(config);
+      await session.setActive(true);
+    } catch (e) {
+      if (kDebugMode) debugPrint('AudioService: session switch failed: $e');
+    }
+  }
+
   Future<void> precache() async {
     // 1. Configure iOS audio session — playback ignores silent switch
-    final session = await AudioSession.instance;
-    await session.configure(const AudioSessionConfiguration(
-      avAudioSessionCategory: AVAudioSessionCategory.playback,
-      avAudioSessionMode: AVAudioSessionMode.defaultMode,
-      androidAudioAttributes: AndroidAudioAttributes(
-        contentType: AndroidAudioContentType.sonification,
-        usage: AndroidAudioUsage.media,
-      ),
-      androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
-    ));
-    await session.setActive(true);
+    await _applySession(_playbackSession);
 
     // 2. Initialize SoLoud engine (FFI — no method channels, lowest latency)
     await _soloud.init();

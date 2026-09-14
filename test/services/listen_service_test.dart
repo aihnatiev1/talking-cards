@@ -50,4 +50,28 @@ void main() {
     expect(await listen.listenOnce(), VoiceOutcome.quiet);
     await first;
   });
+
+  test('the audio session is borrowed for a turn and always given back', () async {
+    // The first successful turn used to leave iOS in a record category:
+    // from the next card on, the whole app was silent. The borrow is now
+    // explicit, and this is the invariant — every true is followed by a
+    // false, whichever way the turn ended.
+    final listen = ListenService.instance;
+    final events = <bool>[];
+    listen.debugSessionHook = (listening) async => events.add(listening);
+    addTearDown(() => listen.debugSessionHook = null);
+
+    listen.debugSilentMode = true;
+    listen.debugInterval = const Duration(milliseconds: 1);
+    listen.enabled.value = true;
+    addTearDown(() {
+      listen.debugSilentMode = false;
+      listen.debugInterval = null;
+      listen.enabled.value = false;
+      listen.debugReset();
+    });
+
+    await listen.listenOnce();
+    expect(events, [true, false]);
+  });
 }

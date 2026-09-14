@@ -7,6 +7,9 @@ import 'package:talking_cards/services/voice_gate.dart';
 void main() {
   VoiceGate gate() => VoiceGate(sampleIntervalMs: 100);
 
+  /// Warm-up plus calibration: how long before the gate has a room.
+  const settle = VoiceGate.warmupMs + VoiceGate.calibrationMs;
+
   VoiceOutcome? feed(VoiceGate g, double db, int ms) {
     VoiceOutcome? out;
     for (var t = 0; t < ms; t += g.sampleIntervalMs) {
@@ -22,13 +25,13 @@ void main() {
 
   test('a voice over the room, long enough, is an attempt', () {
     final g = gate();
-    feed(g, -55, VoiceGate.calibrationMs);
+    feed(g, -55, settle);
     expect(feed(g, -40, 400), VoiceOutcome.spoke);
   });
 
   test('a bump is not a word', () {
     final g = gate();
-    feed(g, -55, VoiceGate.calibrationMs);
+    feed(g, -55, settle);
     // 100 ms spike, then quiet again, repeated: never a 300 ms run.
     for (var i = 0; i < 12; i++) {
       g.add(-30);
@@ -41,7 +44,7 @@ void main() {
     // A kitchen with a television: the floor is high, and the same -40 dB
     // that counted in a quiet room is now just the room.
     final g = gate();
-    feed(g, -42, VoiceGate.calibrationMs);
+    feed(g, -42, settle);
     expect(feed(g, -40, 1000), isNot(VoiceOutcome.spoke));
     // The child still gets through by being louder than the television.
     expect(feed(g, -25, 400), VoiceOutcome.spoke);
@@ -54,7 +57,7 @@ void main() {
 
   test('a decided turn stays decided', () {
     final g = gate();
-    feed(g, -55, VoiceGate.calibrationMs);
+    feed(g, -55, settle);
     feed(g, -30, 400);
     expect(g.outcome, VoiceOutcome.spoke);
     expect(feed(g, -55, 5000), VoiceOutcome.spoke);
@@ -62,12 +65,30 @@ void main() {
 
   test('the next turn keeps the room, not the run', () {
     final g = gate();
-    feed(g, -50, VoiceGate.calibrationMs);
+    feed(g, -50, settle);
     feed(g, -30, 400);
     final next = g.restart();
     expect(next.outcome, isNull);
     expect(next.floorDb, g.floorDb);
     // No re-calibration needed: the child can answer immediately.
     expect(feed(next, -30, 400), VoiceOutcome.spoke);
+  });
+
+  test('the microphone warming up is not a room', () {
+    // The first readings of an iOS capture session are its own silent
+    // floor. Calibrating on them once made an empty room read as a voice
+    // (device playtest): the floor landed at -160 and every ordinary
+    // sample cleared it by more than the threshold.
+    final g = gate();
+    feed(g, -160, VoiceGate.warmupMs);
+    feed(g, -52, VoiceGate.calibrationMs);
+    // The floor is committed on the first sample after calibration.
+    expect(feed(g, -50, 1000), isNot(VoiceOutcome.spoke));
+    expect(g.floorDb, closeTo(-52, 0.001));
+  });
+
+  test('a microphone that never delivers ends quiet, not spoken', () {
+    final g = gate();
+    expect(feed(g, -160, VoiceGate.windowMs), VoiceOutcome.quiet);
   });
 }

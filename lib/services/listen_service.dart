@@ -42,9 +42,45 @@ class ListenService {
   /// something that reacts to their voice. 0..1.
   final ValueNotifier<double> level = ValueNotifier(0);
 
+  /// The raw numbers behind [level], for the parent-side tuning HUD:
+  /// the sample in dBFS and the room floor the gate calibrated to (null
+  /// until calibration ends). Nothing in the child's UI reads this — it
+  /// exists so the thresholds can be checked in a real room instead of
+  /// guessed.
+  final ValueNotifier<({double db, double? floorDb})?> sample =
+      ValueNotifier(null);
+
+  /// What the last finished turn looked like, kept after it ends: a
+  /// verdict with no numbers behind it cannot be acted on, and the HUD
+  /// exists to be acted on. `peakDb` is the loudest sample of the turn.
+  final ValueNotifier<
+    ({double? floorDb, double peakDb, int ms, VoiceOutcome outcome})?
+  >
+  lastTurn = ValueNotifier(null);
+
   VoiceGate? _room;
   Timer? _poll;
   Completer<VoiceOutcome>? _turn;
+  double _peak = VoiceGate.invalidDb;
+  int _turnMs = 0;
+
+  /// The audio session is currently borrowed for recording.
+  bool _holdingSession = false;
+
+  /// Test seam: stands in for the real session switch, which needs a
+  /// platform channel. Called with true to borrow, false to return.
+  @visibleForTesting
+  Future<void> Function(bool listening)? debugSessionHook;
+
+  Future<void> _borrowSession(bool listening) async {
+    final hook = debugSessionHook;
+    if (hook != null) return hook(listening);
+    if (listening) {
+      await AudioService.instance.beginListening();
+    } else {
+      await AudioService.instance.endListening();
+    }
+  }
 
   /// Tests and the debug HUD: feed samples by hand instead of a mic.
   @visibleForTesting
@@ -84,14 +120,34 @@ class ListenService {
     _room = gate;
     final turn = Completer<VoiceOutcome>();
     _turn = turn;
+    _peak = VoiceGate.invalidDb;
+    _turnMs = 0;
+
+    // The app owns the audio session (AudioService), so the recorder must
+    // not configure it: a plugin-managed session switches iOS to a record
+    // category and never switches back, and from the next card on the
+    // whole app is silent — which is what the first successful turn did on
+    // device. Borrow the session explicitly, and give it back in [_finish],
+    // on every path out.
+    await _borrowSession(true);
+    _holdingSession = true;
 
     if (!debugSilentMode) {
-      // A stream, not a file: `record` needs a sink, and the one place a
-      // recording could exist is this call — so it goes nowhere.
-      final stream = await _recorder.startStream(
-        const RecordConfig(encoder: AudioEncoder.pcm16bits, numChannels: 1),
-      );
-      stream.listen(null, cancelOnError: true);
+      await _recorder.ios?.manageAudioSession(false);
+      try {
+        // A stream, not a file: `record` needs a sink, and the one place a
+        // recording could exist is this call — so it goes nowhere.
+        final stream = await _recorder.startStream(
+          const RecordConfig(encoder: AudioEncoder.pcm16bits, numChannels: 1),
+        );
+        stream.listen(null, cancelOnError: true);
+      } catch (e) {
+        // A microphone that will not open must not take the app's sound
+        // with it: hand the session back and end the turn quietly.
+        if (kDebugMode) debugPrint('ListenService: startStream failed: $e');
+        await _finish(VoiceOutcome.quiet);
+        return turn.future;
+      }
     }
 
     _poll = Timer.periodic(_interval, (_) async {
@@ -100,6 +156,9 @@ class ListenService {
           ? VoiceGate.quietRoom
           : (await _recorder.getAmplitude()).current;
       level.value = _levelOf(db, gate.floorDb);
+      sample.value = (db: db, floorDb: gate.floorDb);
+      _turnMs += _interval.inMilliseconds;
+      if (db > _peak) _peak = db;
       final outcome = gate.add(db);
       if (outcome != null) await _finish(outcome);
     });
@@ -114,10 +173,23 @@ class ListenService {
     _poll?.cancel();
     _poll = null;
     level.value = 0;
+    sample.value = null;
+    if (_turn != null) {
+      lastTurn.value = (
+        floorDb: _room?.floorDb,
+        peakDb: _peak,
+        ms: _turnMs,
+        outcome: outcome,
+      );
+    }
     if (!debugSilentMode &&
         _recorderOrNull != null &&
         await _recorder.isRecording()) {
       await _recorder.stop();
+    }
+    if (_holdingSession) {
+      _holdingSession = false;
+      await _borrowSession(false);
     }
     final turn = _turn;
     _turn = null;

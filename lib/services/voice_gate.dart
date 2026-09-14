@@ -27,7 +27,21 @@ enum VoiceOutcome {
 /// Pure logic on purpose: the microphone plugin feeds it, the tests feed
 /// it by hand.
 class VoiceGate {
-  /// Loudness floor is the median of the first [calibrationMs] of samples.
+  /// The microphone is not worth listening to for its first moments: an
+  /// iOS capture session reports its own silent floor (about -160 dBFS)
+  /// until the engine is running. Calibrating on those samples puts the
+  /// room far below where it really is, and then every ordinary sample
+  /// clears floor + [thresholdDb] — the gate "hears a voice" in an empty
+  /// room, which is exactly what it did on the first device run.
+  static const warmupMs = 300;
+
+  /// At or below this a reading is the plugin saying "no signal", not a
+  /// quiet room, and it never counts — neither as calibration nor as
+  /// speech.
+  static const invalidDb = -100.0;
+
+  /// Loudness floor is the median of the first [calibrationMs] of samples
+  /// after the warm-up.
   static const calibrationMs = 500;
 
   /// How far above the room a sound must be, in dBFS.
@@ -63,16 +77,32 @@ class VoiceGate {
     if (_outcome != null) return _outcome;
     _elapsedMs += sampleIntervalMs;
 
-    if (_elapsedMs <= calibrationMs) {
-      _calibration.add(db);
-      // The window is counted from the start, so a long calibration on a
-      // slow device cannot eat the whole turn.
+    // The window is counted from the start throughout, so a slow warm-up
+    // or calibration on a slow device cannot eat the whole turn.
+    if (_elapsedMs <= warmupMs) {
       if (_elapsedMs >= windowMs) _outcome = VoiceOutcome.quiet;
       return _outcome;
     }
 
-    _floor ??= _median(_calibration);
-    if (db >= _floor! + thresholdDb) {
+    if (_floor == null && _elapsedMs <= warmupMs + calibrationMs) {
+      if (db > invalidDb) _calibration.add(db);
+      if (_elapsedMs >= windowMs) _outcome = VoiceOutcome.quiet;
+      return _outcome;
+    }
+
+    if (_floor == null) {
+      // Every calibration sample was the plugin's "no signal" value: the
+      // microphone is not delivering. Keep waiting rather than commit to a
+      // floor that would make noise out of nothing.
+      if (_calibration.isEmpty) {
+        if (db > invalidDb) _calibration.add(db);
+        if (_elapsedMs >= windowMs) _outcome = VoiceOutcome.quiet;
+        return _outcome;
+      }
+      _floor = _median(_calibration);
+    }
+
+    if (db > invalidDb && db >= _floor! + thresholdDb) {
       _loudRunMs += sampleIntervalMs;
       if (_loudRunMs >= minSpeechMs) {
         _outcome = VoiceOutcome.spoke;
@@ -101,7 +131,7 @@ class VoiceGate {
     final next = VoiceGate(sampleIntervalMs: sampleIntervalMs);
     if (_floor != null) {
       next._floor = _floor;
-      next._elapsedMs = calibrationMs;
+      next._elapsedMs = warmupMs + calibrationMs;
       next._calibration.add(_floor!);
     }
     return next;

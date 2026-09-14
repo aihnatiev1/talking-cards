@@ -12,6 +12,7 @@ import '../providers/streak_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/practice_suggestion_provider.dart';
 import '../providers/weak_words_provider.dart';
+import '../providers/listen_enabled_provider.dart';
 import '../providers/word_evidence_provider.dart';
 import '../screens/profile_selector_screen.dart';
 import '../services/notification_service.dart';
@@ -22,6 +23,7 @@ import '../widgets/activity_chart.dart';
 import '../widgets/card_image.dart';
 import '../widgets/settings_action_row.dart';
 import '../widgets/word_wall_share.dart';
+import 'voice_check_screen.dart';
 
 class ParentDashboardScreen extends ConsumerWidget {
   const ParentDashboardScreen({super.key});
@@ -277,6 +279,47 @@ class _OverviewTab extends ConsumerWidget {
         // gate, which is where a setting that changes what the phone does
         // at 10:00 belongs.
         const _ReminderSettingsTile(),
+        const SizedBox(height: 8),
+        // The microphone. Off until this is turned on, and the wording is
+        // the promise: the app notices that a turn was taken, it does not
+        // judge how a word was said and it keeps nothing.
+        SwitchListTile(
+          value: ref.watch(listenEnabledProvider),
+          onChanged: (v) => ref.read(listenEnabledProvider.notifier).set(v),
+          secondary: const Icon(Icons.record_voice_over_rounded),
+          title: Text(s('Скажи за мною', 'Say it with me')),
+          subtitle: Text(
+            s(
+              'У грі «Повтори за мною» застосунок сам помічає, що дитина '
+                  'сказала слово. Нічого не записується і не оцінюється.',
+              'In “Repeat after me” the app notices that your child took a '
+                  'turn. Nothing is recorded and nothing is judged.',
+            ),
+          ),
+          contentPadding: EdgeInsets.zero,
+        ),
+        const SizedBox(height: 8),
+        // Speak & Repeat's thresholds have to be checked in the room they
+        // will be used in, not at a desk. The HUD turns the microphone on
+        // only while it is open and puts it back afterwards.
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.mic_rounded),
+          title: Text(s('Перевірка мікрофона', 'Microphone check')),
+          subtitle: Text(
+            s(
+              'Подивитись, що чує застосунок. Нічого не записується.',
+              'See what the app hears. Nothing is recorded.',
+            ),
+          ),
+          trailing: const Icon(Icons.chevron_right_rounded),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) =>
+                  VoiceCheckScreen(isEn: ref.read(languageProvider) == 'en'),
+            ),
+          ),
+        ),
         const SizedBox(height: 16),
         _RateAppTile(
           label: s('Оцінити додаток', 'Rate the app'),

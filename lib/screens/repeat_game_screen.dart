@@ -1,16 +1,23 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
+import '../models/language_ladder.dart';
 import '../providers/daily_quest_provider.dart';
+import '../providers/curriculum_progress_provider.dart';
+import '../providers/listen_enabled_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/profile_provider.dart';
 import '../providers/word_evidence_provider.dart';
+import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../services/feedback_service.dart';
+import '../services/listen_service.dart';
+import '../services/voice_gate.dart';
 import '../utils/confetti_overlay_mixin.dart';
 import '../utils/design_tokens.dart';
 import '../utils/game_state_mixin.dart';
@@ -34,7 +41,20 @@ class RepeatGameScreen extends ConsumerStatefulWidget {
   /// «Спробуємо ще» on. Capped so the set cannot double in length.
   static const practiceLength = 3;
 
-  const RepeatGameScreen({super.key, required this.cards});
+  /// Draw the set from the Core 60 teaching plan instead of the library.
+  ///
+  /// The library is 471 cards and a random five of them is a quiz, not a
+  /// lesson: the same handful arrive by chance and nothing is ever
+  /// finished. With the plan on, the sixty words that a child of 1–3
+  /// actually uses come round in order, least-practised first. Off where
+  /// there is no plan for the language — then [cards] is the deck.
+  final bool useCurriculum;
+
+  const RepeatGameScreen({
+    super.key,
+    required this.cards,
+    this.useCurriculum = false,
+  });
 
   @override
   ConsumerState<RepeatGameScreen> createState() => _RepeatGameScreenState();
@@ -63,6 +83,21 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
   final List<CardModel> _missed = [];
   bool _practiceRound = false;
 
+  /// A listening turn is open for the current card. The grown-up's two
+  /// pills stay live throughout: the microphone is help, never a gate.
+  bool _listening = false;
+
+  /// The card a listening turn belongs to, so an outcome that arrives
+  /// after the deck moved on is dropped instead of scoring the next word.
+  String? _listeningFor;
+
+  /// Listening turns already spent on the current card. Two, and then the
+  /// screen goes quiet and waits: a word repeated at a child who is not
+  /// answering stops being an invitation somewhere around the third time.
+  /// A deliberate tap on the card starts the count over.
+  int _listenTurns = 0;
+  static const _maxListenTurns = 2;
+
   // Card slide-out when advancing to next
   late AnimationController _exitCtrl;
   late Animation<double> _exitSlide;
@@ -72,8 +107,7 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
   @override
   void initState() {
     super.initState();
-    final shuffled = List<CardModel>.from(widget.cards)..shuffle(Random());
-    _deck = shuffled.take(RepeatGameScreen.sessionLength).toList();
+    _deck = _dealDeck();
 
     _exitCtrl = AnimationController(
       vsync: this,
@@ -102,22 +136,136 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
     });
   }
 
+  /// The grown-up decided, or the screen is closing: the window closes
+  /// with it. [_listeningFor] is cleared so a late outcome is dropped.
+  void _stopListening() {
+    _listeningFor = null;
+    if (_listening) ListenService.instance.cancel();
+  }
+
   @override
   void dispose() {
+    _stopListening();
     _exitCtrl.dispose();
     disposeConfetti();
     super.dispose();
   }
 
+  /// Five words for one set.
+  ///
+  /// From the plan when there is one — in plan order, so a set is a step
+  /// through the sixty rather than a shuffle — and from the library
+  /// otherwise, shuffled as it always was. Each word is counted as offered
+  /// the moment the set is dealt: what matters is that the plan moves on,
+  /// and it must move on for a child who closed the screen halfway too.
+  List<CardModel> _dealDeck() {
+    if (widget.useCurriculum) {
+      final planned = ref
+          .read(speakSetProvider)
+          .take(RepeatGameScreen.sessionLength)
+          .toList();
+      if (planned.length >= RepeatGameScreen.sessionLength) {
+        final progress = ref.read(curriculumProgressProvider.notifier);
+        for (final card in planned) {
+          progress.record(card.id);
+        }
+        return planned;
+      }
+    }
+    final shuffled = List<CardModel>.from(widget.cards)..shuffle(Random());
+    return shuffled.take(RepeatGameScreen.sessionLength).toList();
+  }
+
   CardModel get _current => _deck[_index];
 
+  /// Where this card sits on the ladder for this child. Read fresh each
+  /// time: a «Вийшло!» during the set can be the third mark.
+  LadderStep get _step => ladderStepFor(
+    _current,
+    ref.read(wordEvidenceProvider)[_current.id]?.parentMarked ?? 0,
+  );
+
   Future<void> _speakCurrent() async {
-    await AudioService.instance.playWordOnly(_current.audioKey, _current.sound);
+    final step = _step;
+    if (step.playsSentence) {
+      // The whole recording: the word, then the phrase it lives in. The
+      // child has said this word to a grown-up three times — the next
+      // thing to ask for is the phrase, and the take already has it.
+      await AudioService.instance.speakCard(
+        _current.audioKey,
+        _current.sound,
+        _current.text,
+      );
+    } else {
+      await AudioService.instance.playWordOnly(
+        _current.audioKey,
+        _current.sound,
+      );
+    }
+    await _maybeListen();
+  }
+
+  /// Opens the microphone for one turn, after the word has finished — the
+  /// app must never hear itself. Off by default; a family that has not
+  /// turned it on plays exactly the game they played before.
+  Future<void> _maybeListen() async {
+    if (!mounted || _answered || _listening) return;
+    if (!ref.read(listenEnabledProvider)) return;
+    if (_listenTurns >= _maxListenTurns) return;
+    _listenTurns++;
+    final card = _current;
+    setState(() {
+      _listening = true;
+      _listeningFor = card.id;
+    });
+    final outcome = await ListenService.instance.listenOnce();
+    if (!mounted) return;
+    setState(() => _listening = false);
+    // The deck moved on while the window was open (the grown-up tapped):
+    // this outcome belongs to a card that is no longer on screen.
+    if (_listeningFor != card.id || _answered) return;
+    AnalyticsService.instance.logSpeechTurn(
+      via: 'mic',
+      outcome: outcome == VoiceOutcome.spoke ? 'spoke' : 'quiet',
+      micEnabled: true,
+    );
+    if (outcome == VoiceOutcome.spoke) {
+      await _onHeard();
+    } else {
+      // Quiet is not a failure and is never said to be one: Bloom simply
+      // says the word again, and the turn stays open for as long as the
+      // grown-up leaves the screen there.
+      await _speakCurrent();
+    }
+  }
+
+  /// The microphone noticed a voice.
+  ///
+  /// Everything [_onCorrect] does except the one thing it must not: no
+  /// `recordParentMark`. That mark means a person heard the word, and a
+  /// gate that only knows "a voice happened" cannot make it. The pill is
+  /// still there for the grown-up who did hear it.
+  Future<void> _onHeard() async {
+    if (_answered) return;
+    setState(() => _answered = true);
+    FeedbackService.instance.event(FeedbackEvent.correct);
+    scorePoint();
+    showConfetti();
+    ref.read(dailyQuestProvider.notifier).recordSpeechCorrect();
+    await Future.delayed(DT.motion.repeatPraiseHold);
+    if (!mounted) return;
+    await _advance();
   }
 
   Future<void> _onCorrect() async {
     if (_answered) return;
     setState(() => _answered = true);
+    _stopListening();
+    AnalyticsService.instance.logSpeechTurn(
+      via: 'parent',
+      outcome: 'nice',
+      micEnabled: ref.read(listenEnabledProvider),
+    );
 
     // Used to be a silent haptic; a right answer now dings like every
     // other game.
@@ -138,6 +286,12 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
   Future<void> _onWrong() async {
     if (_answered) return;
     setState(() => _answered = true);
+    _stopListening();
+    AnalyticsService.instance.logSpeechTurn(
+      via: 'parent',
+      outcome: 'again',
+      micEnabled: ref.read(listenEnabledProvider),
+    );
 
     FeedbackService.instance.event(FeedbackEvent.wrong);
     // Remember the tricky word — after the main deck we run one gentle
@@ -151,11 +305,11 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
   void _restart() {
     resetGame();
     setState(() {
-      final shuffled = List<CardModel>.from(widget.cards)..shuffle(Random());
-      _deck = shuffled.take(RepeatGameScreen.sessionLength).toList();
+      _deck = _dealDeck();
       _index = 0;
       _answered = false;
       _practiceRound = false;
+      _listenTurns = 0;
       _missed.clear();
     });
     _speakCurrent();
@@ -172,6 +326,7 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
       _index = 0;
       _answered = false;
       _practiceRound = true;
+      _listenTurns = 0;
       _missed.clear();
     });
     _speakCurrent();
@@ -204,6 +359,7 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
       setState(() {
         _index++;
         _answered = false;
+        _listenTurns = 0;
       });
       _speakCurrent();
     }
@@ -214,6 +370,9 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
     final s = AppS(ref.read(languageProvider) == 'en');
 
     final card = _current;
+    // The ladder decides what is being asked for — the word, or the phrase
+    // it lives in once a grown-up has marked it three times.
+    final prompt = _step.prompt;
 
     // The one sentence on this screen is for the grown-up, and it says
     // what the game actually is: the two of you play it, the phone only
@@ -248,7 +407,12 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
                     ),
                   ),
                   child: KidTap(
-                    onTap: _speakCurrent,
+                    // A deliberate tap is a fresh invitation: the word is
+                    // said again and the microphone gets its turns back.
+                    onTap: () {
+                      _listenTurns = 0;
+                      _speakCurrent();
+                    },
                     // The card speaks the word — a tock on top of the voice
                     // is one sound too many (G12).
                     sound: null,
@@ -341,9 +505,39 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
               // the screen, not a footnote. It was 16 sp of the system face
               // in the default grey and disappeared under the picture.
               Text(
-                s('Скажи: «${card.sound}»', 'Say: «${card.sound}»'),
+                s('Скажи: «$prompt»', 'Say: «$prompt»'),
                 textAlign: TextAlign.center,
                 style: DT.h2.copyWith(color: DT.textPrimary),
+              ),
+              // Why the ask grew. Without this line a parent whose child
+              // has been saying «мама» for a week meets a whole phrase and
+              // reads it as the app losing the plot.
+              if (_step.playsSentence) ...[
+                const SizedBox(height: 4),
+                Text(
+                  s(
+                    'Це слово вже виходить — пробуємо фразою',
+                    'This word is coming along — try the phrase',
+                  ),
+                  textAlign: TextAlign.center,
+                  style: DT.caption.copyWith(
+                    fontSize: 12,
+                    color: DT.textSecondary,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 12),
+
+              // The only thing on screen that says the microphone is open,
+              // and it says it to the child, not the parent: a row of dots
+              // that grows with her own voice. No countdown, no score, and
+              // nothing that could be read as a verdict — when the window
+              // closes quietly the row simply disappears.
+              SizedBox(
+                height: 26,
+                child: _listening
+                    ? _ListeningDots(level: ListenService.instance.level)
+                    : null,
               ),
               const SizedBox(height: 12),
 
@@ -392,11 +586,13 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
 
 /// A small two-together badge and one quiet line.
 ///
-/// The game used to wear a microphone, which promises a machine listening
-/// to a child's pronunciation — this app does no such thing, and a parent
-/// who believed it would read every «Вийшло!» as a verdict about their
-/// child's speech (§21). Two figures side by side is the honest picture of
-/// what happens here.
+/// The game once wore a microphone icon, which promises a machine judging
+/// a child's pronunciation — and a parent who believed that would read
+/// every «Вийшло!» as a verdict about their child's speech (§21). The app
+/// can now open the microphone, but what it does with it is smaller than
+/// the icon claimed: it notices that a voice happened, and never how the
+/// word was said. The grown-up is still the one who hears. Two figures
+/// side by side stays the honest picture.
 class _TogetherChip extends StatelessWidget {
   const _TogetherChip({required this.label});
 
@@ -487,6 +683,48 @@ class _ParentPill extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Five dots that light up with the live microphone level.
+///
+/// Deliberately not a waveform or a number: a two-year-old cannot read
+/// either, and both invite the reading "the app is scoring me". Dots that
+/// answer a voice say the one true thing — someone is listening.
+class _ListeningDots extends StatelessWidget {
+  const _ListeningDots({required this.level});
+
+  final ValueListenable<double> level;
+
+  static const _count = 5;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<double>(
+      valueListenable: level,
+      builder: (context, value, __) {
+        final lit = (value * _count).ceil().clamp(0, _count);
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            for (var i = 0; i < _count; i++) ...[
+              if (i > 0) const SizedBox(width: 8),
+              AnimatedContainer(
+                duration: DT.pressMs,
+                width: i < lit ? 18 : 12,
+                height: i < lit ? 18 : 12,
+                decoration: BoxDecoration(
+                  color: i < lit
+                      ? DT.brand
+                      : DT.brand.withValues(alpha: 0.22),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ],
+          ],
+        );
+      },
     );
   }
 }
