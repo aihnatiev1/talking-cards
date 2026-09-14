@@ -336,14 +336,14 @@
     "cards": [
       {
         "id": "en_h01",
-        "sound": "MOM",
-        "text": "I love my mom!",
+        "sound": "MOMMY",
+        "text": "I love my mommy!",
         "emoji": "🤱",
         "colorBg": "#FFEFD5",
         "colorAccent": "#D63031",
         "audio": "en_mommy",
         "image": "mommy",
-        "transcription": "[mɒm]"
+        "transcription": "[ˈmɒmi]"
       },
       {
         "id": "en_h02",
