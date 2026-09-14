@@ -783,18 +783,46 @@ void _compose(_Sheet s, AppIcon icon) {
       s.shape(_placed(_oval(-4, -5.5, 8, 11), 37, 15, 0.35));
 
     // ── Rewards ──
+    // A pirate chest, not a box with a stripe: a domed lid, gold bands
+    // down both corners, a gold clasp straddling the seam and a keyhole.
+    // The old one was two rounded rectangles — at 46 dp it read as a
+    // suitcase, and a treasure a two-year-old cannot recognise is not a
+    // reason to finish five tasks.
     case AppIcon.rewardChestClosed:
-      s.shape(_rr(6, 20, 36, 21, 6));
-      s.shape(_rr(6, 10, 36, 14, 7));
-      s.line(_poly(const [Offset(6, 24), Offset(42, 24)]));
-      s.shape(_rr(20, 20, 8, 9, 3), color: DT.sunBurst);
+      // Body.
+      s.shape(_rr(7, 24, 34, 16, 3.5));
+      // Domed lid.
+      s.shape(Path()
+        ..moveTo(7, 24)
+        ..cubicTo(7, 9, 41, 9, 41, 24)
+        ..close());
+      // Gold: the seam band, two corner straps, the clasp.
+      s.shape(_rr(7, 22.5, 34, 4, 2), color: DT.sunBurst);
+      s.shape(_rr(9.5, 26.5, 4, 13.5, 1.5), color: DT.sunBurst);
+      s.shape(_rr(34.5, 26.5, 4, 13.5, 1.5), color: DT.sunBurst);
+      s.shape(_rr(20, 19, 8, 11, 2.5), color: DT.sunBurst);
+      s.dot(24, 24.5, 1.8, _ink70);
+      // One sparkle, so the closed chest still promises something.
+      s.shape(_star(40, 12, 4.2, 1.9, 1),
+          color: DT.sunBurst, twoTone: false, outline: false);
 
     case AppIcon.rewardChestOpen:
-      s.shape(_placed(_rr(-18, -13, 36, 13, 6.5), 24, 20, -0.5));
-      s.shape(_circle(24, 24, 6.5), color: DT.sunBurst);
-      s.shape(_rr(6, 23, 36, 18, 6));
-      s.shape(_rr(20, 23, 8, 8, 3), color: DT.sunBurst);
-      s.shape(_star(39, 9, 5, 2.3, 1), color: DT.sunBurst, twoTone: false);
+      // Lid thrown back, treasure heaped over the rim, sparkles above.
+      // The lid hinges off the back of the box, not floating above it.
+      s.shape(_placed(_rr(-16, -9, 32, 10, 4), 23, 18, -0.30));
+      // Coins heaped over the rim: three, so it reads as loose treasure
+      // and not one lump.
+      s.shape(_circle(17, 25, 5), color: DT.sunBurst);
+      s.shape(_circle(31, 25, 5), color: DT.sunBurst);
+      s.shape(_circle(24, 22, 6), color: DT.sunBurst);
+      s.shape(_rr(7, 26, 34, 14, 3.5));
+      s.shape(_rr(7, 25, 34, 4, 2), color: DT.sunBurst);
+      s.shape(_rr(9.5, 29, 4, 11, 1.5), color: DT.sunBurst);
+      s.shape(_rr(34.5, 29, 4, 11, 1.5), color: DT.sunBurst);
+      s.shape(_star(40, 10, 4.6, 2.1, 1),
+          color: DT.sunBurst, twoTone: false, outline: false);
+      s.shape(_star(9, 13, 3.4, 1.5, 1),
+          color: DT.sunBurst, twoTone: false, outline: false);
 
     case AppIcon.rewardGift:
       s.shape(_rr(8, 21, 32, 20, 5));

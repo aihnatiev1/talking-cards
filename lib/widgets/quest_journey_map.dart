@@ -6,6 +6,7 @@ import '../services/feedback_service.dart';
 import '../utils/app_icons.dart';
 import '../utils/design_tokens.dart';
 import '../utils/motion.dart';
+import 'ambient_loop.dart';
 import 'bloom_mascot.dart';
 import 'card_image.dart';
 import 'kid_tap.dart';
@@ -468,6 +469,57 @@ class _JourneyStop extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = done ? const Color(0xFF79BC89) : _colors[index];
     final icon = index == 5 && opened ? AppIcon.rewardChestOpen : _icons[index];
+    // Three states a two-year-old can tell apart without reading a thing:
+    //
+    //  * pressable — full colour, full size, and the only thing on the map
+    //    that breathes. Motion is the cue; a check mark is not.
+    //  * finished — dimmed and a size smaller, so the eye slides off it.
+    //  * locked (the chest before the five) — dim and still, with the lock
+    //    it already had.
+    //
+    // The check badge stays for the grown-up reading over the shoulder; it
+    // is no longer carrying the message on its own.
+    final pressable = onTap != null;
+    final treasureReady = index == 5 && pressable;
+
+    final plate = Container(
+      width: _plate,
+      height: _plate,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(26),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color.lerp(color, Colors.white, .48)!, color],
+        ),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: .95),
+          width: 3,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Color.lerp(color, _ink, .3)!,
+            offset: const Offset(0, 6),
+          ),
+          BoxShadow(
+            color: _ink.withValues(alpha: .18),
+            offset: const Offset(0, 11),
+            blurRadius: 10,
+          ),
+          if (pressable)
+            BoxShadow(
+              color: color.withValues(alpha: .4),
+              blurRadius: 22,
+              spreadRadius: 5,
+            ),
+        ],
+      ),
+      alignment: Alignment.center,
+      // The landmark stays when the stop is finished — a bare check says
+      // "something happened" but not what.
+      child: AppIconView(icon, size: 46, sticker: true),
+    );
+
     return Semantics(
       button: true,
       enabled: onTap != null,
@@ -484,48 +536,32 @@ class _JourneyStop extends StatelessWidget {
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
+                  // Fireworks: only when the five are done and the chest is
+                  // still shut. The one moment in the day the map has a
+                  // single thing left to press, and it says so without a
+                  // word.
+                  if (treasureReady)
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: _TreasureFireworks(color: _colors[5]),
+                      ),
+                    ),
                   _ArrivalPop(
                     play: celebrate,
-                    child: Container(
-                      width: _plate,
-                      height: _plate,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(26),
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Color.lerp(color, Colors.white, .48)!,
-                            color,
-                          ],
+                    child: _Breathing(
+                      enabled: pressable,
+                      child: AnimatedScale(
+                        scale: done ? 0.86 : 1,
+                        duration: MotionPolicy.of(context).dur(DT.motion.base),
+                        child: AnimatedOpacity(
+                          // Finished and locked stops step back; what can
+                          // be pressed is the brightest thing on the map.
+                          opacity: pressable ? 1 : (done ? 0.45 : 0.55),
+                          duration:
+                              MotionPolicy.of(context).dur(DT.motion.base),
+                          child: plate,
                         ),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: .95),
-                          width: 3,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Color.lerp(color, _ink, .3)!,
-                            offset: const Offset(0, 6),
-                          ),
-                          BoxShadow(
-                            color: _ink.withValues(alpha: .18),
-                            offset: const Offset(0, 11),
-                            blurRadius: 10,
-                          ),
-                          if (active)
-                            BoxShadow(
-                              color: color.withValues(alpha: .4),
-                              blurRadius: 22,
-                              spreadRadius: 5,
-                            ),
-                        ],
                       ),
-                      alignment: Alignment.center,
-                      // The landmark stays when the stop is finished — a bare
-                      // check says "something happened" but not what; the
-                      // check rides as a small badge instead.
-                      child: AppIconView(icon, size: 46, sticker: true),
                     ),
                   ),
                   if (done || (index == 5 && onTap == null && !opened))
@@ -555,6 +591,93 @@ class _JourneyStop extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The slow breath that marks the one stop worth pressing.
+///
+/// 1.0 → 1.06 over [DTMotion.questBreath], and nothing at all under
+/// reduced motion (through [AmbientLoop]) — where the ring, the full
+/// colour and the full size still separate it from the rest.
+class _Breathing extends StatelessWidget {
+  const _Breathing({required this.enabled, required this.child});
+
+  final bool enabled;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!enabled) return child;
+    return AmbientLoop(
+      period: DT.motion.questBreath,
+      builder: (_, t, inner) => Transform.scale(
+        scale: 1 + 0.06 * t,
+        child: inner,
+      ),
+      child: child,
+    );
+  }
+}
+
+/// Sparks going off around the chest while it is the last thing left.
+///
+/// Eight of them on two staggered rings, riding one [AmbientLoop] so the
+/// whole thing is a single ticker and a single repaint boundary. Silent —
+/// the reward screen owns the sound.
+class _TreasureFireworks extends StatelessWidget {
+  const _TreasureFireworks({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return RepaintBoundary(
+      child: AmbientLoop(
+        period: DT.motion.questFireworks,
+        reverse: false,
+        builder: (_, t, __) => CustomPaint(
+          painter: _FireworksPainter(t: t, color: color),
+          size: Size.infinite,
+        ),
+      ),
+    );
+  }
+}
+
+class _FireworksPainter extends CustomPainter {
+  const _FireworksPainter({required this.t, required this.color});
+
+  /// 0 → 1, wrapping.
+  final double t;
+  final Color color;
+
+  static const _sparks = 8;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final centre = Offset(size.width / 2, size.height / 2);
+    final reach = size.shortestSide * 0.85;
+    for (var ring = 0; ring < 2; ring++) {
+      // The second ring is half a cycle behind, so something is always
+      // travelling outwards.
+      final phase = (t + ring * 0.5) % 1.0;
+      final travel = Curves.easeOut.transform(phase);
+      final fade = (1 - phase);
+      if (fade <= 0.02) continue;
+      final paint = Paint()
+        ..color = color.withValues(alpha: 0.85 * fade * fade)
+        ..style = PaintingStyle.fill;
+      for (var i = 0; i < _sparks; i++) {
+        final a = (i / _sparks) * 2 * math.pi + ring * (math.pi / _sparks);
+        final d = reach * (0.45 + 0.55 * travel);
+        final p = centre + Offset(math.cos(a) * d, math.sin(a) * d);
+        canvas.drawCircle(p, 3.2 * (1 - travel * 0.5), paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_FireworksPainter old) =>
+      old.t != t || old.color != color;
 }
 
 /// Bloom walking the trail (G13).

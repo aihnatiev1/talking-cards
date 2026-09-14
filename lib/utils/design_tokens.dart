@@ -696,6 +696,17 @@ class DTMotion {
   /// Bloom's walk from one stop to the next.
   final Duration journeyStep = const Duration(milliseconds: 900);
 
+  /// The breath of the one stop that can be pressed (1.0 → 1.06). The
+  /// map's whole "press here" signal for a child who cannot read a check
+  /// mark: on a map where nothing else moves, the thing that moves is the
+  /// thing to touch.
+  final Duration questBreath = const Duration(milliseconds: 900);
+
+  /// One outward pass of the sparks around the chest once the five stops
+  /// are done. Two rings ride it half a cycle apart, so the felt rhythm is
+  /// twice as often as this.
+  final Duration questFireworks = const Duration(milliseconds: 1400);
+
   // Idle loops (`AmbientLoop` periods). One half-cycle rest → peak; the
   // loop reverses, so the felt period is double.
 
