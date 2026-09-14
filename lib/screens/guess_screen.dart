@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -25,6 +24,7 @@ import '../widgets/game_celebration_overlay.dart';
 import '../widgets/kid_screen.dart';
 import '../widgets/kid_tap.dart';
 import '../widgets/quiz_option.dart';
+import '../widgets/quiz_options_board.dart';
 
 class GuessScreen extends ConsumerStatefulWidget {
   final List<CardModel> cards;
@@ -241,16 +241,14 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(_provider);
 
-    // Header: the game's badge, not a sentence — a two-year-old cannot read
-    // "Guess the word"; the instruction is spoken (`instr_guess`).
+    // Replay belongs beside close, leaving the play area to the pictures.
     return KidScreen.game(
       accent: _accent,
-      // The same meadow Bubble Pop is played in. The board only ever
-      // fills part of the screen — two pictures fill less than four — and
-      // the rest was cream nothing, which reads as a screen that failed
-      // to load. Now it is sky, and the pictures stand on the grass.
+      // The games' meadow: the board fills only part of the screen — two
+      // pictures fill less than four — and the rest should be sky, not a
+      // pastel void that reads as a screen which failed to load.
       meadow: true,
-      title: const Text('🎧', style: TextStyle(fontSize: 28)),
+      title: _buildSpeaker(),
       progress: state == null || state.finished
           ? null
           : state.round / state.totalRounds,
@@ -270,70 +268,74 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
     return _buildQuiz(state);
   }
 
+  Widget _buildSpeaker() => Semantics(
+    button: true,
+    label: AppS(ref.watch(languageProvider) == 'en')(
+      'Послухати ще раз',
+      'Listen again',
+    ),
+    child: KidTap(
+      // Replays the target word — no pop under the voice.
+      sound: null,
+      onTap: _playCurrentSound,
+      child: ValueListenableBuilder<bool>(
+        valueListenable: AudioService.instance.isSpeaking,
+        builder: (_, speaking, speaker) => AmbientLoop(
+          period: DT.motion.speakerPulse,
+          enabled: speaking,
+          builder: (_, t, child) =>
+              Transform.scale(scale: 1.0 + 0.06 * t, child: child),
+          child: speaker,
+        ),
+        child: Container(
+          width: 72,
+          height: 72,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [DT.brandLit, _accent],
+            ),
+            border: Border.all(color: Colors.white, width: 3),
+            boxShadow: [
+              BoxShadow(
+                color: _accent.withValues(alpha: 0.35),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Icon(
+            Icons.volume_up_rounded,
+            size: 44,
+            color: Colors.white,
+          ),
+        ),
+      ),
+    ),
+  );
+
   Widget _buildQuiz(QuizState state) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: const EdgeInsets.fromLTRB(18, 10, 18, 20),
       child: Column(
         children: [
-          // Big speaker button — pulses (1.0 → 1.15, 800 ms) while the word
-          // plays. Under reduced motion it rests at 1.0; it is already the
-          // one big accent-coloured button on the screen.
-          KidTap(
-            // Replays the target word — no pop under the voice.
-            sound: null,
-            onTap: _playCurrentSound,
-            child: ValueListenableBuilder<bool>(
-              valueListenable: AudioService.instance.isSpeaking,
-              builder: (_, speaking, speaker) => AmbientLoop(
-                period: DT.motion.speakerPulse,
-                enabled: speaking,
-                builder: (_, t, child) => Transform.scale(
-                  scale: 1.0 + 0.15 * t,
-                  child: child,
-                ),
-                child: speaker,
-              ),
-              child: Container(
-                width: 88,
-                height: 88,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _accent,
-                  boxShadow: [
-                    BoxShadow(
-                      color: _accent.withValues(alpha: 0.35),
-                      blurRadius: 20,
-                      spreadRadius: 2,
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.volume_up_rounded,
-                  size: 44,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Two, three or four pictures — the board is sized by how the
-          // last questions actually went, never by the round number
-          // (experience audit §19). The tiles keep their shape at every
-          // size, so a two-picture question is two *big* pictures and not
-          // two stretched ones.
+          // Difficulty controls the count; available space controls the
+          // arrangement. CardImage preserves the artwork's proportions.
           Expanded(
             child: StaggerScope(
-              child: _OptionsBoard(
+              child: QuizOptionsBoard(
                 options: state.options,
                 tileBuilder: (index, card) {
                   final isTarget = card.id == state.correctCard.id;
                   final mark = !isTarget
                       ? AnswerMark.none
                       : _showCorrect
-                          ? AnswerMark.correct
-                          : _misses.misses >= state.hintAfterMisses
-                              ? AnswerMark.hint
-                              : AnswerMark.none;
+                      ? AnswerMark.correct
+                      : _misses.misses >= state.hintAfterMisses
+                      ? AnswerMark.hint
+                      : AnswerMark.none;
                   // The options land one after another (G11) so the
                   // child's eye is walked across them instead of being
                   // met by a full board.
@@ -353,90 +355,6 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
           ),
         ],
       ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────
-//  The board of pictures: 2 in a row, 3 as 2 + 1, 4 as 2 × 2
-// ─────────────────────────────────────────────
-
-/// Lays out the question's options at a constant tile shape.
-///
-/// A `GridView` stretched two tiles across the whole remaining height the
-/// moment the board dropped from four pictures to two; here the tile keeps
-/// its 0.85 ratio and the board is centred in whatever space is left, so
-/// the youngest child — the one who gets two options — gets the biggest
-/// pictures in the app.
-class _OptionsBoard extends StatelessWidget {
-  const _OptionsBoard({required this.options, required this.tileBuilder});
-
-  final List<CardModel> options;
-  final Widget Function(int index, CardModel card) tileBuilder;
-
-  static const double _gap = 12;
-  static const double _aspect = 0.85; // width / height
-
-  /// The tallest a single-row tile may stretch to (width / height).
-  static const double _tallAspect = 0.62;
-
-  @override
-  Widget build(BuildContext context) {
-    final rows = <List<CardModel>>[
-      options.take(2).toList(),
-      if (options.length > 2) options.sublist(2),
-    ];
-
-    return LayoutBuilder(
-      builder: (context, box) {
-        var tileW = (box.maxWidth - _gap) / 2;
-        var tileH = tileW / _aspect;
-        if (rows.length == 1) {
-          // Two options never fill a phone: the tile can only be half the
-          // width, so at 0.85 the board floated in the middle of a screen
-          // of nothing. A single row grows downwards into the space it
-          // has instead — up to [_tallAspect], past which a picture is a
-          // stripe. This is the youngest child's board; it should be the
-          // biggest one in the app, and now it is.
-          tileH = math.max(tileH, math.min(box.maxHeight, tileW / _tallAspect));
-        }
-        final stack = tileH * rows.length + _gap * (rows.length - 1);
-        if (stack > box.maxHeight && stack > 0) {
-          final k = (box.maxHeight - _gap * (rows.length - 1)) /
-              (tileH * rows.length);
-          tileW *= k;
-          tileH *= k;
-        }
-
-        var index = 0;
-        final children = <Widget>[];
-        for (final row in rows) {
-          if (children.isNotEmpty) children.add(const SizedBox(height: _gap));
-          final tiles = <Widget>[];
-          for (final card in row) {
-            if (tiles.isNotEmpty) tiles.add(const SizedBox(width: _gap));
-            tiles.add(
-              SizedBox(
-                width: tileW,
-                height: tileH,
-                child: tileBuilder(index++, card),
-              ),
-            );
-          }
-          children.add(
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: tiles),
-          );
-        }
-
-        // Low, not centred: a two-picture board that floats in the middle
-        // leaves its dead space under the tiles, which is exactly the part
-        // of a phone a small hand can reach. A four-picture board fills
-        // the space anyway, so this only moves the small boards down.
-        return Align(
-          alignment: const Alignment(0, 0.7),
-          child: Column(mainAxisSize: MainAxisSize.min, children: children),
-        );
-      },
     );
   }
 }

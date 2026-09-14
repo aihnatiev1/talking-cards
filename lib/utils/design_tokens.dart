@@ -45,6 +45,10 @@ class DT {
   /// Indigo seed of the Material colour scheme and the parent-zone accent.
   /// Formerly `DT.brand` in constants.dart; those names are now aliases.
   static const brand = Color(0xFF6C63FF);
+
+  /// The lit end of a [brand] gradient — the top-left of a round button
+  /// that should look like it has a light on it.
+  static const brandLit = Color(0xFF9784FF);
   static const teal = Color(0xFF4ECDC4); // formerly DT.teal
   static const soundRed = Color(0xFFD63031); // formerly DT.soundRed
   static const streakOrange = Color(0xFFE17055); // formerly DT.streakOrange
@@ -725,6 +729,17 @@ class DTMotion {
 
   /// The active step / stone (1.0 → 1.04): one element at a time.
   final Duration ambientPulse = const Duration(milliseconds: 1200);
+
+  /// The home hero's arrival fade, and the sweep of its progress bar when
+  /// a task lands — long enough that a parent sees the bar move, short
+  /// enough that a child is not waiting on it.
+  final Duration heroArrive = const Duration(milliseconds: 480);
+  final Duration heroProgress = const Duration(milliseconds: 650);
+
+  /// The hop of the hero's play button, and how long it hops for before
+  /// it settles: an invitation, not a permanent animation.
+  final Duration heroHop = const Duration(milliseconds: 1400);
+  final Duration heroHopSettle = const Duration(milliseconds: 4200);
 
   // Curves
   final Curve standard = Curves.easeOutCubic;

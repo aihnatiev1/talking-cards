@@ -86,7 +86,7 @@ class DailyHeroCard extends StatelessWidget {
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
-      duration: MotionPolicy.of(context).dur(const Duration(milliseconds: 480)),
+      duration: MotionPolicy.of(context).dur(DT.motion.heroArrive),
       curve: Curves.easeOutCubic,
       builder: (_, t, child) => Opacity(
         opacity: t,
@@ -282,7 +282,7 @@ class _HeroPaneState extends State<_HeroPane>
                     tween: Tween(begin: 0, end: progress.clamp(0.0, 1.0)),
                     duration: MotionPolicy.of(
                       context,
-                    ).dur(const Duration(milliseconds: 650)),
+                    ).dur(DT.motion.heroProgress),
                     builder: (_, value, __) => LinearProgressIndicator(
                       value: value,
                       minHeight: 6,
@@ -296,8 +296,8 @@ class _HeroPaneState extends State<_HeroPane>
               Row(
                 children: [
                   AmbientLoop(
-                    period: const Duration(milliseconds: 1400),
-                    settleAfter: const Duration(milliseconds: 4200),
+                    period: DT.motion.heroHop,
+                    settleAfter: DT.motion.heroHopSettle,
                     enabled: !widget.heroDone,
                     builder: (_, t, child) => Transform.translate(
                       offset: Offset(0, -3 * t),
@@ -578,7 +578,7 @@ class _StoneState extends State<_Stone> with SingleTickerProviderStateMixin {
           ),
           if (t.isDone) ...[
             const SizedBox(width: 4),
-            const Icon(Icons.check_circle_rounded, size: 19, color: DT.success),
+            const AppIconView(AppIcon.check, size: 19, color: DT.success),
           ],
         ],
       ),

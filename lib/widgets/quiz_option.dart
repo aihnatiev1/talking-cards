@@ -33,37 +33,46 @@ class QuizOption extends StatelessWidget {
     return KidTap(
       onTap: onTap,
       child: AnswerFrame(
-        background: cardColor,
+        background: Colors.white,
         accent: card.colorAccent,
         mark: mark,
         nudge: nudge,
-        radius: DT.rLg,
-        padding: const EdgeInsets.all(10),
+        radius: 28,
+        padding: const EdgeInsets.all(12),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Expanded(
               // Pools are sanitized upstream (image required), so the
               // null branch is a defensive placeholder — never emoji.
-              child: card.image != null
-                  ? CardImage.forCard(
-                      card,
-                      size: CardArtSize.tile,
-                      padding: const EdgeInsets.all(4),
-                    )
-                  : Container(
-                      margin: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: cardColor.withValues(alpha: 0.4),
-                        borderRadius: BorderRadius.circular(DT.rMd),
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Color.lerp(cardColor, Colors.white, .45),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: card.image != null
+                    ? CardImage.forCard(
+                        card,
+                        size: CardArtSize.tile,
+                        padding: const EdgeInsets.all(4),
+                      )
+                    : Container(
+                        margin: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: cardColor.withValues(alpha: 0.4),
+                          borderRadius: BorderRadius.circular(DT.rMd),
+                        ),
                       ),
-                    ),
+              ),
             ),
-            const SizedBox(height: DT.sp4),
+            const SizedBox(height: 10),
             Text(
               card.sound,
               textAlign: TextAlign.center,
-              style: DT.tileTitle.copyWith(color: card.colorAccent),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: DT.tileTitle.copyWith(color: DT.textPrimary, fontSize: 19),
             ),
           ],
         ),
