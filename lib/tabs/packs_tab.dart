@@ -1110,6 +1110,26 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                 // call-to-action above the fold.
                 const SizedBox(height: 8),
 
+                // Everything below this line is the library: the whole
+                // catalogue, browsable, and explicitly *not* the day's
+                // route. The word is for the parent — a child is led by
+                // the hero above, not by a heading — and it is what stops
+                // 21 packs from reading as 21 things left to do.
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Text(
+                      s('Бібліотека', 'Library'),
+                      textAlign: TextAlign.left,
+                      style: DT.caption.copyWith(
+                        fontSize: 12,
+                        color: DT.textMuted,
+                      ),
+                    ),
+                  ),
+                ),
+
                 // Category filter — one segmented control instead of three
                 // separate buttons: a single light track, only the active
                 // segment carries brand colour.
