@@ -59,8 +59,47 @@ class AnalyticsService {
 
   // --- Pack events ---
 
-  Future<void> logPackOpen(String packId) =>
-      _safeLog('pack_open', {'pack_id': packId});
+  /// A pack was entered, and by which door.
+  ///
+  /// The id alone answered "which packs get opened"; [source] answers the
+  /// question behind it — whether a pack is chosen from the library grid
+  /// or only ever arrives because the day's plan pushed it. Those are two
+  /// different kinds of interest, and only the first one says what to
+  /// build more of. [position] is the tile's index in the grid, so a pack
+  /// that wins from row four is not confused with one that wins from the
+  /// top-left slot everybody taps.
+  ///
+  /// COPPA: a pack id, a word for the entry point and an integer — the
+  /// same class of data `pack_open` has always carried.
+  Future<void> logPackOpen(
+    String packId, {
+    String? source,
+    int? position,
+    bool? locked,
+  }) => _safeLog('pack_open', {
+    'pack_id': packId,
+    if (source != null) 'source': source,
+    if (position != null) 'position': position,
+    if (locked != null) 'locked': locked,
+  });
+
+  /// Leaving a pack, with how far into it the child actually got.
+  ///
+  /// This is the honest interest signal: opens measure a cover, and cards
+  /// viewed measure the content. A pack opened often and left after two
+  /// cards is a good picture with a weak middle — which is a thing to fix,
+  /// not a thing to make more of.
+  Future<void> logPackClose(
+    String packId, {
+    required int cardsViewed,
+    required int cardsTotal,
+    required int seconds,
+  }) => _safeLog('pack_close', {
+    'pack_id': packId,
+    'cards_viewed': cardsViewed,
+    'cards_total': cardsTotal,
+    'seconds': seconds,
+  });
 
   Future<void> logPackComplete(String packId) =>
       _safeLog('pack_complete', {'pack_id': packId});
@@ -309,8 +348,30 @@ class AnalyticsService {
 
   // --- Games ---
 
-  Future<void> logGameStart(String gameId) =>
-      _safeLog('game_start', {'game_id': gameId});
+  Future<void> logGameStart(String gameId, {String? source}) => _safeLog(
+    'game_start',
+    {'game_id': gameId, if (source != null) 'source': source},
+  );
+
+  /// A game tile was tapped in the games tab — including the tiles that
+  /// cannot be played yet.
+  ///
+  /// `game_start` only ever sees the games a child is already allowed to
+  /// play, so it cannot tell us which locked game families keep reaching
+  /// for. The gap between this event and `game_start` for the same
+  /// `game_id` is exactly that list: what people want, and what stands in
+  /// the way ([playable] false means a lock or a missing prerequisite).
+  Future<void> logGameTileTap(
+    String gameId, {
+    required bool playable,
+    required String section,
+    int? position,
+  }) => _safeLog('game_tile_tap', {
+    'game_id': gameId,
+    'playable': playable,
+    'section': section,
+    if (position != null) 'position': position,
+  });
 
   /// A finished round. The optional fields are the calibration set of
   /// «Лопай бульбашки» (bubble_pop_redesign §5): they say whether the
@@ -340,6 +401,24 @@ class AnalyticsService {
         if (level != null) 'level': level,
         if (deviceClass != null) 'device_class': deviceClass,
       });
+
+  /// One turn of «Повтори за мною»: who decided it and how it went.
+  ///
+  /// [via] is `mic` when the listening gate decided, `parent` when the
+  /// grown-up tapped. [outcome] is `spoke` / `quiet` for the microphone
+  /// and `nice` / `again` for a person. Kept apart on purpose: a machine
+  /// noticing a voice and an adult hearing a word are not the same
+  /// evidence, and a dashboard that merges them would overstate what the
+  /// app knows.
+  Future<void> logSpeechTurn({
+    required String via,
+    required String outcome,
+    required bool micEnabled,
+  }) => _safeLog('speech_turn', {
+    'via': via,
+    'outcome': outcome,
+    'mic_enabled': micEnabled,
+  });
 
   Future<void> logSoundFilterOpen(String letter) =>
       _safeLog('sound_filter_open', {'letter': letter});

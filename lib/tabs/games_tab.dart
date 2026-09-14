@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
 import '../providers/app_review_provider.dart';
+import '../providers/curriculum_progress_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../screens/articulation_screen.dart';
@@ -136,7 +137,16 @@ class _GamesTabState extends ConsumerState<GamesTab> {
         .where((c) => c.image != null)
         .toList();
     if (cards.length < 4) return;
-    _openGame(KidRoutes.game(RepeatGameScreen(cards: cards)));
+    // The plan when the language has one; the library is the fallback and
+    // the screen decides, because only it knows whether the plan could
+    // actually fill a set.
+    final hasPlan = ref.read(speakSetProvider).length >=
+        RepeatGameScreen.sessionLength;
+    _openGame(
+      KidRoutes.game(
+        RepeatGameScreen(cards: cards, useCurriculum: hasPlan),
+      ),
+    );
   }
 
   void _openArticulation() {
@@ -226,6 +236,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
 
           final toddlerGames = <_BigGame>[
             _BigGame(
+              id: 'quiz',
               title: isEn ? 'Guess the word' : 'Вгадай звук',
               subtitle: isEn
                   ? 'Listen and tap the card'
@@ -240,6 +251,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                   : 'Спочатку відкрий більше карток',
             ),
             _BigGame(
+              id: 'memory_match',
               title: isEn ? 'Find the pair' : 'Знайди пару',
               subtitle: isEn
                   ? 'Flip cards, match pairs'
@@ -256,6 +268,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                   : 'Спочатку відкрий більше карток',
             ),
             _BigGame(
+              id: 'bubble_pop_free',
               title: isEn ? 'Pop the bubbles' : 'Лопай бульбашки',
               subtitle: isEn ? 'Pop, pop, pop!' : 'Лоп-лоп-лоп!',
               color: DT.coral,
@@ -272,6 +285,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                   : 'Спочатку відкрий більше карток',
             ),
             _BigGame(
+              id: 'repeat',
               title: isEn ? 'Repeat after me' : 'Повтори за мною',
               subtitle: isEn
                   ? 'Say the word, grown-up taps'
@@ -289,6 +303,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
 
           final parentGames = <_BigGame>[
             _BigGame(
+              id: 'articulation',
               title: isEn ? 'Articulation' : 'Артикуляційна',
               subtitle: isEn
                   ? 'Daily tongue & lip workout'
@@ -332,6 +347,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
               oppPack != null && !oppPack.isLocked && oppPack.cards.length >= 4;
           final advancedGames = <_BigGame>[
             _BigGame(
+              id: 'odd_one_out',
               title: isEn ? 'Odd one out' : 'Знайди зайве',
               subtitle: isEn
                   ? 'Spot the different one'
@@ -366,6 +382,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
             // play, not a replacement, and nothing here punishes a child
             // who pops the wrong one.
             _BigGame(
+              id: 'bubble_pop_find',
               title: isEn ? 'Find the bubble' : 'Знайди бульбашку',
               subtitle: isEn
                   ? 'Pop the one Bloom shows'
@@ -386,6 +403,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                   : 'Спочатку відкрий більше карток',
             ),
             _BigGame(
+              id: 'opposites',
               title: isEn ? 'Opposites' : 'Протилежності',
               subtitle: isEn
                   ? 'Big↔small, hot↔cold'
@@ -417,7 +435,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                 emoji: '🧸',
               ),
               const SizedBox(height: 10),
-              _GameGrid(games: toddlerGames),
+              _GameGrid(games: toddlerGames, section: 'toddler'),
               const SizedBox(height: 22),
               _SectionHeader(
                 title: isEn ? 'For grown-ups' : 'Для батьків',
@@ -457,6 +475,11 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                           ),
                           onTap: () {
                             KidTap.feedback();
+                            AnalyticsService.instance.logGameTileTap(
+                              game.id,
+                              playable: game.onTap != null,
+                              section: 'parent',
+                            );
                             game.onTap?.call();
                           },
                         ),
@@ -471,7 +494,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                 emoji: '🎓',
               ),
               const SizedBox(height: 10),
-              _GameGrid(games: advancedGames),
+              _GameGrid(games: advancedGames, section: 'advanced'),
             ],
           );
         },
@@ -485,6 +508,9 @@ class _GamesTabState extends ConsumerState<GamesTab> {
 // ─────────────────────────────────────────────
 
 class _BigGame {
+  /// Stable analytics id, the same string `game_start` uses where the two
+  /// can be matched — so "tapped" and "played" line up per game.
+  final String id;
   final String title;
   final String subtitle;
   final Color color;
@@ -501,6 +527,7 @@ class _BigGame {
   final VoidCallback? onLockedTap;
 
   _BigGame({
+    required this.id,
     required this.title,
     required this.subtitle,
     required this.color,
@@ -545,7 +572,12 @@ class _SectionHeader extends StatelessWidget {
 
 class _GameGrid extends StatelessWidget {
   final List<_BigGame> games;
-  const _GameGrid({required this.games});
+
+  /// Which shelf this grid is, for `game_tile_tap`: a tile in "for little
+  /// ones" and the same tile under "for older kids" are different offers.
+  final String section;
+
+  const _GameGrid({required this.games, required this.section});
 
   @override
   Widget build(BuildContext context) {
@@ -598,7 +630,12 @@ class _GameGrid extends StatelessWidget {
             itemBuilder: (_, i) => StaggeredEntrance(
               key: ValueKey(games[i].title),
               index: i,
-              child: _BigGameTile(game: games[i], textHeight: textHeight),
+              child: _BigGameTile(
+                game: games[i],
+                textHeight: textHeight,
+                section: section,
+                position: i,
+              ),
             ),
           ),
         );
@@ -610,7 +647,14 @@ class _GameGrid extends StatelessWidget {
 class _BigGameTile extends StatelessWidget {
   final _BigGame game;
   final double textHeight;
-  const _BigGameTile({required this.game, required this.textHeight});
+  final String section;
+  final int position;
+  const _BigGameTile({
+    required this.game,
+    required this.textHeight,
+    required this.section,
+    required this.position,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -620,6 +664,15 @@ class _BigGameTile extends StatelessWidget {
     // Locked or not, the tap itself is answered (audit #13, #23).
     return KidTap(
       onTap: () {
+        // Logged before the branch: a tap on a tile that cannot be played
+        // is the interest we most want to see, and it is the one thing
+        // `game_start` can never report.
+        AnalyticsService.instance.logGameTileTap(
+          g.id,
+          playable: !disabled,
+          section: section,
+          position: position,
+        );
         if (disabled) {
           if (g.onLockedTap != null) {
             g.onLockedTap!();

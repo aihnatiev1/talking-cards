@@ -240,7 +240,9 @@ class StatsScreen extends ConsumerWidget {
 
                   return GestureDetector(
                     onTap: () => Navigator.of(context).push(
-                      KidRoutes.content(CardsScreen(pack: pack)),
+                      KidRoutes.content(
+                        CardsScreen(pack: pack, source: 'parent_stats'),
+                      ),
                     ),
                     child: Container(
                     margin: const EdgeInsets.only(bottom: 10),

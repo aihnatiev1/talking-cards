@@ -84,7 +84,21 @@ class _PackCoverBadge extends StatelessWidget {
 class CardsScreen extends ConsumerStatefulWidget {
   final PackModel pack;
 
-  const CardsScreen({super.key, required this.pack});
+  /// Which door the child came through — the grid, the hero, the day's
+  /// plan, the quest map. `pack_open` is logged here, and without this it
+  /// could only ever say *that* a pack was opened, never whether anyone
+  /// chooses it when free to choose.
+  final String source;
+
+  /// The tile's index when the door was a grid.
+  final int? position;
+
+  const CardsScreen({
+    super.key,
+    required this.pack,
+    this.source = 'other',
+    this.position,
+  });
 
   /// Where a re-opened pack should start (design audit 2026-09-08, #22).
   ///
@@ -123,6 +137,12 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   // in [_showCelebrationAfterSound] aborts and the modal shows immediately.
   bool _skipEndWait = false;
   bool _isFlipped = false;
+
+  /// Distinct cards this visit actually put on screen, and when the visit
+  /// started — the two halves of `pack_close`. Opens say a cover works;
+  /// these say whether the pack behind it holds a child.
+  final Set<String> _viewedCardIds = {};
+  final Stopwatch _visit = Stopwatch()..start();
 
   /// Page whose landing already sounded; a drag that snaps back to the
   /// same page is not a new card on the table.
@@ -202,7 +222,12 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     };
     AudioService.instance.autoSpeak.addListener(_muteListener!);
 
-    AnalyticsService.instance.logPackOpen(widget.pack.id);
+    AnalyticsService.instance.logPackOpen(
+      widget.pack.id,
+      source: widget.source,
+      position: widget.position,
+      locked: widget.pack.isLocked,
+    );
     EngageService.instance.saveLastPack(widget.pack.id, widget.pack.title);
     // The box opens — the one sound of entering a pack, from every door
     // (tile, hero, quest, deep link, "Play again"). Its tail ends before
@@ -653,7 +678,9 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
       onAgain: () {
         if (!mounted) return;
         navigator.pushReplacement(
-          KidRoutes.content(CardsScreen(pack: widget.pack)),
+          KidRoutes.content(
+            CardsScreen(pack: widget.pack, source: 'play_again'),
+          ),
         );
       },
       onDone: () {
@@ -766,6 +793,13 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
 
   @override
   void dispose() {
+    AnalyticsService.instance.logPackClose(
+      widget.pack.id,
+      // The card the pack opened on counts: it was on screen.
+      cardsViewed: _viewedCardIds.length + 1,
+      cardsTotal: _cards.length,
+      seconds: _visit.elapsed.inSeconds,
+    );
     _bloom.sceneLeft(_bloomScene);
     _cancelAutoPlayCountdown();
     _clearProgressStep();
@@ -912,6 +946,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                       if (index > prev) {
                         final step = _bloom.cardAdvanced(index);
                         if (step != null) _armProgressStep(step);
+                        _viewedCardIds.add(cards[index].id);
                         AnalyticsService.instance.logCardView(
                           cards[index].id,
                           widget.pack.id,

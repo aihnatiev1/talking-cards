@@ -171,7 +171,9 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen> {
         },
         onGoToPack: () {
           Navigator.of(context).push(
-            KidRoutes.content(CardsScreen(pack: rewardPack!)),
+            KidRoutes.content(
+              CardsScreen(pack: rewardPack!, source: 'quest_reward'),
+            ),
           );
         },
       );
@@ -246,7 +248,12 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen> {
         // viewCards* is auto-completed by dailyQuestProvider once the child
         // has swiped through N cards — don't pre-complete here.
         final pack = themePack ?? anyOpenPack();
-        if (pack != null) _travel(CardsScreen(pack: pack), game: false);
+        if (pack != null) {
+          _travel(
+            CardsScreen(pack: pack, source: 'quest_map'),
+            game: false,
+          );
+        }
       case QuestTask.reviewOldCard:
         // "Repeat after me" walks the same deck again — the whole point of
         // a theme is that the third meeting with the cat is not the first
@@ -254,7 +261,10 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen> {
         // credit it after the child comes back, so she at least went in.
         final pack = themePack ?? anyOpenPack();
         if (pack == null) return;
-        _travel(CardsScreen(pack: pack), game: false).then((_) {
+        _travel(
+          CardsScreen(pack: pack, source: 'quest_map'),
+          game: false,
+        ).then((_) {
           if (!mounted) return;
           ref
               .read(dailyQuestProvider.notifier)
@@ -386,7 +396,11 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen> {
             );
           },
           onGoToPack: () {
-            Navigator.of(context).push(KidRoutes.content(CardsScreen(pack: pack)));
+            Navigator.of(context).push(
+              KidRoutes.content(
+                CardsScreen(pack: pack, source: 'quest_map'),
+              ),
+            );
           },
         ),
       ),
