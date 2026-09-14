@@ -167,7 +167,7 @@ class DailyHeroCard extends StatelessWidget {
                     DT.sp12,
                     DT.sp8,
                     DT.sp12,
-                    DT.sp12,
+                    DT.sp8,
                   ),
                   child: footer,
                 ),
@@ -294,15 +294,15 @@ class _HeroPaneState extends State<_HeroPane>
         }
 
         final paneHeight = math.max(
-          compact ? 194.0 : 228.0,
-          40 +
-              7 +
-              16 +
-              76 +
-              (showBar ? 18 : 0) +
-              (factLine == null ? 0 : 22) +
-              (minutesLine == null ? 0 : 18) +
-              (widget.bloomLine == null ? 0 : 24) +
+          compact ? 170.0 : 200.0,
+          24 +
+              5 +
+              10 +
+              84 +
+              (showBar ? 14 : 0) +
+              (factLine == null ? 0 : 20) +
+              (minutesLine == null ? 0 : 16) +
+              (widget.bloomLine == null ? 0 : 20) +
               textHeight(heading, DT.caption.copyWith(fontSize: 12)) +
               textHeight(
                 widget.title,
@@ -312,9 +312,9 @@ class _HeroPaneState extends State<_HeroPane>
         final content = Padding(
           padding: EdgeInsets.fromLTRB(
             compact ? 12 : 20,
-            20,
+            12,
             compact ? 12 : 22,
-            20,
+            12,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -327,7 +327,7 @@ class _HeroPaneState extends State<_HeroPane>
                   fontSize: 12,
                 ),
               ),
-              const SizedBox(height: 7),
+              const SizedBox(height: 5),
               Text(
                 widget.title,
                 style: DT.h1.copyWith(
@@ -337,7 +337,7 @@ class _HeroPaneState extends State<_HeroPane>
                 ),
               ),
               if (factLine != null) ...[
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Text(
                   factLine,
                   style: DT.tileTitle.copyWith(
@@ -355,7 +355,7 @@ class _HeroPaneState extends State<_HeroPane>
                   ),
                 ),
               if (showBar) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(6),
                   child: TweenAnimationBuilder<double>(
@@ -372,7 +372,7 @@ class _HeroPaneState extends State<_HeroPane>
                   ),
                 ),
               ],
-              const SizedBox(height: 16),
+              const SizedBox(height: 10),
               Row(
                 children: [
                   AmbientLoop(
@@ -410,7 +410,7 @@ class _HeroPaneState extends State<_HeroPane>
               // pointing at: one sentence naming the next action. It is
               // where Speak & Repeat will speak from.
               if (widget.bloomLine != null) ...[
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Text(
                   widget.bloomLine!,
                   maxLines: 1,
@@ -441,9 +441,9 @@ class _HeroPaneState extends State<_HeroPane>
                     child: Padding(
                       padding: EdgeInsets.fromLTRB(
                         compact ? 12 : 18,
-                        18,
+                        12,
                         0,
-                        18,
+                        12,
                       ),
                       child: AnimatedBuilder(
                         animation: _bounce,
@@ -452,7 +452,7 @@ class _HeroPaneState extends State<_HeroPane>
                           child: child,
                         ),
                         child: Container(
-                          constraints: const BoxConstraints(minHeight: 150),
+                          constraints: const BoxConstraints(minHeight: 120),
                           decoration: BoxDecoration(
                             color: accent.withValues(alpha: .07),
                             borderRadius: BorderRadius.circular(20),
@@ -482,6 +482,10 @@ class _HeroPaneState extends State<_HeroPane>
   }
 }
 
+/// The one button in the hero. It stays a button after the step is done —
+/// a green check filling the whole disc read as a status the child still
+/// wanted to press (playtest). Done is now said by a small badge in the
+/// corner, and the disc itself says "press me again" with a replay arrow.
 class _PlayDisc extends StatelessWidget {
   final Color accent;
   final bool done;
@@ -491,33 +495,66 @@ class _PlayDisc extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final side = DT.size.tapMin;
-    return Container(
-      width: side,
-      height: side,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color.lerp(done ? DT.success : accent, Colors.white, .25)!,
-            done ? DT.success : accent,
-          ],
-        ),
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 3),
-        boxShadow: [
-          BoxShadow(
-            color: accent.withValues(alpha: .2),
-            offset: const Offset(0, 4),
-            blurRadius: 8,
+    return SizedBox(
+      width: side + 8,
+      height: side + 8,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned(
+            left: 0,
+            top: 4,
+            child: Container(
+              width: side,
+              height: side,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color.lerp(accent, Colors.white, .25)!,
+                    accent,
+                  ],
+                ),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 3),
+                boxShadow: [
+                  BoxShadow(
+                    color: accent.withValues(alpha: .2),
+                    offset: const Offset(0, 4),
+                    blurRadius: 8,
+                  ),
+                ],
+              ),
+              alignment: Alignment.center,
+              child: AppIconView(
+                done ? AppIcon.replay : AppIcon.play,
+                size: 34,
+                color: Colors.white,
+              ),
+            ),
           ),
+          if (done)
+            Positioned(
+              right: 0,
+              top: 0,
+              child: Container(
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(
+                  color: DT.success,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                ),
+                alignment: Alignment.center,
+                child: const AppIconView(
+                  AppIcon.check,
+                  size: 16,
+                  color: Colors.white,
+                ),
+              ),
+            ),
         ],
-      ),
-      alignment: Alignment.center,
-      child: AppIconView(
-        done ? AppIcon.check : AppIcon.play,
-        size: 36,
-        color: Colors.white,
       ),
     );
   }

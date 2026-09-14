@@ -14,13 +14,13 @@ import '../providers/daily_quest_provider.dart';
 import '../providers/favorites_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/last_pack_provider.dart';
+import '../providers/home_tab_provider.dart';
 import '../providers/packs_provider.dart';
 import '../providers/profile_provider.dart';
 import '../providers/review_provider.dart';
 import '../providers/seasonal_packs_provider.dart';
 import '../providers/srs_provider.dart';
 import '../providers/streak_provider.dart';
-import '../screens/card_reveal_screen.dart';
 import '../screens/cards_screen.dart';
 import '../screens/kid_word_wall_screen.dart';
 import '../screens/parent_dashboard_screen.dart';
@@ -31,7 +31,6 @@ import '../services/audio_service.dart';
 import '../services/feedback_service.dart';
 import '../services/paywall_flow.dart';
 import '../services/profile_service.dart';
-import '../services/purchase_service.dart';
 import '../services/widget_service.dart';
 import '../utils/app_icons.dart';
 import '../utils/design_tokens.dart';
@@ -269,7 +268,16 @@ class _PacksTabState extends ConsumerState<PacksTab> {
     );
   }
 
-  Future<void> _onPackTap(BuildContext context, PackModel pack) async {
+  /// Which door a pack was opened by. `pack_open` fires inside
+  /// [CardsScreen], which cannot know whether the child came from the
+  /// grid, the hero or the day's plan — so the door is recorded here and
+  /// read there.
+  Future<void> _onPackTap(
+    BuildContext context,
+    PackModel pack, {
+    String source = 'other',
+    int? position,
+  }) async {
     if (pack.id == '_review' || !pack.id.startsWith('_')) {
       ref
           .read(dailyQuestProvider.notifier)
@@ -282,7 +290,11 @@ class _PacksTabState extends ConsumerState<PacksTab> {
     if (pack.isLocked &&
         RemoteConfigService.instance.lockedPackTapOpensPreview) {
       ref.read(lastOpenedPackProvider.notifier).record(pack.id);
-      Navigator.of(context).push(KidRoutes.content(CardsScreen(pack: pack)));
+      Navigator.of(context).push(
+        KidRoutes.content(
+          CardsScreen(pack: pack, source: source, position: position),
+        ),
+      );
       return;
     }
     if (pack.isLocked) {
@@ -307,13 +319,21 @@ class _PacksTabState extends ConsumerState<PacksTab> {
         ref.read(lastOpenedPackProvider.notifier).record(unlocked.id);
         Navigator.of(
           context,
-        ).push(KidRoutes.content(CardsScreen(pack: unlocked)));
+        ).push(
+          KidRoutes.content(
+            CardsScreen(pack: unlocked, source: source, position: position),
+          ),
+        );
         return;
       }
     }
     ref.read(lastOpenedPackProvider.notifier).record(pack.id);
     AnalyticsService.instance.logFirstAction('library_pack');
-    Navigator.of(context).push(KidRoutes.content(CardsScreen(pack: pack)));
+    Navigator.of(context).push(
+      KidRoutes.content(
+        CardsScreen(pack: pack, source: source, position: position),
+      ),
+    );
   }
 
   void _showCardOfDayPopup(CardModel card) {
@@ -602,7 +622,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
           wasActive: firstPending == 2,
         );
         final rp = recommendedPack;
-        if (rp != null) _onPackTap(context, rp);
+        if (rp != null) _onPackTap(context, rp, source: 'today_plan');
       },
     );
     final adventureTask = DailyTask(
@@ -620,47 +640,13 @@ class _PacksTabState extends ConsumerState<PacksTab> {
       },
     );
 
-    // When the day's plan is finished, the whole strip becomes one big tap
-    // target: Pro users go straight into the Daily Adventure, free users
-    // see the won-card reveal (or quest map if the reward isn't built yet).
+    // The day's plan is finished. The row says «Обрати гру», so it opens
+    // the games tab and nothing else: it used to send Pro users to the
+    // quest map and free users to a card reveal, which is not what the
+    // words promise (playtest). Nothing here starts a new lesson — the
+    // day's work is done, the rest of the app is simply open.
     void onAllDone() {
-      final isPro = PurchaseService.instance.isPro.value;
-      if (isPro) {
-        openQuestMap();
-        return;
-      }
-      // Find the most recently won card if any. quest.rewardCardId points
-      // to the card unlocked by yesterday's plan.
-      final reward = ref.read(dailyQuestProvider);
-      if (reward.rewardClaimed && reward.rewardCardId != null) {
-        for (final p in packs) {
-          final card = p.cards
-              .where((c) => c.id == reward.rewardCardId)
-              .firstOrNull;
-          if (card != null) {
-            Navigator.of(context).push(
-              KidRoutes.content(
-                CardRevealScreen(
-                  card: card,
-                  pack: p,
-                  newTotal: p.effectiveFreePreviewCount,
-                  skipAnimation: true,
-                  onShare: (_) {},
-                  onGoToPack: () {
-                    Navigator.of(context).push(
-                      KidRoutes.content(CardsScreen(pack: p)),
-                    );
-                  },
-                ),
-              ),
-            );
-            return;
-          }
-        }
-      }
-      // No reward card yet — fall back to the quest map so the kid sees
-      // the next milestone they're working toward.
-      openQuestMap();
+      ref.read(homeTabRequestProvider.notifier).state = kGamesTabIndex;
     }
 
     String? packThumb(PackModel p) {
@@ -691,7 +677,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
         onHeroTap: () {
           AnalyticsService.instance.logContinueHeroTap(cp.id);
           AnalyticsService.instance.logFirstAction('hero_cta');
-          _onPackTap(context, cp);
+          _onPackTap(context, cp, source: 'hero_continue');
         },
         tasks: [cardTask, adventureTask],
         allDone: allDone,
@@ -740,7 +726,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
       mascot: mascot,
       onHeroTap: () {
         AnalyticsService.instance.logFirstAction('hero_cta');
-        _onPackTap(context, rp);
+        _onPackTap(context, rp, source: 'hero_recommended');
       },
       tasks: [adventureTask],
       allDone: allDone,
@@ -1114,67 +1100,38 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                 // SRS review entry lives in the grid as the "Повторення"
                 // virtual pack — the extra banner here just stacked a third
                 // call-to-action above the fold.
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
 
-                // Everything below this line is the library: the whole
-                // catalogue, browsable, and explicitly *not* the day's
-                // route. The word is for the parent — a child is led by
-                // the hero above, not by a heading — and it is what stops
-                // 21 packs from reading as 21 things left to do.
+                // Category filter. The "Library" heading above it is gone
+                // and so is the grey track behind the chips: a word no
+                // child reads and a box that only added height between the
+                // hero and the packs (playtest). The selected chip alone
+                // carries colour, which is all the grouping this needs.
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: Text(
-                      s('Бібліотека', 'Library'),
-                      textAlign: TextAlign.left,
-                      style: DT.caption.copyWith(
-                        fontSize: 12,
-                        color: DT.textMuted,
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Category filter — one segmented control instead of three
-                // separate buttons: a single light track, only the active
-                // segment carries brand colour.
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white.withValues(alpha: 0.07)
-                          : Colors.black.withValues(alpha: 0.04),
-                      borderRadius: BorderRadius.circular(22),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(4),
-                      child: Row(
-                        children: [
-                          for (int i = 0; i < allCategories.length; i++) ...[
-                            Expanded(
-                              child: _CategoryChip(
-                                label: allCategories[i],
-                                selected: allCategories[i] == _selectedCategory,
-                                onSelected: () {
-                                  final newCat = allCategories[i];
-                                  if (newCat != _selectedCategory) {
-                                    AnalyticsService.instance.logCategorySwitch(
-                                      newCat,
-                                    );
-                                  }
-                                  setState(() {
-                                    _selectedCategory = newCat;
-                                    _lastCategory = newCat;
-                                  });
-                                },
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
+                  padding: const EdgeInsets.fromLTRB(16, 2, 16, 2),
+                  child: Row(
+                    children: [
+                      for (int i = 0; i < allCategories.length; i++) ...[
+                        Expanded(
+                          child: _CategoryChip(
+                            label: allCategories[i],
+                            selected: allCategories[i] == _selectedCategory,
+                            onSelected: () {
+                              final newCat = allCategories[i];
+                              if (newCat != _selectedCategory) {
+                                AnalyticsService.instance.logCategorySwitch(
+                                  newCat,
+                                );
+                              }
+                              setState(() {
+                                _selectedCategory = newCat;
+                                _lastCategory = newCat;
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
 
@@ -1213,7 +1170,12 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                             isCompleted: completedPacks.contains(pack.id),
                             progress: packProgress[pack.id] ?? 0,
                             isSeasonal: item.isSeasonal,
-                            onTap: () => _onPackTap(context, pack),
+                            onTap: () => _onPackTap(
+                              context,
+                              pack,
+                              source: 'library_grid',
+                              position: index,
+                            ),
                           ),
                         );
                       },

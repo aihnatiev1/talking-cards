@@ -18,6 +18,7 @@ import '../utils/motion.dart';
 import '../widgets/notification_opt_in_dialog.dart';
 import '../widgets/parental_gate.dart';
 import 'parent_dashboard_screen.dart';
+import '../providers/home_tab_provider.dart';
 import '../tabs/packs_tab.dart';
 import '../tabs/games_tab.dart';
 import 'coloring_screen.dart';
@@ -265,6 +266,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   @override
   Widget build(BuildContext context) {
     final isEn = ref.watch(languageProvider) == 'en';
+
+    // A screen inside a tab asked for another tab (see
+    // [homeTabRequestProvider]). Switch after this frame — the request is
+    // usually raised from a tap handler mid-build — and clear it so the
+    // same request cannot fire twice.
+    ref.listen<int?>(homeTabRequestProvider, (_, next) {
+      if (next == null) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _selectTab(next);
+        ref.read(homeTabRequestProvider.notifier).state = null;
+      });
+    });
 
     return Scaffold(
       body: AnimatedBuilder(
