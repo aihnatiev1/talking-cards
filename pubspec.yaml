@@ -1,7 +1,7 @@
 name: talking_cards
 description: Інтерактивні картки зі звуками для розвитку мовлення малят від 1 до 5 років. 234 картки, 8 розділів, вікторина та щоденні завдання.
 publish_to: 'none'
-version: 1.3.11+33
+version: 1.4.0+34
 
 environment:
   sdk: ^3.11.0
@@ -35,6 +35,7 @@ dependencies:
   firebase_crashlytics: ^5.0.0
   home_widget: ^0.9.0
   uuid: ^4.5.1
+  record: ^6.2.1
 
 dev_dependencies:
   fake_async: ^1.3.3 # purchase_service_test drives the 3-minute checkout backstop
@@ -55,10 +56,22 @@ flutter_launcher_icons:
 
 flutter:
   uses-material-design: true
+  # Nunito (OFL, assets/fonts/OFL-Nunito.txt): the rounded face for the
+  # child-facing zone — words on cards, headings, tile titles. Body copy for
+  # parents stays Roboto. Variable font: weight comes from FontVariation
+  # (see DT.kidWeight), not from fontWeight alone.
+  fonts:
+    - family: Nunito
+      fonts:
+        - asset: assets/fonts/Nunito-Variable.ttf
   assets:
     - assets/data/
     - assets/images/
     - assets/images/webp/
+    # Articulation exercise positions, one webp per exercise id. Bundled
+    # unconditionally (twelve small drawings, not paid content), which is
+    # what lets ArticulationArt use a literal path.
+    - assets/images/articulation/
     - assets/audio_mp3/
     - assets/audio_sfx/
     # Paid-pack content. Bundled on iOS/debug; the Android app bundle strips

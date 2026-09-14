@@ -7,7 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../services/analytics_service.dart';
-import '../utils/constants.dart';
+import '../utils/design_tokens.dart';
 import '../utils/uk_grammar.dart';
 
 /// Direct store link for the sender's platform — parents overwhelmingly
@@ -184,7 +184,7 @@ class ShareProgressContent extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [kAccent, kTeal],
+          colors: [DT.brand, DT.teal],
         ),
         borderRadius: BorderRadius.circular(24),
       ),

@@ -59,6 +59,149 @@ class ContentPackState {
   int get hashCode => Object.hash(status, bytesDownloaded, totalBytes);
 }
 
+/// Where a card's illustration stands right now.
+///
+/// Returned instead of a bare [ImageProvider] because "not here yet" is an
+/// ordinary state of this app, not an error: on Android the paid catalogue
+/// arrives from Play *after* install, and a provider built over a file that
+/// has not landed throws on first paint. `main.dart` routes
+/// [FlutterError.onError] into `recordFlutterFatalError`, so that throw is
+/// filed as a fatal crash — three of them on 2026-09-08, for two files that
+/// were perfectly intact and simply not downloaded yet.
+///
+/// Dart has no checked exceptions, so a throwing API can never force a call
+/// site to handle absence. An exhaustive `switch` over a sealed result can.
+sealed class CardArt {
+  const CardArt();
+}
+
+/// The bytes are reachable now; draw them.
+class ArtReady extends CardArt {
+  final ImageProvider provider;
+  const ArtReady(this.provider);
+
+  @override
+  bool operator ==(Object other) =>
+      other is ArtReady && other.provider == provider;
+  @override
+  int get hashCode => provider.hashCode;
+  @override
+  String toString() => 'ArtReady($provider)';
+}
+
+/// Real content that is still on its way from Play. Show the placeholder;
+/// [AssetPackService.state] notifies when it lands.
+class ArtPending extends CardArt {
+  final ContentPackState state;
+  const ArtPending(this.state);
+
+  @override
+  bool operator ==(Object other) =>
+      other is ArtPending && other.state == state;
+  @override
+  int get hashCode => state.hashCode;
+  @override
+  String toString() => 'ArtPending(${state.status.name})';
+}
+
+/// Nothing to wait for: the card carries no image, or this build has no
+/// such asset at all. [reason] is short and code-shaped — it is an
+/// analytics dimension value, not copy.
+class ArtMissing extends CardArt {
+  final String reason;
+  const ArtMissing(this.reason);
+
+  /// The card has no illustration; its emoji is the intended rendering.
+  static const noName = ArtMissing('no_name');
+
+  /// Named in the card JSON, absent from the asset manifest — a content
+  /// typo or a bad `tools/pad_split.py` run. Was a runtime throw before.
+  static const notInBuild = ArtMissing('not_in_build');
+
+  @override
+  bool operator ==(Object other) =>
+      other is ArtMissing && other.reason == reason;
+  @override
+  int get hashCode => reason.hashCode;
+  @override
+  String toString() => 'ArtMissing($reason)';
+}
+
+/// Raw illustration bytes, for the one caller that decodes its own image
+/// (the colouring book needs a `ui.Image` for its painter).
+sealed class CardBytes {
+  const CardBytes();
+}
+
+class BytesReady extends CardBytes {
+  final ByteData data;
+  const BytesReady(this.data);
+}
+
+/// Why there are no bytes — the same three answers as [CardArt], so a
+/// caller can tell "wait for it" from "pick something else".
+class BytesUnavailable extends CardBytes {
+  final CardArt reason;
+  const BytesUnavailable(this.reason);
+
+  @override
+  bool operator ==(Object other) =>
+      other is BytesUnavailable && other.reason == reason;
+  @override
+  int get hashCode => reason.hashCode;
+  @override
+  String toString() => 'BytesUnavailable($reason)';
+}
+
+/// Where a card's voice clip is. Mirrors [CardArt]: the failure mode here
+/// is not a crash but silence, which for a one-to-four-year-old is the
+/// worse of the two — the app stops answering and the child keeps tapping.
+sealed class CardVoice {
+  const CardVoice();
+}
+
+class VoiceReady extends CardVoice {
+  final bool isFile;
+  final String path;
+  const VoiceReady({required this.isFile, required this.path});
+
+  @override
+  bool operator ==(Object other) =>
+      other is VoiceReady && other.isFile == isFile && other.path == path;
+  @override
+  int get hashCode => Object.hash(isFile, path);
+  @override
+  String toString() => 'VoiceReady(isFile: $isFile, $path)';
+}
+
+class VoicePending extends CardVoice {
+  final ContentPackState state;
+  const VoicePending(this.state);
+
+  @override
+  bool operator ==(Object other) =>
+      other is VoicePending && other.state == state;
+  @override
+  int get hashCode => state.hashCode;
+  @override
+  String toString() => 'VoicePending(${state.status.name})';
+}
+
+class VoiceMissing extends CardVoice {
+  final String reason;
+  const VoiceMissing(this.reason);
+
+  static const notInBuild = VoiceMissing('not_in_build');
+
+  @override
+  bool operator ==(Object other) =>
+      other is VoiceMissing && other.reason == reason;
+  @override
+  int get hashCode => reason.hashCode;
+  @override
+  String toString() => 'VoiceMissing($reason)';
+}
+
 /// Resolves card illustrations and voice clips to wherever they live.
 ///
 /// The Android app bundle ships only what a first session can touch (free
@@ -89,6 +232,12 @@ class AssetPackService {
 
   /// Asset paths (as declared in pubspec) that live under pad_content.
   Set<String> _padAssets = const {};
+
+  /// Every asset path in this build, or null when the manifest could not
+  /// be read. Null means "cannot prove absence" and the resolver stays
+  /// permissive — claiming [ArtMissing] on a failed manifest read would
+  /// blank the whole app.
+  Set<String>? _allAssets;
   bool _bundled = true;
   String? _packPath;
   bool _initialized = false;
@@ -102,10 +251,12 @@ class AssetPackService {
     _initialized = true;
     try {
       final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
-      _padAssets = manifest
-          .listAssets()
-          .where((p) => p.startsWith(_padPrefix))
-          .toSet();
+      // Keeping the whole list (~1k paths, tens of KB) is what lets the
+      // resolver answer "this build has no such asset" synchronously,
+      // instead of finding out by throwing on first paint.
+      final all = manifest.listAssets().toSet();
+      _allAssets = all;
+      _padAssets = all.where((p) => p.startsWith(_padPrefix)).toSet();
     } catch (e) {
       if (kDebugMode) debugPrint('AssetPackService: manifest failed: $e');
     }
@@ -254,48 +405,78 @@ class AssetPackService {
       !contentReady &&
       _padAssets.contains('${_padPrefix}images/webp/$name.webp');
 
-  /// The file inside the asset pack for a pad_content asset path, or null
-  /// when the pack is not on disk (or the asset is bundled).
-  String? _packFile(String assetPath) {
+  /// Where the bytes of [asset] are, or why they are out of reach.
+  ///
+  /// Exactly one field is non-null on any answer. `file` → read that path
+  /// off disk; all-null → read [asset] from the Flutter bundle. This is
+  /// the single place the old API got wrong. Its helper returned one null
+  /// for two opposite situations — "it is in the bundle" and "the pack is
+  /// not here" — and both fell through to the same doomed `AssetImage`.
+  /// Three answers is the whole fix; everything else follows from it.
+  ({String? file, ContentPackState? pending, String? missing}) _locate(
+    String asset,
+  ) {
+    final all = _allAssets;
+    if (all != null && !all.contains(asset)) {
+      return (file: null, pending: null, missing: ArtMissing.notInBuild.reason);
+    }
+    if (_bundled || !asset.startsWith(_padPrefix)) {
+      return (file: null, pending: null, missing: null);
+    }
     final root = _packPath;
-    if (_bundled || root == null || !assetPath.startsWith(_padPrefix)) {
-      return null;
+    if (root == null) {
+      return (file: null, pending: state.value, missing: null);
     }
-    return '$root/${assetPath.substring(_padPrefix.length)}';
+    return (
+      file: '$root/${asset.substring(_padPrefix.length)}',
+      pending: null,
+      missing: null,
+    );
   }
 
-  /// Provider for a card illustration. [cacheWidth]/[cacheHeight] behave
-  /// like Image.asset's — the same ResizeImage key, so precache and display
-  /// share one decode. A null [name] resolves to a missing asset, exactly as
-  /// the old `'…/${card.image}.webp'` interpolation did, so call sites keep
-  /// relying on their errorBuilder/emoji fallback.
-  ImageProvider cardImage(String? name, {int? cacheWidth, int? cacheHeight}) {
-    final asset = _imageAsset(name ?? 'null');
-    final file = _packFile(asset);
-    final ImageProvider base = file != null
-        ? FileImage(File(file))
-        : AssetImage(asset);
-    return ResizeImage.resizeIfNeeded(cacheWidth, cacheHeight, base);
+  /// Provider for a card illustration, or the reason there is none. Never
+  /// throws and never hands back a provider it knows cannot load.
+  CardArt cardArt(String? name, {int? cacheWidth, int? cacheHeight}) {
+    if (name == null) return ArtMissing.noName;
+    final asset = _imageAsset(name);
+    final (:file, :pending, :missing) = _locate(asset);
+    if (missing != null) return ArtMissing(missing);
+    if (pending != null) return ArtPending(pending);
+    final ImageProvider base =
+        file != null ? FileImage(File(file)) : AssetImage(asset);
+    return ArtReady(ResizeImage.resizeIfNeeded(cacheWidth, cacheHeight, base));
   }
 
-  /// Raw bytes of a card illustration (the colouring book decodes its own).
-  Future<ByteData> cardImageBytes(String? name) async {
-    final asset = _imageAsset(name ?? 'null');
-    final file = _packFile(asset);
-    if (file != null) {
-      final bytes = await File(file).readAsBytes();
-      return ByteData.sublistView(bytes);
+  /// Raw bytes of a card illustration. Never throws: a read can still fail
+  /// after [_locate] says yes, because Play may evict the pack in between.
+  Future<CardBytes> cardBytes(String? name) async {
+    if (name == null) return const BytesUnavailable(ArtMissing.noName);
+    final asset = _imageAsset(name);
+    final (:file, :pending, :missing) = _locate(asset);
+    if (missing != null) return BytesUnavailable(ArtMissing(missing));
+    if (pending != null) return BytesUnavailable(ArtPending(pending));
+    try {
+      if (file != null) {
+        return BytesReady(
+          ByteData.sublistView(await File(file).readAsBytes()),
+        );
+      }
+      return BytesReady(await rootBundle.load(asset));
+    } catch (_) {
+      // Evicted between the check and the read. The caller gets a value to
+      // switch on; the old code got a throw out of a fire-and-forget
+      // future, which Crashlytics filed as fatal.
+      return BytesUnavailable(ArtPending(state.value));
     }
-    return rootBundle.load(asset);
   }
 
-  /// Where AudioService should load [file] (mp3 name, no extension) from:
-  /// a filesystem path inside the asset pack, or a bundle asset path.
-  ({bool isFile, String path}) audioSource(String file) {
+  /// Where AudioService should load a card's clip from, or why it cannot.
+  CardVoice cardVoice(String file) {
     final asset = _audioAsset(file);
-    final packFile = _packFile(asset);
-    if (packFile != null) return (isFile: true, path: packFile);
-    return (isFile: false, path: asset);
+    final (file: packFile, :pending, :missing) = _locate(asset);
+    if (missing != null) return VoiceMissing(missing);
+    if (pending != null) return VoicePending(pending);
+    return VoiceReady(isFile: packFile != null, path: packFile ?? asset);
   }
 
   /// Test seam: install the native→Dart handler init() would on Android.
@@ -310,8 +491,12 @@ class AssetPackService {
     required bool bundled,
     String? packPath,
     ContentPackState? state,
+    /// Null keeps the resolver permissive — the same "cannot prove
+    /// absence" stance as a manifest that failed to load.
+    Set<String>? allAssets,
   }) {
     _initialized = true;
+    _allAssets = allAssets;
     _padAssets = padAssets;
     _bundled = bundled;
     _packPath = packPath;

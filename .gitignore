@@ -57,3 +57,10 @@ assets/audio_mp3_full/
 
 # Marketing site (separate Node.js project with its own node_modules).
 marketing/
+
+# App Store Connect API key — never in the repo (leaked once, 27f1d1f)
+*.p8
+AuthKey_*.p8
+
+# Golden-test diff artifacts: written on every failing run, never reviewed.
+test/goldens/failures/

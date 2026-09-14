@@ -16,7 +16,13 @@ class AnalyticsService {
     }
   }
 
+  /// Test seam: every event that would go to Firebase, as it is built.
+  /// Null in production, so nothing is recorded and nothing is kept.
+  @visibleForTesting
+  static void Function(String name, Map<String, Object> params)? debugSink;
+
   Future<void> _safeLog(String name, [Map<String, Object>? params]) async {
+    debugSink?.call(name, params ?? const {});
     final a = _analytics;
     if (a == null) return;
     try {
@@ -53,8 +59,47 @@ class AnalyticsService {
 
   // --- Pack events ---
 
-  Future<void> logPackOpen(String packId) =>
-      _safeLog('pack_open', {'pack_id': packId});
+  /// A pack was entered, and by which door.
+  ///
+  /// The id alone answered "which packs get opened"; [source] answers the
+  /// question behind it — whether a pack is chosen from the library grid
+  /// or only ever arrives because the day's plan pushed it. Those are two
+  /// different kinds of interest, and only the first one says what to
+  /// build more of. [position] is the tile's index in the grid, so a pack
+  /// that wins from row four is not confused with one that wins from the
+  /// top-left slot everybody taps.
+  ///
+  /// COPPA: a pack id, a word for the entry point and an integer — the
+  /// same class of data `pack_open` has always carried.
+  Future<void> logPackOpen(
+    String packId, {
+    String? source,
+    int? position,
+    bool? locked,
+  }) => _safeLog('pack_open', {
+    'pack_id': packId,
+    if (source != null) 'source': source,
+    if (position != null) 'position': position,
+    if (locked != null) 'locked': locked,
+  });
+
+  /// Leaving a pack, with how far into it the child actually got.
+  ///
+  /// This is the honest interest signal: opens measure a cover, and cards
+  /// viewed measure the content. A pack opened often and left after two
+  /// cards is a good picture with a weak middle — which is a thing to fix,
+  /// not a thing to make more of.
+  Future<void> logPackClose(
+    String packId, {
+    required int cardsViewed,
+    required int cardsTotal,
+    required int seconds,
+  }) => _safeLog('pack_close', {
+    'pack_id': packId,
+    'cards_viewed': cardsViewed,
+    'cards_total': cardsTotal,
+    'seconds': seconds,
+  });
 
   Future<void> logPackComplete(String packId) =>
       _safeLog('pack_complete', {'pack_id': packId});
@@ -160,6 +205,33 @@ class AnalyticsService {
 
   Future<void> logOnboardingComplete() => _safeLog('tutorial_complete');
 
+  // --- Release A: where a session actually starts ---
+
+  /// The source recorded for this launch, or null before the first one.
+  String? _firstActionSource;
+
+  /// The first thing the child was taken into this launch, and what sent
+  /// them there: `hero_cta`, `library_pack`, `games_tab`, `coloring_tab`,
+  /// `quest_map`.
+  ///
+  /// This is the one number Release A is judged by — a home built around a
+  /// single "what now?" either gets sessions started from that card or it
+  /// does not, and a per-screen open count cannot tell us. Fires at most
+  /// once per launch, so a long session counts as one answer.
+  Future<void> logFirstAction(String source) {
+    if (_firstActionSource != null) return Future.value();
+    _firstActionSource = source;
+    return _safeLog('session_first_action', {'source': source});
+  }
+
+  /// Tests only.
+  @visibleForTesting
+  String? get debugFirstActionSource => _firstActionSource;
+
+  /// Tests only: forget that this launch already answered.
+  @visibleForTesting
+  void debugResetFirstAction() => _firstActionSource = null;
+
   // --- Home / Today's Plan ---
 
   Future<void> logContinueHeroTap(String packId) =>
@@ -218,6 +290,19 @@ class AnalyticsService {
   Future<void> logContentWait(String packId, String status) =>
       _safeLog('content_wait', {'pack_id': packId, 'status': status});
 
+  /// A card was rendered without its illustration. [reason] is one of
+  /// `pending` (the Play pack has not landed), `not_in_build` (named in
+  /// the JSON, absent from the manifest — a content bug) or `decode_failed`
+  /// (the bytes were there and would not decode, or the pack was evicted
+  /// mid-read).
+  ///
+  /// Deliberately an ordinary event, not a Crashlytics report: this used
+  /// to reach `FlutterError.onError`, which main.dart files as FATAL, so a
+  /// missing picture counted against crash-free users. The signal is worth
+  /// keeping; the fatal is not.
+  Future<void> logAssetUnavailable(String kind, String reason) =>
+      _safeLog('asset_unavailable', {'kind': kind, 'reason': reason});
+
   static String _msBucket(int ms) {
     if (ms < 1500) return 'lt_1_5s';
     if (ms < 3000) return 'lt_3s';
@@ -263,11 +348,77 @@ class AnalyticsService {
 
   // --- Games ---
 
-  Future<void> logGameStart(String gameId) =>
-      _safeLog('game_start', {'game_id': gameId});
+  Future<void> logGameStart(String gameId, {String? source}) => _safeLog(
+    'game_start',
+    {'game_id': gameId, if (source != null) 'source': source},
+  );
 
-  Future<void> logGameComplete(String gameId, int score) =>
-      _safeLog('game_complete', {'game_id': gameId, 'score': score});
+  /// A game tile was tapped in the games tab — including the tiles that
+  /// cannot be played yet.
+  ///
+  /// `game_start` only ever sees the games a child is already allowed to
+  /// play, so it cannot tell us which locked game families keep reaching
+  /// for. The gap between this event and `game_start` for the same
+  /// `game_id` is exactly that list: what people want, and what stands in
+  /// the way ([playable] false means a lock or a missing prerequisite).
+  Future<void> logGameTileTap(
+    String gameId, {
+    required bool playable,
+    required String section,
+    int? position,
+  }) => _safeLog('game_tile_tap', {
+    'game_id': gameId,
+    'playable': playable,
+    'section': section,
+    if (position != null) 'position': position,
+  });
+
+  /// A finished round. The optional fields are the calibration set of
+  /// «Лопай бульбашки» (bubble_pop_redesign §5): they say whether the
+  /// diameters, the hit slop and the crossing times of a level actually
+  /// fit the hands that play it (targets: L1 ≥ 0.60, L2 ≥ 0.70,
+  /// L3+ ≥ 0.75).
+  ///
+  /// COPPA: aggregates of one round, of exactly the same class as the
+  /// `score` that has always been here — no identifiers, no content, no
+  /// path through the app. [level] is the profile's age band (1–4), which
+  /// is already a user property, and [deviceClass] is `phone` / `tabletS`
+  /// / `tabletL`.
+  Future<void> logGameComplete(
+    String gameId,
+    int score, {
+    double? hitRate,
+    int? timeToFirstPopMs,
+    int? level,
+    String? deviceClass,
+  }) =>
+      _safeLog('game_complete', {
+        'game_id': gameId,
+        'score': score,
+        if (hitRate != null)
+          'hit_rate': double.parse(hitRate.clamp(0.0, 1.0).toStringAsFixed(2)),
+        if (timeToFirstPopMs != null) 'time_to_first_pop_ms': timeToFirstPopMs,
+        if (level != null) 'level': level,
+        if (deviceClass != null) 'device_class': deviceClass,
+      });
+
+  /// One turn of «Повтори за мною»: who decided it and how it went.
+  ///
+  /// [via] is `mic` when the listening gate decided, `parent` when the
+  /// grown-up tapped. [outcome] is `spoke` / `quiet` for the microphone
+  /// and `nice` / `again` for a person. Kept apart on purpose: a machine
+  /// noticing a voice and an adult hearing a word are not the same
+  /// evidence, and a dashboard that merges them would overstate what the
+  /// app knows.
+  Future<void> logSpeechTurn({
+    required String via,
+    required String outcome,
+    required bool micEnabled,
+  }) => _safeLog('speech_turn', {
+    'via': via,
+    'outcome': outcome,
+    'mic_enabled': micEnabled,
+  });
 
   Future<void> logSoundFilterOpen(String letter) =>
       _safeLog('sound_filter_open', {'letter': letter});

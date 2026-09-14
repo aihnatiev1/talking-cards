@@ -194,6 +194,17 @@ class PurchaseService {
   /// The paywall says so instead of going quiet.
   final ValueNotifier<bool> awaitingApproval = ValueNotifier(false);
 
+  /// True while a checkout this session started is still open: the system
+  /// sheet is up, or the store has not yet said what happened.
+  ///
+  /// The paywall keeps its CTA busy off this rather than off a wall clock.
+  /// A fixed ten-second spinner was wrong in both directions — it kept
+  /// spinning for seconds after a parent had already dismissed the sheet,
+  /// and it went idle while a checkout was still running. September's
+  /// funnel is what that costs: 10 parents produced 44 purchase_start and
+  /// 33 purchase_cancel events, roughly four rounds each.
+  final ValueNotifier<bool> purchaseInFlight = ValueNotifier(false);
+
   /// Test seam: the store stream is the only way outcomes reach this
   /// service, and no test has a store.
   @visibleForTesting
@@ -201,7 +212,7 @@ class PurchaseService {
       _onPurchaseUpdate(updates);
 
   @visibleForTesting
-  void debugBeginPurchase(String productId) => _beginPurchase(productId);
+  bool debugBeginPurchase(String productId) => _beginPurchase(productId);
 
   /// Splits the store response into what the paywall shows and what we
   /// charge against.
@@ -338,7 +349,7 @@ class PurchaseService {
     // On Play the entry the paywall displays is not the entry that carries
     // the trial's offer token — see [_indexProducts].
     final product = _offerToBuy[shown.id] ?? shown;
-    _beginPurchase(product.id);
+    if (!_beginPurchase(product.id)) return false;
     final param = PurchaseParam(productDetails: product);
     bool started;
     try {
@@ -371,20 +382,35 @@ class PurchaseService {
   String? _pendingPurchaseId;
   Timer? _pendingTimer;
 
+  /// The SKU whose Ask-to-Buy request is still out with a parent. Separate
+  /// from [_pendingPurchaseId]: that window is closed, this banner is not.
+  String? _awaitingApprovalId;
+
   /// Face ID, a password or an Ask-to-Buy approval can take minutes; this is
   /// only a backstop so an outcome that never arrives is still visible.
   static const _pendingBudget = Duration(minutes: 3);
 
-  void _beginPurchase(String productId) {
+  /// Opens the outcome window for [productId]; false when another checkout
+  /// already owns it. One at a time: a second payment started over the
+  /// first moves [_pendingPurchaseId] out from under it, and the first
+  /// one's outcome is then dropped by the id comparison in [_logOutcome].
+  /// The CTA is disabled while [purchaseInFlight] is true, so in practice
+  /// this only catches a race.
+  bool _beginPurchase(String productId) {
+    if (_pendingPurchaseId != null) return false;
     _pendingTimer?.cancel();
     awaitingApproval.value = false;
     _pendingPurchaseId = productId;
+    purchaseInFlight.value = true;
     _pendingTimer = Timer(_pendingBudget, () {
       if (_pendingPurchaseId != productId) return;
       _pendingPurchaseId = null;
+      // Give the button back with the event: the checkout is not coming.
+      purchaseInFlight.value = false;
       AnalyticsService.instance
           .logPurchaseError(productId, 'no_outcome_in_3min');
     });
+    return true;
   }
 
   void _resolvePurchase(String productId, void Function() log) {
@@ -392,6 +418,7 @@ class PurchaseService {
     _pendingPurchaseId = null;
     _pendingTimer?.cancel();
     awaitingApproval.value = false;
+    purchaseInFlight.value = false;
     log();
   }
 
@@ -441,6 +468,16 @@ class PurchaseService {
   /// and is deliberately not reported as a sale.
   void _logOutcome(PurchaseDetails purchase) {
     final id = purchase.productID;
+    // The Ask-to-Buy wait outlives the checkout window on purpose (see
+    // the `pending` branch), so the decision, whenever it lands, has to be
+    // able to take the banner down even though no pending id is left. A
+    // declined request that left "waiting for approval" on screen forever
+    // would be the same dead end in a different costume.
+    if (id == _awaitingApprovalId &&
+        purchase.status != PurchaseStatus.pending) {
+      _awaitingApprovalId = null;
+      awaitingApproval.value = false;
+    }
     if (id != _pendingPurchaseId) return;
     final analytics = AnalyticsService.instance;
     switch (purchase.status) {
@@ -451,9 +488,25 @@ class PurchaseService {
         // parent. The approval, when it comes, arrives on this same stream,
         // possibly in a later session, and `_verifyAndDeliver` handles it
         // without a pending id.
-        _pendingTimer?.cancel();
+        // The checkout has left our hands: no sheet is up and nothing here
+        // is going to move it. So the window closes completely — timer,
+        // pending id and the busy CTA all go — rather than half of it.
+        //
+        // Holding only the button was worse than holding nothing: the id
+        // stayed set, `_beginPurchase` refuses to open a second checkout
+        // while one is pending, and so every later Buy tap returned false
+        // with no sheet and the "couldn't start, try again" snack — advice
+        // that could not work until the app was restarted. Ask to Buy is
+        // common in a 1-to-4 app, and that is the family most likely to
+        // pay.
+        //
+        // Letting go is safe: the approval arrives on this same stream,
+        // possibly in a later session, and `_verifyAndDeliver` grants it
+        // without a pending id. `awaitingApproval` keeps saying what is
+        // happening on screen.
+        _resolvePurchase(id, () => analytics.logPurchasePending(id));
+        _awaitingApprovalId = id;
         awaitingApproval.value = true;
-        analytics.logPurchasePending(id);
         return;
       case PurchaseStatus.purchased:
       case PurchaseStatus.restored:

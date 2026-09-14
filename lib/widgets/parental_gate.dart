@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../utils/constants.dart';
+import '../utils/design_tokens.dart';
 
 /// Simple parental gate: an addition question written in WORDS (so a
 /// pre-reading child can't parse it) answered on a numeric keypad.
@@ -12,12 +12,37 @@ import '../utils/constants.dart';
 /// Kept deliberately friction-light (no PIN to forget) — the goal is to
 /// stop random toddler taps from reaching the parent area, per Apple's
 /// parental-gate guidance for kids-oriented apps.
+/// How long one solved gate keeps the parent area open.
+///
+/// A gate on every door meant a grown-up answering the same sum twice on
+/// one path: once on the ⓘ button, again on «Parent area» inside the sheet
+/// that the first gate had already opened. The point is to stop a toddler's
+/// random taps, and a toddler does not hand the tablet back and forth
+/// inside five minutes — a parent does.
+const _gateWindow = Duration(minutes: 5);
+
+DateTime? _lastPassed;
+
+/// Whether a gate solved a moment ago is still good.
+bool get parentalGateIsOpen {
+  final at = _lastPassed;
+  return at != null && DateTime.now().difference(at) < _gateWindow;
+}
+
+@visibleForTesting
+void debugResetParentalGate() => _lastPassed = null;
+
 Future<bool> showParentalGate(BuildContext context, {required bool isEn}) async {
+  if (parentalGateIsOpen) return true;
   final ok = await showDialog<bool>(
     context: context,
     builder: (_) => _ParentalGateDialog(isEn: isEn),
   );
-  return ok ?? false;
+  if (ok ?? false) {
+    _lastPassed = DateTime.now();
+    return true;
+  }
+  return false;
 }
 
 const _ukWords = [
@@ -106,7 +131,7 @@ class _ParentalGateDialogState extends State<_ParentalGateDialog> {
               style: const TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.w900,
-                color: kAccent,
+                color: DT.brand,
                 letterSpacing: 4,
               ),
             ),
@@ -143,11 +168,15 @@ class _ParentalGateDialogState extends State<_ParentalGateDialog> {
     return Padding(
       padding: const EdgeInsets.all(4),
       child: SizedBox(
-        width: 64,
-        height: 56,
+        // 72×64: an adult thumb on a phone held one-handed still misses a
+        // 64×56 key often enough to burn one of the three tries (G15).
+        // The gate stays neutral otherwise — no mascot, no confetti: this
+        // is the door out of the child's half of the app, not part of it.
+        width: 72,
+        height: 64,
         child: TextButton(
           style: TextButton.styleFrom(
-            backgroundColor: kAccent.withValues(alpha: 0.08),
+            backgroundColor: DT.brand.withValues(alpha: 0.08),
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14)),
           ),
@@ -157,7 +186,7 @@ class _ParentalGateDialogState extends State<_ParentalGateDialog> {
             style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: kAccent,
+              color: DT.brand,
             ),
           ),
         ),

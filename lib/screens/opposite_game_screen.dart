@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
@@ -9,12 +8,16 @@ import '../models/pack_model.dart';
 import '../providers/language_provider.dart';
 import '../providers/profile_provider.dart';
 import '../services/audio_service.dart';
-import '../utils/confetti_overlay_mixin.dart';
+import '../services/feedback_service.dart';
 import '../utils/game_state_mixin.dart';
+import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
-import '../utils/shake_animation_mixin.dart';
+import '../utils/motion.dart';
+import '../widgets/answer_feedback.dart';
+import '../widgets/card_image.dart';
 import '../widgets/game_celebration_overlay.dart';
-import '../services/asset_pack_service.dart';
+import '../widgets/kid_screen.dart';
+import '../widgets/kid_tap.dart';
 
 /// Game: show one card, pick its opposite from 3 options.
 ///
@@ -30,11 +33,7 @@ class OppositeGameScreen extends ConsumerStatefulWidget {
 }
 
 class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
-    with
-        TickerProviderStateMixin,
-        ShakeAnimationMixin,
-        ConfettiOverlayMixin,
-        GameStateMixin {
+    with GameStateMixin {
   @override
   String get gameId => 'opposite_game';
 
@@ -43,14 +42,16 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
   int get maxRounds => 5;
 
   bool _answered = false;
-  String? _tappedId;
+  // A miss nudges the tapped tile (no colour, no cross); after the second
+  // miss in a round the right tile starts to glow (G10).
+  final _misses = MissTracker();
+  final Map<String, int> _nudges = {};
 
   late _Round _round;
 
   @override
   void initState() {
     super.initState();
-    initShake();
     startGame();
     _buildRound();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -60,13 +61,6 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
         isEn: ref.read(languageProvider) == 'en',
       );
     });
-  }
-
-  @override
-  void dispose() {
-    disposeShake();
-    disposeConfetti();
-    super.dispose();
   }
 
   void _buildRound() {
@@ -102,13 +96,14 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
     setState(() {
       _round = _Round(question: question, correct: correct, options: options);
       _answered = false;
-      _tappedId = null;
+      _misses.reset();
+      _nudges.clear();
     });
 
     // Small gap so the entry instruction (first round) or the previous
     // round's feedback can finish before the new question word plays.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(milliseconds: 400), () {
+      Future.delayed(DT.motion.questionCue, () {
         if (!mounted) return;
         AudioService.instance.playWordOnly(question.audioKey, question.sound);
       });
@@ -132,66 +127,78 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
     if (_answered) return;
     final isCorrect = card.id == _round.correct.id;
 
-    setState(() {
-      _tappedId = card.id;
-      _answered = true;
-    });
-
     if (isCorrect) {
-      HapticFeedback.lightImpact();
-      AudioService.instance.playSfx('ding');
+      // The tile itself pops, frames in success and bursts (AnswerFrame).
+      setState(() => _answered = true);
+      FeedbackService.instance.event(FeedbackEvent.correct);
       AudioService.instance
           .playPraise(isEn: ref.read(languageProvider) == 'en');
       scorePoint();
-      showConfetti();
       // Play the opposite word so child hears both words of the pair
-      Future.delayed(const Duration(milliseconds: 350), () {
+      Future.delayed(DT.motion.pairEcho, () {
         if (mounted) AudioService.instance.playWordOnly(card.audioKey, card.sound);
       });
-      Future.delayed(const Duration(milliseconds: 1000), () {
+      // The pair now stands side by side under the question (п. 22); the
+      // next question waits for that to be seen, not just heard.
+      Future.delayed(DT.motion.pairHold, () {
         if (mounted) _buildRound();
       });
     } else {
-      HapticFeedback.mediumImpact();
-      shake(id: card.id);
-      Future.delayed(const Duration(milliseconds: 1300), () {
-        if (mounted) setState(() { _answered = false; _tappedId = null; });
+      // Gentle redirection — a low pop and one nudge; nothing locks, the
+      // right tile stays there to be found.
+      FeedbackService.instance.event(FeedbackEvent.wrong);
+      setState(() {
+        _nudges[card.id] = (_nudges[card.id] ?? 0) + 1;
+        _misses.miss();
       });
+      if (_misses.justCrossed) {
+        FeedbackService.instance.event(FeedbackEvent.lockedHint);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final s = AppS(ref.read(languageProvider) == 'en');
+    final motion = MotionPolicy.of(context);
 
     final question = _round.question;
     final correct = _round.correct;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F0FF),
-      appBar: AppBar(
-        title: Text(
-          s('Знайди протилежність', 'Find the opposite'),
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: SafeArea(
-        child: Padding(
+    // No text title — the ↔️ row under the question card is the prompt.
+    return KidScreen.game(
+      accent: DT.brand,
+      // Played in the games' meadow, like every other game.
+      meadow: true,
+      body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
             children: [
               const SizedBox(height: 8),
 
               // Question card — large, tappable for audio (word only — kids
-              // get confused if the full example sentence plays each tap)
-              GestureDetector(
+              // get confused if the full example sentence plays each tap).
+              // Once answered it makes room for the pair: the two opposites
+              // stand next to each other, which is the thing to understand
+              // (experience audit п. 22) — the tap was only the way there.
+              KidTap(
                 onTap: () => AudioService.instance
                     .playWordOnly(question.audioKey, question.sound),
+                // The word itself is the answer to this tap.
+                sound: null,
                 child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: _QuestionCard(key: ValueKey(question.id), card: question, s: s),
+                  duration: motion.dur(DT.motion.pairReveal),
+                  child: _answered
+                      ? _PairReveal(
+                          key: ValueKey('pair-${question.id}'),
+                          question: question,
+                          answer: correct,
+                        )
+                      : _QuestionCard(
+                          key: ValueKey(question.id),
+                          card: question,
+                          s: s,
+                        ),
                 ),
               ),
 
@@ -221,19 +228,24 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
                 child: Column(
                   children: _round.options.map((card) {
                     final isCorrectCard = card.id == correct.id;
-                    final isTapped = _tappedId == card.id;
-
-                    final tile = _OptionTile(
-                      card: card,
-                      showCorrect: _answered && isCorrectCard,
-                      showWrong: _answered && isTapped && !isCorrectCard,
-                      onTap: () => _onTap(card),
-                    );
+                    final mark = !isCorrectCard
+                        ? AnswerMark.none
+                        : _answered
+                            ? AnswerMark.correct
+                            : _misses.showHint
+                                ? AnswerMark.hint
+                                : AnswerMark.none;
 
                     return Expanded(
+                      key: ValueKey(card.id),
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 10),
-                        child: wrapShake(tile, id: card.id),
+                        child: _OptionTile(
+                          card: card,
+                          mark: mark,
+                          nudge: _nudges[card.id] ?? 0,
+                          onTap: () => _onTap(card),
+                        ),
                       ),
                     );
                   }).toList(),
@@ -241,7 +253,6 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
               ),
             ],
           ),
-        ),
       ),
     );
   }
@@ -303,10 +314,7 @@ class _QuestionCard extends StatelessWidget {
           if (card.image != null)
             SizedBox(
               height: 110,
-              child: Image(
-                image: AssetPackService.instance.cardImage(card.image),
-                fit: BoxFit.contain,
-              ),
+              child: CardImage.forCard(card, padding: EdgeInsets.zero),
             )
           else
             Container(
@@ -349,97 +357,157 @@ class _QuestionCard extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────
-//  Option tile
+//  Pair reveal — the answer explained, without a word of text
+// ─────────────────────────────────────────────
+
+/// After a right answer the question card becomes the pair: «великий» and
+/// «маленький» next to each other, with the ↔ between them (experience
+/// audit 2026-09-13, п. 22). The point of the game is the relation, and a
+/// relation cannot be shown by one card at a time.
+///
+/// It occupies the question card's slot, so nothing moves on the screen
+/// except the cross-fade [AnimatedSwitcher] already runs.
+class _PairReveal extends StatelessWidget {
+  final CardModel question;
+  final CardModel answer;
+
+  const _PairReveal({
+    super.key,
+    required this.question,
+    required this.answer,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: DT.success.withValues(alpha: 0.35),
+          width: 2,
+        ),
+        boxShadow: DT.shadowSoft(DT.success),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Expanded(child: _PairHalf(card: question)),
+          const Text('↔️', style: TextStyle(fontSize: 26)),
+          Expanded(child: _PairHalf(card: answer)),
+        ],
+      ),
+    );
+  }
+}
+
+class _PairHalf extends StatelessWidget {
+  final CardModel card;
+
+  const _PairHalf({required this.card});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (card.image != null)
+          SizedBox(
+            height: 92,
+            child: CardImage.forCard(card, padding: EdgeInsets.zero),
+          )
+        else
+          Container(
+            width: 92,
+            height: 92,
+            decoration: BoxDecoration(
+              color: card.colorAccent.withValues(alpha: 0.25),
+              borderRadius: BorderRadius.circular(18),
+            ),
+          ),
+        const SizedBox(height: 6),
+        Text(
+          card.sound,
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: card.colorAccent,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+//  Option tile — picture + word inside the shared AnswerFrame
 // ─────────────────────────────────────────────
 
 class _OptionTile extends StatelessWidget {
   final CardModel card;
-  final bool showCorrect;
-  final bool showWrong;
+  final AnswerMark mark;
+  final int nudge;
   final VoidCallback onTap;
 
   const _OptionTile({
     required this.card,
-    required this.showCorrect,
-    required this.showWrong,
+    required this.mark,
+    required this.nudge,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return KidTap(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        decoration: BoxDecoration(
-          color: showCorrect
-              ? const Color(0xFFE8F5E9)
-              : showWrong
-                  ? const Color(0xFFFFEBEE)
-                  : card.colorBg,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: showCorrect
-                ? const Color(0xFF43A047)
-                : showWrong
-                    ? const Color(0xFFE53935)
-                    : card.colorAccent.withValues(alpha: 0.3),
-            width: showCorrect || showWrong ? 2.5 : 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.07),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        // Vertical layout: image centered on top, word below — matches the
-        // question card above so the whole screen reads as a column of
-        // big centered illustrations.
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (card.image != null)
-                SizedBox(
-                  width: 80,
-                  height: 80,
-                  child: Image(
-                    image: AssetPackService.instance.cardImage(card.image),
-                    fit: BoxFit.contain,
-                  ),
-                )
-              else
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: card.colorAccent.withValues(alpha: 0.25),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
+      child: AnswerFrame(
+        background: card.colorBg,
+        accent: card.colorAccent,
+        mark: mark,
+        nudge: nudge,
+        radius: 20,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        // Image on the left, word beside it — matches the question card
+        // above so the whole screen reads as a column of big pictures.
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (card.image != null)
+              SizedBox(
+                width: 80,
+                height: 80,
+                child: CardImage.forCard(card, padding: EdgeInsets.zero),
+              )
+            else
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: card.colorAccent.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-              const SizedBox(width: 14),
-              Text(
+              ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
                 card.sound,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: showCorrect
-                      ? const Color(0xFF2E7D32)
-                      : showWrong
-                          ? const Color(0xFFC62828)
-                          : card.colorAccent,
+                  color: card.colorAccent,
                 ),
               ),
-              const Spacer(),
-              if (showCorrect)
-                const Text('✅', style: TextStyle(fontSize: 22)),
-              if (showWrong)
-                const Text('❌', style: TextStyle(fontSize: 22)),
-            ],
-          ),
+            ),
+            // Room for the corner sticker so it never covers the word.
+            const SizedBox(width: 36),
+          ],
         ),
       ),
     );

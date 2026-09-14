@@ -7,6 +7,8 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:audio_session/audio_session.dart';
 
+import '../utils/sfx.dart';
+import 'analytics_service.dart';
 import 'asset_pack_service.dart';
 
 /// Maps card image key (kirilic) to latin wav filename
@@ -492,6 +494,19 @@ class AudioService {
     ..._audioMap.keys,
     ..._audioMap.values,
   };
+
+  /// Test seam: the clip filename [audioKey] resolves to, mirroring the
+  /// lookup in [loadClip]. A card's `audio` field may be a Cyrillic alias
+  /// ('серце_к') rather than the Latin filename it plays.
+  @visibleForTesting
+  static String debugAudioFile(String audioKey) =>
+      _audioMap[audioKey] ?? audioKey;
+
+  /// Test seam: whether [audioKey] is a key the player will even try.
+  /// An unknown key is dropped silently, which for a child is a card that
+  /// stopped talking.
+  @visibleForTesting
+  static bool debugKnownKey(String audioKey) => _knownKeys.contains(audioKey);
   /// Pre-computed millisecond offset for the end of the WORD portion of each
   /// recording (everything after this is the example sentence). Loaded at
   /// init from `assets/data/audio_word_lengths.json`. Files not in this map
@@ -505,19 +520,57 @@ class AudioService {
   final ValueNotifier<bool> autoSpeak = ValueNotifier(true);
   int _speakGeneration = 0;
 
+  /// The session the app plays cards through: playback, which ignores the
+  /// silent switch and is what a picture card is for.
+  static const _playbackSession = AudioSessionConfiguration(
+    avAudioSessionCategory: AVAudioSessionCategory.playback,
+    avAudioSessionMode: AVAudioSessionMode.defaultMode,
+    androidAudioAttributes: AndroidAudioAttributes(
+      contentType: AndroidAudioContentType.sonification,
+      usage: AndroidAudioUsage.media,
+    ),
+    androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
+  );
+
+  /// The session while «Скажи за мною» has the microphone open. It must
+  /// still play — the game says the word, listens, and says it again —
+  /// so it is playAndRecord, routed to the speaker rather than the tiny
+  /// earpiece receiver playAndRecord defaults to.
+  static const _listeningSession = AudioSessionConfiguration(
+    avAudioSessionCategory: AVAudioSessionCategory.playAndRecord,
+    avAudioSessionCategoryOptions: AVAudioSessionCategoryOptions.defaultToSpeaker,
+    avAudioSessionMode: AVAudioSessionMode.defaultMode,
+    androidAudioAttributes: AndroidAudioAttributes(
+      contentType: AndroidAudioContentType.sonification,
+      usage: AndroidAudioUsage.media,
+    ),
+    androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
+  );
+
+  /// Hand the session to the microphone, and take it back afterwards.
+  ///
+  /// A recorder left to configure the shared session on its own switches
+  /// iOS to a record category and never switches it back: the cards go
+  /// silent for the rest of the launch, which is exactly what turning the
+  /// microphone on did on the first device build. One owner — this
+  /// service — and the borrow is explicit and always returned.
+  Future<void> beginListening() => _applySession(_listeningSession);
+
+  Future<void> endListening() => _applySession(_playbackSession);
+
+  Future<void> _applySession(AudioSessionConfiguration config) async {
+    try {
+      final session = await AudioSession.instance;
+      await session.configure(config);
+      await session.setActive(true);
+    } catch (e) {
+      if (kDebugMode) debugPrint('AudioService: session switch failed: $e');
+    }
+  }
+
   Future<void> precache() async {
     // 1. Configure iOS audio session — playback ignores silent switch
-    final session = await AudioSession.instance;
-    await session.configure(const AudioSessionConfiguration(
-      avAudioSessionCategory: AVAudioSessionCategory.playback,
-      avAudioSessionMode: AVAudioSessionMode.defaultMode,
-      androidAudioAttributes: AndroidAudioAttributes(
-        contentType: AndroidAudioContentType.sonification,
-        usage: AndroidAudioUsage.media,
-      ),
-      androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
-    ));
-    await session.setActive(true);
+    await _applySession(_playbackSession);
 
     // 2. Initialize SoLoud engine (FFI — no method channels, lowest latency)
     await _soloud.init();
@@ -546,6 +599,9 @@ class AudioService {
         _soloud.stop(h);
       }
     } catch (_) {}
+
+    // 4. The handful of SFX the first minute needs (sound_palette §4.6).
+    await warmSfx();
   }
 
   /// Loads [keys] from disk ahead of the first tap. Everything else stays
@@ -568,15 +624,34 @@ class AudioService {
     if (!_knownKeys.contains(audioKey)) return Future.value(null);
 
     final file = _audioMap[audioKey] ?? audioKey;
+
+    // Paid-pack clips may live in the Play asset pack rather than the
+    // bundle. Ask before loading: a clip that is not on the device yet is
+    // an ordinary state here, and the old `audioSource` could not say so —
+    // it returned a bundle path that simply failed to load, and the card
+    // went quiet with nothing recorded anywhere. Silence is this app's
+    // worst failure mode (the audience does not read), so it must at least
+    // be visible in analytics. There is no TTS to fall back on: it was
+    // removed deliberately — see [playWordOnly].
+    final voice = AssetPackService.instance.cardVoice(file);
+    switch (voice) {
+      case VoicePending():
+        _reportSilence(file, 'pending');
+        return Future.value(null);
+      case VoiceMissing(:final reason):
+        _reportSilence(file, reason);
+        return Future.value(null);
+      case VoiceReady():
+        break;
+    }
+
     return _pendingLoads.putIfAbsent(file, () async {
       try {
-        // Paid-pack clips may live in the Play asset pack rather than the
-        // bundle; the service says which. Either way the decode stays on
-        // disk — see the class comment on why nothing is held in RAM.
-        final where = AssetPackService.instance.audioSource(file);
-        final source = where.isFile
-            ? await _soloud.loadFile(where.path, mode: LoadMode.disk)
-            : await _soloud.loadAsset(where.path, mode: LoadMode.disk);
+        // The decode stays on disk either way — see the class comment on
+        // why nothing is held in RAM.
+        final source = voice.isFile
+            ? await _soloud.loadFile(voice.path, mode: LoadMode.disk)
+            : await _soloud.loadAsset(voice.path, mode: LoadMode.disk);
         _sources[file] = source;
         // Also cache under every Cyrillic alias pointing at this file.
         for (final entry in _audioMap.entries) {
@@ -584,7 +659,10 @@ class AudioService {
         }
         return source;
       } catch (e) {
+        // Reachable despite the check above: the pack can be evicted in
+        // between, and a bundled file can be corrupt.
         if (kDebugMode) debugPrint('AudioService: failed to load $file: $e');
+        _reportSilence(file, 'load_failed');
         return null;
       } finally {
         _pendingLoads.remove(file);
@@ -592,25 +670,52 @@ class AudioService {
     });
   }
 
+  /// Clips already reported this session. A child tapping the same silent
+  /// card ten times is one problem, not ten events.
+  final Set<String> _silenceReported = {};
+
+  void _reportSilence(String file, String reason) {
+    if (!_silenceReported.add('$file/$reason')) return;
+    AnalyticsService.instance.logAssetUnavailable('audio', reason);
+  }
+
   Future<void> speakCard(String? audioKey, String sound, String fullText) async {
     if (audioKey == null) return;
+
+    // Silence first, load second. `_getSource` reads from disk — and on
+    // Android copies the asset to temp before decoding — so a stop that
+    // waits for it leaves the previous word playing for the length of that
+    // load. Swipe through cards on a cold cache and two words speak over
+    // each other; the child hears neither. Claiming the generation here
+    // also means a load that loses the race cannot start its word at all.
+    // Silence first, then claim the generation — `stop()` bumps it too, so
+    // claiming before would hand this call a number that is already stale
+    // and every word would abandon itself on the line below.
+    stop();
+    final gen = _speakGeneration;
+
     final source = await _getSource(audioKey);
     if (source == null) {
       if (kDebugMode) debugPrint('AudioService: no source for "$audioKey"');
       return;
     }
+    if (_speakGeneration != gen) return;
 
-    final gen = ++_speakGeneration;
     try {
-      // Stop previous sound before playing new one
-      stop();
       isSpeaking.value = true;
-      _currentHandle = await _soloud.play(source);
-      final handle = _currentHandle;
-      if (handle == null) {
-        if (_speakGeneration == gen) isSpeaking.value = false;
+      final handle = await _soloud.play(source);
+      // `play` is the second await, and a `stop()` landing inside it finds
+      // `_currentHandle` still null: it bumps the generation, silences
+      // nothing, and this voice starts a moment later with nobody holding
+      // its handle. That is the word that kept talking over the home
+      // screen after the back button. Re-check on the far side and stop
+      // the voice we just started if this call has been overtaken.
+      if (_speakGeneration != gen) {
+        _soloud.stop(handle);
         return;
       }
+      _currentHandle = handle;
+      _protectVoice(handle);
       while (_currentHandle == handle &&
           _soloud.getIsValidVoiceHandle(handle)) {
         await Future.delayed(const Duration(milliseconds: 50));
@@ -654,22 +759,36 @@ class AudioService {
     String fallbackWord, {
     String locale = 'uk-UA',
   }) async {
+    debugWordSink?.call(audioKey);
     // No TTS fallback: if there's no recorded audio for this card, stay
     // silent (user opted out of TTS entirely).
     if (audioKey == null) return;
+
+    // Same order as [speakCard]: silence first, load second. A stop that
+    // waits on the disk read lets the previous word keep playing through
+    // it, and two words speak at once.
+    stop();
+    final gen = _speakGeneration;
+
     final source = await _getSource(audioKey);
     if (source == null) return;
+    if (_speakGeneration != gen) return;
 
-    final gen = ++_speakGeneration;
     try {
-      stop();
       isSpeaking.value = true;
-      _currentHandle = await _soloud.play(source);
-      final handle = _currentHandle;
-      if (handle == null) {
-        if (_speakGeneration == gen) isSpeaking.value = false;
+      final handle = await _soloud.play(source);
+      // `play` is the second await, and a `stop()` landing inside it finds
+      // `_currentHandle` still null: it bumps the generation, silences
+      // nothing, and this voice starts a moment later with nobody holding
+      // its handle. That is the word that kept talking over the home
+      // screen after the back button. Re-check on the far side and stop
+      // the voice we just started if this call has been overtaken.
+      if (_speakGeneration != gen) {
+        _soloud.stop(handle);
         return;
       }
+      _currentHandle = handle;
+      _protectVoice(handle);
       // Recordings have shape: WORD · silence · phrase. The exact word-end
       // ms was detected at preprocessing time (see tools that build
       // assets/data/audio_word_lengths.json). For files that lack a trailing
@@ -701,6 +820,17 @@ class AudioService {
   /// Whether audio exists for the given key (loaded lazily on first play).
   bool hasSound(String? key) => key != null && _knownKeys.contains(key);
 
+  /// The word is the loudest thing in the room and must also be the last
+  /// thing the mixer drops: with SoLoud's default of 16 active voices, a
+  /// bubble cascade plus confetti plus a fanfare could otherwise evict the
+  /// narrator mid-syllable (sound_palette §3.1). The flag dies with the
+  /// handle, so nothing has to be undone.
+  void _protectVoice(SoundHandle handle) {
+    try {
+      _soloud.setProtectVoice(handle, true);
+    } catch (_) {}
+  }
+
   // --- Reward & guidance layer -------------------------------------------
   // SFX in assets/audio_sfx/ are tiny synthesized v1 placeholders — swap
   // for studio sounds when available. Praise and instruction clips must be
@@ -727,29 +857,200 @@ class AudioService {
     }
   }
 
-  /// Fire-and-forget UI sound: 'pop', 'ding' or 'tada'. Plays over the
+  /// Test seam: when set, [play] and [playBloom] report here instead of
+  /// touching SoLoud — `(file, pitch, volume)` per sound that would have
+  /// played. A dropped sound never reaches the sink, which is how the
+  /// "never over a word" rule is asserted without an audio engine.
+  /// Every word a screen asks for, for tests that check *that* a card
+  /// spoke — SoLoud is not loaded in the test runner, so the call itself
+  /// is the only observable. Set in `setUp`, cleared in `tearDown`.
+  @visibleForTesting
+  static void Function(String? audioKey)? debugWordSink;
+
+  @visibleForTesting
+  static void Function(String file, double pitch, double volume)? debugFxSink;
+
+  /// Play a palette role (`docs/design/sound_palette.md` §2).
+  ///
+  /// The role's own file plays when it is on disk; otherwise the v1
+  /// placeholder it names ([KidSound.fallback]) stands in, at
+  /// [KidSound.fallbackPitch]. Either miss is remembered for the session
+  /// by [_getFx], so a missing studio file costs one failed load, not one
+  /// per tap. [volume] and [pitch] default to the role's own mix.
+  ///
+  /// [dropIfSpeaking]: a tonal role (class B/C, `transient == false`) is
+  /// *dropped* — not queued — while the narrator speaks. Transients play
+  /// regardless: they are shorter than a syllable. Like [playSfx] this
+  /// never calls [stop]; an SFX cannot cut the word off.
+  Future<void> play(
+    KidSound sound, {
+    double? volume,
+    double? pitch,
+    bool dropIfSpeaking = false,
+  }) async {
+    if (dropIfSpeaking && !sound.transient && isSpeaking.value) return;
+    final vol = volume ?? sound.volume;
+    var speed = pitch ?? sound.pitch;
+    final path = _nextVariant(sound);
+    final sink = debugFxSink;
+    if (sink != null) {
+      sink(path.split('/').last.replaceAll('.wav', ''), speed, vol);
+      return;
+    }
+    var src = await _getFx(path);
+    if (src == null) {
+      src = await _getFx(sound.fallbackPath);
+      speed *= sound.fallbackPitch;
+    }
+    if (src == null) return;
+    await _playFx(src, volume: vol, pitch: speed);
+  }
+
+  /// Which take of a multi-recording role plays next.
+  final Map<KidSound, int> _variantCursor = {};
+
+  /// Walks the takes in order rather than picking at random: with three
+  /// files a shuffle repeats the same one back-to-back a third of the
+  /// time, which is exactly the repetition the extra recordings were made
+  /// to avoid. The start point is random so a round does not always open
+  /// on take one.
+  String _nextVariant(KidSound sound) {
+    if (sound.variants == 1) return sound.assetPath;
+    final next = _variantCursor.update(
+      sound,
+      (i) => i % sound.variants + 1,
+      ifAbsent: () => _rng.nextInt(sound.variants) + 1,
+    );
+    return sound.variantPath(next);
+  }
+
+  /// Decode the wave-1 roles (and `bloom_hi`, which greets on the splash)
+  /// ahead of the first tap. On Android `loadAsset` copies the file to
+  /// temp before decoding, so the first play of every SFX is the slow one
+  /// — better on the splash than under a finger. ≈ 180 KB of files; the
+  /// rest of the palette stays lazy, and the 900+ voice clips are not
+  /// touched (that rule is about them, not about seven tiny WAVs).
+  Future<void> warmSfx() async {
+    await Future.wait([
+      for (final s in KidSound.warm) _warmRole(s),
+      _getFx('${KidSound.dir}/bloom_hi.wav'),
+    ]);
+  }
+
+  Future<void> _warmRole(KidSound s) async {
+    if (s.variants > 1) {
+      final takes = await Future.wait([
+        for (var i = 1; i <= s.variants; i++) _getFx(s.variantPath(i)),
+      ]);
+      if (takes.every((t) => t == null)) await _getFx(s.fallbackPath);
+      return;
+    }
+    final own = await _getFx(s.assetPath);
+    if (own == null) await _getFx(s.fallbackPath);
+  }
+
+  /// Fire-and-forget UI sound by file stem — kept for compatibility; new
+  /// code names a [KidSound] through `FeedbackService`. Plays over the
   /// current word without touching [stop] state — a bubble pop must never
   /// cut the narrator off.
-  Future<void> playSfx(String name, {double volume = 1.0}) async {
-    final src = await _getFx('assets/audio_sfx/$name.wav');
+  ///
+  /// [pitch] is a playback-speed multiplier (1.0 = as recorded). One clip
+  /// played at 0.85–1.25 is four different pops to a two-year-old, and the
+  /// twentieth identical pop of a round is what makes a sound effect
+  /// wallpaper. Cheaper than four files, and it composes with any clip
+  /// that replaces today's placeholders.
+  Future<void> playSfx(
+    String name, {
+    double volume = 1.0,
+    double pitch = 1.0,
+  }) async {
+    final src = await _getFx('${KidSound.dir}/$name.wav');
     if (src == null) return;
+    await _playFx(src, volume: volume, pitch: pitch);
+  }
+
+  Future<void> _playFx(
+    AudioSource src, {
+    required double volume,
+    required double pitch,
+  }) async {
     try {
-      await _soloud.play(src, volume: volume);
+      if (pitch == 1.0) {
+        await _soloud.play(src, volume: volume);
+        return;
+      }
+      // Start paused so the speed is set before the first sample plays;
+      // otherwise the attack sounds at the recorded pitch and then jumps.
+      final handle = await _soloud.play(src, volume: volume, paused: true);
+      _soloud.setRelativePlaySpeed(handle, pitch.clamp(0.5, 2.0));
+      _soloud.setPause(handle, false);
     } catch (_) {}
   }
+
+  /// [playSfx] at a pitch drawn from [spread] around 1.0 — the call a game
+  /// makes on every tap so no two taps sound quite the same.
+  Future<void> playSfxVaried(
+    String name, {
+    double volume = 1.0,
+    double spread = 0.2,
+  }) =>
+      playSfx(
+        name,
+        volume: volume,
+        pitch: 1.0 + (_rng.nextDouble() * 2 - 1) * spread,
+      );
 
   /// Random recorded praise clip ("Молодець!" / "Great job!"). Rate-limited
   /// to every other call so it stays special; pass [always] for game-final
   /// celebrations. Expects assets/audio_mp3/praise_{uk|en}_1..5.mp3.
-  Future<void> playPraise({required bool isEn, bool always = false}) async {
+  ///
+  /// Returns `true` when a clip actually played, `false` when rate-limited
+  /// or when no praise file is bundled — the caller (`BloomReactions`) then
+  /// knows Bloom's own `bloom_yay` will not talk over a narrator.
+  Future<bool> playPraise({required bool isEn, bool always = false}) async {
     _praiseCounter++;
-    if (!always && _praiseCounter.isOdd) return;
+    if (!always && _praiseCounter.isOdd) return false;
     final src = await _getFx(
         'assets/audio_mp3/praise_${isEn ? 'en' : 'uk'}_${_rng.nextInt(5) + 1}.mp3');
-    if (src == null) return;
+    if (src == null) {
+      _praiseKnownMissing = true;
+      return false;
+    }
     try {
       await _soloud.play(src);
-    } catch (_) {}
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  bool _praiseKnownMissing = false;
+
+  /// `true` once a praise clip was asked for and found missing. Bloom's
+  /// `bloom_yay` stands in for the narrator's cheer only then
+  /// (docs/design/bloom_character.md §6).
+  bool get praiseKnownMissing => _praiseKnownMissing;
+
+  /// One of Bloom's own sounds (`assets/audio_sfx/bloom_*.wav`, §6).
+  ///
+  /// Same lazy `_getFx` path as [playSfx]; while the files are not yet
+  /// recorded this is a silent no-op, exactly like [playPraise] — so the
+  /// mascot can be wired now and sound later. Never plays over a word:
+  /// the sound is *dropped*, not queued (bloom_character.md §6 rule 1) —
+  /// enforced here as well as in `BloomReactions`, so the celebration's
+  /// stand-in `bloom_yay` obeys the same rule.
+  Future<void> playBloom(
+    String name, {
+    double volume = 0.6,
+    double pitch = 1.0,
+  }) {
+    if (isSpeaking.value) return Future.value();
+    final sink = debugFxSink;
+    if (sink != null) {
+      sink(name, pitch, volume);
+      return Future.value();
+    }
+    return playSfx(name, volume: volume, pitch: pitch);
   }
 
   /// Per-game voice instruction played on entry ("Лопай бульбашки!").
@@ -767,6 +1068,12 @@ class AudioService {
   SoundHandle? _currentHandle;
 
   void stop() {
+    // Bumping the generation is the half that was missing: `stop()` only
+    // ever silenced what was already playing, so a `speakCard` still
+    // waiting on its disk read sailed past it and started speaking after.
+    // That is why leaving a pack kept talking into the menu — dispose
+    // called stop, the pending load did not care.
+    _speakGeneration++;
     if (_currentHandle != null) {
       _soloud.stop(_currentHandle!);
       _currentHandle = null;

@@ -28,11 +28,14 @@ void main() {
       expect(notifier.debugState, isNull);
     });
 
-    test('start sets up first question with 4 options', () {
+    // The board of pictures starts at two and is grown by the child's own
+    // answers, never by the round number (experience audit §19) — see
+    // quiz_difficulty_test.dart for the ladder itself.
+    test('start sets up first question with two options', () {
       notifier.start();
 
       final state = notifier.debugState!;
-      expect(state.options.length, 4);
+      expect(state.options.length, 2);
       expect(state.round, 1);
       expect(state.score, 0);
       expect(state.finished, false);

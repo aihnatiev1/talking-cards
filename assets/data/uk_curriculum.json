@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "lang": "uk",
+  "units": [
+    {
+      "id": "people",
+      "title": "Люди і дім",
+      "titleEn": "People and home",
+      "cards": [
+        "h01",
+        "h02",
+        "h03",
+        "h04",
+        "h05",
+        "h28",
+        "h29",
+        "h30"
+      ]
+    },
+    {
+      "id": "animals",
+      "title": "Тварини",
+      "titleEn": "Animals",
+      "cards": [
+        "a01",
+        "a02",
+        "a03",
+        "a04",
+        "a06",
+        "a08",
+        "a09",
+        "a10",
+        "a11",
+        "a15",
+        "a16",
+        "a12"
+      ]
+    },
+    {
+      "id": "food",
+      "title": "Їжа і пиття",
+      "titleEn": "Food and drink",
+      "cards": [
+        "h21",
+        "f02",
+        "f11",
+        "f12",
+        "h20",
+        "f15",
+        "h22",
+        "f29"
+      ]
+    },
+    {
+      "id": "body",
+      "title": "Тіло",
+      "titleEn": "The body",
+      "cards": [
+        "b01",
+        "b02",
+        "b03",
+        "b04",
+        "b05",
+        "b06",
+        "b11",
+        "b15"
+      ]
+    },
+    {
+      "id": "doing",
+      "title": "Дії",
+      "titleEn": "Doing",
+      "cards": [
+        "act01",
+        "act02",
+        "act03",
+        "act04",
+        "act05",
+        "act06",
+        "act12",
+        "act14",
+        "act15",
+        "act18",
+        "act19",
+        "act16"
+      ]
+    },
+    {
+      "id": "things",
+      "title": "Речі поруч",
+      "titleEn": "Things nearby",
+      "cards": [
+        "h15",
+        "h16",
+        "h17",
+        "h18",
+        "h19",
+        "h27",
+        "h24",
+        "h26"
+      ]
+    },
+    {
+      "id": "feelings",
+      "title": "Почуття",
+      "titleEn": "Feelings",
+      "cards": [
+        "h10",
+        "h11",
+        "h13",
+        "e15"
+      ]
+    }
+  ]
+}

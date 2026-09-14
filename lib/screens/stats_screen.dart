@@ -6,15 +6,37 @@ import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../providers/streak_provider.dart';
 import '../screens/cards_screen.dart';
-import '../screens/rewards_screen.dart';
-import '../utils/constants.dart';
+import '../utils/design_tokens.dart';
+import '../utils/kid_routes.dart';
 import '../utils/l10n.dart';
 import '../utils/uk_grammar.dart';
 import '../widgets/activity_chart.dart';
+import '../widgets/parental_gate.dart';
 import '../widgets/share_progress_card.dart';
 
+/// The parent's report: packs completed, minutes, the week's activity and
+/// every pack's progress row.
+///
+/// Parent-only by construction (ux-gap-audit G14, CLAUDE.md rule 7). It
+/// used to hang off the streak chip on the child's home screen — one tap
+/// from a toddler's finger to a screen of charts, a share sheet and a way
+/// into any pack. The child's own rewards moved to the treasure box
+/// (`KidWordWallScreen`); what is left here is for a grown-up, so the only
+/// way in is [open], which asks the gate first. The share button *inside*
+/// is not gated a second time: the gate has already been passed to get
+/// here.
 class StatsScreen extends ConsumerWidget {
   const StatsScreen({super.key});
+
+  /// Asks the parental gate, then pushes the screen. Returns `true` when
+  /// the gate was passed. Never construct a route to [StatsScreen]
+  /// directly — `test/screens/rewards_album_test.dart` guards this.
+  static Future<bool> open(BuildContext context, {required bool isEn}) async {
+    final ok = await showParentalGate(context, isEn: isEn);
+    if (!ok || !context.mounted) return false;
+    await Navigator.of(context).push(KidRoutes.sheet(const StatsScreen()));
+    return true;
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -31,7 +53,7 @@ class StatsScreen extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: kAccent),
+          icon: const Icon(Icons.arrow_back_ios, color: DT.brand),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
@@ -41,7 +63,7 @@ class StatsScreen extends ConsumerWidget {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.share_rounded, color: kAccent),
+            icon: const Icon(Icons.share_rounded, color: DT.brand),
             onPressed: () {
               final packs = packsAsync.valueOrNull ?? [];
               shareProgress(
@@ -84,7 +106,7 @@ class StatsScreen extends ConsumerWidget {
                       vertical: 20, horizontal: 20),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [kAccent, kTeal],
+                      colors: [DT.brand, DT.teal],
                     ),
                     borderRadius: BorderRadius.circular(20),
                   ),
@@ -122,38 +144,38 @@ class StatsScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
+                      // The streak is a read-out here, not a door: the
+                      // rewards album belongs to the child and lives in the
+                      // treasure box (G14), not two taps inside the
+                      // parent's report.
                       if (streak.currentStreak >= 2)
-                        GestureDetector(
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                                builder: (_) => const RewardsScreen()),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 12),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Column(
-                              children: [
-                                Text(
-                                  '🔥 ${streak.currentStreak}',
-                                  style: const TextStyle(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
+                          child: Column(
+                            children: [
+                              Text(
+                                '🔥 ${streak.currentStreak}',
+                                style: const TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
                                 ),
-                                Text(
-                                  s.isEn ? 'days' : dayWord(streak.currentStreak),
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white70,
-                                  ),
+                              ),
+                              Text(
+                                s.isEn
+                                    ? 'days'
+                                    : dayWord(streak.currentStreak),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white70,
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                     ],
@@ -166,11 +188,11 @@ class StatsScreen extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     decoration: BoxDecoration(
                       color:
-                          kAccent.withValues(alpha: 0.1),
+                          DT.brand.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color:
-                            kAccent.withValues(alpha: 0.2),
+                            DT.brand.withValues(alpha: 0.2),
                       ),
                     ),
                     child: Column(
@@ -183,7 +205,7 @@ class StatsScreen extends ConsumerWidget {
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: kAccent,
+                            color: DT.brand,
                           ),
                         ),
                         Text(
@@ -218,8 +240,9 @@ class StatsScreen extends ConsumerWidget {
 
                   return GestureDetector(
                     onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                          builder: (_) => CardsScreen(pack: pack)),
+                      KidRoutes.content(
+                        CardsScreen(pack: pack, source: 'parent_stats'),
+                      ),
                     ),
                     child: Container(
                     margin: const EdgeInsets.only(bottom: 10),

@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/profile_model.dart';
 import '../providers/language_provider.dart';
 import '../providers/profile_provider.dart';
-import '../utils/constants.dart';
+import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 
 // ─────────────────────────────────────────────
@@ -59,7 +59,7 @@ class _ProfileSelectorSheet extends ConsumerWidget {
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w800,
-              color: kAccent,
+              color: DT.brand,
             ),
           ),
           const SizedBox(height: 16),
@@ -85,8 +85,8 @@ class _ProfileSelectorSheet extends ConsumerWidget {
                 icon: const Icon(Icons.add_rounded),
                 label: Text(s('Додати профіль', 'Add profile')),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: kAccent,
-                  side: BorderSide(color: kAccent.withValues(alpha: 0.4)),
+                  foregroundColor: DT.brand,
+                  side: BorderSide(color: DT.brand.withValues(alpha: 0.4)),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14)),
@@ -203,11 +203,11 @@ class _ProfileTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: isActive
-            ? kAccent.withValues(alpha: 0.1)
+            ? DT.brand.withValues(alpha: 0.1)
             : Colors.grey.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(14),
         border: isActive
-            ? Border.all(color: kAccent.withValues(alpha: 0.35), width: 1.5)
+            ? Border.all(color: DT.brand.withValues(alpha: 0.35), width: 1.5)
             : null,
       ),
       child: ListTile(
@@ -218,7 +218,7 @@ class _ProfileTile extends StatelessWidget {
           height: 44,
           decoration: BoxDecoration(
             color: isActive
-                ? kAccent.withValues(alpha: 0.15)
+                ? DT.brand.withValues(alpha: 0.15)
                 : Colors.grey.withValues(alpha: 0.12),
             shape: BoxShape.circle,
           ),
@@ -231,7 +231,7 @@ class _ProfileTile extends StatelessWidget {
           profile.name,
           style: TextStyle(
             fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-            color: isActive ? kAccent : null,
+            color: isActive ? DT.brand : null,
           ),
         ),
         subtitle: Text(
@@ -244,7 +244,7 @@ class _ProfileTile extends StatelessWidget {
           children: [
             if (isActive)
               const Icon(Icons.check_circle_rounded,
-                  color: kAccent, size: 20),
+                  color: DT.brand, size: 20),
             IconButton(
               icon: Icon(Icons.edit_outlined,
                   size: 18, color: Colors.grey[500]),
@@ -379,11 +379,11 @@ class _ProfileEditDialogState extends State<_ProfileEditDialog> {
                     height: 44,
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? kAccent.withValues(alpha: 0.15)
+                          ? DT.brand.withValues(alpha: 0.15)
                           : Colors.grey.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                       border: isSelected
-                          ? Border.all(color: kAccent, width: 2)
+                          ? Border.all(color: DT.brand, width: 2)
                           : null,
                     ),
                     child: Center(
@@ -408,7 +408,7 @@ class _ProfileEditDialogState extends State<_ProfileEditDialog> {
               : () => Navigator.of(context).pop(
                   (_nameCtrl.text.trim(), _selectedAvatar, _selectedLang, _selectedLevel)),
           style: ElevatedButton.styleFrom(
-            backgroundColor: kAccent,
+            backgroundColor: DT.brand,
             foregroundColor: Colors.white,
           ),
           child: Text(s('Зберегти', 'Save')),
@@ -428,17 +428,17 @@ class _ProfileEditDialogState extends State<_ProfileEditDialog> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: selected
-              ? kAccent.withValues(alpha: 0.15)
+              ? DT.brand.withValues(alpha: 0.15)
               : Colors.grey.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(10),
-          border: selected ? Border.all(color: kAccent, width: 2) : null,
+          border: selected ? Border.all(color: DT.brand, width: 2) : null,
         ),
         child: Text(
           label,
           style: TextStyle(
             fontSize: 14,
             fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-            color: selected ? kAccent : null,
+            color: selected ? DT.brand : null,
           ),
         ),
       ),
@@ -457,10 +457,10 @@ class _ProfileEditDialogState extends State<_ProfileEditDialog> {
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
             color: selected
-                ? kAccent.withValues(alpha: 0.15)
+                ? DT.brand.withValues(alpha: 0.15)
                 : Colors.grey.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(10),
-            border: selected ? Border.all(color: kAccent, width: 2) : null,
+            border: selected ? Border.all(color: DT.brand, width: 2) : null,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -472,7 +472,7 @@ class _ProfileEditDialogState extends State<_ProfileEditDialog> {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-                  color: selected ? kAccent : Colors.grey[600],
+                  color: selected ? DT.brand : Colors.grey[600],
                 ),
               ),
             ],

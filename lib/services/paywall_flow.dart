@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/packs_provider.dart';
 import '../screens/paywall_screen.dart';
+import '../utils/kid_routes.dart';
 
 /// Shows the paywall. Returns true if purchase was successful.
 ///
@@ -24,8 +25,8 @@ Future<bool> runPaywallFlow(
   String source = 'paywall_screen',
 }) async {
   final purchased = await Navigator.of(context).push<bool>(
-    MaterialPageRoute(
-      builder: (_) => PaywallScreen(
+    KidRoutes.sheet(
+      PaywallScreen(
         isOnboarding: isOnboarding,
         source: isOnboarding ? 'paywall_onboarding' : source,
       ),

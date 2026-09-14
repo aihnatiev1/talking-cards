@@ -1,21 +1,25 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
-import '../utils/constants.dart';
+import '../services/feedback_service.dart';
+import '../utils/app_icons.dart';
 import '../utils/design_tokens.dart';
-import '../services/asset_pack_service.dart';
+import '../utils/motion.dart';
+import 'ambient_loop.dart';
+import 'card_image.dart';
+import 'kid_tap.dart';
 
-/// One secondary step of today's plan, rendered as a compact button under the
-/// hero. Replaces the old free-standing "stone" in Today's Plan strip.
+/// A localized daily action with an illustration and a completion badge.
 class DailyTask {
-  final String emoji;
+  final AppIcon icon;
   final String label;
   final bool isDone;
   final bool isActive;
   final VoidCallback onTap;
 
   const DailyTask({
-    required this.emoji,
+    required this.icon,
     required this.label,
     required this.isDone,
     required this.isActive,
@@ -23,17 +27,9 @@ class DailyTask {
   });
 }
 
-/// The single above-the-fold block on Home: one hero (Card of the Day, or
-/// "Continue" when a pack is half-finished) plus the remaining daily steps as
-/// compact buttons inside the SAME frame.
-///
-/// Before this, Home stacked two separately-framed cards — hero and Today's
-/// Plan — which cost ~80dp of vertical space and made the child choose between
-/// two equally-loud entry points. Now there is one obvious thing to tap and the
-/// plan reads as its follow-up.
-class DailyHeroCard extends StatefulWidget {
-  /// Small pill above the title, e.g. '🔊 Картка дня' / '▶ Продовжити'.
-  final String badge;
+/// Responsive invitation with a framed illustration, a separate mascot slot,
+/// and full-width localized actions. Motion is confined to the play button.
+class DailyHeroCard extends StatelessWidget {
   final String title;
   final Color accent;
 
@@ -44,10 +40,17 @@ class DailyHeroCard extends StatefulWidget {
   /// 0..1 progress for the "Continue" flavour; null hides the bar.
   final double? progress;
 
-  /// The hero's own daily task is already done — swaps the affordance icon
-  /// for a check and stops the invite pulse.
+  /// The hero's own daily task is already done — swaps the play disc for a
+  /// check and stops the invite breath.
   final bool heroDone;
   final VoidCallback onHeroTap;
+
+  /// Long-press on the hero — the Card-of-the-Day sheet for the parent
+  /// (favourites, listen again). Null disables the gesture.
+  final VoidCallback? onHeroLongPress;
+
+  /// Bloom S, or null for a hero without him (tests, empty catalogue).
+  final Widget? mascot;
 
   /// Daily steps NOT represented by the hero itself.
   final List<DailyTask> tasks;
@@ -56,272 +59,553 @@ class DailyHeroCard extends StatefulWidget {
   final bool allDone;
   final VoidCallback? onAllDoneTap;
 
+  /// Steps of today's route, as `2 з 5 виконано`. This is the line that
+  /// answers "how much is left" — minutes are a guess, steps are a fact.
+  /// Null on the first visit, where there is no progress to show yet.
+  final int? stepsDone;
+  final int stepsTotal;
+
+  /// Rough minutes left, shown small under the steps. Secondary on
+  /// purpose: a parent plans by it, a child does not read it.
+  final int? minutesLeft;
+
+  /// Nothing has been done on this profile yet: the card stops being a
+  /// progress report and becomes an invitation — a shorter first session
+  /// (3 minutes, 4 words) and no progress bar, because a bar at 0 % is a
+  /// worse greeting than no bar at all.
+  final bool firstVisit;
+
+  /// The one short line Bloom says inside the card, and it always names
+  /// the next action ("Далі: скажи «жаба»"), never motivation for its own
+  /// sake. Null hides the line.
+  final String? bloomLine;
+
   final bool isEn;
 
   const DailyHeroCard({
     super.key,
-    required this.badge,
     required this.title,
     required this.accent,
     required this.onHeroTap,
     required this.tasks,
     required this.isEn,
+    this.onHeroLongPress,
+    this.mascot,
     this.image,
     this.fallbackEmoji = '🃏',
     this.progress,
     this.heroDone = false,
     this.allDone = false,
     this.onAllDoneTap,
+    this.stepsDone,
+    this.stepsTotal = 5,
+    this.minutesLeft,
+    this.firstVisit = false,
+    this.bloomLine,
   });
 
   @override
-  State<DailyHeroCard> createState() => _DailyHeroCardState();
+  Widget build(BuildContext context) {
+    final Widget footer = allDone
+        ? _AllDoneRow(isEn: isEn, onTap: onAllDoneTap)
+        : _StoneRow(tasks: tasks, accent: accent);
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: MotionPolicy.of(context).dur(DT.motion.heroArrive),
+      curve: Curves.easeOutCubic,
+      builder: (_, t, child) => Opacity(
+        opacity: t,
+        child: Transform.translate(
+          offset: Offset(0, 12 * (1 - t)),
+          child: child,
+        ),
+      ),
+      child: RepaintBoundary(
+        child: Container(
+          decoration: BoxDecoration(
+            color: DT.surfaceWhite,
+            borderRadius: BorderRadius.circular(DT.rLg),
+            border: Border.all(
+              color: accent.withValues(alpha: 0.22),
+              width: 1.5,
+            ),
+            boxShadow: DT.shadowSoft(accent),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(DT.rLg - 2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _HeroPane(
+                  title: title,
+                  isEn: isEn,
+                  accent: accent,
+                  image: image,
+                  fallbackEmoji: fallbackEmoji,
+                  progress: progress,
+                  heroDone: heroDone,
+                  mascot: mascot,
+                  onTap: onHeroTap,
+                  onLongPress: onHeroLongPress,
+                  stepsDone: stepsDone,
+                  stepsTotal: stepsTotal,
+                  minutesLeft: minutesLeft,
+                  firstVisit: firstVisit,
+                  bloomLine: bloomLine,
+                ),
+                // Hairline instead of a second frame: the stones belong to
+                // the hero, they are not a separate card.
+                Container(
+                  height: 1,
+                  margin: const EdgeInsets.symmetric(horizontal: DT.sp12),
+                  color: DT.textPrimary.withValues(alpha: 0.06),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    DT.sp12,
+                    DT.sp8,
+                    DT.sp12,
+                    DT.sp8,
+                  ),
+                  child: footer,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
-class _DailyHeroCardState extends State<DailyHeroCard>
+/// The 150 dp hero row. Stateful only for the illustration bounce on tap
+/// (audit A1-9: tap = the word + a bounce, the sheet moves to long-press).
+class _HeroPane extends StatefulWidget {
+  final String title;
+  final bool isEn;
+  final Color accent;
+  final String? image;
+  final String fallbackEmoji;
+  final double? progress;
+  final bool heroDone;
+  final Widget? mascot;
+  final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+  final int? stepsDone;
+  final int stepsTotal;
+  final int? minutesLeft;
+  final bool firstVisit;
+  final String? bloomLine;
+
+  const _HeroPane({
+    required this.title,
+    required this.isEn,
+    required this.accent,
+    required this.image,
+    required this.fallbackEmoji,
+    required this.progress,
+    required this.heroDone,
+    required this.mascot,
+    required this.onTap,
+    required this.onLongPress,
+    required this.stepsDone,
+    required this.stepsTotal,
+    required this.minutesLeft,
+    required this.firstVisit,
+    required this.bloomLine,
+  });
+
+  @override
+  State<_HeroPane> createState() => _HeroPaneState();
+}
+
+class _HeroPaneState extends State<_HeroPane>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _pulse;
-  late final Animation<double> _scale;
-  bool _pressed = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulse = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1600),
-    );
-    // Gentler than the old 1.03 hero pulse: the card is taller now, so the
-    // same ratio read as the whole screen breathing.
-    _scale = Tween<double>(
-      begin: 1.0,
-      end: 1.02,
-    ).animate(CurvedAnimation(parent: _pulse, curve: Curves.easeInOut));
-    _syncPulse();
-  }
-
-  @override
-  void didUpdateWidget(covariant DailyHeroCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.heroDone != widget.heroDone) _syncPulse();
-  }
-
-  void _syncPulse() {
-    if (widget.heroDone) {
-      _pulse.stop();
-      _pulse.value = 0;
-    } else if (!_pulse.isAnimating) {
-      _pulse.repeat(reverse: true);
-    }
-  }
+  late final AnimationController _bounce = AnimationController(
+    vsync: this,
+    duration: DT.motion.successPop,
+  );
 
   @override
   void dispose() {
-    _pulse.dispose();
+    _bounce.dispose();
     super.dispose();
+  }
+
+  void _onTap() {
+    // Zero under reduced motion: the controller completes in one frame and
+    // the picture never leaves 1.0.
+    _bounce.duration = MotionPolicy.of(context).dur(DT.motion.successPop);
+    _bounce.forward(from: 0);
+    widget.onTap();
   }
 
   @override
   Widget build(BuildContext context) {
     final accent = widget.accent;
-    final narrow = MediaQuery.of(context).size.width < 360;
-    const heroHeight = 96.0;
+    final progress = widget.progress;
+    return LayoutBuilder(
+      builder: (context, bounds) {
+        final compact = bounds.maxWidth < 400;
+        final artWidth = math.min(bounds.maxWidth * .36, 225.0);
+        final heading = widget.firstVisit
+            ? (widget.isEn ? 'Starting out' : 'Починаємо')
+            : widget.heroDone
+            ? (widget.isEn ? 'Well done!' : 'Молодець!')
+            : (widget.isEn ? 'Today' : 'Сьогодні');
 
-    final hero = GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) => setState(() => _pressed = false),
-      onTapCancel: () => setState(() => _pressed = false),
-      onTap: () {
-        HapticFeedback.lightImpact();
-        widget.onHeroTap();
-      },
-      child: AnimatedScale(
-        scale: _pressed ? DT.pressScale : 1.0,
-        duration: DT.pressMs,
-        curve: Curves.easeOut,
-        child: SizedBox(
-          height: heroHeight,
-          child: Row(
-            children: [
-              // Illustration pane — fixed width keeps intrinsic sizing bounded
-              // so the webp never balloons to its natural resolution.
-              SizedBox(
-                width: narrow ? 78 : 94,
-                height: heroHeight,
-                child: Container(
-                  color: accent.withValues(alpha: 0.10),
-                  alignment: Alignment.center,
-                  child: widget.image != null
-                      ? Padding(
-                          padding: const EdgeInsets.all(6),
-                          child: Image(
-                            image: AssetPackService.instance.cardImage(
-                              widget.image,
-                            ),
-                            height: heroHeight - 12,
-                            fit: BoxFit.contain,
-                            // Card-of-the-day may be paid content that the
-                            // asset pack has not delivered yet.
-                            errorBuilder: (_, __, ___) => FittedBox(
-                              fit: BoxFit.contain,
-                              child: Text(
-                                widget.fallbackEmoji,
-                                style: const TextStyle(fontSize: 44),
-                              ),
-                            ),
-                          ),
-                        )
-                      : FittedBox(
-                          fit: BoxFit.contain,
-                          child: Text(
-                            widget.fallbackEmoji,
-                            style: const TextStyle(fontSize: 44),
-                          ),
-                        ),
+        // The line under the title. First visit sells how small the first
+        // session is; after that, steps — a fact — carry it, and minutes
+        // ride underneath in a smaller, quieter size.
+        final done = widget.stepsDone;
+        final String? factLine = widget.firstVisit
+            ? (widget.isEn ? '3 min · 4 words' : '3 хв · 4 слова')
+            : done == null
+            ? null
+            : (widget.isEn
+                  ? '$done of ${widget.stepsTotal} done'
+                  : '$done з ${widget.stepsTotal} виконано');
+        final minutes = widget.minutesLeft;
+        final String? minutesLine = widget.firstVisit || minutes == null
+            ? null
+            : (widget.isEn ? '~$minutes min left' : '~$minutes хв залишилось');
+        // A bar at 0 % is a worse greeting than no bar.
+        final showBar = !widget.firstVisit && progress != null;
+        double textHeight(String text, TextStyle style) {
+          final painter =
+              TextPainter(
+                text: TextSpan(
+                  text: text,
+                  style: DefaultTextStyle.of(context).style.merge(style),
                 ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 10, 6, 10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: accent.withValues(alpha: 0.14),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          widget.badge,
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            color: accent,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          widget.title,
-                          maxLines: 1,
-                          style: TextStyle(
-                            fontSize: 21,
-                            fontWeight: FontWeight.w900,
-                            color: accent,
-                            letterSpacing: 0.2,
-                          ),
-                        ),
-                      ),
-                      if (widget.progress != null) ...[
-                        const SizedBox(height: 5),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(2),
-                          child: LinearProgressIndicator(
-                            value: widget.progress!.clamp(0.0, 1.0),
-                            minHeight: 3,
-                            backgroundColor: accent.withValues(alpha: 0.15),
-                            valueColor: AlwaysStoppedAnimation<Color>(accent),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
+                textDirection: Directionality.of(context),
+                textScaler: MediaQuery.textScalerOf(context),
+              )..layout(
+                maxWidth: math.max(
+                  1,
+                  bounds.maxWidth - artWidth - (compact ? 24 : 42),
                 ),
+              );
+          final height = painter.height;
+          painter.dispose();
+          return height;
+        }
+
+        final paneHeight = math.max(
+          compact ? 170.0 : 200.0,
+          24 +
+              5 +
+              10 +
+              84 +
+              (showBar ? 14 : 0) +
+              (factLine == null ? 0 : 20) +
+              (minutesLine == null ? 0 : 16) +
+              (widget.bloomLine == null ? 0 : 20) +
+              textHeight(heading, DT.caption.copyWith(fontSize: 12)) +
+              textHeight(
+                widget.title,
+                DT.h1.copyWith(fontSize: compact ? 21 : 26, height: 1.15),
               ),
-              // Affordance: a non-reader needs a visible "press me" mark.
-              Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: widget.heroDone
-                        ? DT.success.withValues(alpha: 0.12)
-                        : accent.withValues(alpha: 0.14),
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: Icon(
-                    widget.heroDone
-                        ? Icons.check_rounded
-                        : Icons.play_arrow_rounded,
-                    size: 24,
-                    color: widget.heroDone ? DT.success : accent,
-                  ),
-                ),
-              ),
-            ],
+        );
+        final content = Padding(
+          padding: EdgeInsets.fromLTRB(
+            compact ? 12 : 20,
+            12,
+            compact ? 12 : 22,
+            12,
           ),
-        ),
-      ),
-    );
-
-    final Widget footer = widget.allDone
-        ? _AllDoneRow(isEn: widget.isEn, onTap: widget.onAllDoneTap)
-        : Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              for (int i = 0; i < widget.tasks.length; i++) ...[
-                if (i > 0) const SizedBox(width: 8),
-                Expanded(
-                  child: _TaskButton(
-                    key: ValueKey('daily_task_$i'),
-                    task: widget.tasks[i],
-                    accent: accent,
-                    // When the pending step is the hero itself, no button is
-                    // "active" — mark the first unfinished one as up-next so
-                    // the row doesn't read as two disabled controls.
-                    isNext: i == widget.tasks.indexWhere((t) => !t.isDone),
+              Text(
+                heading,
+                style: DT.caption.copyWith(
+                  color: DT.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                widget.title,
+                style: DT.h1.copyWith(
+                  fontSize: compact ? 21 : 26,
+                  color: DT.onTint(accent),
+                  height: 1.15,
+                ),
+              ),
+              if (factLine != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  factLine,
+                  style: DT.tileTitle.copyWith(
+                    fontSize: 13,
+                    color: DT.onTint(accent),
+                  ),
+                ),
+              ],
+              if (minutesLine != null)
+                Text(
+                  minutesLine,
+                  style: DT.caption.copyWith(
+                    fontSize: 11,
+                    color: DT.textSecondary,
+                  ),
+                ),
+              if (showBar) ...[
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: progress.clamp(0.0, 1.0)),
+                    duration: MotionPolicy.of(
+                      context,
+                    ).dur(DT.motion.heroProgress),
+                    builder: (_, value, __) => LinearProgressIndicator(
+                      value: value,
+                      minHeight: 6,
+                      backgroundColor: accent.withValues(alpha: .1),
+                      color: accent,
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  AmbientLoop(
+                    period: DT.motion.heroHop,
+                    settleAfter: DT.motion.heroHopSettle,
+                    enabled: !widget.heroDone,
+                    builder: (_, t, child) => Transform.translate(
+                      offset: Offset(0, -3 * t),
+                      child: Transform.rotate(
+                        angle: -.045 * math.sin(t * math.pi),
+                        child: child,
+                      ),
+                    ),
+                    child: _PlayDisc(accent: accent, done: widget.heroDone),
+                  ),
+                  if (widget.mascot != null) ...[
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: SizedBox(
+                          width: 68,
+                          height: 76,
+                          child: FittedBox(
+                            fit: BoxFit.contain,
+                            child: widget.mascot!,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              // Bloom's line lives inside the card, under the button he is
+              // pointing at: one sentence naming the next action. It is
+              // where Speak & Repeat will speak from.
+              if (widget.bloomLine != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  widget.bloomLine!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: DT.caption.copyWith(
+                    fontSize: 12,
+                    color: DT.textSecondary,
                   ),
                 ),
               ],
             ],
-          );
-
-    return ScaleTransition(
-      scale: _scale,
-      child: Container(
-        decoration: BoxDecoration(
-          color: DT.surfaceWhite,
-          borderRadius: BorderRadius.circular(DT.rLg),
-          border: Border.all(color: accent.withValues(alpha: 0.22), width: 1.5),
-          boxShadow: DT.shadowSoft(accent),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(DT.rLg - 2),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              hero,
-              // Hairline instead of a second frame: the plan belongs to the
-              // hero, it isn't a separate card.
-              Container(
-                height: 1,
-                margin: const EdgeInsets.symmetric(horizontal: 12),
-                color: Colors.black.withValues(alpha: 0.05),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
-                child: footer,
-              ),
-            ],
           ),
-        ),
+        );
+        return Semantics(
+          button: true,
+          label: widget.title,
+          child: KidTap(
+            onTap: _onTap,
+            onLongPress: widget.onLongPress,
+            sound: null,
+            child: SizedBox(
+              height: paneHeight,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(
+                    width: artWidth,
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        compact ? 12 : 18,
+                        12,
+                        0,
+                        12,
+                      ),
+                      child: AnimatedBuilder(
+                        animation: _bounce,
+                        builder: (_, child) => Transform.scale(
+                          scale: 1.0 + .035 * math.sin(math.pi * _bounce.value),
+                          child: child,
+                        ),
+                        child: Container(
+                          constraints: const BoxConstraints(minHeight: 120),
+                          decoration: BoxDecoration(
+                            color: accent.withValues(alpha: .07),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(20),
+                            child: CardImage(
+                              name: widget.image,
+                              fallbackEmoji: widget.fallbackEmoji,
+                              size: CardArtSize.hero,
+                              fit: BoxFit.contain,
+                              padding: const EdgeInsets.all(6),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(child: content),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// The one button in the hero. It stays a button after the step is done —
+/// a green check filling the whole disc read as a status the child still
+/// wanted to press (playtest). Done is now said by a small badge in the
+/// corner, and the disc itself says "press me again" with a replay arrow.
+class _PlayDisc extends StatelessWidget {
+  final Color accent;
+  final bool done;
+
+  const _PlayDisc({required this.accent, required this.done});
+
+  @override
+  Widget build(BuildContext context) {
+    final side = DT.size.tapMin;
+    return SizedBox(
+      width: side + 8,
+      height: side + 8,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned(
+            left: 0,
+            top: 4,
+            child: Container(
+              width: side,
+              height: side,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color.lerp(accent, Colors.white, .25)!,
+                    accent,
+                  ],
+                ),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 3),
+                boxShadow: [
+                  BoxShadow(
+                    color: accent.withValues(alpha: .2),
+                    offset: const Offset(0, 4),
+                    blurRadius: 8,
+                  ),
+                ],
+              ),
+              alignment: Alignment.center,
+              child: AppIconView(
+                done ? AppIcon.replay : AppIcon.play,
+                size: 34,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          if (done)
+            Positioned(
+              right: 0,
+              top: 0,
+              child: Container(
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(
+                  color: DT.success,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                ),
+                alignment: Alignment.center,
+                child: const AppIconView(
+                  AppIcon.check,
+                  size: 16,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
 }
 
-class _TaskButton extends StatefulWidget {
+class _StoneRow extends StatelessWidget {
+  final List<DailyTask> tasks;
+  final Color accent;
+
+  const _StoneRow({required this.tasks, required this.accent});
+
+  @override
+  Widget build(BuildContext context) {
+    // When the pending step is the hero itself, no stone is "active" — mark
+    // the first unfinished one as up-next so the row doesn't read as a set
+    // of disabled controls.
+    final next = tasks.indexWhere((t) => !t.isDone);
+    return LayoutBuilder(
+      builder: (context, box) {
+        final largeText = MediaQuery.textScalerOf(context).scale(14) > 21;
+        final count = largeText || box.maxWidth < 290
+            ? 1
+            : math.min(tasks.length, 3);
+        final width = count == 0
+            ? box.maxWidth
+            : (box.maxWidth - (count - 1) * 10) / count;
+        return Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            for (var i = 0; i < tasks.length; i++)
+              SizedBox(
+                width: width,
+                child: _Stone(
+                  key: ValueKey('daily_task_$i'),
+                  task: tasks[i],
+                  accent: accent,
+                  isNext: i == next,
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// One 72×72 wordless step. Green with a check once done; the moment it
+/// turns green *while the child can see it* it pops and sparkles with the
+/// small-success sound (spec: `sparkle` → role `successSmall`).
+class _Stone extends StatefulWidget {
   final DailyTask task;
   final Color accent;
 
@@ -329,7 +613,7 @@ class _TaskButton extends StatefulWidget {
   /// pulse/outline that belongs to a single element at a time.
   final bool isNext;
 
-  const _TaskButton({
+  const _Stone({
     super.key,
     required this.task,
     required this.accent,
@@ -337,137 +621,168 @@ class _TaskButton extends StatefulWidget {
   });
 
   @override
-  State<_TaskButton> createState() => _TaskButtonState();
+  State<_Stone> createState() => _StoneState();
 }
 
-class _TaskButtonState extends State<_TaskButton>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _pulse;
-  late final Animation<double> _scale;
-  bool _pressed = false;
+class _StoneState extends State<_Stone> with SingleTickerProviderStateMixin {
+  late final AnimationController _sparkle = AnimationController(
+    vsync: this,
+    duration: DT.motion.celebrate,
+    // Rests at the end: the painter draws nothing at t = 1.
+    value: 1,
+  );
+
+  /// A done-flip arrived while the tab was off stage (the step is usually
+  /// finished on another route); the sparkle waits for the child to come
+  /// back so the sound lands on a screen she is looking at.
+  bool _pending = false;
 
   @override
-  void initState() {
-    super.initState();
-    _pulse = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    );
-    _scale = Tween<double>(
-      begin: 1.0,
-      end: 1.04,
-    ).animate(CurvedAnimation(parent: _pulse, curve: Curves.easeInOut));
-    _syncPulse();
-  }
-
-  @override
-  void didUpdateWidget(covariant _TaskButton oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.task.isActive != widget.task.isActive ||
-        oldWidget.task.isDone != widget.task.isDone) {
-      _syncPulse();
-    }
-  }
-
-  void _syncPulse() {
-    final shouldPulse = widget.task.isActive && !widget.task.isDone;
-    if (shouldPulse) {
-      if (!_pulse.isAnimating) _pulse.repeat(reverse: true);
-    } else {
-      _pulse.stop();
-      _pulse.value = 0;
-    }
+  void didUpdateWidget(_Stone old) {
+    super.didUpdateWidget(old);
+    if (widget.task.isDone && !old.task.isDone) _pending = true;
+    if (!widget.task.isDone) _pending = false;
   }
 
   @override
   void dispose() {
-    _pulse.dispose();
+    _sparkle.dispose();
     super.dispose();
+  }
+
+  void _fire() {
+    if (!mounted || !_pending) return;
+    _pending = false;
+    FeedbackService.instance.event(FeedbackEvent.correct);
+    _sparkle.duration = MotionPolicy.of(context).dur(DT.motion.celebrate);
+    _sparkle.forward(from: 0);
   }
 
   @override
   Widget build(BuildContext context) {
-    final t = widget.task;
-    final active = t.isActive && !t.isDone;
-    final accent = widget.accent;
+    // Registers a dependency: when the tab comes back on stage the build
+    // reruns and the deferred sparkle fires.
+    if (_pending && TickerMode.valuesOf(context).enabled) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _fire());
+    }
 
+    final t = widget.task;
+    final accent = widget.accent;
+    final active = t.isActive && !t.isDone;
     final next = widget.isNext && !t.isDone && !active;
+    final side = DT.size.tapMin;
 
     final Color bg;
     if (t.isDone) {
-      bg = DT.success.withValues(alpha: 0.10);
+      bg = DT.success;
     } else if (active) {
       bg = accent.withValues(alpha: 0.14);
     } else if (next) {
       bg = accent.withValues(alpha: 0.07);
     } else {
-      bg = Colors.black.withValues(alpha: 0.04);
+      bg = DT.textPrimary.withValues(alpha: 0.05);
     }
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) => setState(() => _pressed = false),
-      onTapCancel: () => setState(() => _pressed = false),
-      onTap: () {
-        HapticFeedback.lightImpact();
-        t.onTap();
-      },
-      child: AnimatedScale(
-        scale: _pressed ? DT.pressScale : 1.0,
-        duration: DT.pressMs,
-        curve: Curves.easeOut,
-        child: ScaleTransition(
-          scale: active ? _scale : const AlwaysStoppedAnimation(1.0),
-          child: Container(
-            height: 54,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            decoration: BoxDecoration(
-              color: bg,
-              borderRadius: BorderRadius.circular(16),
-              border: active ? Border.all(color: accent, width: 1.5) : null,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Opacity(
-                  opacity: t.isDone || active || next ? 1.0 : 0.55,
-                  child: Text(
-                    t.emoji,
-                    style: const TextStyle(fontSize: 22, height: 1),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Flexible(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      t.label,
-                      maxLines: 1,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: t.isDone
-                            ? DT.success
-                            : (active || next ? DT.textPrimary : DT.textMuted),
-                      ),
-                    ),
-                  ),
-                ),
-                if (t.isDone) ...[
-                  const SizedBox(width: 4),
-                  const Icon(Icons.check_rounded, size: 15, color: DT.success),
-                ],
-              ],
-            ),
-          ),
+    final stone = Container(
+      constraints: BoxConstraints(minHeight: side),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      decoration: BoxDecoration(
+        color: t.isDone ? DT.success.withValues(alpha: .09) : bg,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: (t.isDone ? DT.success : accent).withValues(alpha: .16),
         ),
       ),
+      child: Row(
+        children: [
+          SizedBox(width: 32, height: 32, child: AppIconView(t.icon, size: 30)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              t.label,
+              style: DT.caption.copyWith(
+                fontSize: 13,
+                height: 1.2,
+                color: DT.textPrimary,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          if (t.isDone) ...[
+            const SizedBox(width: 4),
+            const AppIconView(AppIcon.check, size: 19, color: DT.success),
+          ],
+        ],
+      ),
+    );
+
+    // Only the active step breathes (1.0 → 1.04). Under reduced motion it
+    // keeps its accent border and tint; only the breath is dropped.
+    Widget body = AmbientLoop(
+      period: DT.motion.ambientPulse,
+      enabled: active,
+      settleAfter: const Duration(seconds: 4),
+      builder: (_, pulse, child) =>
+          Transform.scale(scale: 1.0 + 0.04 * pulse, child: child),
+      child: AnimatedBuilder(
+        animation: _sparkle,
+        builder: (_, child) {
+          final v = _sparkle.value;
+          // Pop 1 → 1.10 → 1 across the first 40 % of the sparkle.
+          final pop = math.sin(math.pi * (v / 0.4).clamp(0.0, 1.0));
+          return Transform.scale(
+            scale: 1.0 + 0.10 * pop,
+            child: CustomPaint(
+              foregroundPainter: _SparklePainter(v),
+              child: child,
+            ),
+          );
+        },
+        child: stone,
+      ),
+    );
+
+    return Tooltip(
+      message: t.label,
+      child: KidTap(onTap: t.onTap, child: body),
     );
   }
 }
 
+/// Six sparks flying out of the stone and fading; nothing at t = 1.
+class _SparklePainter extends CustomPainter {
+  final double t;
+
+  const _SparklePainter(this.t);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (t <= 0 || t >= 1) return;
+    final centre = size.center(Offset.zero);
+    final reach = size.shortestSide * (0.45 + 0.5 * t);
+    final alpha = (1 - t).clamp(0.0, 1.0);
+    final radius = 3.0 * (1 - 0.6 * t);
+    final paint = Paint()..color = DT.sunBurst.withValues(alpha: alpha);
+    final core = Paint()..color = DT.surfaceWhite.withValues(alpha: alpha);
+    for (var i = 0; i < 6; i++) {
+      final angle = -math.pi / 2 + i * math.pi / 3;
+      final p = centre + Offset(math.cos(angle), math.sin(angle)) * reach;
+      canvas.drawCircle(p, radius, paint);
+      canvas.drawCircle(p, radius * 0.4, core);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_SparklePainter old) => old.t != t;
+}
+
+/// The end of the day: what was done, a quiet way into the library, and
+/// what waits tomorrow.
+///
+/// It used to be one green bar saying "All done today!" and it is still
+/// that shape — but the control is now secondary and named ("Обрати гру"),
+/// because a card that says "finished" and then pushes another lesson is
+/// arguing with itself.
 class _AllDoneRow extends StatelessWidget {
   final bool isEn;
   final VoidCallback? onTap;
@@ -476,35 +791,29 @@ class _AllDoneRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap == null
-          ? null
-          : () {
-              HapticFeedback.lightImpact();
-              onTap!();
-            },
+    return KidTap(
+      onTap: onTap,
       child: Container(
-        height: 54,
+        height: DT.size.tapMin,
         decoration: BoxDecoration(
           color: DT.success.withValues(alpha: 0.10),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(DT.rMd),
         ),
         alignment: Alignment.center,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('🎉', style: TextStyle(fontSize: 24, height: 1)),
-            const SizedBox(width: 8),
+            const AppIconView(AppIcon.navGames, size: 26),
+            const SizedBox(width: DT.sp8),
             Flexible(
               child: Text(
-                isEn ? 'All done today! 🎁' : 'Все на сьогодні готово! 🎁',
+                isEn ? 'Pick a game' : 'Обрати гру',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                // One green: the done-tint's own ink, not the brand indigo.
+                style: DT.tileTitle.copyWith(
                   fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  color: kAccent,
+                  color: PackPalette.of(DT.success).onTint,
                 ),
               ),
             ),

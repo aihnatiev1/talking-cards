@@ -2,6 +2,15 @@
     xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <!-- «Скажи за мною»: the app opens the microphone to notice whether the
+         child took a turn, and only while a grown-up has turned the feature
+         on in settings. No audio is written to disk and none leaves the
+         device. The Play data-safety form must say exactly that: audio is
+         accessed, not collected and not shared. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <!-- The device may have no microphone at all: the feature degrades to
+         the grown-up tapping, so it must not gate installation. -->
+    <uses-feature android:name="android.hardware.microphone" android:required="false"/>
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove"/>
     <application
         android:label="@string/app_name"

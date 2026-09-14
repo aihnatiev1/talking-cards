@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -11,10 +9,11 @@ import '../providers/srs_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/purchase_service.dart';
 import '../services/remote_config_service.dart';
-import '../utils/constants.dart';
+import '../utils/app_icons.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../utils/uk_grammar.dart';
+import '../widgets/paywall_hero_art.dart';
 
 class PaywallScreen extends ConsumerStatefulWidget {
   /// When true, shows the onboarding-specific welcome variant: stronger
@@ -37,6 +36,12 @@ class PaywallScreen extends ConsumerStatefulWidget {
 
 class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   bool _loading = false;
+
+  /// Whether the buying controls are occupied. [_loading] covers the local
+  /// awaits; the store covers the part that outlives them — while a
+  /// checkout is open the CTA must not offer to start a second one.
+  bool get _busy =>
+      _loading || PurchaseService.instance.purchaseInFlight.value;
 
   /// Selection is by product, never by position: the catalogue can come
   /// back without a SKU (lifetime until it exists in a console, yearly in an
@@ -109,6 +114,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     // paying family from being left staring at the paywall.
     PurchaseService.instance.isPro.addListener(_onEntitlement);
     PurchaseService.instance.awaitingApproval.addListener(_rebuild);
+    PurchaseService.instance.purchaseInFlight.addListener(_rebuild);
     _loadStore();
     // Eligibility flips the moment a trial is taken, so ask on every open
     // rather than trusting what launch found — every trial claim on this
@@ -122,6 +128,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   void dispose() {
     PurchaseService.instance.isPro.removeListener(_onEntitlement);
     PurchaseService.instance.awaitingApproval.removeListener(_rebuild);
+    PurchaseService.instance.purchaseInFlight.removeListener(_rebuild);
     super.dispose();
   }
 
@@ -279,43 +286,39 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       // Outcome events (success / cancel / error) are logged by
       // PurchaseService off the store stream — it outlives this screen,
       // which the system purchase sheet regularly tears down.
-      if (!success) {
-        setState(() => _loading = false);
-        return;
-      }
-      // Only the spinner is time-boxed here: `_onEntitlement` closes the
-      // screen whenever Pro actually lands, however long the store takes.
-      await _waitForPro();
-      if (!mounted) return;
+      //
+      // The CTA stays busy on `purchaseInFlight` from here, not on a timer.
+      // Waiting a flat ten seconds for Pro ignored the outcome that had
+      // already arrived: a parent who dismissed the sheet after five
+      // seconds got five more of a spinning, dead Buy button, and tapped
+      // it again the moment it came back. `_onEntitlement` closes the
+      // screen whenever Pro lands, however long the store takes.
       setState(() => _loading = false);
+      // A checkout that never started has no sheet for the parent to act
+      // on and nothing for the store stream to report later — the same
+      // silent dead end as a throwing `buyNonConsumable`, and it reads to
+      // a parent as a button that did nothing. `product_unavailable` and
+      // `buy_refused` both land here.
+      if (!success &&
+          !PurchaseService.instance.purchaseInFlight.value &&
+          !PurchaseService.instance.isPro.value) {
+        _sayCouldNotStart(s);
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);
       // A throwing `buyNonConsumable` used to fail in complete silence: the
       // spinner stopped and nothing else happened, so parents just tapped
       // Buy again. Say something instead.
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(s('Не вдалося почати покупку. Спробуйте ще раз',
-            "Couldn't start the purchase. Please try again")),
-      ));
+      _sayCouldNotStart(s);
     }
   }
 
-  /// Waits for isPro to become true, or times out after 10 seconds.
-  Future<void> _waitForPro() async {
-    if (PurchaseService.instance.isPro.value) return;
-    final completer = Completer<void>();
-    void listener() {
-      if (PurchaseService.instance.isPro.value && !completer.isCompleted) {
-        completer.complete();
-      }
-    }
-    PurchaseService.instance.isPro.addListener(listener);
-    await completer.future.timeout(
-      const Duration(seconds: 10),
-      onTimeout: () {},
-    );
-    PurchaseService.instance.isPro.removeListener(listener);
+  void _sayCouldNotStart(AppS s) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(s('Не вдалося почати покупку. Спробуйте ще раз',
+          "Couldn't start the purchase. Please try again")),
+    ));
   }
 
   Future<void> _restore() async {
@@ -364,7 +367,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              kAccent.withValues(alpha: 0.06),
+              DT.brand.withValues(alpha: 0.06),
               Theme.of(context).scaffoldBackgroundColor,
             ],
           ),
@@ -377,7 +380,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 400),
+                  duration: DT.motion.slow,
                   opacity: _canCloseEarly ? 1.0 : 0.0,
                   child: IgnorePointer(
                     ignoring: !_canCloseEarly,
@@ -416,15 +419,14 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    _benefit(Icons.grid_view_rounded,
-                        _packsBenefit(s, packCount)),
+                    _benefit(AppIcon.stepCards, _packsBenefit(s, packCount)),
                     const SizedBox(height: 10),
                     _benefit(
-                        Icons.volume_up_rounded,
+                        AppIcon.sound,
                         s('400+ яскравих карток зі звуком',
                             '400+ vivid cards with sound')),
                     const SizedBox(height: 10),
-                    _benefit(Icons.auto_awesome_rounded,
+                    _benefit(AppIcon.star,
                         s('Нові розділи щомісяця', 'New packs every month')),
                     const SizedBox(height: 18),
                     _testimonial(s),
@@ -437,7 +439,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                     }),
                     const SizedBox(height: 16),
                     TextButton(
-                      onPressed: _loading ? null : _restore,
+                      onPressed: _busy ? null : _restore,
                       child: Text(
                         s('Відновити покупки', 'Restore purchases'),
                         style: TextStyle(
@@ -508,18 +510,18 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               borderRadius: BorderRadius.circular(22),
               boxShadow: [
                 BoxShadow(
-                  color: kAccent.withValues(alpha: 0.35),
+                  color: DT.brand.withValues(alpha: 0.35),
                   blurRadius: 18,
                   offset: const Offset(0, 6),
                 ),
               ],
             ),
             child: ElevatedButton(
-              onPressed: _loading || _storeReady == null
+              onPressed: _busy || _storeReady == null
                   ? null
                   : (_storeReady! ? _purchase : _loadStore),
               style: ElevatedButton.styleFrom(
-                backgroundColor: kAccent,
+                backgroundColor: DT.brand,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 shape: RoundedRectangleBorder(
@@ -527,7 +529,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                 ),
                 elevation: 0,
               ),
-              child: _loading || _storeReady == null
+              child: _busy || _storeReady == null
                   ? const SizedBox(
                       height: 22,
                       width: 22,
@@ -655,7 +657,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   Widget _planTile(int index, List<_Plan> plans) {
     final plan = plans[index];
     final selected = plan.productId == _selectedProductId;
-    const tileColor = kAccent;
+    const tileColor = DT.brand;
 
     return GestureDetector(
       onTap: () {
@@ -668,7 +670,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         selected: selected,
         button: true,
         child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: DT.motion.base,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
           color: selected
@@ -809,17 +811,19 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            kAccent.withValues(alpha: 0.18),
-            const Color(0xFFF9A825).withValues(alpha: 0.18),
+            DT.brand.withValues(alpha: 0.18),
+            DT.sunBurst.withValues(alpha: 0.30),
           ],
         ),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: kAccent.withValues(alpha: 0.30), width: 1.5),
+        border: Border.all(color: DT.brand.withValues(alpha: 0.30), width: 1.5),
       ),
       child: Column(
         children: [
-          Text(trialDays == null ? '🔓' : (isOnb ? '🎉' : '🎁'),
-              style: const TextStyle(fontSize: 48)),
+          PaywallHeroArt(
+            semanticsLabel: s('Блум і картки — усе, що відкриється',
+                'Bloom and the cards this unlocks'),
+          ),
           const SizedBox(height: 6),
           if (isOnb && trialDays != null) ...[
             Text(
@@ -827,7 +831,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               style: TextStyle(
                 fontSize: responsiveFont(context, 14),
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFFF9A825),
+                color: DT.onTint(DT.sunBurst),
                 letterSpacing: 1.2,
               ),
             ),
@@ -842,7 +846,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
             style: TextStyle(
               fontSize: responsiveFont(context, 24),
               fontWeight: FontWeight.w900,
-              color: kAccent,
+              color: DT.brand,
               letterSpacing: 0.5,
             ),
           ),
@@ -890,10 +894,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(
             5,
-            (_) => const Icon(
-              Icons.star_rounded,
-              color: Color(0xFFFFB300),
-              size: 22,
+            (i) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 1),
+              child: AppIconView(
+                AppIcon.star,
+                key: ValueKey('rating-star-$i'),
+                size: 22,
+              ),
             ),
           ),
         ),
@@ -917,10 +924,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFBEA),
+        color: DT.sunTint,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-            color: const Color(0xFFFFC107).withValues(alpha: 0.35)),
+            color: DT.sunBurst.withValues(alpha: 0.55)),
       ),
       child: Column(
         children: [
@@ -929,10 +936,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
                 5,
-                (_) => const Icon(
-                  Icons.star_rounded,
-                  color: Color(0xFFFFB300),
-                  size: 18,
+                (i) => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 1),
+                  child: AppIconView(
+                    AppIcon.star,
+                    key: ValueKey('quote-star-$i'),
+                    size: 18,
+                  ),
                 ),
               ),
             ),
@@ -944,7 +954,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
             style: TextStyle(
               fontSize: responsiveFont(context, 14),
               fontStyle: FontStyle.italic,
-              color: const Color(0xFF4A3F1A),
+              color: DT.textPrimary,
               height: 1.35,
             ),
           ),
@@ -974,17 +984,21 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         '$count learning ${count == 1 ? 'pack' : 'packs'}');
   }
 
-  Widget _benefit(IconData icon, String text) {
+  /// One benefit line. The glyph is an [AppIcon] — the same drawing the
+  /// child sees on the tabs and the quest map, so the parent recognises
+  /// what they are buying (G15) instead of reading a Material pictogram.
+  Widget _benefit(AppIcon icon, String text) {
     return Row(
       children: [
         Container(
-          width: 34,
-          height: 34,
+          width: 38,
+          height: 38,
+          alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: kAccent.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(10),
+            color: DT.brand.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(DT.rSm),
           ),
-          child: Icon(icon, color: kAccent, size: 18),
+          child: AppIconView(icon, size: 26),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -995,7 +1009,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               // Hardcoded dark grey was invisible on the dark theme.
               color: Theme.of(context).brightness == Brightness.dark
                   ? Colors.white.withValues(alpha: 0.87)
-                  : const Color(0xFF3A3A3A),
+                  : DT.textPrimary,
               height: 1.3,
               fontWeight: FontWeight.w500,
             ),
@@ -1011,7 +1025,7 @@ class _Plan {
   final String price;
   final String period; // empty for one-time purchase
   final String? badge;
-  final Color badgeColor = const Color(0xFFFF6B6B);
+  final Color badgeColor = DT.coral;
   final String productId;
 
   const _Plan(

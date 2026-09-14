@@ -1,118 +1,90 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
-import '../utils/constants.dart';
+import '../utils/app_icons.dart';
 import '../utils/design_tokens.dart';
+import 'ambient_loop.dart';
+import 'kid_tap.dart';
 
 /// Bright streak counter visible on home — Duolingo signature pattern adapted
 /// for our 1-4 audience: pulsing flame + day count, single-tap to stats.
 ///
 /// Hidden when [streak] is 0 to avoid drawing attention to "nothing yet".
-class StreakChip extends StatefulWidget {
+class StreakChip extends StatelessWidget {
   final int streak;
   final VoidCallback onTap;
 
-  const StreakChip({
-    super.key,
-    required this.streak,
-    required this.onTap,
-  });
+  const StreakChip({super.key, required this.streak, required this.onTap});
 
-  @override
-  State<StreakChip> createState() => _StreakChipState();
-}
-
-class _StreakChipState extends State<StreakChip>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _pulse;
-  Timer? _burstTimer;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulse = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1400),
-    );
-    // Pulse in short bursts instead of forever — a permanent repeat() kept
-    // the home tab repainting at 60fps for the whole session (battery/thermal
-    // cost on the old tablets kids get handed).
-    _runBurst();
-    _burstTimer =
-        Timer.periodic(const Duration(seconds: 30), (_) => _runBurst());
-  }
-
-  Future<void> _runBurst() async {
-    for (var i = 0; i < 2 && mounted; i++) {
-      await _pulse.forward();
-      await _pulse.reverse();
-    }
-  }
-
-  @override
-  void dispose() {
-    _burstTimer?.cancel();
-    _pulse.dispose();
-    super.dispose();
-  }
+  /// Two full pulses (1400 ms out, 1400 ms back, twice) as an intro accent,
+  /// then calm. A permanent loop kept the home tab repainting at 60fps for
+  /// the whole session (battery/thermal cost on the old tablets kids get
+  /// handed); the 30 s re-burst it was replaced with still made Home the
+  /// screen with four idle loops (motion audit §7 — budget is one).
+  static const _burst = Duration(milliseconds: 1400 * 2 * 2);
 
   @override
   Widget build(BuildContext context) {
-    if (widget.streak <= 0) return const SizedBox.shrink();
+    if (streak <= 0) return const SizedBox.shrink();
 
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        widget.onTap();
-      },
-      child: AnimatedBuilder(
-        animation: _pulse,
-        builder: (_, __) {
-          final t = Curves.easeInOut.transform(_pulse.value);
-          final glow = 0.25 + 0.35 * t;
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  kStreakOrange.withValues(alpha: 0.95),
-                  const Color(0xFFFF6F4D),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: kStreakOrange.withValues(alpha: glow),
-                  blurRadius: 10 + 4 * t,
-                  spreadRadius: 1 + 0.5 * t,
+    return KidTap(
+      onTap: onTap,
+      // Under reduced motion the flame and the day count sit at rest
+      // (glow 0.25, scale 1.0) and stay just as legible.
+      // The flame is a door to the sticker album — a child's destination,
+      // so the finger gets the full 72 dp even though the chip itself is
+      // header-sized (CLAUDE.md rule 1 / ux-gap G12).
+      child: KidHitBox(
+        child: AmbientLoop(
+          period: const Duration(milliseconds: 1400),
+          settleAfter: _burst,
+          builder: (context, t, _) {
+            final glow = 0.25 + 0.35 * t;
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [DT.streakOrange.withValues(alpha: 0.95), DT.coral],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Transform.scale(
-                  scale: 1.0 + 0.08 * t,
-                  child: const Text('🔥', style: TextStyle(fontSize: 16)),
-                ),
-                const SizedBox(width: 5),
-                Text(
-                  '${widget.streak}',
-                  style: TextStyle(
-                    fontSize: responsiveFont(context, 14),
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    letterSpacing: 0.3,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: DT.streakOrange.withValues(alpha: glow),
+                    blurRadius: 10 + 4 * t,
+                    spreadRadius: 1 + 0.5 * t,
                   ),
-                ),
-              ],
-            ),
-          );
-        },
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Transform.scale(
+                    scale: 1.0 + 0.08 * t,
+                    // The flame with eyes (spec §5.1), sticker-edged on the
+                    // orange gradient.
+                    child: const AppIconView(
+                      AppIcon.streakFlame,
+                      size: 20,
+                      sticker: true,
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    '$streak',
+                    style: DT.tileTitle.copyWith(
+                      fontSize: responsiveFont(context, 14),
+                      fontVariations: DT.kidWeight(900),
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }

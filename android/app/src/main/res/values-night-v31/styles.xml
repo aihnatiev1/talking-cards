@@ -5,7 +5,7 @@
          launcher icon (which cut the «КАРТКИ-РОЗМОВЛЯЛКИ» text). -->
     <style name="LaunchTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:windowBackground">@drawable/launch_background</item>
-        <item name="android:windowSplashScreenBackground">#FAF8F5</item>
+        <item name="android:windowSplashScreenBackground">#FFFBF0</item>
         <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
     </style>
 </resources>

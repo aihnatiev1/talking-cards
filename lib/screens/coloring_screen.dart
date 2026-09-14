@@ -2,22 +2,28 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
+import '../providers/coloring_album_provider.dart';
+import '../providers/content_pack_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
+import '../services/feedback_service.dart';
 import '../services/paywall_flow.dart';
 import '../utils/confetti_overlay_mixin.dart';
-import '../utils/constants.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
+import '../utils/motion.dart';
 import '../services/asset_pack_service.dart';
+import '../widgets/content_download_view.dart';
+import '../widgets/bloom_mascot.dart';
+import '../widgets/kid_screen.dart';
+import '../widgets/kid_tap.dart';
 
 /// Water-reveal coloring screen.
 ///
@@ -44,7 +50,12 @@ class ColoringScreen extends ConsumerStatefulWidget {
       .where((c) {
         final image = c.image;
         return image != null &&
-            !CardModel.calmingExcludedImages.contains(image);
+            !CardModel.calmingExcludedImages.contains(image) &&
+            // A picture still inside the undelivered Play asset pack cannot
+            // be coloured — there are no bytes to decode. Unfiltered, it
+            // threw out of a fire-and-forget load and left the canvas on
+            // its spinner forever. games_tab filters its pool the same way.
+            !AssetPackService.instance.needsDownload(image);
       })
       .toList();
 
@@ -76,6 +87,9 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
   static const int _gridRows = 24;
   static const double _completionRatio = 0.85;
 
+  /// Pictures already dealt in this visit, by illustration name.
+  final Set<String?> _seenThisVisit = {};
+
   static const _completedCountKey = 'coloring_completed_count';
   // 72dp button + the done bar's vertical margins.
   static const double _bottomBarHeight = 96;
@@ -95,15 +109,29 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
 
   Rect? _imageRect;
   bool _done = false;
+
+  /// The ghost finger (п. 24) runs once per profile, on the first picture of
+  /// the visit, and any real touch ends it early. This flag is the "already
+  /// over" half; the "never again" half lives in [coloringAlbumProvider].
+  bool _handHintOver = false;
+
+  /// The first pick of this visit may resume the picture the child left
+  /// unfinished; every later pick is a new one.
+  bool _mayResume = true;
   int _completedCount = 0;
   bool _paywallGated = false;
+
+  /// The colourable pool is empty, or its bytes cannot be read, because the
+  /// Play asset pack has not landed. Renders [ContentDownloadView] — the
+  /// one screen in the app that explains a download to a parent.
+  bool _contentUnavailable = false;
 
   /// 1.0 = overlay fully visible (not revealed), 0.0 = fully revealed.
   /// Once the child reaches 85%, we animate this to 0 so the remaining
   /// stubborn contour bits melt away on their own.
   late final AnimationController _revealCtrl = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 550),
+    duration: DT.motion.coloringMelt,
     value: 1.0,
   );
 
@@ -167,6 +195,8 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
       _done = false;
       _image = null;
       _card = null;
+      _contentUnavailable = false;
+      _loadFailures = 0;
       _paywallGated = _isGated();
     });
     _revealCtrl.value = 1.0;
@@ -185,24 +215,113 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
   //  Card selection & image loading
   // ─────────────────────────────────────────────
 
-  void _pickCardAndLoad() {
+  Future<void> _pickCardAndLoad() async {
+    AnalyticsService.instance.logFirstAction('coloring_tab');
+    // The album knows which picture was left half-revealed last time; the
+    // canvas waits that one read rather than dealing a stranger over it.
+    final album = ref.read(coloringAlbumProvider.notifier);
+    await album.ready;
+    if (!mounted) return;
+
     final packs = ref.read(packsProvider).valueOrNull ?? [];
     final pool = ColoringScreen.coloringPool(packs);
-    if (pool.isEmpty) return;
-    final chosen = ColoringScreen.pickNext(pool, _card, _rng);
+    if (pool.isEmpty) {
+      // Everything colourable is still in the Play pack: say so with the
+      // download screen rather than leaving the canvas spinning.
+      if (packs.isNotEmpty && !AssetPackService.instance.contentReady) {
+        setState(() => _contentUnavailable = true);
+      }
+      return;
+    }
+    // Nothing repeats inside one visit. The album button is gone, and this
+    // is what replaces it: rather than a shelf of finished pictures the
+    // child has to go find, the next picture is simply never one already
+    // revealed today. With 400+ illustrations the pool outlasts any
+    // sitting; when it does run out, the visit starts over.
+    final fresh = pool.where((c) => !_seenThisVisit.contains(c.image)).toList();
+    if (fresh.isEmpty) _seenThisVisit.clear();
+    final from = fresh.isEmpty ? pool : fresh;
+    final chosen = _resume(pool) ?? ColoringScreen.pickNext(from, _card, _rng);
+    _seenThisVisit.add(chosen.image);
+    _mayResume = false;
     _card = chosen;
+    // Remembered before the first stroke: a child who leaves mid-picture
+    // comes back to it, which is what makes it *theirs* rather than a
+    // stream of pictures the app hands out (п. 24).
+    album.setUnfinished(chosen.id);
     _loadImage(chosen);
   }
 
+  /// The unfinished picture from the last visit, if it is still colourable.
+  CardModel? _resume(List<CardModel> pool) {
+    if (!_mayResume) return null;
+    final id = ref.read(coloringAlbumProvider).unfinishedCardId;
+    if (id == null) return null;
+    for (final card in pool) {
+      if (card.id == id) return card;
+    }
+    return null;
+  }
+
+  /// A read can fail even after the pool filter — Play may evict the pack
+  /// in between. Bounded so a wholly unreadable pool cannot loop.
+  int _loadFailures = 0;
+  static const _maxLoadFailures = 3;
+
   Future<void> _loadImage(CardModel card) async {
     final gen = ++_loadGen;
-    final data = await AssetPackService.instance.cardImageBytes(card.image);
-    final codec = await ui.instantiateImageCodec(
-      data.buffer.asUint8List(),
-    );
-    final frame = await codec.getNextFrame();
+    // The colouring book is the one place that needs raw bytes — the
+    // painter wants a ui.Image — so it consumes CardBytes directly
+    // instead of going through CardImage like every other screen.
+    final bytes = await AssetPackService.instance.cardBytes(card.image);
     if (!mounted || gen != _loadGen) return;
-    setState(() => _image = frame.image);
+
+    switch (bytes) {
+      case BytesUnavailable(:final reason):
+        // The pool filter should have kept this card out; getting here
+        // means Play evicted the pack in between, or the card names an
+        // asset this build does not have. Either way it is a value now —
+        // it used to be a throw out of a fire-and-forget future, which
+        // Crashlytics filed as fatal while the canvas span forever.
+        AnalyticsService.instance.logAssetUnavailable(
+          'coloring',
+          switch (reason) {
+            ArtPending() => 'pending',
+            ArtMissing(:final reason) => reason,
+            ArtReady() => 'unknown',
+          },
+        );
+        _afterFailedLoad();
+      case BytesReady(:final data):
+        final ui.Image decoded;
+        try {
+          final codec = await ui.instantiateImageCodec(
+            data.buffer.asUint8List(),
+          );
+          decoded = (await codec.getNextFrame()).image;
+        } catch (_) {
+          // Bytes present but undecodable: a corrupt file rather than a
+          // missing one. Same dead end for the child, so same exit.
+          if (!mounted || gen != _loadGen) return;
+          AnalyticsService.instance
+              .logAssetUnavailable('coloring', 'decode_failed');
+          _afterFailedLoad();
+          return;
+        }
+        if (!mounted || gen != _loadGen) return;
+        _loadFailures = 0;
+        setState(() => _image = decoded);
+    }
+  }
+
+  /// Try another picture, but not forever: a pool that is wholly
+  /// unreadable has to end on the download screen, not on a retry loop.
+  void _afterFailedLoad() {
+    if (++_loadFailures > _maxLoadFailures) {
+      setState(() => _contentUnavailable = true);
+      return;
+    }
+    _pickCardAndLoad();
   }
 
   // ─────────────────────────────────────────────
@@ -213,6 +332,7 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
       (math.min(r.width, r.height) * 0.085).clamp(24.0, 56.0);
 
   void _onStart(Offset p) {
+    _endHandHint();
     _current
       ..clear()
       ..add(p);
@@ -268,6 +388,15 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
     }
   }
 
+  /// The demonstration is over the moment the child's own finger lands —
+  /// forgiving input (CLAUDE.md rule 3): the hint never competes for the
+  /// stroke that interrupted it.
+  void _endHandHint() {
+    if (_handHintOver) return;
+    setState(() => _handHintOver = true);
+    ref.read(coloringAlbumProvider.notifier).markHandHintSeen();
+  }
+
   void _checkDone() {
     if (_done) return;
     final ratio = _revealedCells.length / (_gridCols * _gridRows);
@@ -276,16 +405,22 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
     _done = true;
     final card = _card;
     final isEn = ref.read(languageProvider) == 'en';
-    HapticFeedback.mediumImpact();
+    FeedbackService.instance.event(FeedbackEvent.correct);
     _revealCtrl.animateTo(0.0, curve: Curves.easeOutCubic);
     _incrementCompletedCount();
+    if (card != null) {
+      // Into the album — the result of colouring is a collection, not just
+      // the picture currently on screen (п. 24).
+      ref.read(coloringAlbumProvider.notifier).record(card);
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       showConfetti();
       if (card != null) {
-        // playWordOnly uses the recorded mp3 when available (UA and EN
-        // voiceovers are both bundled), falling back to TTS in the given
-        // locale when a card has no audio asset.
+        // Recorded mp3 only — there is no TTS fallback in this app (see
+        // AudioService.playWordOnly). A card with no clip stays silent,
+        // which AudioService now reports as asset_unavailable rather than
+        // swallowing.
         AudioService.instance.playWordOnly(
           card.audioKey,
           card.sound,
@@ -300,8 +435,7 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
   /// child can leave a picture they dislike (design audit #25). Haptic +
   /// pop SFX because 1–2-year-olds need audio feedback on every action.
   void _next() {
-    HapticFeedback.lightImpact();
-    AudioService.instance.playSfx('pop');
+    FeedbackService.instance.event(FeedbackEvent.tap);
     if (_isGated()) {
       // Free quota exhausted — prompt paywall instead of loading another drawing.
       runPaywallFlow(context, ref, source: 'coloring_gate');
@@ -314,9 +448,28 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
       _revealedCells.clear();
       _done = false;
       _image = null;
+      _contentUnavailable = false;
+      _loadFailures = 0;
+      _mayResume = false;
     });
     _revealCtrl.value = 1.0;
     _pickCardAndLoad();
+  }
+
+  /// The word Bloom says when a picture is finished.
+  ///
+  /// Chosen from the picture's own id, not at random: the same picture
+  /// always earns the same word, so a child who comes back to the fish
+  /// hears the fish's praise again — and across pictures it still varies.
+  String _praise(AppS s, String cardId) {
+    final words = [
+      s('Молодець!', 'Well done!'),
+      s('Круто!', 'Awesome!'),
+      s('Так тримати!', 'Keep it up!'),
+      s('Гарно!', 'Lovely!'),
+      s('Ого!', 'Wow!'),
+    ];
+    return words[cardId.hashCode.abs() % words.length];
   }
 
   // ─────────────────────────────────────────────
@@ -328,18 +481,41 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
     final isEn = ref.watch(languageProvider) == 'en';
     final s = AppS(isEn);
     final card = _card;
+    final album = ref.watch(coloringAlbumProvider);
+    final motion = MotionPolicy.of(context);
+    // Once per profile, and never over a picture that is already being
+    // revealed: a ghost finger draws one line to show what this screen wants
+    // (п. 24). Checked against `reduced` rather than `reduce` on purpose —
+    // the OS flag means "do not animate a hand at me", while the *test*
+    // override only freezes idle loops, and this hint is the thing under
+    // test. Under real reduced motion it simply stays unseen and waits.
+    final showHand = album.loaded &&
+        !album.handHintSeen &&
+        !_handHintOver &&
+        !_done &&
+        motion.mode != MotionMode.reduced &&
+        _image != null &&
+        _strokes.isEmpty &&
+        _current.isEmpty;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF7F2FF),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(s('Розмальовки водою', 'Water coloring')),
-      ),
+    // No text title: the finger on the picture is the whole instruction.
+    return KidScreen.game(
+      accent: DT.brand,
+      background: DT.violetTint,
+      // No X: colouring is a tab inside the home shell, not a pushed
+      // route. The default close popped the shell itself and left a black
+      // screen; the way out of a tab is the tab bar underneath.
+      showLeading: false,
       body: _paywallGated
           ? _PaywallGate(
               onUnlock: () =>
                   runPaywallFlow(context, ref, source: 'coloring_gate'))
+          : _contentUnavailable
+          ? ContentDownloadView(
+              state: ref.watch(contentPackProvider),
+              accent: DT.brand,
+              isEn: isEn,
+            )
           : card == null
           ? Center(
               child: Text(
@@ -347,14 +523,13 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
                     'Open at least one pack with images first'),
               ),
             )
-          : SafeArea(
-              child: Column(
+          : Column(
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
                     child: Text(
                       s('Проведи пальцем по картинці — проявляться кольори',
-                          'Drag your finger — colors appear'),
+                          'Drag your finger — the colors appear'),
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 14,
@@ -383,18 +558,28 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(24),
-                              child: AnimatedBuilder(
-                                animation: _revealCtrl,
-                                builder: (_, __) => _ColoringCanvas(
-                                  image: _image,
-                                  strokes: _strokes,
-                                  current: _current,
-                                  overlayOpacity: _revealCtrl.value,
-                                  onRectChanged: (r) => _imageRect = r,
-                                  onStart: _onStart,
-                                  onMove: _onMove,
-                                  onEnd: _onEnd,
-                                ),
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  AnimatedBuilder(
+                                    animation: _revealCtrl,
+                                    builder: (_, __) => _ColoringCanvas(
+                                      image: _image,
+                                      strokes: _strokes,
+                                      current: _current,
+                                      overlayOpacity: _revealCtrl.value,
+                                      onRectChanged: (r) => _imageRect = r,
+                                      onStart: _onStart,
+                                      onMove: _onMove,
+                                      onEnd: _onEnd,
+                                    ),
+                                  ),
+                                  if (showHand)
+                                    _GhostFinger(
+                                      key: const ValueKey('ghost-finger'),
+                                      onDone: _endHandHint,
+                                    ),
+                                ],
                               ),
                             ),
                           );
@@ -406,34 +591,18 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
                   // strokes' local coordinates) never resize mid-drawing.
                   SizedBox(
                     height: _bottomBarHeight,
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 250),
-                      switchInCurve: Curves.easeOutBack,
-                      transitionBuilder: (w, a) => SlideTransition(
-                        position: Tween<Offset>(
-                                begin: const Offset(0, 0.4),
-                                end: Offset.zero)
-                            .animate(a),
-                        child: FadeTransition(opacity: a, child: w),
-                      ),
-                      child: _done
-                          ? _DoneBar(
-                              key: ValueKey(card.id),
-                              word: card.sound,
-                              accent: card.colorAccent,
-                              onNext: _next,
-                              label: s('Нова картинка', 'New picture'),
-                            )
-                          : _IdleBar(
-                              key: const ValueKey('idle'),
-                              onNext: _next,
-                              label: s('Нова картинка', 'New picture'),
-                            ),
+                    // No `AnimatedSwitcher`: it is one bar in two moods,
+                    // and its Stack clipped Bloom's bubble at the bar's
+                    // edge. The bubble animates itself in instead.
+                    child: _ColoringBar(
+                      done: _done,
+                      onNext: _next,
+                      label: s('Нова картинка', 'New picture'),
+                      praise: _praise(s, card.id),
                     ),
                   ),
                 ],
               ),
-            ),
     );
   }
 }
@@ -617,126 +786,340 @@ class _ColoringPainter extends CustomPainter {
 //  "New picture" button + bottom bars
 // ─────────────────────────────────────────────
 
-/// Permanent 72×72dp round "new picture" button (design audit #25). Lives
-/// in the same bottom-right spot before and after completion so the child
-/// learns a single control; [_DoneBar] reuses it instead of a text button.
+/// The one control under the picture: a new picture.
+///
+/// It was two icon-only circles whose words lived in a `Tooltip` — a long
+/// press nobody performs. The album went with them: a shelf of finished
+/// pictures is a place a child has to be taught to visit, and the same
+/// promise is kept better by simply never dealing a picture twice in one
+/// sitting.
 class _NewPictureButton extends StatelessWidget {
+  const _NewPictureButton({required this.onTap, required this.label});
+
   final VoidCallback onTap;
   final String label;
 
-  const _NewPictureButton({required this.onTap, required this.label});
-
-  static const double size = 72;
+  static const double height = 72;
 
   @override
   Widget build(BuildContext context) {
-    return Tooltip(
-      message: label,
+    return KidTap(
+      onTap: onTap,
       child: Container(
-        width: size,
-        height: size,
+        height: height,
+        // Hugs its word instead of spanning the tablet: a pill reads as a
+        // button, a full-width band reads as a bar nobody presses.
+        padding: const EdgeInsets.symmetric(horizontal: 40),
         decoration: BoxDecoration(
-          color: DT.violet,
-          shape: BoxShape.circle,
-          boxShadow: DT.shadowSoft(DT.violet),
+          color: DT.mint,
+          borderRadius: BorderRadius.circular(DT.rLg),
+          boxShadow: DT.shadowSoft(DT.mint),
         ),
-        child: Material(
-          color: Colors.transparent,
-          shape: const CircleBorder(),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onTap,
-            child: const Center(
-              child: Icon(
-                Icons.shuffle_rounded,
-                size: 34,
-                color: Colors.white,
+        // A `Row` that hugs, not `alignment:` — a Container with an
+        // alignment takes every pixel its parent offers.
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                // Big enough to read across a room: this is the only text
+                // on the screen and a parent reads it from a lap.
+                style: DT.kidButton.copyWith(color: DT.surfaceWhite),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
   }
 }
 
-/// Bottom bar while the child is still revealing: just the new-picture
-/// button, right-aligned to match its place in [_DoneBar].
-class _IdleBar extends StatelessWidget {
+/// The bottom bar, in both of its states.
+///
+/// Bloom sits beside the button the whole time, facing it — a companion
+/// who is already there, not a reward that appears. When the picture is
+/// finished he cheers and a small bubble above him says so, and that is
+/// the whole "you are done" signal: the white plate that used to fence
+/// the button off is gone. A bunny who starts jumping is a clearer
+/// "press here now" for a two-year-old than any panel.
+class _ColoringBar extends StatelessWidget {
+  const _ColoringBar({
+    required this.done,
+    required this.onNext,
+    required this.label,
+    required this.praise,
+  });
+
+  final bool done;
   final VoidCallback onNext;
   final String label;
 
-  const _IdleBar({super.key, required this.onNext, required this.label});
+  /// The word in Bloom's bubble once the picture is finished.
+  final String praise;
+
+  static const double bloomSize = 64;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: _NewPictureButton(onTap: onNext, label: label),
+      padding: const EdgeInsets.fromLTRB(DT.sp16, DT.sp8, DT.sp16, DT.sp12),
+      child: Center(
+        // Bloom plus the pill can outgrow a small phone; scaling the row
+        // down keeps both visible instead of clipping the bunny off the
+        // edge. The row is the same width in both moods — the praise is
+        // painted outside the layout — so nothing here ever moves.
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _BloomCue(done: done, praise: praise),
+              const SizedBox(width: DT.sp12),
+              _NewPictureButton(onTap: onNext, label: label),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Bloom and, when the picture is done, his bubble.
+///
+/// The bubble is a `Positioned` in a non-clipping `Stack`, so it costs no
+/// width: Bloom's slot is the same 64 dp before and after, and the button
+/// never moves under a finger already on its way down.
+///
+/// Frozen states, not the shared brain: this screen never taught the
+/// reactions notifier about itself, and a bunny borrowing another route's
+/// mood would be worse than one with a mood of its own. `ambient:
+/// breathe` keeps him alive (breath + blink) under `MotionPolicy`.
+class _BloomCue extends StatelessWidget {
+  const _BloomCue({required this.done, required this.praise});
+
+  final bool done;
+  final String praise;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: _ColoringBar.bloomSize,
+      height: _ColoringBar.bloomSize,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          BloomMascot(
+            size: _ColoringBar.bloomSize,
+            // Facing the button he is pointing the child at.
+            facing: BloomFacing.right,
+            interactive: false,
+            semanticsLabel: 'Bloom',
+            state: done
+                ? const BloomState(
+                    emotion: BloomEmotion.cheer,
+                    hops: 3,
+                    ambient: BloomAmbient.breathe,
+                    lookAt: Alignment.centerRight,
+                  )
+                : const BloomState(
+                    emotion: BloomEmotion.idle,
+                    hops: 0,
+                    ambient: BloomAmbient.breathe,
+                    lookAt: Alignment.centerRight,
+                  ),
+          ),
+          if (done)
+            // Above him, negatively inset on both sides so a long word
+            // ("Так тримати!") stays centred over the bunny and spills
+            // into the empty bar instead of widening his slot.
+            Positioned(
+              top: -40,
+              left: -80,
+              right: -80,
+              child: Center(child: _PraiseBubble(text: praise)),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The praise above Bloom. A bubble, not a banner: it belongs to him.
+class _PraiseBubble extends StatelessWidget {
+  const _PraiseBubble({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final motion = MotionPolicy.of(context);
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: motion.dur(DT.motion.coloringBarSwap),
+      curve: Curves.easeOutBack,
+      builder: (_, t, child) => Transform.scale(
+        scale: 0.6 + 0.4 * t,
+        child: Opacity(opacity: t.clamp(0.0, 1.0), child: child),
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: DT.sp16,
+          vertical: DT.sp8,
+        ),
+        decoration: BoxDecoration(
+          color: DT.surfaceWhite,
+          borderRadius: BorderRadius.circular(DT.rLg),
+          boxShadow: DT.shadowSoft(DT.violet),
+        ),
+        child: Text(
+          text,
+          maxLines: 1,
+          style: DT.h2.copyWith(color: DT.violet),
+        ),
       ),
     );
   }
 }
 
 // ─────────────────────────────────────────────
-//  Done bar (word + next)
+//  The ghost finger (п. 24)
 // ─────────────────────────────────────────────
 
-class _DoneBar extends StatelessWidget {
-  final String word;
-  final Color accent;
-  final VoidCallback onNext;
-  final String label;
+/// One wordless demonstration on the first visit: a translucent finger
+/// draws a line across the picture and a pale trail follows it. It runs
+/// once per profile, it is `IgnorePointer` so it can never steal the
+/// child's first stroke, and [onDone] fires whether it finished or was
+/// interrupted.
+class _GhostFinger extends StatefulWidget {
+  final VoidCallback onDone;
 
-  const _DoneBar({
-    super.key,
-    required this.word,
-    required this.accent,
-    required this.onNext,
-    required this.label,
-  });
+  const _GhostFinger({super.key, required this.onDone});
+
+  @override
+  State<_GhostFinger> createState() => _GhostFingerState();
+}
+
+class _GhostFingerState extends State<_GhostFinger>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl = AnimationController(
+    vsync: this,
+    duration: DT.motion.coloringHandTrace,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl
+      ..addStatusListener((status) {
+        if (status == AnimationStatus.completed) widget.onDone();
+      })
+      ..forward();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      padding: const EdgeInsets.fromLTRB(20, 0, 0, 0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: accent.withValues(alpha: 0.4), width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: accent.withValues(alpha: 0.22),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Text('🎉', style: TextStyle(fontSize: 28)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              word,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: accent,
-                letterSpacing: 0.3,
-              ),
-            ),
-          ),
-          _NewPictureButton(onTap: onNext, label: label),
-        ],
+    return IgnorePointer(
+      child: AnimatedBuilder(
+        animation: _ctrl,
+        builder: (_, __) => CustomPaint(
+          size: Size.infinite,
+          painter: _GhostFingerPainter(_ctrl.value),
+        ),
       ),
     );
   }
+}
+
+class _GhostFingerPainter extends CustomPainter {
+  _GhostFingerPainter(this.t);
+
+  /// 0 → 1 through one pass.
+  final double t;
+
+  /// Fade in, hold, fade out — as fractions of the pass.
+  static const _fadeIn = 0.08;
+  static const _fadeOut = 0.85;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final opacity = t < _fadeIn
+        ? t / _fadeIn
+        : t > _fadeOut
+            ? (1 - t) / (1 - _fadeOut)
+            : 1.0;
+    if (opacity <= 0) return;
+
+    final path = Path()
+      ..moveTo(size.width * 0.18, size.height * 0.66)
+      ..cubicTo(
+        size.width * 0.34,
+        size.height * 0.28,
+        size.width * 0.64,
+        size.height * 0.86,
+        size.width * 0.84,
+        size.height * 0.40,
+      );
+    final metric = path.computeMetrics().first;
+    final travelled = metric.length * t;
+    final trail = metric.extractPath(0, travelled);
+
+    canvas.drawPath(
+      trail,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..strokeWidth = 30
+        ..color = Colors.white.withValues(alpha: 0.42 * opacity),
+    );
+
+    final tangent = metric.getTangentForOffset(travelled);
+    final at = tangent?.position;
+    if (at == null) return;
+
+    // The finger: a pad on the line and a tapered tip leaving it — enough
+    // to read as a hand without pretending to be an illustration.
+    canvas.drawCircle(
+      at,
+      18,
+      Paint()..color = Colors.white.withValues(alpha: 0.85 * opacity),
+    );
+    canvas.drawCircle(
+      at,
+      18,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..color = DT.bloomInk.withValues(alpha: 0.30 * opacity),
+    );
+    final tip = RRect.fromRectAndRadius(
+      Rect.fromLTWH(at.dx + 6, at.dy - 58, 22, 52),
+      const Radius.circular(11),
+    );
+    canvas.drawRRect(
+      tip,
+      Paint()..color = Colors.white.withValues(alpha: 0.70 * opacity),
+    );
+    canvas.drawRRect(
+      tip,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..color = DT.bloomInk.withValues(alpha: 0.22 * opacity),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_GhostFingerPainter old) => old.t != t;
 }
 
 class _PaywallGate extends ConsumerWidget {
@@ -761,16 +1144,19 @@ class _PaywallGate extends ConsumerWidget {
             const Text('🎨', style: TextStyle(fontSize: 96)),
             const SizedBox(height: 16),
             Text(
-              s('Понад $hundreds малюнків чекають!',
-                  '$hundreds+ drawings waiting!'),
+              s('Понад $hundreds картинок чекають!',
+                  '$hundreds+ pictures waiting!'),
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             Text(
+              // Honest about what this is: colours appear under a finger.
+              // No brush, no palette — do not promise free drawing (п. 24).
               s(
-                  'Розблокуй усі картинки одразу — і фарбуй щодня.',
-                  'Unlock all pictures — and color every day.'),
+                  'Розблокуй усі картинки — проявляй кольори пальчиком щодня.',
+                  'Unlock all pictures — reveal the colors with a finger, '
+                      'every day.'),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 15,
@@ -784,7 +1170,7 @@ class _PaywallGate extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(22),
                 boxShadow: [
                   BoxShadow(
-                    color: kAccent.withValues(alpha: 0.35),
+                    color: DT.brand.withValues(alpha: 0.35),
                     blurRadius: 16,
                     offset: const Offset(0, 5),
                   ),
@@ -795,7 +1181,7 @@ class _PaywallGate extends ConsumerWidget {
                 icon: const Text('💎', style: TextStyle(fontSize: 18)),
                 label: Text(s('Розблокувати', 'Unlock')),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: kAccent,
+                  backgroundColor: DT.brand,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(
                       horizontal: 28, vertical: 14),

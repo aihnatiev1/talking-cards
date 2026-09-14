@@ -1,64 +1,22 @@
 import 'package:flutter/material.dart';
 
 import '../services/audio_service.dart';
-import '../utils/constants.dart';
+import '../services/feedback_service.dart';
+import '../utils/app_icons.dart';
+import '../utils/design_tokens.dart';
+import 'ambient_loop.dart';
+import 'kid_tap.dart';
 
 /// Self-contained speaker toggle button.
 /// Uses ValueListenableBuilder — rebuilds only itself, not the parent.
-class SpeakerButton extends StatefulWidget {
+class SpeakerButton extends StatelessWidget {
   /// Called when autoSpeak is toggled on and current card should be spoken.
   final VoidCallback? onActivated;
 
   const SpeakerButton({super.key, this.onActivated});
 
-  @override
-  State<SpeakerButton> createState() => _SpeakerButtonState();
-}
-
-class _SpeakerButtonState extends State<SpeakerButton>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _pulseController;
-  late final Animation<double> _pulseAnimation;
-
-  static const _onColor = kTeal;
-  static const _offColor = kSoundRed;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-    AudioService.instance.isSpeaking.addListener(_updatePulse);
-    AudioService.instance.autoSpeak.addListener(_updatePulse);
-  }
-
-  @override
-  void dispose() {
-    AudioService.instance.isSpeaking.removeListener(_updatePulse);
-    AudioService.instance.autoSpeak.removeListener(_updatePulse);
-    _pulseController.dispose();
-    super.dispose();
-  }
-
-  void _updatePulse() {
-    if (!mounted) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final speaking = AudioService.instance.isSpeaking.value;
-      final autoOn = AudioService.instance.autoSpeak.value;
-      if (speaking && autoOn) {
-        _pulseController.repeat(reverse: true);
-      } else {
-        _pulseController.stop();
-        _pulseController.value = 0.0;
-      }
-    });
-  }
+  static const _onColor = DT.teal;
+  static const _offColor = DT.soundRed;
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +26,9 @@ class _SpeakerButtonState extends State<SpeakerButton>
         return ValueListenableBuilder<bool>(
           valueListenable: AudioService.instance.isSpeaking,
           builder: (_, speaking, __) {
-            return GestureDetector(
+            return KidTap(
+              // Toggling speech is itself the sound of this tap.
+              sound: null,
               onTap: () {
                 final audio = AudioService.instance;
                 final newValue = !audio.autoSpeak.value;
@@ -76,17 +36,31 @@ class _SpeakerButtonState extends State<SpeakerButton>
                 // toddler tap can't silence the app across launches.
                 audio.autoSpeak.value = newValue;
                 if (newValue) {
-                  widget.onActivated?.call();
+                  onActivated?.call();
                 } else {
+                  // The only action in the app whose answer used to be
+                  // silence. A low tock says "heard" (sound_palette §6.14).
                   audio.stop();
+                  FeedbackService.instance.play(KidSound.tap, pitch: 0.9);
                 }
               },
-              child: ScaleTransition(
-                scale: _pulseAnimation,
+              // Pulses (1.0 → 1.2, 500 ms) while a clip plays with sound
+              // on. Under reduced motion it rests at 1.0 — the wider shadow
+              // while speaking (blurRadius 12 vs 6) still shows that audio
+              // is playing.
+              child: AmbientLoop(
+                period: const Duration(milliseconds: 500),
+                enabled: speaking && autoOn,
+                builder: (_, t, child) => Transform.scale(
+                  scale: 1.0 + 0.2 * t,
+                  child: child,
+                ),
                 child: Container(
-                  // Paired with the 56dp heart on the card (audit #20).
-                  width: 56,
-                  height: 56,
+                  // The one control a child presses on the cards screen, so
+                  // it carries the full 72 dp target (CLAUDE.md rule 1 /
+                  // ux-gap G12) rather than the old 56.
+                  width: DT.size.tapMin,
+                  height: DT.size.tapMin,
                   decoration: BoxDecoration(
                     color: autoOn ? _onColor : _offColor,
                     shape: BoxShape.circle,
@@ -100,12 +74,15 @@ class _SpeakerButtonState extends State<SpeakerButton>
                       ),
                     ],
                   ),
-                  child: Icon(
-                    autoOn
-                        ? Icons.volume_up_rounded
-                        : Icons.volume_off_rounded,
-                    color: Colors.white,
-                    size: 24,
+                  // White paper speaker on the saturated disc; the ink
+                  // outline keeps it legible on both the teal and the red.
+                  child: Center(
+                    child: AppIconView(
+                      autoOn ? AppIcon.sound : AppIcon.soundOff,
+                      // 0.53 of the disc — the ratio the 30/56 button had.
+                      size: 38,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),

@@ -60,8 +60,15 @@ class PackModel {
       color: colorFromHex(json['color'] as String),
       isLocked: locked,
       isFree: !locked,
+      // `"hidden": true` in the catalogue takes a card out of the app
+      // everywhere at once — packs, games, colouring, the daily quest,
+      // SRS — because nothing downstream ever sees it. It is how a card
+      // whose illustration is wrong waits for a new one without losing
+      // its text, its recording or its id.
       cards: (json['cards'] as List<dynamic>)
-          .map((c) => CardModel.fromJson(c as Map<String, dynamic>))
+          .cast<Map<String, dynamic>>()
+          .where((c) => c['hidden'] != true)
+          .map(CardModel.fromJson)
           .toList(),
       cover: (json['cover'] as String?)?.trim().isEmpty ?? true
           ? null
@@ -84,3 +91,15 @@ class PackModel {
     );
   }
 }
+
+/// Card id → the id of the pack it came from.
+///
+/// Games are handed a flat list of cards drawn from every unlocked pack,
+/// which loses the one piece of semantics the catalogue has: what a card is
+/// *about*. «Вгадай звук» needs it back to build a question out of one set
+/// (experience audit 2026-09-13 §19), so the call site that still has the
+/// packs builds this map alongside the list.
+Map<String, String> cardGroupsOf(Iterable<PackModel> packs) => {
+      for (final p in packs)
+        for (final c in p.cards) c.id: p.id,
+    };

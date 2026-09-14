@@ -5,8 +5,10 @@ import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/notification_service.dart';
-import '../utils/constants.dart';
+import '../utils/app_icons.dart';
+import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
+import 'bloom_mascot.dart';
 
 /// Asks the parent about daily reminders — once, in the app, with a reason.
 ///
@@ -50,6 +52,38 @@ Future<void> maybeAskNotificationOptIn(
   }
 }
 
+/// Bloom, frozen mid-hop, with the bell sticker tucked at his side.
+class _BloomWithBell extends StatelessWidget {
+  final String label;
+
+  const _BloomWithBell({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 108,
+      height: 84,
+      child: Stack(
+        alignment: Alignment.center,
+        clipBehavior: Clip.none,
+        children: [
+          BloomMascot(
+            size: 80,
+            state: const BloomState.still(BloomEmotion.happy),
+            interactive: false,
+            semanticsLabel: label,
+          ),
+          const Positioned(
+            right: 0,
+            bottom: 6,
+            child: AppIconView(AppIcon.stopBell, size: 34, sticker: true),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _NotificationOptInDialog extends StatelessWidget {
   final AppS s;
 
@@ -64,7 +98,10 @@ class _NotificationOptInDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('🔔', style: TextStyle(fontSize: 56)),
+            // Bloom asks, with the bell of the quest map's "listen" stop
+            // in his paws — a system emoji here was the one place the
+            // reminder ask looked like it came from another app (G15).
+            _BloomWithBell(label: s('Блум', 'Bloom')),
             const SizedBox(height: 12),
             Text(
               s('Нагадувати про заняття?', 'A daily reminder?'),
@@ -95,7 +132,7 @@ class _NotificationOptInDialog extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(true),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: kAccent,
+                  backgroundColor: DT.brand,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(

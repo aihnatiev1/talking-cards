@@ -1,21 +1,24 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
 import '../providers/language_provider.dart';
 import '../services/audio_service.dart';
+import '../services/feedback_service.dart';
+import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
-import '../services/asset_pack_service.dart';
+import '../widgets/card_image.dart';
+import '../widgets/kid_tap.dart';
 
 /// Full-screen card reveal with celebration effects.
 class CardRevealScreen extends ConsumerStatefulWidget {
   final CardModel card;
   final PackModel pack;
   final int newTotal;
+
   /// Kept for call-site compatibility; the Share button was removed from
   /// this child-facing screen (no parental gate exists in the app).
   final void Function(BuildContext)? onShare;
@@ -51,13 +54,19 @@ class _CardRevealScreenState extends ConsumerState<CardRevealScreen>
   bool _showButtons = false;
 
   late final List<_Particle> _burstParticles;
+  late final List<_ConfettiPiece> _confetti;
   final _rng = Random();
+
+  bool get _reduceMotion => MediaQuery.disableAnimationsOf(context);
 
   @override
   void initState() {
     super.initState();
 
     _burstParticles = List.generate(50, (_) => _Particle.random(_rng));
+    // Precomputed once: the old painter re-seeded Random(42) and rebuilt
+    // 45 pieces on every frame.
+    _confetti = List.generate(40, (_) => _ConfettiPiece.random(_rng));
 
     _envelopeCtrl = AnimationController(
       vsync: this,
@@ -98,11 +107,12 @@ class _CardRevealScreenState extends ConsumerState<CardRevealScreen>
       _settleCtrl.value = 1.0;
       _burstCtrl.value = 1.0;
       _bgCtrl.value = 1.0;
-      _glowCtrl.repeat(reverse: true);
-      _confettiCtrl.repeat();
+      // Reads MediaQuery, so it has to wait until we are in the tree.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _startAmbient();
+      });
     } else {
       _envelopeCtrl.forward().then((_) {
-        HapticFeedback.mediumImpact();
         Future.delayed(const Duration(milliseconds: 400), () {
           if (!mounted) return;
           _startPhase2();
@@ -113,7 +123,9 @@ class _CardRevealScreenState extends ConsumerState<CardRevealScreen>
 
   void _startPhase2() {
     setState(() => _phase2Started = true);
-    HapticFeedback.heavyImpact();
+    // The open moment: tada + heavy haptic in one event. The three
+    // hand-placed haptics of the old phases collapse into this.
+    FeedbackService.instance.event(FeedbackEvent.reveal);
     _openCtrl.forward();
     _burstCtrl.forward();
     _bgCtrl.forward();
@@ -125,15 +137,25 @@ class _CardRevealScreenState extends ConsumerState<CardRevealScreen>
 
   void _startPhase3() {
     setState(() => _phase3Started = true);
-    HapticFeedback.lightImpact();
     // Voice the revealed word — the reward moment must be heard, not read.
     AudioService.instance.playWordOnly(widget.card.audioKey, widget.card.sound);
     _settleCtrl.forward();
-    _glowCtrl.repeat(reverse: true);
-    _confettiCtrl.repeat();
+    _startAmbient();
     Future.delayed(const Duration(milliseconds: 600), () {
       if (mounted) setState(() => _showButtons = true);
     });
+  }
+
+  /// Glow pulses three times and rests bright; confetti rains once and
+  /// fades. Both used to `repeat()` forever — full-screen repaints at 60 fps
+  /// on an old tablet until the parent pressed a button.
+  void _startAmbient() {
+    if (_reduceMotion) {
+      _glowCtrl.value = 1.0;
+      return;
+    }
+    _glowCtrl.repeat(reverse: true, count: 3);
+    _confettiCtrl.forward();
   }
 
   @override
@@ -151,14 +173,16 @@ class _CardRevealScreenState extends ConsumerState<CardRevealScreen>
   // Derive vibrant bg colors from pack color
   Color get _bgDark {
     final hsl = HSLColor.fromColor(widget.pack.color);
-    return hsl.withLightness((hsl.lightness * 0.15).clamp(0.0, 1.0))
+    return hsl
+        .withLightness((hsl.lightness * 0.15).clamp(0.0, 1.0))
         .withSaturation((hsl.saturation * 0.8).clamp(0.0, 1.0))
         .toColor();
   }
 
   Color get _bgMid {
     final hsl = HSLColor.fromColor(widget.pack.color);
-    return hsl.withLightness((hsl.lightness * 0.3).clamp(0.0, 1.0))
+    return hsl
+        .withLightness((hsl.lightness * 0.3).clamp(0.0, 1.0))
         .withSaturation((hsl.saturation * 0.9).clamp(0.0, 1.0))
         .toColor();
   }
@@ -193,44 +217,52 @@ class _CardRevealScreenState extends ConsumerState<CardRevealScreen>
             },
           ),
 
-          // Subtle radial light rays
-          if (_phase3Started)
-            AnimatedBuilder(
-              animation: _glowCtrl,
-              builder: (_, __) {
-                return CustomPaint(
-                  size: MediaQuery.of(context).size,
-                  painter: _RaysPainter(
-                    progress: _glowCtrl.value,
-                    color: packColor,
-                  ),
-                );
-              },
+          // Subtle radial light rays. Each full-screen painter sits in its
+          // own RepaintBoundary so the card and buttons stay off the hot path.
+          if (_phase3Started && !_reduceMotion)
+            _fullScreenLayer(
+              AnimatedBuilder(
+                animation: _glowCtrl,
+                builder: (_, __) {
+                  return CustomPaint(
+                    size: MediaQuery.of(context).size,
+                    painter: _RaysPainter(
+                      progress: _glowCtrl.value,
+                      color: packColor,
+                    ),
+                  );
+                },
+              ),
             ),
 
           // Burst particles (one-shot on open)
-          if (_phase2Started)
-            AnimatedBuilder(
-              animation: _burstCtrl,
-              builder: (_, __) => CustomPaint(
-                size: MediaQuery.of(context).size,
-                painter: _BurstPainter(
-                  particles: _burstParticles,
-                  progress: _burstCtrl.value,
-                  color: packColor,
+          if (_phase2Started && !_reduceMotion)
+            _fullScreenLayer(
+              AnimatedBuilder(
+                animation: _burstCtrl,
+                builder: (_, __) => CustomPaint(
+                  size: MediaQuery.of(context).size,
+                  painter: _BurstPainter(
+                    particles: _burstParticles,
+                    progress: _burstCtrl.value,
+                    color: packColor,
+                  ),
                 ),
               ),
             ),
 
-          // Continuous confetti rain
-          if (_phase3Started)
-            AnimatedBuilder(
-              animation: _confettiCtrl,
-              builder: (_, __) => CustomPaint(
-                size: MediaQuery.of(context).size,
-                painter: _ConfettiPainter(
-                  progress: _confettiCtrl.value,
-                  packColor: packColor,
+          // Confetti rain — one pass, fades out at the end
+          if (_phase3Started && !_reduceMotion)
+            _fullScreenLayer(
+              AnimatedBuilder(
+                animation: _confettiCtrl,
+                builder: (_, __) => CustomPaint(
+                  size: MediaQuery.of(context).size,
+                  painter: _ConfettiPainter(
+                    pieces: _confetti,
+                    progress: _confettiCtrl.value,
+                    packColor: packColor,
+                  ),
                 ),
               ),
             ),
@@ -247,15 +279,18 @@ class _CardRevealScreenState extends ConsumerState<CardRevealScreen>
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(28),
                     boxShadow: [
+                      // blur 80 / spread 30 was the single most expensive
+                      // draw on the screen; 40 / 10 reads the same at arm's
+                      // length (perf guardrail, motion audit §7).
                       BoxShadow(
                         color: packColor.withValues(alpha: pulse),
-                        blurRadius: 80,
-                        spreadRadius: 30,
+                        blurRadius: 40,
+                        spreadRadius: 10,
                       ),
                       BoxShadow(
                         color: Colors.white.withValues(alpha: pulse * 0.2),
-                        blurRadius: 40,
-                        spreadRadius: 5,
+                        blurRadius: 30,
+                        spreadRadius: 4,
                       ),
                     ],
                   ),
@@ -280,15 +315,31 @@ class _CardRevealScreenState extends ConsumerState<CardRevealScreen>
               child: _buildButtons(),
             ),
 
-          // Close button
+          // Close button. The drawing stays small and half-transparent on
+          // purpose — leaving the reveal is not something to invite — but
+          // the hit zone is the full 72 dp, and its centre sits 48 dp in
+          // from the right edge so a palm resting on the bezel misses it
+          // (ux-gap G12).
           Positioned(
             top: MediaQuery.of(context).padding.top + 8,
             right: 12,
             child: _showButtons
-                ? IconButton(
-                    icon: Icon(Icons.close_rounded,
-                        color: Colors.white.withValues(alpha: 0.5), size: 28),
-                    onPressed: () => Navigator.of(context).pop(),
+                ? KidTap(
+                    onTap: () => Navigator.of(context).pop(),
+                    sound: null,
+                    child: Semantics(
+                      button: true,
+                      label: 'Close',
+                      child: SizedBox(
+                        width: DT.size.tapBack,
+                        height: DT.size.tapBack,
+                        child: Icon(
+                          Icons.close_rounded,
+                          color: Colors.white.withValues(alpha: 0.5),
+                          size: 28,
+                        ),
+                      ),
+                    ),
                   )
                 : const SizedBox.shrink(),
           ),
@@ -296,6 +347,9 @@ class _CardRevealScreenState extends ConsumerState<CardRevealScreen>
       ),
     );
   }
+
+  Widget _fullScreenLayer(Widget child) =>
+      IgnorePointer(child: RepaintBoundary(child: child));
 
   Widget _buildEnvelope() {
     return AnimatedBuilder(
@@ -332,8 +386,7 @@ class _CardRevealScreenState extends ConsumerState<CardRevealScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(widget.pack.icon,
-                      style: const TextStyle(fontSize: 56)),
+                  Text(widget.pack.icon, style: const TextStyle(fontSize: 56)),
                   const SizedBox(height: 8),
                   const Text('🎁', style: TextStyle(fontSize: 36)),
                 ],
@@ -357,10 +410,7 @@ class _CardRevealScreenState extends ConsumerState<CardRevealScreen>
           offset: Offset(0, yOffset),
           child: Transform.scale(
             scale: scale,
-            child: Transform.rotate(
-              angle: rotation,
-              child: _cardWidget(),
-            ),
+            child: Transform.rotate(angle: rotation, child: _cardWidget()),
           ),
         );
       },
@@ -371,8 +421,9 @@ class _CardRevealScreenState extends ConsumerState<CardRevealScreen>
     return AnimatedBuilder(
       animation: _settleCtrl,
       builder: (_, __) {
-        final bounce = Curves.elasticOut
-            .transform(_settleCtrl.value.clamp(0.0, 1.0));
+        final bounce = Curves.elasticOut.transform(
+          _settleCtrl.value.clamp(0.0, 1.0),
+        );
         return Transform.scale(
           scale: 0.95 + bounce * 0.05,
           child: _cardWidget(),
@@ -410,8 +461,7 @@ class _CardRevealScreenState extends ConsumerState<CardRevealScreen>
         children: [
           // Pack badge
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
             decoration: BoxDecoration(
               color: packColor.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(14),
@@ -428,18 +478,10 @@ class _CardRevealScreenState extends ConsumerState<CardRevealScreen>
           const SizedBox(height: 18),
 
           // Card image / emoji
-          if (card.image != null)
-            SizedBox(
-              height: 120,
-              child: Image(
-                image: AssetPackService.instance.cardImage(card.image),
-                fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) =>
-                    Text(card.emoji, style: const TextStyle(fontSize: 72)),
-              ),
-            )
-          else
-            Text(card.emoji, style: const TextStyle(fontSize: 72)),
+          SizedBox(
+            height: 120,
+            child: CardImage.forCard(card, padding: EdgeInsets.zero),
+          ),
           const SizedBox(height: 16),
 
           // Sound
@@ -521,14 +563,19 @@ class _CardRevealScreenState extends ConsumerState<CardRevealScreen>
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: () {
+                KidTap.feedback();
                 Navigator.of(context).pop();
                 widget.onGoToPack?.call();
               },
-              icon: Text(widget.pack.icon,
-                  style: const TextStyle(fontSize: 20)),
+              icon: Text(
+                widget.pack.icon,
+                style: const TextStyle(fontSize: 20),
+              ),
               label: Text(
-                s('До розділу "${widget.pack.title}"',
-                    'To "${widget.pack.title}"'),
+                s(
+                  'До розділу "${widget.pack.title}"',
+                  'To "${widget.pack.title}"',
+                ),
                 style: const TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 15,
@@ -537,9 +584,12 @@ class _CardRevealScreenState extends ConsumerState<CardRevealScreen>
               style: ElevatedButton.styleFrom(
                 backgroundColor: packColor,
                 foregroundColor: Colors.white,
+                // Rule 1: both buttons on this screen are child targets.
+                minimumSize: Size.fromHeight(DT.size.tapMin),
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18)),
+                  borderRadius: BorderRadius.circular(18),
+                ),
                 elevation: 6,
                 shadowColor: packColor.withValues(alpha: 0.5),
               ),
@@ -551,16 +601,23 @@ class _CardRevealScreenState extends ConsumerState<CardRevealScreen>
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () {
+                KidTap.feedback();
+                Navigator.of(context).pop();
+              },
               icon: const Icon(Icons.home_rounded, size: 18),
-              label: Text(s('На головну', 'Home'),
-                  style: const TextStyle(fontWeight: FontWeight.w600)),
+              label: Text(
+                s('На головну', 'Home'),
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white.withValues(alpha: 0.15),
                 foregroundColor: Colors.white,
+                minimumSize: Size.fromHeight(DT.size.tapMin),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 elevation: 0,
               ),
             ),
@@ -587,8 +644,7 @@ class _RaysPainter extends CustomPainter {
     const rayCount = 12;
     final baseAngle = progress * pi * 2 / rayCount; // slow rotation
 
-    final paint = Paint()
-      ..style = PaintingStyle.fill;
+    final paint = Paint()..style = PaintingStyle.fill;
 
     for (int i = 0; i < rayCount; i++) {
       final angle = baseAngle + (i * 2 * pi / rayCount);
@@ -614,8 +670,7 @@ class _RaysPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _RaysPainter old) =>
-      old.progress != progress;
+  bool shouldRepaint(covariant _RaysPainter old) => old.progress != progress;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -672,13 +727,14 @@ class _BurstPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height * 0.42);
     for (final p in particles) {
-      final t =
-          ((progress - p.startDelay) / (1 - p.startDelay)).clamp(0.0, 1.0);
+      final t = ((progress - p.startDelay) / (1 - p.startDelay)).clamp(
+        0.0,
+        1.0,
+      );
       if (t <= 0) continue;
       final opacity = (1 - t).clamp(0.0, 1.0);
       final dist = p.speed * Curves.easeOut.transform(t);
-      final pos =
-          center + Offset(cos(p.angle) * dist, sin(p.angle) * dist);
+      final pos = center + Offset(cos(p.angle) * dist, sin(p.angle) * dist);
       final paint = Paint()
         ..color = p.colorTint.withValues(alpha: opacity * 0.85)
         ..style = PaintingStyle.fill;
@@ -687,58 +743,97 @@ class _BurstPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _BurstPainter old) =>
-      old.progress != progress;
+  bool shouldRepaint(covariant _BurstPainter old) => old.progress != progress;
 }
 
 // ═══════════════════════════════════════════════════════════════
 //  CONFETTI — continuous colorful rain
 // ═══════════════════════════════════════════════════════════════
 
+class _ConfettiPiece {
+  final double x; // 0..1 of width
+  final double speed; // 0.3..1.0
+  final double phase; // 0..1
+  final int colorIndex; // into base colours; -1 = pack colour
+  final double w;
+  final double h;
+  final bool rect;
+  final double spin; // ±1
+
+  const _ConfettiPiece({
+    required this.x,
+    required this.speed,
+    required this.phase,
+    required this.colorIndex,
+    required this.w,
+    required this.h,
+    required this.rect,
+    required this.spin,
+  });
+
+  factory _ConfettiPiece.random(Random rng) {
+    final w = 4.0 + rng.nextDouble() * 6;
+    return _ConfettiPiece(
+      x: rng.nextDouble(),
+      speed: 0.3 + rng.nextDouble() * 0.7,
+      phase: rng.nextDouble(),
+      colorIndex: rng.nextInt(_ConfettiPainter._baseColors.length + 1) - 1,
+      w: w,
+      h: rng.nextBool() ? (6.0 + rng.nextDouble() * 10) : w,
+      rect: rng.nextBool(),
+      spin: rng.nextBool() ? 1 : -1,
+    );
+  }
+}
+
 class _ConfettiPainter extends CustomPainter {
+  final List<_ConfettiPiece> pieces;
   final double progress;
   final Color packColor;
 
-  _ConfettiPainter({required this.progress, required this.packColor});
+  _ConfettiPainter({
+    required this.pieces,
+    required this.progress,
+    required this.packColor,
+  });
 
-  static final _baseColors = [
-    const Color(0xFFFF6B6B),
-    const Color(0xFFFFD93D),
-    const Color(0xFF6BCB77),
-    const Color(0xFF4D96FF),
-    const Color(0xFFFF9FF3),
-    const Color(0xFFFFA502),
-    const Color(0xFF7B68EE),
+  static const _baseColors = [
+    DT.coral,
+    DT.sunBurst,
+    DT.mint,
+    DT.sky,
+    DT.pink,
+    DT.peach,
+    DT.violet,
   ];
 
   @override
   void paint(Canvas canvas, Size size) {
-    final rng = Random(42);
+    if (progress >= 1.0) return;
+    // Rain at full strength for 70 % of the pass, then thin out to nothing.
+    final fade = progress < 0.7 ? 1.0 : (1.0 - progress) / 0.3;
     final paint = Paint()..style = PaintingStyle.fill;
-    final colors = [..._baseColors, packColor];
+    // Slower overall drift than the old 5 s loop so one pass reads as rain.
+    final t = progress * 3;
 
-    for (int i = 0; i < 45; i++) {
-      final x = rng.nextDouble() * size.width;
-      final speed = 0.3 + rng.nextDouble() * 0.7;
-      final phase = rng.nextDouble();
-      final color = colors[rng.nextInt(colors.length)];
-      final w = 4.0 + rng.nextDouble() * 6;
-      final h = rng.nextBool() ? (6.0 + rng.nextDouble() * 10) : w;
-
-      final yNorm = ((progress * speed + phase) % 1.0);
+    for (final p in pieces) {
+      final color = p.colorIndex < 0 ? packColor : _baseColors[p.colorIndex];
+      final yNorm = ((t * p.speed + p.phase) % 1.0);
       final y = yNorm * (size.height + 40) - 20;
-      final wobble = sin((progress * 5 + phase * pi * 2)) * 18;
-      final rotation =
-          progress * pi * 3 * (rng.nextBool() ? 1 : -1) + phase * pi;
+      final wobble = sin((t * 5 + p.phase * pi * 2)) * 18;
+      final rotation = t * pi * 3 * p.spin + p.phase * pi;
 
-      paint.color =
-          color.withValues(alpha: (1.0 - yNorm * 0.4).clamp(0.3, 0.8));
+      paint.color = color.withValues(
+        alpha: (1.0 - yNorm * 0.4).clamp(0.3, 0.8) * fade,
+      );
 
       canvas.save();
-      canvas.translate(x + wobble, y);
+      canvas.translate(p.x * size.width + wobble, y);
       canvas.rotate(rotation);
 
-      if (rng.nextBool()) {
+      final w = p.w;
+      final h = p.h;
+      if (p.rect) {
         canvas.drawRRect(
           RRect.fromRectAndRadius(
             Rect.fromCenter(center: Offset.zero, width: w, height: h),

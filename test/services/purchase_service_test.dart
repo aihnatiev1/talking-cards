@@ -89,6 +89,81 @@ void main() {
       // Drain the checkout so the 3-minute backstop is not left pending.
       service.debugHandlePurchaseUpdate(
           [update('yearly_premium', PurchaseStatus.canceled)]);
+      service.purchaseInFlight.value = false;
+    });
+
+    test('an open checkout stays in flight until the store answers', () {
+      expect(service.purchaseInFlight.value, false);
+      service.debugBeginPurchase('yearly_premium');
+      expect(service.purchaseInFlight.value, true);
+
+      service.debugHandlePurchaseUpdate(
+          [update('yearly_premium', PurchaseStatus.canceled)]);
+      // The outcome releases the CTA, not a wall clock on the paywall: a
+      // flat ten-second wait kept the button dead for whatever was left of
+      // it after the parent had already dismissed the sheet.
+      expect(service.purchaseInFlight.value, false);
+    });
+
+    test('the backstop releases the checkout it gives up on', () {
+      FakeAsync().run((async) {
+        service.debugBeginPurchase('yearly_premium');
+        async.elapse(const Duration(minutes: 4));
+        // `no_outcome_in_3min` is filed and the button comes back with it —
+        // holding it any longer strands a parent on a screen that cannot
+        // sell and cannot explain itself.
+        expect(service.purchaseInFlight.value, false);
+      });
+    });
+
+    test('an Ask to Buy wait leaves the family able to buy again', () {
+      FakeAsync().run((async) {
+        service.debugBeginPurchase('yearly_premium');
+        service.debugHandlePurchaseUpdate(
+            [update('yearly_premium', PurchaseStatus.pending)]);
+        async.elapse(const Duration(minutes: 4));
+
+        // The wait is real and the paywall says so.
+        expect(service.awaitingApproval.value, true);
+        expect(service.purchaseInFlight.value, false);
+
+        // And the checkout window is actually open again — the thing the
+        // flag exists for. Asserting only the flag passed while every Buy
+        // tap returned false with no sheet: `pending` used to keep the
+        // pending id, and `_beginPurchase` refuses a second checkout while
+        // one is pending. A live button over a closed service is worse
+        // than a disabled one.
+        expect(service.debugBeginPurchase('yearly_premium'), isTrue);
+        expect(service.purchaseInFlight.value, true);
+      });
+    });
+
+    test('an approval that lands after the window closed still grants Pro',
+        () {
+      FakeAsync().run((async) {
+        service.debugBeginPurchase('yearly_premium');
+        service.debugHandlePurchaseUpdate(
+            [update('yearly_premium', PurchaseStatus.pending)]);
+        // Hours later, in this or a later session, the parent approves.
+        async.elapse(const Duration(hours: 2));
+        service.debugHandlePurchaseUpdate(
+            [update('yearly_premium', PurchaseStatus.purchased)]);
+        async.flushMicrotasks();
+
+        expect(service.isPro.value, true);
+      });
+    });
+
+    test('a second checkout cannot start over an open one', () {
+      FakeAsync().run((async) {
+        service.debugBeginPurchase('yearly_premium');
+        service.debugBeginPurchase('monthly_premium');
+        // The first checkout still owns the window; its outcome must not
+        // be orphaned by an id that moved under it.
+        service.debugHandlePurchaseUpdate(
+            [update('yearly_premium', PurchaseStatus.canceled)]);
+        expect(service.purchaseInFlight.value, false);
+      });
     });
 
     test('Ask to Buy leaves the checkout visibly waiting, not failed',
