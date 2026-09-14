@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:talking_cards/providers/daily_quest_provider.dart';
 import 'package:talking_cards/utils/motion.dart';
 import 'package:talking_cards/widgets/bloom_mascot.dart';
+import 'package:talking_cards/utils/design_tokens.dart';
 import 'package:talking_cards/widgets/quest_journey_map.dart';
 
 import '../helpers/motion.dart';
@@ -120,8 +121,11 @@ void main() {
     await tester.pump();
     // Mid-walk he is somewhere on the trail, not yet parked on stop 1…
     await tester.pump(const Duration(milliseconds: 100));
-    // …and the walk finishes on its own.
-    await tester.pumpAndSettle();
+    // …and the walk finishes on its own. Pumped by hand, not settled: the
+    // pressable stop breathes forever under full motion (that endless
+    // pulse is the map's "press here"), so `pumpAndSettle` never returns.
+    await tester.pump(DT.motion.journeyStep);
+    await tester.pump(const Duration(milliseconds: 32));
     expect(stopUnderBloom(tester), 1);
     expect(tester.takeException(), isNull);
   });

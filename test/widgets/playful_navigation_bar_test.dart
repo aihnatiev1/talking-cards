@@ -41,9 +41,16 @@ void main() {
         for (var i = 0; i < 3; i++) {
           final target = find.byKey(ValueKey('main-tab-$i'));
           final rect = tester.getRect(target);
-          expect(rect.left, greaterThanOrEqualTo(0));
-          expect(rect.right, lessThanOrEqualTo(width));
-          expect(rect.bottom, lessThanOrEqualTo(566));
+          // Inset from both edges: the bar is a floating block, not a
+          // slab welded to the bottom of the phone.
+          expect(rect.left, greaterThanOrEqualTo(16));
+          expect(rect.right, lessThanOrEqualTo(width - 16));
+          // It sits as low as it can — the home indicator floats over its
+          // lower edge — but a button never runs off the screen and never
+          // ends flush with it.
+          expect(rect.bottom, lessThanOrEqualTo(600 - 8));
+          expect(rect.bottom, greaterThan(566),
+              reason: 'the bar should use the space the inset used to take');
           expect(rect.height, greaterThanOrEqualTo(72));
           await tester.tap(target);
           await tester.pumpAndSettle();

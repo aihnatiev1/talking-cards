@@ -507,6 +507,7 @@
       },
       {
         "id": "a21",
+        "hidden": true,
         "sound": "СОВА",
         "soundEn": "OWL",
         "transcription": "[aʊl]",
@@ -1362,6 +1363,7 @@
     "cards": [
       {
         "id": "t01",
+        "hidden": true,
         "sound": "АВТОМОБІЛЬ",
         "soundEn": "CAR",
         "transcription": "[kɑːr]",
@@ -1911,6 +1913,7 @@
       },
       {
         "id": "f16",
+        "hidden": true,
         "sound": "ПИРІЖОК",
         "soundEn": "PIE",
         "transcription": "[paɪ]",
@@ -2055,6 +2058,7 @@
       },
       {
         "id": "f28",
+        "hidden": true,
         "sound": "ЯЄЧКО",
         "soundEn": "EGG",
         "transcription": "[eɡ]",
@@ -3315,6 +3319,7 @@
       },
       {
         "id": "act15",
+        "hidden": true,
         "sound": "СИДІТИ",
         "text": "Сядь спокійно!",
         "emoji": "🪑",
@@ -4730,6 +4735,7 @@
       },
       {
         "id": "ss08",
+        "hidden": true,
         "sound": "МАШИНА",
         "text": "Машина їде по дорозі!",
         "emoji": "🚗",
@@ -4896,6 +4902,7 @@
       },
       {
         "id": "sc04",
+        "hidden": true,
         "sound": "СОВА",
         "text": "Сова бачить уночі!",
         "emoji": "🦉",
@@ -5895,6 +5902,7 @@
       },
       {
         "id": "sts06",
+        "hidden": true,
         "sound": "ЯЙЦЕ",
         "text": "Яйце кругле і біле!",
         "emoji": "🥚",
