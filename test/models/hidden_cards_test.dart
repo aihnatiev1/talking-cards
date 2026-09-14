@@ -37,22 +37,34 @@ void main() {
     expect(pack.cards.map((c) => c.id), ['shown', 'also']);
   });
 
-  test('the six pulled pictures are out of both catalogues', () {
-    // owl, car, pie, egg, sit, sea — pulled 2026-09-14 pending new art.
-    const pulled = {
-      'en': ['en_a21', 'en_sl16', 'en_ac14', 'en_fd16', 'en_fd28', 'en_t01',
-          'en_ss13'],
-      'uk': ['a21', 'sc04', 'act15', 'f16', 'f28', 'sts06', 't01', 'ss08'],
-    };
-    for (final entry in pulled.entries) {
-      final raw = File('assets/data/${entry.key}_cards.json').readAsStringSync();
-      final packs = (jsonDecode(raw) as List<dynamic>)
-          .map((p) => PackModel.fromJson(p as Map<String, dynamic>))
-          .toList();
-      final live = {for (final p in packs) for (final c in p.cards) c.id};
-      for (final id in entry.value) {
-        expect(live, isNot(contains(id)), reason: '${entry.key}/$id is showing');
-      }
+  Set<String> liveIds(String lang) {
+    final raw = File('assets/data/${lang}_cards.json').readAsStringSync();
+    final packs = (jsonDecode(raw) as List<dynamic>)
+        .map((p) => PackModel.fromJson(p as Map<String, dynamic>))
+        .toList();
+    return {for (final p in packs) for (final c in p.cards) c.id};
+  }
+
+  test('six English cards are pulled — the recordings, not the pictures', () {
+    // owl, car, pie, egg, sit, sea: the EN voice on these is bad AI. The
+    // pictures are fine and the Ukrainian cards that share them keep
+    // playing, so this list is English-only by design.
+    const pulled = [
+      'en_a21', 'en_sl16', 'en_ac14', 'en_fd16', 'en_fd28', 'en_t01',
+      'en_ss13',
+    ];
+    final live = liveIds('en');
+    for (final id in pulled) {
+      expect(live, isNot(contains(id)), reason: '$id is showing');
+    }
+  });
+
+  test('the Ukrainian versions of those cards still play', () {
+    // Same pictures, a different voice — nothing to pull.
+    const kept = ['a21', 'sc04', 'act15', 'f16', 'f28', 'sts06', 't01', 'ss08'];
+    final live = liveIds('uk');
+    for (final id in kept) {
+      expect(live, contains(id), reason: '$id was pulled by mistake');
     }
   });
 }
