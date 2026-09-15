@@ -78,6 +78,20 @@ class ColoringHubScreen extends ConsumerWidget {
         open: () => const FillColoringScreen(sheetId: 'placeholder_lion'),
       ),
       _DrawMode(
+        id: 'fill_by_ear',
+        title: 'Слухай і фарбуй',
+        titleEn: 'Listen and colour',
+        subtitle: 'Блум називає колір — знайди його',
+        subtitleEn: 'Bloom names a colour — find it',
+        color: DT.peach,
+        tint: DT.peachTint,
+        badge: AppIcon.catSpeech,
+        open: () => const FillColoringScreen(
+          sheetId: 'placeholder_lion',
+          byEar: true,
+        ),
+      ),
+      _DrawMode(
         id: 'stickers',
         title: 'Наліпки',
         titleEn: 'Stickers',

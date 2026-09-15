@@ -16,11 +16,20 @@ class Crayon {
   final String name;
   final String nameEn;
 
+  /// The audio key of the colour word, in the `colors` pack.
+  ///
+  /// Spelled out rather than derived from [id]: the takes were recorded
+  /// for cards, not for crayons, and two of them disagree (violet is
+  /// filed as `purple`, grey as `gray`). Guessing cost the listening mode
+  /// a silent question before this field existed.
+  final String audio;
+
   const Crayon({
     required this.id,
     required this.color,
     required this.name,
     required this.nameEn,
+    required this.audio,
   });
 
   String localizedName(bool isEn) => isEn ? nameEn : name;
@@ -30,16 +39,76 @@ class Crayon {
 /// [DT] like every other colour in the app; what is here is the pairing of
 /// each one with the name a child will be asked to match it to.
 const List<Crayon> kCrayons = [
-  Crayon(id: 'red', color: DT.crayonRed, name: 'червоний', nameEn: 'red'),
-  Crayon(id: 'orange', color: DT.crayonOrange, name: 'помаранчевий', nameEn: 'orange'),
-  Crayon(id: 'yellow', color: DT.crayonYellow, name: 'жовтий', nameEn: 'yellow'),
-  Crayon(id: 'green', color: DT.crayonGreen, name: 'зелений', nameEn: 'green'),
-  Crayon(id: 'blue', color: DT.crayonBlue, name: 'синій', nameEn: 'blue'),
-  Crayon(id: 'violet', color: DT.crayonViolet, name: 'фіолетовий', nameEn: 'purple'),
-  Crayon(id: 'pink', color: DT.crayonPink, name: 'рожевий', nameEn: 'pink'),
-  Crayon(id: 'brown', color: DT.crayonBrown, name: 'коричневий', nameEn: 'brown'),
-  Crayon(id: 'grey', color: DT.crayonGrey, name: 'сірий', nameEn: 'grey'),
-  Crayon(id: 'black', color: DT.crayonBlack, name: 'чорний', nameEn: 'black'),
+  Crayon(
+    id: 'red',
+    color: DT.crayonRed,
+    name: 'червоний',
+    nameEn: 'red',
+    audio: 'red',
+  ),
+  Crayon(
+    id: 'orange',
+    color: DT.crayonOrange,
+    name: 'помаранчевий',
+    nameEn: 'orange',
+    audio: 'orange',
+  ),
+  Crayon(
+    id: 'yellow',
+    color: DT.crayonYellow,
+    name: 'жовтий',
+    nameEn: 'yellow',
+    audio: 'yellow',
+  ),
+  Crayon(
+    id: 'green',
+    color: DT.crayonGreen,
+    name: 'зелений',
+    nameEn: 'green',
+    audio: 'green',
+  ),
+  Crayon(
+    id: 'blue',
+    color: DT.crayonBlue,
+    name: 'синій',
+    nameEn: 'blue',
+    audio: 'blue',
+  ),
+  Crayon(
+    id: 'violet',
+    color: DT.crayonViolet,
+    name: 'фіолетовий',
+    nameEn: 'purple',
+    audio: 'purple',
+  ),
+  Crayon(
+    id: 'pink',
+    color: DT.crayonPink,
+    name: 'рожевий',
+    nameEn: 'pink',
+    audio: 'pink',
+  ),
+  Crayon(
+    id: 'brown',
+    color: DT.crayonBrown,
+    name: 'коричневий',
+    nameEn: 'brown',
+    audio: 'brown',
+  ),
+  Crayon(
+    id: 'grey',
+    color: DT.crayonGrey,
+    name: 'сірий',
+    nameEn: 'grey',
+    audio: 'gray',
+  ),
+  Crayon(
+    id: 'black',
+    color: DT.crayonBlack,
+    name: 'чорний',
+    nameEn: 'black',
+    audio: 'black',
+  ),
 ];
 
 /// The row of crayons along the bottom of a drawing screen.
@@ -53,11 +122,17 @@ class CrayonPalette extends StatelessWidget {
   final ValueChanged<Crayon> onSelected;
   final bool isEn;
 
+  /// Glow on one crayon, for the listening mode after a couple of misses.
+  /// A hint, in the app's one hint colour — never a correction, and never
+  /// the thing that answers for the child.
+  final String? hintId;
+
   const CrayonPalette({
     super.key,
     required this.selectedId,
     required this.onSelected,
     required this.isEn,
+    this.hintId,
   });
 
   @override
@@ -73,6 +148,7 @@ class CrayonPalette extends StatelessWidget {
         itemBuilder: (context, i) {
           final crayon = kCrayons[i];
           final selected = crayon.id == selectedId;
+          final hinted = crayon.id == hintId;
           return Semantics(
             selected: selected,
             button: true,
@@ -97,14 +173,21 @@ class CrayonPalette extends StatelessWidget {
                     color: crayon.color,
                     borderRadius: BorderRadius.circular(selected ? 20 : 16),
                     border: Border.all(
-                      color: Colors.white,
-                      width: selected ? 4 : 2,
+                      color: hinted ? DT.hint : Colors.white,
+                      width: selected || hinted ? 4 : 2,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: crayon.color.withValues(alpha: selected ? .45 : .25),
-                        offset: Offset(0, selected ? 5 : 3),
-                        blurRadius: selected ? 10 : 6,
+                        color: hinted
+                            ? DT.hint
+                            : crayon.color.withValues(
+                                alpha: selected ? .45 : .25,
+                              ),
+                        offset: hinted
+                            ? Offset.zero
+                            : Offset(0, selected ? 5 : 3),
+                        blurRadius: hinted ? 16 : (selected ? 10 : 6),
+                        spreadRadius: hinted ? 2 : 0,
                       ),
                     ],
                   ),

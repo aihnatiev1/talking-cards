@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/coloring_sheet.dart';
 import '../providers/language_provider.dart';
 import '../services/analytics_service.dart';
+import '../services/audio_service.dart';
 import '../services/feedback_service.dart';
 import '../utils/confetti_overlay_mixin.dart';
 import '../utils/design_tokens.dart';
@@ -17,6 +18,7 @@ import '../utils/motion.dart';
 import '../widgets/ambient_loop.dart';
 import '../widgets/crayon_palette.dart';
 import '../widgets/kid_screen.dart';
+import '../widgets/kid_tap.dart';
 
 /// Tap a colour, tap a part of the picture, the whole part fills.
 ///
@@ -32,7 +34,19 @@ class FillColoringScreen extends ConsumerStatefulWidget {
   /// Asset id under `assets/images/coloring/`.
   final String sheetId;
 
-  const FillColoringScreen({super.key, required this.sheetId});
+  /// Bloom names the colour and the child has to find it by ear.
+  ///
+  /// The same picture and the same filling; what changes is that the
+  /// crayon is chosen by listening rather than by looking. This is the
+  /// one drawing mode that is an exercise — and it needs no new content,
+  /// because all ten colour words are already recorded as cards.
+  final bool byEar;
+
+  const FillColoringScreen({
+    super.key,
+    required this.sheetId,
+    this.byEar = false,
+  });
 
   @override
   ConsumerState<FillColoringScreen> createState() => _FillColoringScreenState();
@@ -60,10 +74,20 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
   bool _rebuilding = false;
   bool _done = false;
 
+  /// The colour Bloom is asking for, when [FillColoringScreen.byEar].
+  Crayon? _asked;
+
+  /// Wrong crayons tried since the ask. After two, the right one glows —
+  /// a child who cannot find it must not be left tapping for ever, and a
+  /// hint is not a correction.
+  int _misses = 0;
+
   @override
   void initState() {
     super.initState();
-    AnalyticsService.instance.logGameStart('fill_coloring');
+    AnalyticsService.instance.logGameStart(
+      widget.byEar ? 'fill_coloring_by_ear' : 'fill_coloring',
+    );
     _load();
   }
 
@@ -74,7 +98,55 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
       _sheet = sheet;
       _buffer = Uint32List(sheet.width * sheet.height);
     });
+    if (widget.byEar) _ask();
   }
+
+  /// Pick a colour that is not the one just asked for and say it.
+  void _ask() {
+    final pool = kCrayons.where((c) => c.id != _asked?.id).toList();
+    final next = pool[math.Random().nextInt(pool.length)];
+    setState(() {
+      _asked = next;
+      _misses = 0;
+      // Nothing is in hand until it is found by ear.
+      _crayon = next;
+    });
+    _sayAsked();
+  }
+
+  void _sayAsked() {
+    final asked = _asked;
+    if (asked == null) return;
+    // The colour words are cards like any other: `colors` pack, English
+    // audio keys (red, blue…), Ukrainian voice behind them.
+    AudioService.instance.playWordOnly(
+      asked.audio,
+      asked.localizedName(ref.read(languageProvider) == 'en'),
+    );
+  }
+
+  /// In by-ear mode the crayon is the answer: it is only picked up when
+  /// it is the one that was named. A wrong one is never called wrong —
+  /// Bloom simply says the colour again.
+  void _chooseCrayon(Crayon crayon) {
+    if (!widget.byEar) {
+      setState(() => _crayon = crayon);
+      return;
+    }
+    if (crayon.id == _asked?.id) {
+      FeedbackService.instance.event(FeedbackEvent.correct);
+      setState(() {
+        _crayon = crayon;
+        _found = true;
+      });
+      return;
+    }
+    setState(() => _misses++);
+    _sayAsked();
+  }
+
+  /// The named crayon is in hand and the child may paint with it.
+  bool _found = false;
 
   @override
   void dispose() {
@@ -90,6 +162,13 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
     if (sheet == null || buffer == null || area == 0) return;
     final pixels = sheet.pixelsOf[area];
     if (pixels == null) return;
+    if (widget.byEar && !_found) {
+      // The crayon has not been found yet: the picture is not the
+      // question. Say the colour again rather than doing nothing, which
+      // a child reads as the screen being broken.
+      _sayAsked();
+      return;
+    }
 
     final c = _crayon.color;
     // decodeImageFromPixels wants ABGR little-endian, not ARGB.
@@ -106,6 +185,14 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
 
     if (!_done && _filled.length >= sheet.areaCount) {
       _finish();
+      return;
+    }
+    // One colour, one area: the next ask comes after the paint lands, so
+    // the child hears the new word with a finished stroke behind them.
+    if (widget.byEar) {
+      setState(() => _found = false);
+      await Future<void>.delayed(DT.motion.successPop);
+      if (mounted) _ask();
     }
   }
 
@@ -234,10 +321,19 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
                     ),
                   ),
                 ),
-                CrayonPalette(
-                  selectedId: _crayon.id,
+                if (widget.byEar) _AskBanner(
+                  crayon: _asked,
+                  found: _found,
                   isEn: isEn,
-                  onSelected: (c) => setState(() => _crayon = c),
+                  onRepeat: _sayAsked,
+                ),
+                CrayonPalette(
+                  selectedId: widget.byEar && !_found ? '' : _crayon.id,
+                  isEn: isEn,
+                  hintId: widget.byEar && _misses >= 2 && !_found
+                      ? _asked?.id
+                      : null,
+                  onSelected: _chooseCrayon,
                 ),
                 const SizedBox(height: 8),
               ],
@@ -369,4 +465,72 @@ class _SheetPainter extends CustomPainter {
       old.layer != layer ||
       old.filled.length != filled.length ||
       old.lid != lid;
+}
+
+/// What Bloom is asking for, and a way to hear it again.
+///
+/// The colour is never shown as a swatch here — that would answer the
+/// question. It is a word, and the tap-to-repeat is the whole help the
+/// screen offers until the third try.
+class _AskBanner extends StatelessWidget {
+  final Crayon? crayon;
+  final bool found;
+  final bool isEn;
+  final VoidCallback onRepeat;
+
+  const _AskBanner({
+    required this.crayon,
+    required this.found,
+    required this.isEn,
+    required this.onRepeat,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final asked = crayon;
+    if (asked == null) return const SizedBox.shrink();
+    final s = AppS(isEn);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+      child: KidTap(
+        onTap: onRepeat,
+        sound: null,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: DT.surfaceWhite,
+            borderRadius: BorderRadius.circular(DT.rMd),
+            border: Border.all(color: Colors.white, width: 2),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                found ? Icons.check_circle_rounded : Icons.volume_up_rounded,
+                size: 22,
+                color: found ? DT.success : DT.brand,
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  found
+                      ? s(
+                          'Тепер тисни на картинку',
+                          'Now tap the picture',
+                        )
+                      : s('Знайди колір', 'Find the colour'),
+                  textAlign: TextAlign.center,
+                  style: DT.tileTitle.copyWith(
+                    fontSize: 15,
+                    color: DT.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
