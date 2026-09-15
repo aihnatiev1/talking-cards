@@ -95,6 +95,10 @@ class _StickerSceneScreenState extends ConsumerState<StickerSceneScreen> {
     // The same pool the water mode draws from: real word cards with a
     // picture, nothing sad, nothing still inside an undelivered pack.
     final pool = ColoringScreen.coloringPool(packs).take(40).toList();
+    // Something is always in hand. An empty hand means the first tap on
+    // the meadow does nothing, and a child reads that as a screen that
+    // does not work — not as "pick a sticker first".
+    if (_held == null && pool.isNotEmpty) _held = pool.first;
 
     return KidScreen.game(
       accent: DT.brand,

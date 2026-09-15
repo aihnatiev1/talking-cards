@@ -15,10 +15,12 @@ import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../services/feedback_service.dart';
 import '../utils/confetti_overlay_mixin.dart';
+import '../utils/app_icons.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../utils/motion.dart';
 import '../widgets/ambient_loop.dart';
+import '../widgets/bloom_mascot.dart';
 import '../widgets/crayon_palette.dart';
 import '../widgets/kid_screen.dart';
 import '../widgets/kid_tap.dart';
@@ -151,7 +153,7 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
     if (!mounted) return;
     // A picture that was already finished is alive the moment it opens —
     // it was finished, and nothing about closing the screen undid that.
-    if (_filled.length >= sheet.areaCount) setState(() => _done = true);
+    if (_paintedShare(sheet) >= _doneShare) setState(() => _done = true);
   }
 
   static int _packed(Color c) =>
@@ -253,7 +255,7 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
     FeedbackService.instance.event(FeedbackEvent.tap, haptic: false);
     await _repaint();
 
-    if (!_done && _filled.length >= sheet.areaCount) {
+    if (!_done && _paintedShare(sheet) >= _doneShare) {
       _finish();
       return;
     }
@@ -302,6 +304,23 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
       'fill_coloring',
       _filled.length,
     );
+  }
+
+  /// Finished when this much of the drawing has colour on it.
+  ///
+  /// Not every area: a picture can hold forty of them, several the size
+  /// of a bow, and demanding all of them means the celebration never
+  /// comes. Most of the paper covered is what "done" looks like to a
+  /// child, which is the same rule the water mode uses.
+  static const _doneShare = 0.85;
+
+  double _paintedShare(ColoringSheet sheet) {
+    var painted = 0, total = 0;
+    for (final entry in sheet.pixelsOf.entries) {
+      total += entry.value.length;
+      if (_filled.containsKey(entry.key)) painted += entry.value.length;
+    }
+    return total == 0 ? 0 : painted / total;
   }
 
   /// Eyes are open nearly all the time; a blink is a fast down-and-up at
@@ -429,14 +448,27 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
                   isEn: isEn,
                   onRepeat: _sayAsked,
                 ),
-                CrayonPalette(
-                  selectedId: widget.byEar && !_found ? '' : _crayon.id,
-                  isEn: isEn,
-                  hintId: widget.byEar && _misses >= 2 && !_found
-                      ? _asked?.id
-                      : null,
-                  onSelected: _chooseCrayon,
-                ),
+                // Finished: Bloom says so, and the one thing to do next is
+                // a button a child can read without words on it. The
+                // header icons above are a grown-up's affordance — a
+                // two-year-old does not know a circular arrow means
+                // "again", and until this panel existed there was nothing
+                // else to press.
+                if (_done)
+                  _FinishedPanel(
+                    isEn: isEn,
+                    onAnother: _ids.length > 1 ? _newPicture : null,
+                    onAgain: _clear,
+                  )
+                else
+                  CrayonPalette(
+                    selectedId: widget.byEar && !_found ? '' : _crayon.id,
+                    isEn: isEn,
+                    hintId: widget.byEar && _misses >= 2 && !_found
+                        ? _asked?.id
+                        : null,
+                    onSelected: _chooseCrayon,
+                  ),
                 const SizedBox(height: 8),
               ],
             ),
@@ -631,6 +663,134 @@ class _AskBanner extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// What a child sees when the drawing is done.
+///
+/// Bloom, one word of praise, and a big button that starts another
+/// picture. No icons to decode: at two, «Ще малюнок» with a picture on it
+/// is the only kind of instruction that lands.
+class _FinishedPanel extends StatelessWidget {
+  final bool isEn;
+  final VoidCallback? onAnother;
+  final VoidCallback onAgain;
+
+  const _FinishedPanel({
+    required this.isEn,
+    required this.onAnother,
+    required this.onAgain,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final s = AppS(isEn);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const BloomMascot(
+                size: 72,
+                state: BloomState.still(BloomEmotion.happy),
+                interactive: false,
+                semanticsLabel: 'Bloom',
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  s('Круто!', 'Awesome!'),
+                  style: DT.h1.copyWith(fontSize: 28, color: DT.success),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: _BigButton(
+                  label: s('Ще раз', 'Again'),
+                  icon: AppIcon.replay,
+                  background: DT.surfaceWhite,
+                  foreground: DT.brand,
+                  onTap: onAgain,
+                ),
+              ),
+              if (onAnother != null) ...[
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 2,
+                  child: _BigButton(
+                    label: s('Ще малюнок', 'New picture'),
+                    icon: AppIcon.navColoring,
+                    background: DT.brand,
+                    foreground: Colors.white,
+                    onTap: onAnother!,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BigButton extends StatelessWidget {
+  final String label;
+  final AppIcon icon;
+  final Color background;
+  final Color foreground;
+  final VoidCallback onTap;
+
+  const _BigButton({
+    required this.label,
+    required this.icon,
+    required this.background,
+    required this.foreground,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return KidTap(
+      onTap: onTap,
+      child: Container(
+        height: DT.size.tapMin,
+        decoration: BoxDecoration(
+          color: background,
+          borderRadius: BorderRadius.circular(DT.rLg),
+          border: Border.all(color: Colors.white, width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: background.withValues(alpha: .35),
+              offset: const Offset(0, 4),
+              blurRadius: 10,
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AppIconView(icon, size: 30),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: DT.tileTitle.copyWith(fontSize: 17, color: foreground),
+              ),
+            ),
+          ],
         ),
       ),
     );

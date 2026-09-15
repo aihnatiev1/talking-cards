@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../utils/design_tokens.dart';
@@ -111,7 +113,12 @@ const List<Crayon> kCrayons = [
   ),
 ];
 
-/// The row of crayons along the bottom of a drawing screen.
+/// The crayons along the bottom of a drawing screen, in two rows.
+///
+/// They used to be one scrolling row, and a two-year-old does not
+/// discover a scroll — five of the ten simply did not exist for her. Two
+/// rows of five fit any phone without scrolling, so the whole box is on
+/// the table the way a real one is.
 ///
 /// Rounded squares rather than circles: at this size a circle of colour
 /// reads as a button to press *into* something, and these are things you
@@ -135,67 +142,102 @@ class CrayonPalette extends StatelessWidget {
     this.hintId,
   });
 
+  static const _perRow = 5;
+
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 84,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        physics: const BouncingScrollPhysics(),
-        itemCount: kCrayons.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
-        itemBuilder: (context, i) {
-          final crayon = kCrayons[i];
-          final selected = crayon.id == selectedId;
-          final hinted = crayon.id == hintId;
-          return Semantics(
-            selected: selected,
-            button: true,
-            label: crayon.localizedName(isEn),
-            excludeSemantics: true,
-            child: KidTap(
-              onTap: () => onSelected(crayon),
-              child: AnimatedContainer(
-                duration: DT.pressMs,
-                curve: Curves.easeOutCubic,
-                // 72 dp of target either way; the unselected chip is the
-                // same box with a smaller painted face, so nothing moves
-                // sideways when the choice changes.
-                width: 72,
-                alignment: Alignment.center,
-                child: AnimatedContainer(
-                  duration: DT.pressMs,
-                  curve: Curves.easeOutCubic,
-                  width: selected ? 64 : 52,
-                  height: selected ? 64 : 52,
-                  decoration: BoxDecoration(
-                    color: crayon.color,
-                    borderRadius: BorderRadius.circular(selected ? 20 : 16),
-                    border: Border.all(
-                      color: hinted ? DT.hint : Colors.white,
-                      width: selected || hinted ? 4 : 2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: hinted
-                            ? DT.hint
-                            : crayon.color.withValues(
-                                alpha: selected ? .45 : .25,
-                              ),
-                        offset: hinted
-                            ? Offset.zero
-                            : Offset(0, selected ? 5 : 3),
-                        blurRadius: hinted ? 16 : (selected ? 10 : 6),
-                        spreadRadius: hinted ? 2 : 0,
-                      ),
-                    ],
-                  ),
+    return LayoutBuilder(
+      builder: (context, box) {
+        // Whatever the phone is, five across with room to breathe; never
+        // below a child's minimum target.
+        final cell = math.max(
+          DT.size.tapMin,
+          (box.maxWidth - 32 - (_perRow - 1) * 8) / _perRow,
+        );
+        final face = math.min(cell - 8, 64.0);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            alignment: WrapAlignment.center,
+            children: [
+              for (final crayon in kCrayons)
+                _Crayon(
+                  crayon: crayon,
+                  selected: crayon.id == selectedId,
+                  hinted: crayon.id == hintId,
+                  isEn: isEn,
+                  cell: cell,
+                  face: face,
+                  onTap: () => onSelected(crayon),
                 ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _Crayon extends StatelessWidget {
+  final Crayon crayon;
+  final bool selected;
+  final bool hinted;
+  final bool isEn;
+  final double cell;
+  final double face;
+  final VoidCallback onTap;
+
+  const _Crayon({
+    required this.crayon,
+    required this.selected,
+    required this.hinted,
+    required this.isEn,
+    required this.cell,
+    required this.face,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      selected: selected,
+      button: true,
+      label: crayon.localizedName(isEn),
+      excludeSemantics: true,
+      child: KidTap(
+        onTap: onTap,
+        child: SizedBox(
+          width: cell,
+          height: cell,
+          child: Center(
+            child: AnimatedContainer(
+              duration: DT.pressMs,
+              curve: Curves.easeOutCubic,
+              width: selected ? face : face - 10,
+              height: selected ? face : face - 10,
+              decoration: BoxDecoration(
+                color: crayon.color,
+                borderRadius: BorderRadius.circular(selected ? 20 : 16),
+                border: Border.all(
+                  color: hinted ? DT.hint : Colors.white,
+                  width: selected || hinted ? 4 : 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: hinted
+                        ? DT.hint
+                        : crayon.color.withValues(alpha: selected ? .45 : .25),
+                    offset: hinted ? Offset.zero : Offset(0, selected ? 5 : 3),
+                    blurRadius: hinted ? 16 : (selected ? 10 : 6),
+                    spreadRadius: hinted ? 2 : 0,
+                  ),
+                ],
               ),
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }
