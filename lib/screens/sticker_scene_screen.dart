@@ -170,7 +170,11 @@ class _PlacedStickerState extends State<_PlacedSticker>
 
   @override
   Widget build(BuildContext context) {
-    const side = 96.0;
+    // Three times the first size. A sticker a child places is the thing
+    // they made, not a decoration on a scene — at 96 dp the meadow looked
+    // like a page of tiny icons, and a two-year-old could not tell what
+    // they had put down.
+    const side = 288.0;
     final sticker = widget.sticker;
     return Positioned(
       left: sticker.position.dx - side / 2,
@@ -205,7 +209,7 @@ class _StickerTray extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 96,
+      height: 120,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -221,7 +225,7 @@ class _StickerTray extends StatelessWidget {
             child: AnimatedContainer(
               duration: DT.pressMs,
               curve: Curves.easeOutCubic,
-              width: 84,
+              width: 104,
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 color: held ? DT.surfaceWhite : DT.surfaceWhite.withValues(
