@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/coloring_sheet.dart';
+import '../providers/coloring_sheets_provider.dart';
 import '../providers/language_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
@@ -31,8 +32,9 @@ import '../widgets/kid_tap.dart';
 /// hops, it blinks, and it pops on its own name. All three work on any
 /// picture without anyone rigging it — see [_AlivePicture].
 class FillColoringScreen extends ConsumerStatefulWidget {
-  /// Asset id under `assets/images/coloring/`.
-  final String sheetId;
+  /// A single drawing to open, instead of the ones in the index. Tests
+  /// and deep links; normally the screen takes what the folder holds.
+  final String? sheetId;
 
   /// Bloom names the colour and the child has to find it by ear.
   ///
@@ -44,7 +46,7 @@ class FillColoringScreen extends ConsumerStatefulWidget {
 
   const FillColoringScreen({
     super.key,
-    required this.sheetId,
+    this.sheetId,
     this.byEar = false,
   });
 
@@ -91,14 +93,46 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
     _load();
   }
 
+  /// Every drawing in the folder, and which one is on the table.
+  List<String> _ids = const [];
+  int _at = 0;
+
   Future<void> _load() async {
-    final sheet = await ColoringSheet.load(widget.sheetId);
+    final only = widget.sheetId;
+    final ids = only != null
+        ? [only]
+        : await ref.read(coloringSheetsProvider.future);
+    if (!mounted || ids.isEmpty) return;
+    // Start somewhere random so the same lion is not the first thing
+    // every single time.
+    _ids = ids;
+    _at = math.Random().nextInt(ids.length);
+    await _open(_ids[_at]);
+  }
+
+  Future<void> _open(String id) async {
+    final sheet = await ColoringSheet.load(id);
     if (!mounted) return;
     setState(() {
+      _sheet?.lineArt.dispose();
       _sheet = sheet;
       _buffer = Uint32List(sheet.width * sheet.height);
+      _paint?.dispose();
+      _paint = null;
+      _filled.clear();
+      _done = false;
+      _found = false;
     });
     if (widget.byEar) _ask();
+  }
+
+  /// A fresh drawing, in the order the index lists them so a child works
+  /// through the whole folder instead of meeting the same three.
+  void _newPicture() {
+    if (_ids.length < 2) return;
+    FeedbackService.instance.event(FeedbackEvent.tap);
+    _at = (_at + 1) % _ids.length;
+    _open(_ids[_at]);
   }
 
   /// Pick a colour that is not the one just asked for and say it.
@@ -262,14 +296,26 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
       background: DT.violetTint,
       trailing: sheet == null
           ? null
-          : IconButton(
-              tooltip: s('Спочатку', 'Start over'),
-              onPressed: _clear,
-              icon: Icon(
-                Icons.refresh_rounded,
-                size: 28,
-                color: _filled.isEmpty ? DT.textMuted : DT.brand,
-              ),
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  tooltip: s('Спочатку', 'Start over'),
+                  onPressed: _clear,
+                  icon: Icon(
+                    Icons.refresh_rounded,
+                    size: 28,
+                    color: _filled.isEmpty ? DT.textMuted : DT.brand,
+                  ),
+                ),
+                if (_ids.length > 1)
+                  IconButton(
+                    tooltip: s('Нова картинка', 'New picture'),
+                    onPressed: _newPicture,
+                    icon: const Icon(Icons.auto_awesome_rounded, size: 26),
+                    color: DT.brand,
+                  ),
+              ],
             ),
       body: sheet == null
           ? const Center(child: CircularProgressIndicator())

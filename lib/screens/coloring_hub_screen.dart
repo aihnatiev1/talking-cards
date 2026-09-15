@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../providers/coloring_sheets_provider.dart';
 import '../providers/language_provider.dart';
 import '../utils/app_icons.dart';
 import '../utils/design_tokens.dart';
@@ -53,6 +54,11 @@ class ColoringHubScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isEn = ref.watch(languageProvider) == 'en';
     final s = AppS(isEn);
+    // The filling modes only exist if there are line drawings to fill. A
+    // tile that opens an empty screen is worse than no tile, and a build
+    // whose contours have not landed yet is a real state.
+    final hasSheets =
+        (ref.watch(coloringSheetsProvider).valueOrNull ?? const []).isNotEmpty;
 
     final modes = <_DrawMode>[
       _DrawMode(
@@ -66,31 +72,30 @@ class ColoringHubScreen extends ConsumerWidget {
         badge: AppIcon.navColoring,
         open: () => const ColoringScreen(),
       ),
-      _DrawMode(
-        id: 'fill',
-        title: 'Розфарбуй',
-        titleEn: 'Colour it in',
-        subtitle: 'Обери колір і тисни на частинку',
-        subtitleEn: 'Pick a colour, tap a part',
-        color: DT.coral,
-        tint: DT.coralTint,
-        badge: AppIcon.gameMatch,
-        open: () => const FillColoringScreen(sheetId: 'placeholder_lion'),
-      ),
-      _DrawMode(
-        id: 'fill_by_ear',
-        title: 'Слухай і фарбуй',
-        titleEn: 'Listen and colour',
-        subtitle: 'Блум називає колір — знайди його',
-        subtitleEn: 'Bloom names a colour — find it',
-        color: DT.peach,
-        tint: DT.peachTint,
-        badge: AppIcon.catSpeech,
-        open: () => const FillColoringScreen(
-          sheetId: 'placeholder_lion',
-          byEar: true,
+      if (hasSheets)
+        _DrawMode(
+          id: 'fill',
+          title: 'Розфарбуй',
+          titleEn: 'Colour it in',
+          subtitle: 'Обери колір і тисни на частинку',
+          subtitleEn: 'Pick a colour, tap a part',
+          color: DT.coral,
+          tint: DT.coralTint,
+          badge: AppIcon.gameMatch,
+          open: () => const FillColoringScreen(),
         ),
-      ),
+      if (hasSheets)
+        _DrawMode(
+          id: 'fill_by_ear',
+          title: 'Слухай і фарбуй',
+          titleEn: 'Listen and colour',
+          subtitle: 'Блум називає колір — знайди його',
+          subtitleEn: 'Bloom names a colour — find it',
+          color: DT.peach,
+          tint: DT.peachTint,
+          badge: AppIcon.catSpeech,
+          open: () => const FillColoringScreen(byEar: true),
+        ),
       _DrawMode(
         id: 'stickers',
         title: 'Наліпки',
@@ -154,9 +159,7 @@ class _ModeTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return KidTap(
-      onTap: () => Navigator.of(context).push(
-        KidRoutes.content(mode.open()),
-      ),
+      onTap: () => Navigator.of(context).push(KidRoutes.content(mode.open())),
       child: Container(
         decoration: BoxDecoration(
           color: mode.tint,
