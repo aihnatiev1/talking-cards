@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "lang": "en",
+  "units": [
+    {
+      "id": "people",
+      "title": "Люди і дім",
+      "titleEn": "People and home",
+      "cards": [
+        "en_h01",
+        "en_h02",
+        "en_h03",
+        "en_h04",
+        "en_h05",
+        "en_h26",
+        "en_h27",
+        "en_h28"
+      ]
+    },
+    {
+      "id": "animals",
+      "title": "Тварини",
+      "titleEn": "Animals",
+      "cards": [
+        "en_a01",
+        "en_a02",
+        "en_a03",
+        "en_a04",
+        "en_a06",
+        "en_a08",
+        "en_a09",
+        "en_a10",
+        "en_a11",
+        "en_a15",
+        "en_a16",
+        "en_a12"
+      ]
+    },
+    {
+      "id": "food",
+      "title": "Їжа і пиття",
+      "titleEn": "Food and drink",
+      "cards": [
+        "en_h19",
+        "en_fd02",
+        "en_fd11",
+        "en_fd12",
+        "en_h18",
+        "en_fd15",
+        "en_h20",
+        "en_fd29"
+      ]
+    },
+    {
+      "id": "body",
+      "title": "Тіло",
+      "titleEn": "The body",
+      "cards": [
+        "en_b01",
+        "en_b02",
+        "en_b03",
+        "en_b04",
+        "en_b05",
+        "en_b06",
+        "en_b11",
+        "en_b15"
+      ]
+    },
+    {
+      "id": "doing",
+      "title": "Дії",
+      "titleEn": "Doing",
+      "cards": [
+        "en_ac01",
+        "en_ac02",
+        "en_fd14",
+        "en_ac04",
+        "en_ac05",
+        "en_h30",
+        "en_h23",
+        "en_h21",
+        "en_h07",
+        "en_ac18",
+        "en_b22"
+      ]
+    },
+    {
+      "id": "things",
+      "title": "Речі поруч",
+      "titleEn": "Things nearby",
+      "cards": [
+        "en_h13",
+        "en_h14",
+        "en_h15",
+        "en_h16",
+        "en_h17",
+        "en_h25",
+        "en_h22",
+        "en_h24"
+      ]
+    },
+    {
+      "id": "feelings",
+      "title": "Почуття",
+      "titleEn": "Feelings",
+      "cards": [
+        "en_f01",
+        "en_f02",
+        "en_f04",
+        "en_ac10"
+      ]
+    }
+  ]
+}
