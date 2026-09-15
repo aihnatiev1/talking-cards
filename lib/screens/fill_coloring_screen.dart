@@ -10,6 +10,7 @@ import '../models/coloring_sheet.dart';
 import '../providers/coloring_sheets_provider.dart';
 import '../providers/filled_sheets_provider.dart';
 import '../providers/language_provider.dart';
+import '../providers/packs_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../services/feedback_service.dart';
@@ -296,6 +297,7 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
     _pop.forward(from: 0);
     FeedbackService.instance.event(FeedbackEvent.correct);
     showConfetti();
+    _sayTheWord();
     AnalyticsService.instance.logGameComplete(
       'fill_coloring',
       _filled.length,
@@ -309,6 +311,23 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
     if (t < start) return 0;
     final k = (t - start) / (1 - start);
     return k < 0.5 ? k * 2 : (1 - k) * 2;
+  }
+
+  /// The finished picture says what it is. Level three of coming alive is
+  /// the pop, and this is the sound it lands on — a squash in silence
+  /// reads as a glitch, the same squash with «лев» on it reads as the
+  /// drawing speaking.
+  void _sayTheWord() {
+    final word = _sheet?.word;
+    if (word == null) return;
+    final packs = ref.read(packsProvider).valueOrNull ?? const [];
+    for (final pack in packs) {
+      final card = pack.cards.where((c) => c.id == word).firstOrNull;
+      if (card != null) {
+        AudioService.instance.playWordOnly(card.audioKey, card.sound);
+        return;
+      }
+    }
   }
 
   void _clear() {

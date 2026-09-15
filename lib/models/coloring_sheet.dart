@@ -45,6 +45,14 @@ class ColoringSheet {
 
   final List<ColoringEye> eyes;
 
+  /// The card id of the word this picture says when it is finished, or
+  /// null for a drawing that has no word yet.
+  ///
+  /// This is the line between a colouring app and a speech app: the
+  /// reward for finishing a lion is hearing «лев», in the same voice the
+  /// cards use, at the moment the child is proudest of it.
+  final String? word;
+
   ColoringSheet({
     required this.id,
     required this.lineArt,
@@ -53,6 +61,7 @@ class ColoringSheet {
     required this.areaAt,
     required this.pixelsOf,
     required this.eyes,
+    this.word,
   });
 
   int get areaCount => pixelsOf.length;
@@ -149,6 +158,7 @@ class ColoringSheet {
       areaAt: areaAt,
       pixelsOf: pixelsOf,
       eyes: eyes,
+      word: meta['word'] as String?,
     );
   }
 
