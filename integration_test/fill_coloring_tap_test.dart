@@ -24,7 +24,7 @@ void main() {
       UncontrolledProviderScope(
         container: container,
         child: const MaterialApp(
-          home: FillColoringScreen(sheetId: 'placeholder_lion'),
+          home: FillColoringScreen(sheetId: 'bear_cub'),
         ),
       ),
     );
@@ -46,7 +46,7 @@ void main() {
 
     final saved = container
         .read(filledSheetsProvider.notifier)
-        .of('placeholder_lion');
+        .of('bear_cub');
     debugPrint('FILL_TEST filled areas: $saved');
     expect(saved, isNotEmpty, reason: 'a tap in the middle painted nothing');
   });

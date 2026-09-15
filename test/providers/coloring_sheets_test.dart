@@ -16,8 +16,7 @@ void main() {
     addTearDown(container.dispose);
 
     final sheets = await container.read(coloringSheetsProvider.future);
-    // The real bundled index; the placeholders are in it until real
-    // contours replace them.
+    // The real bundled index.
     expect(sheets, isNotEmpty);
     expect(sheets, everyElement(isA<String>()));
   });
