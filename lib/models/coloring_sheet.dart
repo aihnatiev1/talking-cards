@@ -53,6 +53,12 @@ class ColoringSheet {
   /// cards use, at the moment the child is proudest of it.
   final String? word;
 
+  /// The paper around the figure. Fillable like anything else, but it
+  /// never counts towards "finished": on a face drawing it is most of the
+  /// pixels, and painting it alone used to end the picture with the whole
+  /// animal still white.
+  final int? backgroundArea;
+
   ColoringSheet({
     required this.id,
     required this.lineArt,
@@ -62,6 +68,7 @@ class ColoringSheet {
     required this.pixelsOf,
     required this.eyes,
     this.word,
+    this.backgroundArea,
   });
 
   int get areaCount => pixelsOf.length;
@@ -163,6 +170,7 @@ class ColoringSheet {
       pixelsOf: pixelsOf,
       eyes: eyes,
       word: meta['word'] as String?,
+      backgroundArea: meta['background'] as int?,
     );
   }
 

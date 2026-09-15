@@ -25,7 +25,7 @@ void main() {
     final container = ProviderContainer();
     addTearDown(container.dispose);
     await container
-        .read(filledSheetsProvider.notifier)
+        .read(finishedSheetsProvider.notifier)
         .record('bear_cub', 1, 'yellow');
 
     await tester.pumpWidget(

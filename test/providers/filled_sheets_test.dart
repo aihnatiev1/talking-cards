@@ -68,4 +68,30 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 20));
     expect(notifier.state, isEmpty);
   });
+
+  test('finishing hands the picture over and frees the canvas', () async {
+    final c = ProviderContainer();
+    addTearDown(c.dispose);
+    final working = c.read(filledSheetsProvider.notifier);
+    final finished = c.read(finishedSheetsProvider.notifier);
+
+    await working.record('bear_cub', 3, 'brown');
+    await working.record('bear_cub', 4, 'yellow');
+
+    // What the screen does when the last part is painted.
+    await finished.putAll('bear_cub', working.of('bear_cub'));
+    await working.clear('bear_cub');
+
+    // The meadow keeps it; the canvas opens blank next time. Before this
+    // split, every picture after the first one opened already coloured.
+    expect(finished.of('bear_cub'), {3: 'brown', 4: 'yellow'});
+    expect(working.of('bear_cub'), isEmpty);
+  });
+
+  test('the two stores do not see each other', () async {
+    final c = ProviderContainer();
+    addTearDown(c.dispose);
+    await c.read(filledSheetsProvider.notifier).record('cat_face', 1, 'red');
+    expect(c.read(finishedSheetsProvider.notifier).of('cat_face'), isEmpty);
+  });
 }

@@ -295,6 +295,18 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
   }
 
   void _finish() {
+    final sheet = _sheet;
+    if (sheet != null) {
+      // The picture is finished: it goes to the meadow, and the canvas is
+      // given back empty. Without this every drawing after the first one
+      // opened already coloured, and the only thing to do with it was
+      // press a reset button a child cannot read.
+      ref.read(finishedSheetsProvider.notifier).putAll(
+            sheet.id,
+            {for (final e in _filled.entries) e.key: _crayonIdOf(e.value)},
+          );
+      ref.read(filledSheetsProvider.notifier).clear(sheet.id);
+    }
     setState(() => _done = true);
     _pop.duration = MotionPolicy.of(context).dur(DT.motion.successPop);
     _pop.forward(from: 0);
@@ -307,6 +319,10 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
     );
   }
 
+  static String _crayonIdOf(Color c) => kCrayons
+      .firstWhere((k) => k.color == c, orElse: () => kCrayons.first)
+      .id;
+
   /// Finished when this much of the drawing has colour on it.
   ///
   /// Not every area: a picture can hold forty of them, several the size
@@ -318,6 +334,7 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
   double _paintedShare(ColoringSheet sheet) {
     var painted = 0, total = 0;
     for (final entry in sheet.pixelsOf.entries) {
+      if (entry.key == sheet.backgroundArea) continue;
       total += entry.value.length;
       if (_filled.containsKey(entry.key)) painted += entry.value.length;
     }
@@ -460,9 +477,11 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
                     isEn: isEn,
                     onAnother: _ids.length > 1 ? _newPicture : null,
                     onAgain: _clear,
-                  )
-                else
-                  CrayonPalette(
+                  ),
+                // The crayons stay. Finishing is not the end of playing —
+                // a child who wants to keep colouring the ears should not
+                // have the box taken away from her.
+                CrayonPalette(
                     selectedId: widget.byEar && !_found ? '' : _crayon.id,
                     isEn: isEn,
                     hintId: widget.byEar && _misses >= 2 && !_found

@@ -56,7 +56,8 @@ class _MyMeadowScreenState extends ConsumerState<MyMeadowScreen> {
   Widget build(BuildContext context) {
     final isEn = ref.watch(languageProvider) == 'en';
     final s = AppS(isEn);
-    final fills = ref.watch(filledSheetsProvider);
+    // What was finished, not what is half-painted on the canvas.
+    final fills = ref.watch(finishedSheetsProvider);
     final album = ref.watch(coloringAlbumProvider);
 
     final residents = <Widget>[

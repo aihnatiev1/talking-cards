@@ -1,6 +1,7 @@
 {
   "width": 360,
   "height": 360,
+  "background": 1,
   "areas": [
     {
       "id": 1,

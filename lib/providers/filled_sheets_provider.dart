@@ -14,18 +14,28 @@ import '../services/profile_service.dart';
 /// version of the artwork.
 ///
 /// Per profile, like everything a child makes.
+/// The drawing in progress, per sheet.
 final filledSheetsProvider =
     StateNotifierProvider<FilledSheetsNotifier, Map<String, Map<int, String>>>(
-      (ref) => FilledSheetsNotifier(),
+      (ref) => FilledSheetsNotifier('filled_sheets'),
+    );
+
+/// The ones the child finished. Kept apart on purpose: finishing a
+/// picture hands it to the meadow and gives the canvas back empty, so the
+/// next visit is a fresh drawing rather than somebody else's leftovers —
+/// which is what every picture after the first one looked like.
+final finishedSheetsProvider =
+    StateNotifierProvider<FilledSheetsNotifier, Map<String, Map<int, String>>>(
+      (ref) => FilledSheetsNotifier('finished_sheets'),
     );
 
 class FilledSheetsNotifier
     extends StateNotifier<Map<String, Map<int, String>>> {
-  FilledSheetsNotifier() : super(const {}) {
+  FilledSheetsNotifier(this._key) : super(const {}) {
     _load();
   }
 
-  static const _key = 'filled_sheets';
+  final String _key;
 
   String get _prefixedKey => '${ProfileService.prefix}$_key';
 
@@ -61,6 +71,14 @@ class FilledSheetsNotifier
       ...state,
       sheetId: {...state[sheetId] ?? const {}, area: crayonId},
     };
+    await _save();
+  }
+
+  /// Put a whole drawing in at once — used when a finished picture moves
+  /// from the canvas to the meadow.
+  Future<void> putAll(String sheetId, Map<int, String> fills) async {
+    if (fills.isEmpty) return;
+    state = {...state, sheetId: Map<int, String>.from(fills)};
     await _save();
   }
 
