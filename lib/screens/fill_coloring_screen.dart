@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/coloring_sheet.dart';
 import '../providers/coloring_sheets_provider.dart';
+import '../providers/filled_sheets_provider.dart';
 import '../providers/language_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
@@ -113,18 +114,50 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
   Future<void> _open(String id) async {
     final sheet = await ColoringSheet.load(id);
     if (!mounted) return;
+    final buffer = Uint32List(sheet.width * sheet.height);
     setState(() {
       _sheet?.lineArt.dispose();
       _sheet = sheet;
-      _buffer = Uint32List(sheet.width * sheet.height);
+      _buffer = buffer;
       _paint?.dispose();
       _paint = null;
       _filled.clear();
       _done = false;
       _found = false;
     });
+    await _restore(sheet, buffer);
     if (widget.byEar) _ask();
   }
+
+  /// Put back what the child painted last time.
+  ///
+  /// Replayed from stored colours rather than saved pixels: a handful of
+  /// numbers per drawing, and it still works if the artwork is redrawn.
+  Future<void> _restore(ColoringSheet sheet, Uint32List buffer) async {
+    final saved = ref.read(filledSheetsProvider.notifier).of(sheet.id);
+    if (saved.isEmpty) return;
+    for (final entry in saved.entries) {
+      final pixels = sheet.pixelsOf[entry.key];
+      final crayon = kCrayons.where((c) => c.id == entry.value).firstOrNull;
+      if (pixels == null || crayon == null) continue;
+      final packed = _packed(crayon.color);
+      for (final i in pixels) {
+        buffer[i] = packed;
+      }
+      _filled[entry.key] = crayon.color;
+    }
+    await _repaint();
+    if (!mounted) return;
+    // A picture that was already finished is alive the moment it opens —
+    // it was finished, and nothing about closing the screen undid that.
+    if (_filled.length >= sheet.areaCount) setState(() => _done = true);
+  }
+
+  static int _packed(Color c) =>
+      (0xFF << 24) |
+      ((c.b * 255).round() << 16) |
+      ((c.g * 255).round() << 8) |
+      (c.r * 255).round();
 
   /// A fresh drawing, in the order the index lists them so a child works
   /// through the whole folder instead of meeting the same three.
@@ -206,14 +239,16 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
 
     final c = _crayon.color;
     // decodeImageFromPixels wants ABGR little-endian, not ARGB.
-    final packed = (0xFF << 24) |
-        ((c.b * 255).round() << 16) |
-        ((c.g * 255).round() << 8) |
-        (c.r * 255).round();
+    final packed = _packed(c);
     for (final i in pixels) {
       buffer[i] = packed;
     }
     _filled[area] = c;
+    ref.read(filledSheetsProvider.notifier).record(
+          sheet.id,
+          area,
+          _crayon.id,
+        );
     FeedbackService.instance.event(FeedbackEvent.tap, haptic: false);
     await _repaint();
 
@@ -278,7 +313,9 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
 
   void _clear() {
     final buffer = _buffer;
-    if (buffer == null || _filled.isEmpty) return;
+    final sheet = _sheet;
+    if (buffer == null || sheet == null || _filled.isEmpty) return;
+    ref.read(filledSheetsProvider.notifier).clear(sheet.id);
     buffer.fillRange(0, buffer.length, 0);
     _filled.clear();
     setState(() => _done = false);
