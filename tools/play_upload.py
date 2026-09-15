@@ -3,6 +3,7 @@
 
     /usr/bin/python3 tools/play_upload.py 32          # expected versionCode
     /usr/bin/python3 tools/play_upload.py --diff      # repo vs the live listing
+    /usr/bin/python3 tools/play_upload.py --listing   # push title/descriptions
 
 All four tracks (internal/alpha/beta/production) get the same versionCode:
 Play's "Billing Library" warning keyed on the oldest track, which used to
@@ -18,6 +19,11 @@ actually serving. The App Store side had drifted — keywords tuned in the
 console, never committed, then overwritten by an upload — and nothing had
 ever compared the two. This is that check for Play, and it does not open
 an edit, so it is safe to run at any time.
+
+--listing pushes the store listing from this repo. It prints the same
+diff first and pushes only the fields that differ, because the one time
+metadata went up unchecked it replaced keywords somebody had tuned in a
+console and never committed. No bundle, no track, no release.
 
 Auth: service account ~/.private_keys/play-service-account.json (RS256 JWT).
 Needs /usr/bin/python3 (has pyjwt); the Homebrew python does not.
@@ -83,13 +89,19 @@ def http(tok):
     return call
 
 
-def diff():
-    """Every field where this repo and the live Play listing disagree."""
+def diff(push=False):
+    """Every field where this repo and the live Play listing disagree.
+
+    With [push], the differing fields are written back to the store — and
+    only those, so a field nobody edited here cannot be clobbered by a
+    stale copy of it.
+    """
     call = http(token())
-    # Listings are only readable inside an edit; this one is never
-    # committed, so nothing changes on the store.
+    # Listings are only readable inside an edit; without [push] this one
+    # is deleted, so nothing changes on the store.
     edit = call('POST', f'{BASE}/edits', {})['id']
     differences = 0
+    changes = {}
     for loc in LOCALES:
         live = call('GET', f'{BASE}/edits/{edit}/listings/{PLAY_LANG[loc]}')
         for field, name in LISTING.items():
@@ -101,6 +113,7 @@ def diff():
             if mine == theirs:
                 continue
             differences += 1
+            changes.setdefault(loc, dict(live))[field] = mine
             print(f'\n  {loc}.{field}')
             a, b = theirs.splitlines(), mine.splitlines()
             for i in range(max(len(a), len(b))):
@@ -111,15 +124,35 @@ def diff():
                     print(f'      store: {x[:150] or "(nothing)"}')
                     print(f'      repo : {y[:150] or "(nothing)"}')
                     break
-    call('DELETE', f'{BASE}/edits/{edit}')
-    print(f'\n{differences} difference(s).' if differences
-          else '\nrepo matches the store.')
+    if not push:
+        call('DELETE', f'{BASE}/edits/{edit}')
+        print(f'\n{differences} difference(s).' if differences
+              else '\nrepo matches the store.')
+        return 0
+
+    if not changes:
+        call('DELETE', f'{BASE}/edits/{edit}')
+        print('\nrepo matches the store; nothing to push.')
+        return 0
+    for loc, listing in changes.items():
+        lang = PLAY_LANG[loc]
+        listing['language'] = lang
+        call('PUT', f'{BASE}/edits/{edit}/listings/{lang}', listing)
+        print(f'\npushed {loc}')
+    call('POST', f'{BASE}/edits/{edit}:validate', {})
+    print('commit', call(
+        'POST', f'{BASE}/edits/{edit}:commit?changesNotSentForReview=false',
+        {}).get('id'))
+    print('\nListing queued. Play Console: «Огляд публікації» → '
+          '«Надіслати на перевірку».')
     return 0
 
 
 def main(argv):
     if argv and argv[0] == '--diff':
         return diff()
+    if argv and argv[0] == '--listing':
+        return diff(push=True)
     if len(argv) != 1 or not argv[0].isdigit():
         raise SystemExit(__doc__)
     expected = int(argv[0])
