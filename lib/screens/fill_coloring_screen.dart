@@ -139,6 +139,18 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
   Future<void> _restore(ColoringSheet sheet, Uint32List buffer) async {
     final saved = ref.read(filledSheetsProvider.notifier).of(sheet.id);
     if (saved.isEmpty) return;
+
+    // A drawing that was already finished does not come back to be
+    // finished again: it belongs to the meadow, and the canvas opens
+    // empty. Without this, every picture painted before finishing was
+    // split out of the working store greeted the child fully coloured,
+    // with nothing left to do on it.
+    if (_shareOf(sheet, saved.keys.toSet()) >= _doneShare) {
+      ref.read(finishedSheetsProvider.notifier).putAll(sheet.id, saved);
+      ref.read(filledSheetsProvider.notifier).clear(sheet.id);
+      return;
+    }
+
     for (final entry in saved.entries) {
       final pixels = sheet.pixelsOf[entry.key];
       final crayon = kCrayons.where((c) => c.id == entry.value).firstOrNull;
@@ -331,12 +343,16 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
   /// child, which is the same rule the water mode uses.
   static const _doneShare = 0.85;
 
-  double _paintedShare(ColoringSheet sheet) {
+  double _paintedShare(ColoringSheet sheet) =>
+      _shareOf(sheet, _filled.keys.toSet());
+
+  /// How much of the figure [areas] covers, the paper not counting.
+  static double _shareOf(ColoringSheet sheet, Set<int> areas) {
     var painted = 0, total = 0;
     for (final entry in sheet.pixelsOf.entries) {
       if (entry.key == sheet.backgroundArea) continue;
       total += entry.value.length;
-      if (_filled.containsKey(entry.key)) painted += entry.value.length;
+      if (areas.contains(entry.key)) painted += entry.value.length;
     }
     return total == 0 ? 0 : painted / total;
   }
