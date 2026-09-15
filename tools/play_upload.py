@@ -2,6 +2,7 @@
 """Upload the release AAB to Google Play and put it on every track.
 
     /usr/bin/python3 tools/play_upload.py 32          # expected versionCode
+    /usr/bin/python3 tools/play_upload.py --diff      # repo vs the live listing
 
 All four tracks (internal/alpha/beta/production) get the same versionCode:
 Play's "Billing Library" warning keyed on the oldest track, which used to
@@ -11,6 +12,12 @@ android/fastlane/metadata/android/<locale>/changelogs/<versionCode>.txt.
 Managed publishing is ON for this app: the commit only queues the release.
 After this script, press "Огляд публікації → Надіслати на перевірку" in
 Play Console — without it nothing ships (v22/v23 were lost that way).
+
+--diff compares the store listing in this repo against the one Play is
+actually serving. The App Store side had drifted — keywords tuned in the
+console, never committed, then overwritten by an upload — and nothing had
+ever compared the two. This is that check for Play, and it does not open
+an edit, so it is safe to run at any time.
 
 Auth: service account ~/.private_keys/play-service-account.json (RS256 JWT).
 Needs /usr/bin/python3 (has pyjwt); the Homebrew python does not.
@@ -32,7 +39,12 @@ PKG = 'com.talkingcards.app'
 BASE = f'https://androidpublisher.googleapis.com/androidpublisher/v3/applications/{PKG}'
 UP = f'https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/{PKG}'
 TRACKS = ('internal', 'alpha', 'beta', 'production')
+# Repo folder → the language code Play actually uses. Fastlane's tree is
+# named uk-UA; Play's listing for it is plain `uk`, and it rejects uk-UA
+# outright for listings while quietly accepting it for release notes —
+# which is how notes can end up stored under a language nobody is served.
 LOCALES = ('uk-UA', 'en-US')
+PLAY_LANG = {'uk-UA': 'uk', 'en-US': 'en-US'}
 
 
 def token():
@@ -52,12 +64,12 @@ def token():
     return json.load(resp)['access_token']
 
 
-def main(argv):
-    if len(argv) != 1 or not argv[0].isdigit():
-        raise SystemExit(__doc__)
-    expected = int(argv[0])
-    tok = token()
+LISTING = {'title': 'title.txt',
+           'shortDescription': 'short_description.txt',
+           'fullDescription': 'full_description.txt'}
 
+
+def http(tok):
     def call(method, url, body=None, raw=None, ctype='application/json'):
         data = raw if raw is not None else (
             json.dumps(body).encode() if body is not None else None)
@@ -68,13 +80,59 @@ def main(argv):
             return json.loads(d) if d else {}
         except urllib.error.HTTPError as e:
             raise SystemExit(f'{method} {url} -> {e.code}: {e.read().decode()[:800]}')
+    return call
+
+
+def diff():
+    """Every field where this repo and the live Play listing disagree."""
+    call = http(token())
+    # Listings are only readable inside an edit; this one is never
+    # committed, so nothing changes on the store.
+    edit = call('POST', f'{BASE}/edits', {})['id']
+    differences = 0
+    for loc in LOCALES:
+        live = call('GET', f'{BASE}/edits/{edit}/listings/{PLAY_LANG[loc]}')
+        for field, name in LISTING.items():
+            path = NOTES / loc / name
+            if not path.exists():
+                continue
+            mine = path.read_text().strip()
+            theirs = (live.get(field) or '').strip()
+            if mine == theirs:
+                continue
+            differences += 1
+            print(f'\n  {loc}.{field}')
+            a, b = theirs.splitlines(), mine.splitlines()
+            for i in range(max(len(a), len(b))):
+                x = a[i] if i < len(a) else ''
+                y = b[i] if i < len(b) else ''
+                if x != y:
+                    print(f'    line {i + 1}')
+                    print(f'      store: {x[:150] or "(nothing)"}')
+                    print(f'      repo : {y[:150] or "(nothing)"}')
+                    break
+    call('DELETE', f'{BASE}/edits/{edit}')
+    print(f'\n{differences} difference(s).' if differences
+          else '\nrepo matches the store.')
+    return 0
+
+
+def main(argv):
+    if argv and argv[0] == '--diff':
+        return diff()
+    if len(argv) != 1 or not argv[0].isdigit():
+        raise SystemExit(__doc__)
+    expected = int(argv[0])
+    tok = token()
+
+    call = http(tok)
 
     notes = []
     for loc in LOCALES:
         text = (NOTES / loc / 'changelogs' / f'{expected}.txt').read_text().strip()
         if len(text) > 500:
             raise SystemExit(f'{loc}/changelogs/{expected}.txt is {len(text)} chars (max 500)')
-        notes.append({'language': loc, 'text': text})
+        notes.append({'language': PLAY_LANG[loc], 'text': text})
 
     edit = call('POST', f'{BASE}/edits', {})['id']
     print('edit', edit)
