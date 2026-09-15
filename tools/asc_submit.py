@@ -3,11 +3,20 @@
 
     /usr/bin/python3 tools/asc_submit.py 1.3.10            # submit
     /usr/bin/python3 tools/asc_submit.py 1.3.10 --wait     # poll for the build first
+    /usr/bin/python3 tools/asc_submit.py 1.3.10 --metadata # push description/keywords too
+    /usr/bin/python3 tools/asc_submit.py 1.3.10 --metadata-only  # no build, no submit
 
 Binary-only releases: the new version inherits description/keywords/promo
 from the live one; the script refuses to submit if they differ (metadata
 changes are a separate, deliberate step — see memory aso-ctr-insight).
 What's New comes from ios/fastlane/metadata/<locale>/release_notes.txt.
+
+--metadata makes that step deliberate instead of impossible: the local
+description, keywords and promotional text are pushed as written. Use it
+when the copy has to change with the build — a listing that describes the
+old app is worse than one that changes. --metadata-only stops there: it
+edits the version in place and submits nothing, which is how a listing is
+corrected while a release already sits in review.
 
 The build is the newest VALID one whose preReleaseVersion matches the
 marketing version — Xcode Cloud numbers builds by its own counter, not by
@@ -77,8 +86,10 @@ def main(argv):
         raise SystemExit(__doc__)
     version = argv[0]
     wait = '--wait' in argv
+    push_metadata = '--metadata' in argv or '--metadata-only' in argv
+    metadata_only = '--metadata-only' in argv
 
-    build = find_build(version)
+    build = None if metadata_only else find_build(version)
     polls = 0
     while build is None and wait and polls < POLL_MAX:
         polls += 1
@@ -86,9 +97,10 @@ def main(argv):
               f'waiting {POLL_S}s ({polls}/{POLL_MAX})', flush=True)
         time.sleep(POLL_S)
         build = find_build(version)
-    if build is None:
+    if build is None and not metadata_only:
         raise SystemExit(f'no VALID build for {version} in App Store Connect')
-    print('build', build['attributes']['version'], build['id'])
+    if build is not None:
+        print('build', build['attributes']['version'], build['id'])
 
     versions = get(f'/v1/apps/{APP}/appStoreVersions?limit=3'
                    '&fields[appStoreVersions]=versionString,appVersionState,createdDate')['data']
@@ -97,6 +109,8 @@ def main(argv):
     if existing:
         vid = existing['id']
         print('version exists', vid, existing['attributes']['appVersionState'])
+    elif metadata_only:
+        raise SystemExit(f'no {version} in App Store Connect to edit')
     else:
         vid = call('POST', '/v1/appStoreVersions', {'data': {
             'type': 'appStoreVersions',
@@ -113,19 +127,38 @@ def main(argv):
         prev = {l['attributes']['locale']: l['attributes'] for l in get(
             f"/v1/appStoreVersions/{previous['id']}/appStoreVersionLocalizations"
             f'?fields[appStoreVersionLocalizations]={fields}')['data']}
+    files = {'description': 'description.txt', 'keywords': 'keywords.txt',
+             'promotionalText': 'promotional_text.txt'}
     for l in locs:
         loc = l['attributes']['locale']
         p = prev.get(loc)
-        if p:
-            for k in ('description', 'keywords', 'promotionalText'):
+        attrs = {}
+        if push_metadata:
+            for field, name in files.items():
+                path = META / loc / name
+                if not path.exists():
+                    continue
+                text = path.read_text().strip()
+                if text != l['attributes'].get(field):
+                    attrs[field] = text
+        elif p:
+            for k in files:
                 if l['attributes'].get(k) != p.get(k):
                     raise SystemExit(f'{loc}.{k} differs from the live version — '
-                                     'metadata changed; refusing a binary-only submit')
-        notes = (META / loc / 'release_notes.txt').read_text().strip()
-        call('PATCH', f"/v1/appStoreVersionLocalizations/{l['id']}", {'data': {
-            'type': 'appStoreVersionLocalizations', 'id': l['id'],
-            'attributes': {'whatsNew': notes}}})
-        print('whatsNew', loc, len(notes))
+                                     'metadata changed; re-run with --metadata '
+                                     'if that is the point')
+        if not metadata_only:
+            notes = (META / loc / 'release_notes.txt').read_text().strip()
+            attrs['whatsNew'] = notes
+        if attrs:
+            call('PATCH', f"/v1/appStoreVersionLocalizations/{l['id']}",
+                 {'data': {'type': 'appStoreVersionLocalizations',
+                           'id': l['id'], 'attributes': attrs}})
+        print(loc, ' '.join(sorted(attrs)) or 'unchanged')
+
+    if metadata_only:
+        print('metadata only: no build attached, nothing submitted')
+        return 0
 
     call('PATCH', f'/v1/appStoreVersions/{vid}/relationships/build',
          {'data': {'type': 'builds', 'id': build['id']}})
