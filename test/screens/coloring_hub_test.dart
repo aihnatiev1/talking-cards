@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talking_cards/providers/coloring_sheets_provider.dart';
+import 'package:talking_cards/services/analytics_service.dart';
 import 'package:talking_cards/screens/coloring_hub_screen.dart';
 import 'package:talking_cards/screens/mirror_draw_screen.dart';
 
@@ -69,5 +70,30 @@ void main() {
     await tester.tap(find.text('Дзеркальце'));
     await tester.pumpAndSettle();
     expect(find.byType(MirrorDrawScreen), findsOneWidget);
+  });
+
+  testWidgets('opening a mode is logged under an id that joins game_start', (
+    tester,
+  ) async {
+    final events = <({String name, Map<String, Object> params})>[];
+    AnalyticsService.debugSink = (name, params) =>
+        events.add((name: name, params: params));
+    addTearDown(() => AnalyticsService.debugSink = null);
+
+    await open(tester, sheets: const ['lion']);
+    await tester.tap(find.text('Дзеркальце'));
+    await tester.pumpAndSettle();
+
+    final tap = events.firstWhere((e) => e.name == 'game_tile_tap');
+    expect(tap.params['section'], 'draw');
+    // The screen logs game_start with this same id; a different one here
+    // would make the pair unjoinable and the dashboards quietly useless.
+    expect(tap.params['game_id'], 'mirror_draw');
+    expect(
+      events.any(
+        (e) => e.name == 'game_start' && e.params['game_id'] == 'mirror_draw',
+      ),
+      isTrue,
+    );
   });
 }

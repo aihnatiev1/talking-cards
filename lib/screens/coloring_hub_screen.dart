@@ -5,6 +5,7 @@ import '../providers/coloring_album_provider.dart';
 import '../providers/coloring_sheets_provider.dart';
 import '../providers/filled_sheets_provider.dart';
 import '../providers/language_provider.dart';
+import '../services/analytics_service.dart';
 import '../utils/app_icons.dart';
 import '../utils/design_tokens.dart';
 import '../utils/kid_routes.dart';
@@ -72,7 +73,7 @@ class ColoringHubScreen extends ConsumerWidget {
 
     final modes = <_DrawMode>[
       _DrawMode(
-        id: 'water',
+        id: 'coloring',
         title: 'Чарівна вода',
         titleEn: 'Magic water',
         subtitle: 'Проведи пальцем — з\'являються кольори',
@@ -84,7 +85,7 @@ class ColoringHubScreen extends ConsumerWidget {
       ),
       if (hasSheets)
         _DrawMode(
-          id: 'fill',
+          id: 'fill_coloring',
           title: 'Розфарбуй',
           titleEn: 'Colour it in',
           subtitle: 'Обери колір і тисни на частинку',
@@ -96,7 +97,7 @@ class ColoringHubScreen extends ConsumerWidget {
         ),
       if (hasSheets)
         _DrawMode(
-          id: 'fill_by_ear',
+          id: 'fill_coloring_by_ear',
           title: 'Слухай і фарбуй',
           titleEn: 'Listen and colour',
           subtitle: 'Блум називає колір — знайди його',
@@ -107,7 +108,7 @@ class ColoringHubScreen extends ConsumerWidget {
           open: () => const FillColoringScreen(byEar: true),
         ),
       _DrawMode(
-        id: 'stickers',
+        id: 'sticker_scene',
         title: 'Наліпки',
         titleEn: 'Stickers',
         subtitle: 'Постав на галявину — і почуй слово',
@@ -119,7 +120,7 @@ class ColoringHubScreen extends ConsumerWidget {
       ),
       if (hasFinished)
         _DrawMode(
-          id: 'meadow',
+          id: 'my_meadow',
           title: 'Моя галявина',
           titleEn: 'My meadow',
           subtitle: 'Усе, що ти вже намалював',
@@ -130,7 +131,7 @@ class ColoringHubScreen extends ConsumerWidget {
           open: () => const MyMeadowScreen(),
         ),
       _DrawMode(
-        id: 'mirror',
+        id: 'mirror_draw',
         title: 'Дзеркальце',
         titleEn: 'Mirror',
         subtitle: 'Малюй половинку — вийде ціле',
@@ -164,7 +165,7 @@ class ColoringHubScreen extends ConsumerWidget {
           itemBuilder: (context, i) => StaggeredEntrance(
             key: ValueKey(modes[i].id),
             index: i,
-            child: _ModeTile(mode: modes[i], isEn: isEn),
+            child: _ModeTile(mode: modes[i], isEn: isEn, position: i),
           ),
         ),
       ),
@@ -175,13 +176,30 @@ class ColoringHubScreen extends ConsumerWidget {
 class _ModeTile extends StatelessWidget {
   final _DrawMode mode;
   final bool isEn;
+  final int position;
 
-  const _ModeTile({required this.mode, required this.isEn});
+  const _ModeTile({
+    required this.mode,
+    required this.isEn,
+    required this.position,
+  });
 
   @override
   Widget build(BuildContext context) {
     return KidTap(
-      onTap: () => Navigator.of(context).push(KidRoutes.content(mode.open())),
+      onTap: () {
+        // The same event the games shelf uses, with ids that match the
+        // `game_start` each screen logs — so "picked it up" and "played
+        // it" join per mode. Five ways to draw landed at once; without
+        // this we would be guessing which one anybody wants.
+        AnalyticsService.instance.logGameTileTap(
+          mode.id,
+          playable: true,
+          section: 'draw',
+          position: position,
+        );
+        Navigator.of(context).push(KidRoutes.content(mode.open()));
+      },
       child: Container(
         decoration: BoxDecoration(
           color: mode.tint,
