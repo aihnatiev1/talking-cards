@@ -85,6 +85,26 @@ class DT {
   static const warning = Color(0xFFE17055);
   static const error = Color(0xFFE53935);
 
+  // ── Crayons ─────────────────────────────────
+  /// The ten colours a child draws with.
+  ///
+  /// Not the brand palette and not the pack accents: these are chosen to
+  /// be told apart by a two-year-old and to be *named* — colouring leads
+  /// to «зафарбуй гриву жовтим», where the child has to match a word to a
+  /// swatch. No two neighbours anyone would confuse, and brown and black
+  /// earn their places because animals and outlines need them. The words
+  /// live with the palette widget; only the colours belong here.
+  static const crayonRed = Color(0xFFE53935);
+  static const crayonOrange = Color(0xFFFB8C00);
+  static const crayonYellow = Color(0xFFFDD835);
+  static const crayonGreen = Color(0xFF43A047);
+  static const crayonBlue = Color(0xFF1E88E5);
+  static const crayonViolet = Color(0xFF8E4FD8);
+  static const crayonPink = Color(0xFFEC407A);
+  static const crayonBrown = Color(0xFF8D6E4A);
+  static const crayonGrey = Color(0xFF9E9E9E);
+  static const crayonBlack = Color(0xFF3F3635);
+
   // ── Bloom (the mascot) ───────────────────────
   /// Bloom's own palette (docs/design/bloom_character.md §2.1). Brand cream,
   /// pink and warm ink — never repainted to a pack accent. `bloomBody` is a

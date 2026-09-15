@@ -185,10 +185,12 @@ void main() {
       expect(find.byKey(const ValueKey('ghost-finger')), findsNothing);
     });
 
-    testWidgets('has no close button — it is a tab, not a pushed route',
+    testWidgets('has a close button — it is a pushed route again',
         (tester) async {
-      // The default X popped the home shell that hosts this tab and left
-      // the child looking at a black screen. The way out is the tab bar.
+      // History: while colouring *was* the tab, the default X popped the
+      // home shell and left a black screen, so it was removed. The tab is
+      // now the drawing shelf and this screen is pushed from it, which
+      // makes the X both correct and the only way back.
       final container = await open(tester);
       addTearDown(container.dispose);
 
@@ -196,7 +198,9 @@ void main() {
         find.byWidgetPredicate(
           (w) => w is Semantics && w.properties.label == 'Close',
         ),
-        findsNothing,
+        // The header's button and the icon inside it both carry the
+        // label; one is enough to prove the way out is there.
+        findsAtLeastNWidgets(1),
       );
     });
 

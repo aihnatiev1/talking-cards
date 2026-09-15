@@ -502,10 +502,9 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
     return KidScreen.game(
       accent: DT.brand,
       background: DT.violetTint,
-      // No X: colouring is a tab inside the home shell, not a pushed
-      // route. The default close popped the shell itself and left a black
-      // screen; the way out of a tab is the tab bar underneath.
-      showLeading: false,
+      // The X is back: this is a pushed route again now that the tab is
+      // the drawing shelf. (It was removed when colouring *was* the tab —
+      // the close popped the shell itself and left a black screen.)
       body: _paywallGated
           ? _PaywallGate(
               onUnlock: () =>

@@ -21,7 +21,7 @@ import 'parent_dashboard_screen.dart';
 import '../providers/home_tab_provider.dart';
 import '../tabs/packs_tab.dart';
 import '../tabs/games_tab.dart';
-import 'coloring_screen.dart';
+import 'coloring_hub_screen.dart';
 import '../widgets/playful_navigation_bar.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -298,7 +298,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               TickerMode(enabled: _visibleTab == 1, child: const GamesTab()),
               TickerMode(
                 enabled: _visibleTab == 2,
-                child: const ColoringScreen(),
+                child: const ColoringHubScreen(),
               ),
             ],
           ),
