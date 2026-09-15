@@ -11,6 +11,12 @@ void main() {
     'orange', 'pink', 'purple', 'brown', 'gray',
   };
 
+  // And in assets/data/en_cards.json, pack `en_colors`.
+  const recordedEn = {
+    'en_red', 'en_blue', 'en_yellow', 'en_green', 'en_white', 'en_black',
+    'en_orange_c', 'en_pink', 'en_purple', 'en_brown', 'en_gray',
+  };
+
   test('every crayon has a colour word that is actually recorded', () {
     for (final crayon in kCrayons) {
       expect(
@@ -19,6 +25,20 @@ void main() {
         reason: 'no recording for «${crayon.name}» (key "${crayon.audio}") '
             '— the '
             'listening mode would ask for a colour it cannot say',
+      );
+    }
+  });
+
+  test('every crayon has an English take too', () {
+    // The English app asked for its colours in Ukrainian: the crayons
+    // carried one audio key, and it was the Ukrainian one. An English
+    // child heard «жовтий» and was expected to find yellow.
+    for (final crayon in kCrayons) {
+      expect(
+        recordedEn.contains(crayon.audioEn),
+        isTrue,
+        reason: 'no English recording for ${crayon.nameEn} '
+            '(key "${crayon.audioEn}")',
       );
     }
   });

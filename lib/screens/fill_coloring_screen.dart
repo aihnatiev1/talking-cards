@@ -189,9 +189,10 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
     if (asked == null) return;
     // The colour words are cards like any other: `colors` pack, English
     // audio keys (red, blue…), Ukrainian voice behind them.
+    final isEn = ref.read(languageProvider) == 'en';
     AudioService.instance.playWordOnly(
-      asked.audio,
-      asked.localizedName(ref.read(languageProvider) == 'en'),
+      asked.localizedAudio(isEn),
+      asked.localizedName(isEn),
     );
   }
 

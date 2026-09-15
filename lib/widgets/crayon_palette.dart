@@ -18,13 +18,17 @@ class Crayon {
   final String name;
   final String nameEn;
 
-  /// The audio key of the colour word, in the `colors` pack.
+  /// The audio key of the colour word, per language: the `colors` pack
+  /// for Ukrainian, `en_colors` for English.
   ///
   /// Spelled out rather than derived from [id]: the takes were recorded
-  /// for cards, not for crayons, and two of them disagree (violet is
-  /// filed as `purple`, grey as `gray`). Guessing cost the listening mode
-  /// a silent question before this field existed.
+  /// for cards, not for crayons, and they disagree in both languages
+  /// (violet is filed as `purple`, grey as `gray`, orange as
+  /// `en_orange_c`). Guessing cost the listening mode a silent question
+  /// once, and an English child being asked for a colour in Ukrainian a
+  /// second time.
   final String audio;
+  final String audioEn;
 
   const Crayon({
     required this.id,
@@ -32,7 +36,10 @@ class Crayon {
     required this.name,
     required this.nameEn,
     required this.audio,
+    required this.audioEn,
   });
+
+  String localizedAudio(bool isEn) => isEn ? audioEn : audio;
 
   String localizedName(bool isEn) => isEn ? nameEn : name;
 }
@@ -47,6 +54,7 @@ const List<Crayon> kCrayons = [
     name: 'червоний',
     nameEn: 'red',
     audio: 'red',
+    audioEn: 'en_red',
   ),
   Crayon(
     id: 'orange',
@@ -54,6 +62,7 @@ const List<Crayon> kCrayons = [
     name: 'помаранчевий',
     nameEn: 'orange',
     audio: 'orange',
+    audioEn: 'en_orange_c',
   ),
   Crayon(
     id: 'yellow',
@@ -61,6 +70,7 @@ const List<Crayon> kCrayons = [
     name: 'жовтий',
     nameEn: 'yellow',
     audio: 'yellow',
+    audioEn: 'en_yellow',
   ),
   Crayon(
     id: 'green',
@@ -68,6 +78,7 @@ const List<Crayon> kCrayons = [
     name: 'зелений',
     nameEn: 'green',
     audio: 'green',
+    audioEn: 'en_green',
   ),
   Crayon(
     id: 'blue',
@@ -75,6 +86,7 @@ const List<Crayon> kCrayons = [
     name: 'синій',
     nameEn: 'blue',
     audio: 'blue',
+    audioEn: 'en_blue',
   ),
   Crayon(
     id: 'violet',
@@ -82,6 +94,7 @@ const List<Crayon> kCrayons = [
     name: 'фіолетовий',
     nameEn: 'purple',
     audio: 'purple',
+    audioEn: 'en_purple',
   ),
   Crayon(
     id: 'pink',
@@ -89,6 +102,7 @@ const List<Crayon> kCrayons = [
     name: 'рожевий',
     nameEn: 'pink',
     audio: 'pink',
+    audioEn: 'en_pink',
   ),
   Crayon(
     id: 'brown',
@@ -96,6 +110,7 @@ const List<Crayon> kCrayons = [
     name: 'коричневий',
     nameEn: 'brown',
     audio: 'brown',
+    audioEn: 'en_brown',
   ),
   Crayon(
     id: 'grey',
@@ -103,6 +118,7 @@ const List<Crayon> kCrayons = [
     name: 'сірий',
     nameEn: 'grey',
     audio: 'gray',
+    audioEn: 'en_gray',
   ),
   Crayon(
     id: 'black',
@@ -110,6 +126,7 @@ const List<Crayon> kCrayons = [
     name: 'чорний',
     nameEn: 'black',
     audio: 'black',
+    audioEn: 'en_black',
   ),
 ];
 
