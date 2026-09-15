@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../providers/coloring_album_provider.dart';
 import '../providers/coloring_sheets_provider.dart';
+import '../providers/filled_sheets_provider.dart';
 import '../providers/language_provider.dart';
 import '../utils/app_icons.dart';
 import '../utils/design_tokens.dart';
@@ -13,6 +15,7 @@ import '../widgets/kid_tap.dart';
 import 'coloring_screen.dart';
 import 'fill_coloring_screen.dart';
 import 'mirror_draw_screen.dart';
+import 'my_meadow_screen.dart';
 import 'sticker_scene_screen.dart';
 
 /// One way of drawing.
@@ -59,6 +62,13 @@ class ColoringHubScreen extends ConsumerWidget {
     // whose contours have not landed yet is a real state.
     final hasSheets =
         (ref.watch(coloringSheetsProvider).valueOrNull ?? const []).isNotEmpty;
+
+    // The meadow only exists once something is standing on it. An empty
+    // gallery is a promise the app has not kept yet, and a child cannot
+    // read the promise.
+    final hasFinished =
+        ref.watch(filledSheetsProvider).isNotEmpty ||
+        ref.watch(coloringAlbumProvider).entries.isNotEmpty;
 
     final modes = <_DrawMode>[
       _DrawMode(
@@ -107,6 +117,18 @@ class ColoringHubScreen extends ConsumerWidget {
         badge: AppIcon.stickerRainbow,
         open: () => const StickerSceneScreen(),
       ),
+      if (hasFinished)
+        _DrawMode(
+          id: 'meadow',
+          title: 'Моя галявина',
+          titleEn: 'My meadow',
+          subtitle: 'Усе, що ти вже намалював',
+          subtitleEn: 'Everything you have finished',
+          color: DT.teal,
+          tint: DT.mintTint,
+          badge: AppIcon.rewardTrophy,
+          open: () => const MyMeadowScreen(),
+        ),
       _DrawMode(
         id: 'mirror',
         title: 'Дзеркальце',

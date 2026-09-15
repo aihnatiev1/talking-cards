@@ -766,6 +766,11 @@ class DTMotion {
   final Duration drawingBreath = const Duration(milliseconds: 2400);
   final Duration drawingBlink = const Duration(milliseconds: 4200);
 
+  /// How much each finished drawing on the meadow lags the one before it.
+  /// A dozen breathing in unison look mechanical; the same dozen slightly
+  /// out of step look like a crowd.
+  final Duration drawingBreathStagger = const Duration(milliseconds: 137);
+
   final Duration heroHop = const Duration(milliseconds: 1400);
   final Duration heroHopSettle = const Duration(milliseconds: 4200);
 
