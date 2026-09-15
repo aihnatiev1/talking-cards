@@ -758,6 +758,14 @@ class DTMotion {
 
   /// The hop of the hero's play button, and how long it hops for before
   /// it settles: an invitation, not a permanent animation.
+  /// A finished drawing breathing, and how often it blinks.
+  ///
+  /// Slower than Bloom's hop on purpose: the drawing is a thing the child
+  /// made and is looking at, not a companion asking for attention. The
+  /// blink is rare — an eye that closes often reads as sleepy.
+  final Duration drawingBreath = const Duration(milliseconds: 2400);
+  final Duration drawingBlink = const Duration(milliseconds: 4200);
+
   final Duration heroHop = const Duration(milliseconds: 1400);
   final Duration heroHopSettle = const Duration(milliseconds: 4200);
 

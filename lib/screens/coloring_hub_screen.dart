@@ -10,6 +10,7 @@ import '../widgets/entrance_stagger.dart';
 import '../widgets/kid_screen.dart';
 import '../widgets/kid_tap.dart';
 import 'coloring_screen.dart';
+import 'fill_coloring_screen.dart';
 import 'mirror_draw_screen.dart';
 
 /// One way of drawing.
@@ -63,6 +64,17 @@ class ColoringHubScreen extends ConsumerWidget {
         tint: DT.skyTint,
         badge: AppIcon.navColoring,
         open: () => const ColoringScreen(),
+      ),
+      _DrawMode(
+        id: 'fill',
+        title: 'Розфарбуй',
+        titleEn: 'Colour it in',
+        subtitle: 'Обери колір і тисни на частинку',
+        subtitleEn: 'Pick a colour, tap a part',
+        color: DT.coral,
+        tint: DT.coralTint,
+        badge: AppIcon.gameMatch,
+        open: () => const FillColoringScreen(sheetId: 'placeholder_lion'),
       ),
       _DrawMode(
         id: 'mirror',
