@@ -28,10 +28,16 @@ void main() {
     );
   });
 
-  testWidgets('both ways of drawing are on the shelf', (tester) async {
+  testWidgets('every way of drawing is on the shelf', (tester) async {
     await open(tester);
-    expect(find.text('Чарівна вода'), findsOneWidget);
-    expect(find.text('Дзеркальце'), findsOneWidget);
+    for (final title in [
+      'Чарівна вода',
+      'Розфарбуй',
+      'Наліпки',
+      'Дзеркальце',
+    ]) {
+      expect(find.text(title), findsOneWidget, reason: title);
+    }
   });
 
   testWidgets('a tile opens its screen', (tester) async {

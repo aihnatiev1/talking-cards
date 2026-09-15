@@ -12,6 +12,7 @@ import '../widgets/kid_tap.dart';
 import 'coloring_screen.dart';
 import 'fill_coloring_screen.dart';
 import 'mirror_draw_screen.dart';
+import 'sticker_scene_screen.dart';
 
 /// One way of drawing.
 class _DrawMode {
@@ -75,6 +76,17 @@ class ColoringHubScreen extends ConsumerWidget {
         tint: DT.coralTint,
         badge: AppIcon.gameMatch,
         open: () => const FillColoringScreen(sheetId: 'placeholder_lion'),
+      ),
+      _DrawMode(
+        id: 'stickers',
+        title: 'Наліпки',
+        titleEn: 'Stickers',
+        subtitle: 'Постав на галявину — і почуй слово',
+        subtitleEn: 'Put them on the meadow and hear the word',
+        color: DT.mint,
+        tint: DT.mintTint,
+        badge: AppIcon.stickerRainbow,
+        open: () => const StickerSceneScreen(),
       ),
       _DrawMode(
         id: 'mirror',
