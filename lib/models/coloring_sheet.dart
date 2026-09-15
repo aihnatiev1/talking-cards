@@ -91,7 +91,11 @@ class ColoringSheet {
     final meta =
         json.decode(await rootBundle.loadString('$base.json'))
             as Map<String, dynamic>;
-    final lineArt = await _decode('$base.png');
+    // The outline on transparency, not the delivered file: artwork
+    // arrives on solid white, and white drawn over the child's colours
+    // hides every one of them. tools/gen_region_map.py knocks the paper
+    // out; this is that file.
+    final lineArt = await _decode('$base.ink.png');
     final map = await _decode('$base.map.png');
     final raw = await map.toByteData(format: ui.ImageByteFormat.rawRgba);
     map.dispose();
