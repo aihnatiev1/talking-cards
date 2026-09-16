@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
+import '../providers/daily_quest_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../screens/coloring_screen.dart';
@@ -70,6 +71,7 @@ class _StickerSceneScreenState extends ConsumerState<StickerSceneScreen> {
     if (card == null) return;
     FeedbackService.instance.event(FeedbackEvent.tap, haptic: false);
     AudioService.instance.playWordOnly(card.audioKey, card.sound);
+    ref.read(dailyQuestProvider.notifier).recordDrawing();
     setState(() {
       _placed.add(_Sticker(
         card: card,

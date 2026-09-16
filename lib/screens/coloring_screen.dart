@@ -9,6 +9,7 @@ import '../models/card_model.dart';
 import '../models/pack_model.dart';
 import '../providers/coloring_album_provider.dart';
 import '../providers/content_pack_provider.dart';
+import '../providers/daily_quest_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../services/analytics_service.dart';
@@ -354,6 +355,8 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
 
   void _onEnd() {
     if (_current.isNotEmpty) {
+      // The day's drawing step — one stroke is enough.
+      ref.read(dailyQuestProvider.notifier).recordDrawing();
       _strokes.add(List.of(_current));
       _current.clear();
       setState(() {});

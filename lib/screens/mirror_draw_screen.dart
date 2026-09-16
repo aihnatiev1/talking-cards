@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../providers/daily_quest_provider.dart';
 import '../providers/language_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/feedback_service.dart';
@@ -58,6 +59,7 @@ class _MirrorDrawScreenState extends ConsumerState<MirrorDrawScreen> {
       return;
     }
     FeedbackService.instance.event(FeedbackEvent.tap, haptic: false);
+    ref.read(dailyQuestProvider.notifier).recordDrawing();
     setState(() {
       _strokes.add(_Stroke(_current, _crayon.color));
       _current = [];

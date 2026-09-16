@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/coloring_sheet.dart';
 import '../providers/coloring_sheets_provider.dart';
+import '../providers/daily_quest_provider.dart';
 import '../providers/filled_sheets_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
@@ -260,6 +261,9 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
       buffer[i] = packed;
     }
     _filled[area] = c;
+    // The day's drawing step: one filled area is enough. The step is
+    // "you drew today", not "you finished a drawing".
+    ref.read(dailyQuestProvider.notifier).recordDrawing();
     ref.read(filledSheetsProvider.notifier).record(
           sheet.id,
           area,

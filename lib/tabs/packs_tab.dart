@@ -555,7 +555,9 @@ class _PacksTabState extends ConsumerState<PacksTab> {
         ? sHero('Далі: послухай картку', 'Next: listen to the card')
         : !viewDone
         ? sHero('Далі: погортай картки', 'Next: swipe some cards')
-        : sHero('Далі: пограємо', 'Next: a game');
+        : !playDone
+        ? sHero('Далі: пограємо', 'Next: a game')
+        : sHero('Далі: помалюємо', 'Next: let\'s draw');
     if (allDone) {
       // Fire-and-forget; internal guard prevents duplicate logs per day.
       unawaited(_maybeLogTodayPlanComplete(allDone));
@@ -568,6 +570,8 @@ class _PacksTabState extends ConsumerState<PacksTab> {
         ? 2
         : !playDone
         ? 3
+        : !questState.completed.contains(QuestTask.drawPicture)
+        ? 4
         : 0;
 
     void openQuestMap() {
@@ -640,6 +644,24 @@ class _PacksTabState extends ConsumerState<PacksTab> {
       },
     );
 
+    final drawDone = questState.completed.contains(QuestTask.drawPicture);
+    final drawTask = DailyTask(
+      icon: AppIcon.navColoring,
+      label: isEn ? 'Draw' : 'Малюємо',
+      isDone: drawDone,
+      isActive: firstPending == 4,
+      onTap: () {
+        AnalyticsService.instance.logTodayPlanStoneTap(
+          stoneId: 4,
+          wasDone: drawDone,
+          wasActive: firstPending == 4,
+        );
+        // The shelf, not one mode: which way to draw is the child's
+        // choice, and it is the only choice on that screen.
+        ref.read(homeTabRequestProvider.notifier).state = kDrawTabIndex;
+      },
+    );
+
     // The day's plan is finished. The row says «Обрати гру», so it opens
     // the games tab and nothing else: it used to send Pro users to the
     // quest map and free users to a card reveal, which is not what the
@@ -679,7 +701,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
           AnalyticsService.instance.logFirstAction('hero_cta');
           _onPackTap(context, cp, source: 'hero_continue');
         },
-        tasks: [cardTask, adventureTask],
+        tasks: [cardTask, adventureTask, drawTask],
         allDone: allDone,
         onAllDoneTap: allDone ? onAllDone : null,
         stepsDone: firstVisit ? null : stepsDone,
@@ -701,7 +723,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
         mascot: mascot,
         onHeroTap: openCardOfDay,
         onHeroLongPress: () => _showCardOfDayPopup(cotd),
-        tasks: [packTask, adventureTask],
+        tasks: [packTask, adventureTask, drawTask],
         allDone: allDone,
         onAllDoneTap: allDone ? onAllDone : null,
         stepsDone: firstVisit ? null : stepsDone,
@@ -728,7 +750,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
         AnalyticsService.instance.logFirstAction('hero_cta');
         _onPackTap(context, rp, source: 'hero_recommended');
       },
-      tasks: [adventureTask],
+      tasks: [adventureTask, drawTask],
       allDone: allDone,
       onAllDoneTap: allDone ? onAllDone : null,
       stepsDone: firstVisit ? null : stepsDone,

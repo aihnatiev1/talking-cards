@@ -8,6 +8,7 @@ import '../models/pack_model.dart';
 import '../models/quest_theme.dart';
 import '../providers/bonus_cards_provider.dart';
 import '../providers/daily_quest_provider.dart';
+import '../providers/home_tab_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../services/audio_service.dart';
@@ -306,6 +307,11 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen> {
             game: true,
           );
         }
+      case QuestTask.drawPicture:
+        // The drawing shelf lives in a tab, not on a route this map can
+        // push: leave the map and ask the home shell for it.
+        Navigator.of(context).popUntil((r) => r.isFirst);
+        ref.read(homeTabRequestProvider.notifier).state = kDrawTabIndex;
       case QuestTask.reviewSRSCards:
       case QuestTask.speakWords:
         // Bonus tasks — no specific navigation action needed
