@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/card_model.dart';
 import '../providers/daily_quest_provider.dart';
 import '../providers/language_provider.dart';
+import '../providers/sticker_scene_provider.dart';
 import '../providers/packs_provider.dart';
 import '../screens/coloring_screen.dart';
 import '../services/analytics_service.dart';
@@ -17,20 +18,6 @@ import '../widgets/card_image.dart';
 import '../widgets/kid_screen.dart';
 import '../widgets/kid_tap.dart';
 import '../widgets/meadow_scene.dart';
-
-class _Sticker {
-  final CardModel card;
-  final Offset position;
-  final double scale;
-  final double angle;
-
-  const _Sticker({
-    required this.card,
-    required this.position,
-    required this.scale,
-    required this.angle,
-  });
-}
 
 /// A meadow and a tray of things to put on it.
 ///
@@ -51,7 +38,6 @@ class StickerSceneScreen extends ConsumerStatefulWidget {
 }
 
 class _StickerSceneScreenState extends ConsumerState<StickerSceneScreen> {
-  final List<_Sticker> _placed = [];
   final _rng = math.Random();
   CardModel? _held;
 
@@ -66,27 +52,31 @@ class _StickerSceneScreenState extends ConsumerState<StickerSceneScreen> {
     AudioService.instance.playWordOnly(card.audioKey, card.sound);
   }
 
-  void _place(Offset at) {
+  void _place(Offset at, Size field) {
     final card = _held;
-    if (card == null) return;
+    if (card == null || field.isEmpty) return;
     FeedbackService.instance.event(FeedbackEvent.tap, haptic: false);
     AudioService.instance.playWordOnly(card.audioKey, card.sound);
     ref.read(dailyQuestProvider.notifier).recordDrawing();
-    setState(() {
-      _placed.add(_Sticker(
-        card: card,
-        position: at,
-        // A little variety so a meadow of cats does not look like a grid.
-        scale: 0.85 + _rng.nextDouble() * 0.4,
-        angle: (_rng.nextDouble() - 0.5) * 0.35,
-      ));
-    });
+    ref.read(stickerSceneProvider.notifier).place(
+          PlacedSticker(
+            cardId: card.id,
+            // Fractions, not pixels: the scene has to come back right on
+            // a phone held differently, and on a tablet.
+            x: at.dx / field.width,
+            y: at.dy / field.height,
+            // A little variety so a meadow of cats does not look like a
+            // grid.
+            scale: 0.85 + _rng.nextDouble() * 0.4,
+            angle: (_rng.nextDouble() - 0.5) * 0.35,
+          ),
+        );
   }
 
   void _undo() {
-    if (_placed.isEmpty) return;
+    if (ref.read(stickerSceneProvider).isEmpty) return;
     FeedbackService.instance.event(FeedbackEvent.tap);
-    setState(() => _placed.removeLast());
+    ref.read(stickerSceneProvider.notifier).removeLast();
   }
 
   @override
@@ -97,6 +87,8 @@ class _StickerSceneScreenState extends ConsumerState<StickerSceneScreen> {
     // The same pool the water mode draws from: real word cards with a
     // picture, nothing sad, nothing still inside an undelivered pack.
     final pool = ColoringScreen.coloringPool(packs).take(40).toList();
+    final placed = ref.watch(stickerSceneProvider);
+    final byId = {for (final c in pool) c.id: c};
     // Something is always in hand. An empty hand means the first tap on
     // the meadow does nothing, and a child reads that as a screen that
     // does not work — not as "pick a sticker first".
@@ -111,7 +103,7 @@ class _StickerSceneScreenState extends ConsumerState<StickerSceneScreen> {
         icon: Icon(
           Icons.undo_rounded,
           size: 28,
-          color: _placed.isEmpty ? DT.textMuted : DT.brand,
+          color: placed.isEmpty ? DT.textMuted : DT.brand,
         ),
       ),
       body: pool.isEmpty
@@ -124,19 +116,27 @@ class _StickerSceneScreenState extends ConsumerState<StickerSceneScreen> {
           : Column(
               children: [
                 Expanded(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTapUp: (d) => _place(d.localPosition),
-                    child: Stack(
-                      children: [
-                        const Positioned.fill(child: MeadowScene()),
-                        for (var i = 0; i < _placed.length; i++)
-                          _PlacedSticker(
-                            key: ValueKey('sticker-$i'),
-                            sticker: _placed[i],
-                          ),
-                      ],
-                    ),
+                  child: LayoutBuilder(
+                    builder: (context, box) {
+                      final field = Size(box.maxWidth, box.maxHeight);
+                      return GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTapUp: (d) => _place(d.localPosition, field),
+                        child: Stack(
+                          children: [
+                            const Positioned.fill(child: MeadowScene()),
+                            for (var i = 0; i < placed.length; i++)
+                              if (byId[placed[i].cardId] case final card?)
+                                _PlacedStickerView(
+                                  key: ValueKey('sticker-$i'),
+                                  sticker: placed[i],
+                                  card: card,
+                                  field: field,
+                                ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                 ),
                 _StickerTray(
@@ -153,15 +153,23 @@ class _StickerSceneScreenState extends ConsumerState<StickerSceneScreen> {
 
 /// One sticker on the meadow. It arrives with a pop — a thing that lands
 /// is more convincing than a thing that is suddenly there.
-class _PlacedSticker extends StatefulWidget {
-  final _Sticker sticker;
-  const _PlacedSticker({super.key, required this.sticker});
+class _PlacedStickerView extends StatefulWidget {
+  final PlacedSticker sticker;
+  final CardModel card;
+  final Size field;
+
+  const _PlacedStickerView({
+    super.key,
+    required this.sticker,
+    required this.card,
+    required this.field,
+  });
 
   @override
-  State<_PlacedSticker> createState() => _PlacedStickerState();
+  State<_PlacedStickerView> createState() => _PlacedStickerViewState();
 }
 
-class _PlacedStickerState extends State<_PlacedSticker>
+class _PlacedStickerViewState extends State<_PlacedStickerView>
     with SingleTickerProviderStateMixin {
   late final AnimationController _in = AnimationController(
     vsync: this,
@@ -183,8 +191,8 @@ class _PlacedStickerState extends State<_PlacedSticker>
     const side = 288.0;
     final sticker = widget.sticker;
     return Positioned(
-      left: sticker.position.dx - side / 2,
-      top: sticker.position.dy - side / 2,
+      left: sticker.x * widget.field.width - side / 2,
+      top: sticker.y * widget.field.height - side / 2,
       width: side,
       height: side,
       child: IgnorePointer(
@@ -194,7 +202,7 @@ class _PlacedStickerState extends State<_PlacedSticker>
             scale: sticker.scale * Curves.easeOutBack.transform(_in.value),
             child: Transform.rotate(angle: sticker.angle, child: child),
           ),
-          child: CardImage.forCard(sticker.card),
+          child: CardImage.forCard(widget.card),
         ),
       ),
     );
