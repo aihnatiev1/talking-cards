@@ -37,6 +37,12 @@ import 'package:talking_cards/services/audio_service.dart';
 ///
 ///   flutter drive --driver=test_driver/integration_test.dart \
 ///     --target=integration_test/audit_screenshots_test.dart -d `<sim udid>`
+/// Which language the walk runs in. The store needs the same screens in
+/// both, and the rig only ever spoke Ukrainian:
+///
+///   flutter drive ... --dart-define=AUDIT_LANG=en
+const _lang = String.fromEnvironment('AUDIT_LANG', defaultValue: 'uk');
+
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -49,11 +55,11 @@ void main() {
     final profiles = [
       {
         'id': 'p1',
-        'name': 'Соломійка',
+        'name': _lang == 'en' ? 'Emma' : 'Соломійка',
         'avatar': '👧',
         'createdAt':
             DateTime.now().subtract(const Duration(days: 40)).toIso8601String(),
-        'lang': 'uk',
+        'lang': _lang,
         'level': 2,
       },
     ];
@@ -63,6 +69,10 @@ void main() {
       'swipe_hint_shown': true,
       'today_plan_intro_seen_v1': true,
       'installed': true,
+      // The what's-new sheet covers the home screen, which is the one
+      // shot the store listing is built from. A seeded profile has
+      // already "seen" it.
+      'whats_new_seen_v2_0': true,
       'is_pro': true,
       'active_profile_id': 'p1',
       'app_profiles': [for (final p in profiles) json.encode(p)],
@@ -89,7 +99,7 @@ void main() {
 
   Future<void> shot(WidgetTester tester, String name) async {
     try {
-      await binding.takeScreenshot(name);
+      await binding.takeScreenshot(_lang == 'en' ? '$name-en' : name);
       debugPrint('AUDIT_SHOT ok $name');
     } catch (e) {
       debugPrint('AUDIT_SHOT fail $name: $e');
@@ -107,6 +117,14 @@ void main() {
     try {
       nav.push(MaterialPageRoute(builder: (_) => build()));
       await settle(tester, wait);
+      // Anything a screen reads from SharedPreferences or an asset needs
+      // the real event loop; pumping a fake clock lets the screen build
+      // with the store still empty. The drawing shelf showed five tiles
+      // instead of six that way.
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 400)),
+      );
+      await settle(tester, 400);
       await shot(tester, name);
       if (interact != null) {
         await interact(tester);
