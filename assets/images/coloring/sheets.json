@@ -1,12 +1,25 @@
 {
   "sheets": [
-    "bear_cub",
-    "cat_box",
-    "cat_face",
-    "cat_icecream",
-    "chick_hat",
-    "chick_plaster",
-    "dog_face",
-    "panda_koala"
+    "bear_heart",
+    "bunny",
+    "bunny_carrot",
+    "cat",
+    "cow",
+    "dog",
+    "elephant",
+    "fox",
+    "goat",
+    "house",
+    "koala",
+    "leopard",
+    "lion",
+    "owl",
+    "panda",
+    "parrot",
+    "penguin",
+    "pig",
+    "pony",
+    "tractor",
+    "wolf_pup"
   ]
 }

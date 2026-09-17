@@ -281,7 +281,7 @@ void main() {
         () => const ColoringHubScreen(), wait: 2000);
 
     await pushAndShot(tester, nav, 'k02-fill-coloring',
-        () => const FillColoringScreen(sheetId: 'bear_cub'),
+        () => const FillColoringScreen(sheetId: 'bear_heart'),
         wait: 3000, interact: (t) async {
       // Paint a few parts so the shot shows the point of the screen rather
       // than an empty outline. The spots are taken from the drawing's own
@@ -309,7 +309,7 @@ void main() {
 
     await pushAndShot(tester, nav, 'k04-fill-by-ear',
         () => const FillColoringScreen(
-              sheetId: 'bear_cub',
+              sheetId: 'bear_heart',
               byEar: true,
             ),
         wait: 2600);

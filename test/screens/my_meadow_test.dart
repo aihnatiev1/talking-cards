@@ -26,7 +26,7 @@ void main() {
     addTearDown(container.dispose);
     await container
         .read(finishedSheetsProvider.notifier)
-        .record('bear_cub', 1, 'yellow');
+        .record('bear_heart', 1, 'yellow');
 
     await tester.pumpWidget(
       UncontrolledProviderScope(
@@ -37,6 +37,6 @@ void main() {
     await tester.pump();
 
     expect(find.text('Тут стануть твої малюнки'), findsNothing);
-    expect(find.byKey(const ValueKey('sheet-bear_cub')), findsOneWidget);
+    expect(find.byKey(const ValueKey('sheet-bear_heart')), findsOneWidget);
   });
 }
