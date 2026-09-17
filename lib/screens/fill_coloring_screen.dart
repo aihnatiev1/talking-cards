@@ -480,12 +480,15 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
                     ),
                   ),
                 ),
-                if (widget.byEar) _AskBanner(
-                  crayon: _asked,
-                  found: _found,
-                  isEn: isEn,
-                  onRepeat: _sayAsked,
-                ),
+                if (widget.byEar)
+                  _Centred(
+                    child: _AskBanner(
+                      crayon: _asked,
+                      found: _found,
+                      isEn: isEn,
+                      onRepeat: _sayAsked,
+                    ),
+                  ),
                 // Finished: Bloom says so, and the one thing to do next is
                 // a button a child can read without words on it. The
                 // header icons above are a grown-up's affordance — a
@@ -493,15 +496,18 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
                 // "again", and until this panel existed there was nothing
                 // else to press.
                 if (_done)
-                  _FinishedPanel(
-                    isEn: isEn,
-                    onAnother: _ids.length > 1 ? _newPicture : null,
-                    onAgain: _clear,
+                  _Centred(
+                    child: _FinishedPanel(
+                      isEn: isEn,
+                      onAnother: _ids.length > 1 ? _newPicture : null,
+                      onAgain: _clear,
+                    ),
                   ),
                 // The crayons stay. Finishing is not the end of playing —
                 // a child who wants to keep colouring the ears should not
                 // have the box taken away from her.
-                CrayonPalette(
+                _Centred(
+                  child: CrayonPalette(
                     selectedId: widget.byEar && !_found ? '' : _crayon.id,
                     isEn: isEn,
                     hintId: widget.byEar && _misses >= 2 && !_found
@@ -509,6 +515,7 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
                         : null,
                     onSelected: _chooseCrayon,
                   ),
+                ),
                 const SizedBox(height: 8),
               ],
             ),
@@ -835,4 +842,19 @@ class _BigButton extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Bottom furniture stops growing at the hero's width. A tablet is a big
+/// screen, not a reason to stretch a row of buttons across all of it.
+class _Centred extends StatelessWidget {
+  final Widget child;
+  const _Centred({required this.child});
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: DT.size.heroMaxWidth),
+      child: child,
+    ),
+  );
 }

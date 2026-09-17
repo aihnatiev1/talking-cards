@@ -166,12 +166,15 @@ class CrayonPalette extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, box) {
         // Whatever the phone is, five across with room to breathe; never
-        // below a child's minimum target.
+        // below a child's minimum target. The box stops growing at the
+        // hero's width so a tablet gets a box of crayons rather than ten
+        // dinner plates stretched across 1200 px.
+        final width = math.min(box.maxWidth, DT.size.heroMaxWidth);
         final cell = math.max(
           DT.size.tapMin,
-          (box.maxWidth - 32 - (_perRow - 1) * 8) / _perRow,
+          (width - 32 - (_perRow - 1) * 8) / _perRow,
         );
-        final face = math.min(cell - 8, 64.0);
+        final face = math.min(cell - 8, 72.0);
         return Padding(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
           child: Wrap(

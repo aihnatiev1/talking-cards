@@ -188,7 +188,10 @@ class _PlacedStickerViewState extends State<_PlacedStickerView>
     // they made, not a decoration on a scene — at 96 dp the meadow looked
     // like a page of tiny icons, and a two-year-old could not tell what
     // they had put down.
-    const side = 288.0;
+    // A sticker is about a third of the shorter side of the meadow: on a
+    // phone that is the 288 dp this was fixed at, and on a tablet it
+    // grows with the field instead of sitting there like a postage stamp.
+    final side = (widget.field.shortestSide * 0.72).clamp(220.0, 460.0);
     final sticker = widget.sticker;
     return Positioned(
       left: sticker.x * widget.field.width - side / 2,
@@ -222,8 +225,12 @@ class _StickerTray extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // The tray grows with the screen: on a tablet a row of 104 dp thumbs
+    // is a strip of postage stamps under a meadow the size of a table.
+    final wide = MediaQuery.sizeOf(context).shortestSide >= kLargeScreen;
+    final thumb = wide ? 150.0 : 104.0;
     return SizedBox(
-      height: 120,
+      height: thumb + 16,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -239,7 +246,7 @@ class _StickerTray extends StatelessWidget {
             child: AnimatedContainer(
               duration: DT.pressMs,
               curve: Curves.easeOutCubic,
-              width: 104,
+              width: thumb,
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 color: held ? DT.surfaceWhite : DT.surfaceWhite.withValues(

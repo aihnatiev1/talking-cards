@@ -153,19 +153,29 @@ class ColoringHubScreen extends ConsumerWidget {
         style: DT.h2.copyWith(fontSize: 19, color: DT.textPrimary),
       ),
       body: StaggerScope(
-        child: GridView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: MediaQuery.sizeOf(context).width < 600 ? 2 : 3,
-            mainAxisSpacing: 14,
-            crossAxisSpacing: 14,
-            childAspectRatio: 0.92,
-          ),
-          itemCount: modes.length,
-          itemBuilder: (context, i) => StaggeredEntrance(
-            key: ValueKey(modes[i].id),
-            index: i,
-            child: _ModeTile(mode: modes[i], isEn: isEn, position: i),
+        // Centred and capped: on a tablet a top-aligned grid of six tiles
+        // left two thirds of the screen empty, which reads as a page that
+        // failed to load rather than a shelf.
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 900),
+            child: GridView.builder(
+              shrinkWrap: true,
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount:
+                    MediaQuery.sizeOf(context).width < 600 ? 2 : 3,
+                mainAxisSpacing: 14,
+                crossAxisSpacing: 14,
+                childAspectRatio: 0.92,
+              ),
+              itemCount: modes.length,
+              itemBuilder: (context, i) => StaggeredEntrance(
+                key: ValueKey(modes[i].id),
+                index: i,
+                child: _ModeTile(mode: modes[i], isEn: isEn, position: i),
+              ),
+            ),
           ),
         ),
       ),
