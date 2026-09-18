@@ -1003,18 +1003,26 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                         // Reserve a gutter: StreakChip pulses (scales past its
                         // layout box) and used to graze the title's last letter.
                         child: Padding(
-                          padding: const EdgeInsets.only(right: 10),
+                          padding: const EdgeInsets.only(right: 8),
                           child: FittedBox(
                             fit: BoxFit.scaleDown,
                             alignment: Alignment.centerLeft,
+                            // The emoji is gone and the name is on two
+                            // lines. Sharing one line with the streak,
+                            // the avatar and the info button left the
+                            // title about 55 % of the width, and
+                            // scaleDown obligingly shrank a 19 sp name to
+                            // something nearer 12 — the app's own name,
+                            // set smaller than its captions.
                             child: Text(
                               s(
-                                '🗣️ Картки-розмовлялки',
-                                '🗣️ FirstWords Cards',
+                                'Картки-\nрозмовлялки',
+                                'FirstWords\nCards',
                               ),
-                              maxLines: 1,
+                              maxLines: 2,
                               style: TextStyle(
                                 fontSize: 19 * scale,
+                                height: 1.05,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
