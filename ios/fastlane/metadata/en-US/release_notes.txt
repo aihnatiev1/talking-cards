@@ -1,7 +1,9 @@
-- A “Today” card on the home screen: the day’s plan in one place, with what’s left to do
-- “Say it with me”: in Repeat after me the app notices that your child took a turn. A grown-up turns it on in the parent area — nothing is recorded and nothing is judged
-- Words grow into phrases: once a word is coming along, the card asks for it in a sentence
-- The first sixty words now come round in order instead of at random
-- The free pack is now the Alphabet
+- A new “Let’s draw” section: five ways to draw and 21 pictures
+- “Colour it in”: pick a colour, tap a part — it fills, then says its word
+- “Listen and colour”: Bloom names a colour and your child finds it by ear
+- Stickers on the meadow: every one says its word, and the meadow keeps
+- “Mirror”: draw one half, get the whole
+- Drawing is part of the daily plan now
+- English gets the first-words plan too
 
 Thanks for growing with us!
