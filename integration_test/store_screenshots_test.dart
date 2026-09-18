@@ -58,6 +58,7 @@ void main() {
       'swipe_hint_shown': true,
       'today_plan_intro_seen_v1': true,
       'installed': true,
+      'whats_new_seen_v2_0': true,
       'is_pro': true,
       'active_profile_id': 'p1',
       'app_profiles': [for (final p in profiles) json.encode(p)],

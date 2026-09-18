@@ -13,10 +13,14 @@ import 'package:talking_cards/screens/articulation_screen.dart';
 import 'package:talking_cards/screens/bubble_pop_screen.dart';
 import 'package:talking_cards/screens/card_reveal_screen.dart';
 import 'package:talking_cards/screens/cards_screen.dart';
+import 'package:talking_cards/screens/coloring_hub_screen.dart';
 import 'package:talking_cards/screens/coloring_screen.dart';
+import 'package:talking_cards/screens/fill_coloring_screen.dart';
 import 'package:talking_cards/screens/guess_screen.dart';
 import 'package:talking_cards/screens/kid_word_wall_screen.dart';
 import 'package:talking_cards/screens/memory_match_screen.dart';
+import 'package:talking_cards/screens/mirror_draw_screen.dart';
+import 'package:talking_cards/screens/my_meadow_screen.dart';
 import 'package:talking_cards/screens/odd_one_out_screen.dart';
 import 'package:talking_cards/screens/opposite_game_screen.dart';
 import 'package:talking_cards/screens/paywall_screen.dart';
@@ -24,6 +28,7 @@ import 'package:talking_cards/screens/quest_map_screen.dart';
 import 'package:talking_cards/screens/repeat_game_screen.dart';
 import 'package:talking_cards/screens/rewards_screen.dart';
 import 'package:talking_cards/screens/stats_screen.dart';
+import 'package:talking_cards/screens/sticker_scene_screen.dart';
 import 'package:talking_cards/services/audio_service.dart';
 
 /// Design-audit rig: walks every kid-facing and parent-facing screen and
@@ -32,6 +37,12 @@ import 'package:talking_cards/services/audio_service.dart';
 ///
 ///   flutter drive --driver=test_driver/integration_test.dart \
 ///     --target=integration_test/audit_screenshots_test.dart -d `<sim udid>`
+/// Which language the walk runs in. The store needs the same screens in
+/// both, and the rig only ever spoke Ukrainian:
+///
+///   flutter drive ... --dart-define=AUDIT_LANG=en
+const _lang = String.fromEnvironment('AUDIT_LANG', defaultValue: 'uk');
+
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -44,11 +55,11 @@ void main() {
     final profiles = [
       {
         'id': 'p1',
-        'name': 'Соломійка',
+        'name': _lang == 'en' ? 'Emma' : 'Соломійка',
         'avatar': '👧',
         'createdAt':
             DateTime.now().subtract(const Duration(days: 40)).toIso8601String(),
-        'lang': 'uk',
+        'lang': _lang,
         'level': 2,
       },
     ];
@@ -58,6 +69,10 @@ void main() {
       'swipe_hint_shown': true,
       'today_plan_intro_seen_v1': true,
       'installed': true,
+      // The what's-new sheet covers the home screen, which is the one
+      // shot the store listing is built from. A seeded profile has
+      // already "seen" it.
+      'whats_new_seen_v2_0': true,
       'is_pro': true,
       'active_profile_id': 'p1',
       'app_profiles': [for (final p in profiles) json.encode(p)],
@@ -84,7 +99,7 @@ void main() {
 
   Future<void> shot(WidgetTester tester, String name) async {
     try {
-      await binding.takeScreenshot(name);
+      await binding.takeScreenshot(_lang == 'en' ? '$name-en' : name);
       debugPrint('AUDIT_SHOT ok $name');
     } catch (e) {
       debugPrint('AUDIT_SHOT fail $name: $e');
@@ -102,6 +117,14 @@ void main() {
     try {
       nav.push(MaterialPageRoute(builder: (_) => build()));
       await settle(tester, wait);
+      // Anything a screen reads from SharedPreferences or an asset needs
+      // the real event loop; pumping a fake clock lets the screen build
+      // with the store still empty. The drawing shelf showed five tiles
+      // instead of six that way.
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 400)),
+      );
+      await settle(tester, 400);
       await shot(tester, name);
       if (interact != null) {
         await interact(tester);
@@ -250,6 +273,55 @@ void main() {
 
     await pushAndShot(tester, nav, 'k00-coloring', () => const ColoringScreen(),
         wait: 2000);
+
+    // The drawing shelf and everything on it. Five ways to draw landed at
+    // once and none of them was in the audit set, so nothing outside the
+    // app had ever seen them.
+    await pushAndShot(tester, nav, 'k01-draw-shelf',
+        () => const ColoringHubScreen(), wait: 2000);
+
+    await pushAndShot(tester, nav, 'k02-fill-coloring',
+        () => const FillColoringScreen(sheetId: 'bear_heart'),
+        wait: 3000, interact: (t) async {
+      // Paint a few parts so the shot shows the point of the screen rather
+      // than an empty outline. The spots are taken from the drawing's own
+      // rect — hard-coded offsets missed it entirely the first time, and
+      // the result looked like a broken feature rather than a bad tap.
+      final picture = t.getRect(find.byType(CustomPaint).last);
+      for (final at in [
+        picture.center,
+        Offset(picture.center.dx, picture.top + picture.height * 0.18),
+        Offset(picture.center.dx, picture.bottom - picture.height * 0.2),
+      ]) {
+        await t.tapAt(at);
+        // The painted layer is built by ui.decodeImageFromPixels, whose
+        // callback needs the real event loop — pumping a fake clock lets
+        // the fill be recorded but never drawn, which is why the first
+        // run of this shot came back as an empty outline.
+        await t.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 400)),
+        );
+        await settle(t, 600);
+      }
+      await settle(t, 600);
+      await shot(t, 'k03-fill-coloring-painted');
+    });
+
+    await pushAndShot(tester, nav, 'k04-fill-by-ear',
+        () => const FillColoringScreen(
+              sheetId: 'bear_heart',
+              byEar: true,
+            ),
+        wait: 2600);
+
+    await pushAndShot(tester, nav, 'k05-stickers',
+        () => const StickerSceneScreen(), wait: 2200);
+
+    await pushAndShot(tester, nav, 'k06-mirror-draw',
+        () => const MirrorDrawScreen(), wait: 1800);
+
+    await pushAndShot(tester, nav, 'k07-my-meadow',
+        () => const MyMeadowScreen(), wait: 2200);
 
     await pushAndShot(tester, nav, 'l00-rewards', () => const RewardsScreen(),
         wait: 2000);

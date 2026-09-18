@@ -11,13 +11,20 @@ import 'packs_provider.dart';
 /// The teaching plan for the current language, or null where there is not
 /// one yet.
 ///
-/// Only Ukrainian has a plan today: the English recordings are being
-/// redone, and a curriculum is only as good as the voice behind it. The
-/// English app keeps the library — it loses nothing it had.
+/// Both languages have one. English is 59 words rather than 60: its SIT
+/// card is one of the six pulled for a bad AI take, and a plan must not
+/// teach a word the app cannot say properly. It comes back the day that
+/// recording is redone — the plan is a list of ids over the library, so
+/// the fix is one line of JSON and no code at all.
 final curriculumProvider = FutureProvider<Curriculum?>((ref) async {
   final lang = ref.watch(languageProvider);
-  if (lang != 'uk') return null;
-  final raw = await rootBundle.loadString('assets/data/uk_curriculum.json');
+  final asset = switch (lang) {
+    'uk' => 'assets/data/uk_curriculum.json',
+    'en' => 'assets/data/en_curriculum.json',
+    _ => null,
+  };
+  if (asset == null) return null;
+  final raw = await rootBundle.loadString(asset);
   return Curriculum.fromJson(json.decode(raw) as Map<String, dynamic>);
 });
 

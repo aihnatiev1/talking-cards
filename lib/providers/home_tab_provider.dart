@@ -13,3 +13,6 @@ final homeTabRequestProvider = StateProvider<int?>((ref) => null);
 
 /// Games — the tab "Обрати гру" means.
 const int kGamesTabIndex = 1;
+
+/// «Малюємо» — where the day's drawing step sends the child.
+const int kDrawTabIndex = 2;

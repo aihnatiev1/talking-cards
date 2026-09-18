@@ -10,12 +10,19 @@ enum QuestTask {
   playQuiz,        // Play the guess game (quiz or memory match)
   viewCards5,      // View 5 total cards (cumulative with viewCards3)
   reviewOldCard,   // Open the review pack or revisit any pack
+  drawPicture,     // Colour, stamp or draw in «Малюємо» (bonus)
   reviewSRSCards,  // Review 5+ SRS-due cards (bonus — does not block reward)
   speakWords,      // Say 3 words correctly via mic (bonus — does not block reward)
 }
 
 /// The 5 core tasks required to unlock the daily reward.
-/// reviewSRSCards is bonus and never blocks the reward.
+/// reviewSRSCards, speakWords and drawPicture are bonus and never block it.
+///
+/// Drawing is deliberately not one of the five. The day is five steps and
+/// about five minutes, which is the whole promise; the adventure map is
+/// drawn with exactly five stops and a chest. What drawing gets instead
+/// is a stone of its own on the home card — visible, tappable, and not
+/// standing between a child and her treasure.
 const _coreTasks = {
   QuestTask.listenCardOfDay,
   QuestTask.viewCards3,
@@ -159,6 +166,11 @@ class DailyQuestNotifier extends StateNotifier<DailyQuestState> {
     if (_viewsToday >= 3) await completeTask(QuestTask.viewCards3);
     if (_viewsToday >= 5) await completeTask(QuestTask.viewCards5);
   }
+
+  /// Anything the child made in «Малюємо» — a filled area, a revealed
+  /// picture, a sticker, a line. One is enough: the step is "you drew
+  /// today", not "you finished a drawing".
+  Future<void> recordDrawing() => completeTask(QuestTask.drawPicture);
 
   /// Call each time a card is reviewed in the SRS session.
   /// Completes the bonus [QuestTask.reviewSRSCards] after 5 reviews.

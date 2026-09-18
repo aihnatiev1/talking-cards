@@ -698,13 +698,22 @@ class _StoneState extends State<_Stone> with SingleTickerProviderStateMixin {
           SizedBox(width: 32, height: 32, child: AppIconView(t.icon, size: 30)),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              t.label,
-              style: DT.caption.copyWith(
-                fontSize: 13,
-                height: 1.2,
-                color: DT.textPrimary,
-                fontWeight: FontWeight.w800,
+            // One line, shrinking if it has to. Three stones share a row,
+            // and «Малюємо» in the third of them broke across two lines
+            // as «Малює / мо» — a word split down the middle is the sort
+            // of thing a parent reads as a broken app.
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                t.label,
+                maxLines: 1,
+                style: DT.caption.copyWith(
+                  fontSize: 13,
+                  height: 1.2,
+                  color: DT.textPrimary,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
           ),

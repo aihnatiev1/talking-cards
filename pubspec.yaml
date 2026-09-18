@@ -1,7 +1,7 @@
 name: talking_cards
 description: Інтерактивні картки зі звуками для розвитку мовлення малят від 1 до 5 років. 234 картки, 8 розділів, вікторина та щоденні завдання.
 publish_to: 'none'
-version: 1.4.0+34
+version: 1.4.1+35
 
 environment:
   sdk: ^3.11.0
@@ -72,6 +72,9 @@ flutter:
     # unconditionally (twelve small drawings, not paid content), which is
     # what lets ArticulationArt use a literal path.
     - assets/images/articulation/
+    # Tap-to-fill colouring: one line-art png per picture, plus the region
+    # map and metadata generated from it by tools/gen_region_map.py.
+    - assets/images/coloring/
     - assets/audio_mp3/
     - assets/audio_sfx/
     # Paid-pack content. Bundled on iOS/debug; the Android app bundle strips

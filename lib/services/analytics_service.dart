@@ -420,9 +420,6 @@ class AnalyticsService {
     'mic_enabled': micEnabled,
   });
 
-  Future<void> logSoundFilterOpen(String letter) =>
-      _safeLog('sound_filter_open', {'letter': letter});
-
   /// Generic event logger for ad-hoc events (e.g. speech_attempt).
   Future<void> logEvent(String name,
           {Map<String, Object>? parameters}) =>

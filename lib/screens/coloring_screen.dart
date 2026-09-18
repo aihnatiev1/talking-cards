@@ -9,6 +9,7 @@ import '../models/card_model.dart';
 import '../models/pack_model.dart';
 import '../providers/coloring_album_provider.dart';
 import '../providers/content_pack_provider.dart';
+import '../providers/daily_quest_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../services/analytics_service.dart';
@@ -354,6 +355,8 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
 
   void _onEnd() {
     if (_current.isNotEmpty) {
+      // The day's drawing step — one stroke is enough.
+      ref.read(dailyQuestProvider.notifier).recordDrawing();
       _strokes.add(List.of(_current));
       _current.clear();
       setState(() {});
@@ -502,10 +505,9 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
     return KidScreen.game(
       accent: DT.brand,
       background: DT.violetTint,
-      // No X: colouring is a tab inside the home shell, not a pushed
-      // route. The default close popped the shell itself and left a black
-      // screen; the way out of a tab is the tab bar underneath.
-      showLeading: false,
+      // The X is back: this is a pushed route again now that the tab is
+      // the drawing shelf. (It was removed when colouring *was* the tab —
+      // the close popped the shell itself and left a black screen.)
       body: _paywallGated
           ? _PaywallGate(
               onUnlock: () =>
