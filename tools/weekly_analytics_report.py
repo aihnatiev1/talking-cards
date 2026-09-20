@@ -452,6 +452,168 @@ def money(days=7):
     return lines
 
 
+def asc_daily_rows(tok, name, category, days):
+    """Rows of a daily ONGOING analytics report, one row per unique set of
+    dimensions per day.
+
+    Apple ships a fresh instance every processing day and restates the
+    previous ones, so the same (day, dimensions) appears in several
+    instances with different counts. Summing them would inflate every
+    number; the latest instance wins instead."""
+    reqs = asc_get(tok, f'/v1/apps/{ASC_APP}/analyticsReportRequests'
+                        '?filter[accessType]=ONGOING')['data']
+    if not reqs:
+        return []
+    reports = asc_get(tok, f"/v1/analyticsReportRequests/{reqs[0]['id']}/reports"
+                           f'?filter[category]={category}&limit=200')['data']
+    report = next((r for r in reports if r['attributes']['name'] == name), None)
+    if report is None:
+        return []
+    inst = asc_get(tok, f"/v1/analyticsReports/{report['id']}/instances"
+                        '?filter[granularity]=DAILY&limit=200')['data']
+    inst = sorted(inst, key=lambda i: i['attributes']['processingDate'])[-(days + 3):]
+    since = (date.today() - timedelta(days=days * 2 + 1)).isoformat()
+    out = {}
+    for i in inst:
+        for seg in asc_get(tok, f"/v1/analyticsReportInstances/{i['id']}/segments")['data']:
+            raw = gzip.decompress(urllib.request.urlopen(
+                seg['attributes']['url']).read()).decode()
+            hdr = None
+            for ln in raw.strip().split('\n'):
+                cells = ln.split('\t')
+                if cells[0] == 'Date':       # each segment repeats the header
+                    hdr = cells
+                    continue
+                if hdr is None:
+                    continue
+                row = dict(zip(hdr, cells))
+                if (row.get('Date') or '') < since:
+                    continue
+                out[tuple(v for k, v in row.items()
+                          if k not in ('Counts', 'Unique Counts'))] = row
+    return list(out.values())
+
+
+def store_funnel(days=7):
+    """The half of the funnel GA4 cannot see: the App Store product page.
+
+    GA4 starts at first_open, so a drop in *installs* is invisible there —
+    an ASO change can halve the page conversion and every in-app number
+    stays flat. Impression → product page view → first-time download,
+    this week against the one before, from the App Store Discovery and
+    Engagement and App Downloads reports.
+
+    Updates are excluded: an auto-update is not an install. Impressions
+    are unique devices, because one search can redraw the tile many
+    times."""
+    try:
+        tok = asc_token()
+        disc = asc_daily_rows(tok, 'App Store Discovery and Engagement Standard',
+                              'APP_STORE_ENGAGEMENT', days)
+        dls = asc_daily_rows(tok, 'App Downloads Standard', 'COMMERCE', days)
+    except Exception as e:
+        return [f'- Сторінка в App Store: звіт недоступний ({type(e).__name__})']
+    if not disc and not dls:
+        return ['- Сторінка в App Store: даних ще немає']
+
+    # Apple finishes the two reports on different days; anchor each on its
+    # own last day so the current week is never a short one.
+    def buckets(rows, pick):
+        last = max((r['Date'] for r in rows), default='')
+        cur = prev = 0
+        for r in rows:
+            val = pick(r)
+            if val is None:
+                continue
+            age = (date.fromisoformat(last) - date.fromisoformat(r['Date'])).days
+            if age < days:
+                cur += val
+            elif age < days * 2:
+                prev += val
+        return cur, prev, last
+
+    def counts(r, field='Counts'):
+        try:
+            return int(r.get(field) or 0)
+        except ValueError:
+            return 0
+
+    imp, imp_p, disc_last = buckets(
+        disc, lambda r: counts(r, 'Unique Counts') if r.get('Event') == 'Impression' else None)
+    pv, pv_p, _ = buckets(
+        disc, lambda r: counts(r) if r.get('Event') == 'Page view' else None)
+    ftd, ftd_p, dl_last = buckets(
+        dls, lambda r: counts(r) if r.get('Download Type') == 'First-time download' else None)
+
+    lines = ['', f'### Сторінка в App Store ({days} дн, до {dl_last or disc_last})',
+             '| крок | 7 дн | попередні 7 | Δ |', '|---|---|---|---|',
+             f'| покази (унікальні) | {imp} | {imp_p} | {fmt_delta(imp, imp_p)} |',
+             f'| перегляди сторінки | {pv} | {pv_p} | {fmt_delta(pv, pv_p)} |',
+             f'| перші встановлення | {ftd} | {ftd_p} | {fmt_delta(ftd, ftd_p)} |']
+    if imp and imp_p:
+        lines.append(f'- Конверсія показ→встановлення: {ftd / imp:.0%} '
+                     f'проти {ftd_p / imp_p:.0%} тижнем раніше')
+    src = {}
+    for r in dls:
+        if r.get('Download Type') != 'First-time download':
+            continue
+        if (date.fromisoformat(dl_last) - date.fromisoformat(r['Date'])).days >= days:
+            continue
+        src[r.get('Source Type', '?')] = src.get(r.get('Source Type', '?'), 0) + counts(r)
+    if src:
+        lines.append('- Звідки прийшли: ' + ', '.join(
+            f'{k} {v}' for k, v in sorted(src.items(), key=lambda kv: -kv[1])))
+    terr = {}
+    for r in dls:
+        if r.get('Download Type') != 'First-time download':
+            continue
+        if (date.fromisoformat(dl_last) - date.fromisoformat(r['Date'])).days >= days:
+            continue
+        terr[r.get('Territory', '?')] = terr.get(r.get('Territory', '?'), 0) + counts(r)
+    if terr:
+        top = sorted(terr.items(), key=lambda kv: -kv[1])[:6]
+        lines.append('- Країни: ' + ', '.join(f'{k} {v}' for k, v in top))
+    return lines
+
+
+def platform_split(tok, days=7):
+    """iOS against Android on the same events.
+
+    The stores are two different businesses here — one ASC report covers
+    only Apple — and a fall in one is invisible in a total that mixes
+    both."""
+    events = ['first_open', 'paywall_view', 'purchase_start', 'purchase_success']
+    out = {}
+    for label, (start, end) in (('cur', (f'{days}daysAgo', 'today')),
+                                ('prev', (f'{days * 2}daysAgo', f'{days + 1}daysAgo'))):
+        body = {'dateRanges': [{'startDate': start, 'endDate': end}],
+                'dimensions': [{'name': 'platform'}, {'name': 'eventName'}],
+                'metrics': [{'name': 'eventCount'}],
+                'dimensionFilter': {'filter': {'fieldName': 'eventName',
+                                               'inListFilter': {'values': events}}},
+                'limit': 1000}
+        for r in run_report(tok, body).get('rows', []):
+            plat = r['dimensionValues'][0]['value']
+            ev = r['dimensionValues'][1]['value']
+            out[(label, plat, ev)] = int(r['metricValues'][0]['value'])
+    if not out:
+        return []
+    lines = ['', f'### iOS проти Android ({days} дн)',
+             '| подія | iOS | Δ | Android | Δ |', '|---|---|---|---|---|']
+    for ev in events:
+        i, ip = out.get(('cur', 'iOS', ev), 0), out.get(('prev', 'iOS', ev), 0)
+        a, ap = out.get(('cur', 'Android', ev), 0), out.get(('prev', 'Android', ev), 0)
+        lines.append(f'| {ev} | {i} | {fmt_delta(i, ip)} | {a} | {fmt_delta(a, ap)} |')
+    ios_pw = out.get(('cur', 'iOS', 'paywall_view'), 0)
+    ios_st = out.get(('cur', 'iOS', 'purchase_start'), 0)
+    and_pw = out.get(('cur', 'Android', 'paywall_view'), 0)
+    and_st = out.get(('cur', 'Android', 'purchase_start'), 0)
+    if ios_pw and and_pw:
+        lines.append(f'- Пейвол→старт покупки: iOS {ios_st / ios_pw:.0%}, '
+                     f'Android {and_st / and_pw:.0%}')
+    return lines
+
+
 def paywall_doors(tok, reviewers):
     """paywall_view → purchase_start → purchase_success by entry point
     (`source`: locked_tile, preview_end, games_lock, coloring_gate, reminder,
@@ -635,6 +797,8 @@ def main():
     lines.extend(paywall_doors(tok, reviewers))
     lines.extend(default_plan_ab(tok, reviewers))
     lines.extend(money())
+    lines.extend(store_funnel())
+    lines.extend(platform_split(tok))
     lines.extend(content_pack(tok, reviewers))
     lines.extend(crash_summary(bq_token()))
 
