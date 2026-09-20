@@ -63,4 +63,31 @@ void main() {
       );
     }
   });
+
+  /// Apple gives the keyword field 100 characters and indexes the name and
+  /// subtitle anyway, so a word spent twice is a word not spent. Spaces
+  /// after commas cost a character each and buy nothing.
+  test('iOS keyword fields fit and waste nothing', () {
+    for (final loc in ['uk', 'en-US', 'en-GB', 'en-AU', 'en-CA']) {
+      final dir = 'ios/fastlane/metadata/$loc';
+      final keywords = File('$dir/keywords.txt').readAsStringSync().trim();
+      expect(keywords.length, lessThanOrEqualTo(100),
+          reason: '$loc keywords are ${keywords.length} characters');
+      expect(keywords, isNot(contains(' ')), reason: '$loc wastes a space');
+
+      final tokens = keywords.split(',');
+      expect(tokens.toSet(), hasLength(tokens.length),
+          reason: '$loc repeats a keyword');
+
+      final indexed = ('${File('$dir/name.txt').readAsStringSync()} '
+              '${File('$dir/subtitle.txt').readAsStringSync()}')
+          .toLowerCase();
+      for (final token in tokens) {
+        if (token.length < 4) continue; // "2", "abc" are cheap either way
+        expect(indexed, isNot(contains(token.toLowerCase())),
+            reason: '$loc spends a keyword on «$token», '
+                'which the name or subtitle already indexes');
+      }
+    }
+  });
 }
