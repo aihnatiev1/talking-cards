@@ -140,18 +140,32 @@ class AnalyticsService {
   Future<void> logPaywallProductSelect(String productId) =>
       _safeLog('paywall_product_select', {'product_id': productId});
 
-  Future<void> logPurchaseStart(String productId, String trial) =>
-      _safeLog('purchase_start', {'product_id': productId, 'trial': trial});
+  // `source` is the door the checkout came through, the same value
+  // `paywall_view.source` carries — locked_tile, preview_end, games_lock,
+  // coloring_gate, paywall_onboarding. Only the view event had it, so over
+  // 90 days the funnel could say that 23 parents met the paywall after a
+  // preview and 157 through a tile, and nothing at all about which of them
+  // ever paid. [PurchaseService.checkoutSource] carries it to the outcome
+  // events, which arrive off the store stream long after the screen is gone.
+  Future<void> logPurchaseStart(String productId, String trial,
+          [String source = 'unknown']) =>
+      _safeLog('purchase_start',
+          {'product_id': productId, 'trial': trial, 'source': source});
 
-  Future<void> logPurchaseSuccess(String productId, String trial) =>
-      _safeLog('purchase_success', {'product_id': productId, 'trial': trial});
+  Future<void> logPurchaseSuccess(String productId, String trial,
+          [String source = 'unknown']) =>
+      _safeLog('purchase_success',
+          {'product_id': productId, 'trial': trial, 'source': source});
 
-  Future<void> logPurchaseCancel(String productId, String trial) =>
-      _safeLog('purchase_cancel', {'product_id': productId, 'trial': trial});
+  Future<void> logPurchaseCancel(String productId, String trial,
+          [String source = 'unknown']) =>
+      _safeLog('purchase_cancel',
+          {'product_id': productId, 'trial': trial, 'source': source});
 
-  Future<void> logPurchaseError(String productId, String reason) =>
+  Future<void> logPurchaseError(String productId, String reason,
+          [String source = 'unknown']) =>
       _safeLog('purchase_error',
-          {'product_id': productId, 'reason': reason});
+          {'product_id': productId, 'reason': reason, 'source': source});
 
   /// Ask to Buy / SCA: the sheet closed with neither a sale nor a cancel.
   /// Its own event, so a family waiting on a parent's approval no longer

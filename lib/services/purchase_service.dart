@@ -172,6 +172,14 @@ class PurchaseService {
   /// does-nothing in a different costume.
   static const storeBudget = Duration(seconds: 8);
 
+  /// The paywall door this checkout came through, for the outcome events.
+  ///
+  /// The screen sets it when it opens; the store stream reads it when the
+  /// sale, the cancel or the error finally lands, which can be minutes
+  /// later and with the paywall long gone. One checkout runs at a time
+  /// ([_beginPurchase]), so a single field is enough.
+  String checkoutSource = 'unknown';
+
   /// Why the last [ensureProducts] came back empty, or null after a load
   /// that worked.
   ///
@@ -367,7 +375,7 @@ class PurchaseService {
       // still renders its fallback prices, so this is invisible without an
       // event of its own.
       AnalyticsService.instance
-          .logPurchaseError(productId, 'product_unavailable');
+          .logPurchaseError(productId, 'product_unavailable', checkoutSource);
       return false;
     }
     return _buy(product);
@@ -387,12 +395,13 @@ class PurchaseService {
       _resolvePurchase(
           product.id,
           () => AnalyticsService.instance.logPurchaseError(product.id,
-              text.length <= 100 ? text : text.substring(0, 100)));
+              text.length <= 100 ? text : text.substring(0, 100),
+              checkoutSource));
       rethrow;
     }
     if (!started) {
       _resolvePurchase(product.id, () => AnalyticsService.instance
-          .logPurchaseError(product.id, 'buy_refused'));
+          .logPurchaseError(product.id, 'buy_refused', checkoutSource));
     }
     return started;
   }
@@ -436,7 +445,7 @@ class PurchaseService {
       // Give the button back with the event: the checkout is not coming.
       purchaseInFlight.value = false;
       AnalyticsService.instance
-          .logPurchaseError(productId, 'no_outcome_in_3min');
+          .logPurchaseError(productId, 'no_outcome_in_3min', checkoutSource);
     });
     return true;
   }
@@ -540,15 +549,19 @@ class PurchaseService {
       case PurchaseStatus.restored:
         final trial = trialStateFor(id);
         if (trial == 'offered') unawaited(_recordTrialStart());
-        _resolvePurchase(id, () => analytics.logPurchaseSuccess(id, trial));
+        _resolvePurchase(
+            id, () => analytics.logPurchaseSuccess(id, trial, checkoutSource));
       case PurchaseStatus.canceled:
         _resolvePurchase(
-            id, () => analytics.logPurchaseCancel(id, trialStateFor(id)));
+            id,
+            () => analytics.logPurchaseCancel(
+                id, trialStateFor(id), checkoutSource));
       case PurchaseStatus.error:
         final err = purchase.error;
         _resolvePurchase(
             id,
-            () => analytics.logPurchaseError(id, _reason(err)));
+            () => analytics.logPurchaseError(
+                id, _reason(err), checkoutSource));
     }
   }
 

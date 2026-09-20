@@ -95,8 +95,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     final variant = _learnedCount >= _minLearnedForAnchor
         ? 'progress'
         : (_isRealName(name) ? 'personal' : 'generic');
+    PurchaseService.instance.checkoutSource = _source;
     AnalyticsService.instance.logPaywallView(
-      widget.isOnboarding ? 'paywall_onboarding' : widget.source,
+      _source,
       variant: variant,
       // As known right now, which is what the first frame renders: launch
       // already refreshed this. The re-check below can correct the screen,
@@ -135,6 +136,12 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   void _rebuild() {
     if (mounted) setState(() {});
   }
+
+  /// The door this paywall was opened through. Onboarding overrides the
+  /// caller's label, because that screen is reached from every entry the
+  /// first run has and none of them mean anything once the app is set up.
+  String get _source =>
+      widget.isOnboarding ? 'paywall_onboarding' : widget.source;
 
   /// Loads (or re-loads) the catalogue. Until this settles the CTA shows a
   /// spinner; if the store never answers it becomes a retry — the one
@@ -280,7 +287,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     final plans = _buildPlans(s);
     final plan = plans[_selectedIndex(plans)];
     AnalyticsService.instance.logPurchaseStart(plan.productId,
-        PurchaseService.instance.trialStateFor(plan.productId));
+        PurchaseService.instance.trialStateFor(plan.productId), _source);
     setState(() => _loading = true);
     try {
       final success =
