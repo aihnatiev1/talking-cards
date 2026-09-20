@@ -12,7 +12,7 @@ import 'package:talking_cards/services/purchase_service.dart';
 /// device without a Play account "unavailable" is the correct answer and
 /// still worth seeing.
 ///
-///   flutter test integration_test/play_billing_probe_test.dart -d <device>
+///   flutter test integration_test/play_billing_probe_test.dart -d `<device>`
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
