@@ -172,6 +172,18 @@ class PurchaseService {
   /// does-nothing in a different costume.
   static const storeBudget = Duration(seconds: 8);
 
+  /// Why the last [ensureProducts] came back empty, or null after a load
+  /// that worked.
+  ///
+  /// The catch-all used to swallow this, and Android then showed 55 paywall
+  /// views and 2 checkouts over 90 days with nothing in the data to say
+  /// whether Play was missing, slow, or simply had no such SKU. The paywall
+  /// sends it with `store_unavailable`, so the next week of real devices
+  /// answers what no emulator here can: an emulator without a Play account
+  /// fails at `isAvailable` every time, which is the one case we already
+  /// understand.
+  String? lastLoadFailure;
+
   Future<bool> _loadProducts() async {
     try {
       final response = await () async {
@@ -179,12 +191,28 @@ class PurchaseService {
         return _iap.queryProductDetails(_productIds);
       }()
           .timeout(storeBudget);
-      if (response == null) return false;
+      if (response == null) {
+        lastLoadFailure = 'store_unavailable';
+        return false;
+      }
+      if (response.error != null) {
+        // Play's BillingResponse code, StoreKit's SKError domain: the code
+        // is the difference between "this device has no billing" and "our
+        // request was wrong".
+        lastLoadFailure = 'query_error:${response.error!.code}';
+      } else if (response.productDetails.isEmpty) {
+        lastLoadFailure = 'not_found:${response.notFoundIDs.length}';
+      }
       _indexProducts(response.productDetails);
-    } catch (_) {
-      return false; // Timed out, billing client not connected, no network.
+    } on TimeoutException {
+      lastLoadFailure = 'timeout';
+      return false;
+    } catch (e) {
+      lastLoadFailure = 'threw:${e.runtimeType}';
+      return false;
     }
     if (products.isEmpty) return false;
+    lastLoadFailure = null;
     unawaited(refreshTrialAvailability());
     return true;
   }

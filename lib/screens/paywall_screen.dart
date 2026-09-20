@@ -152,7 +152,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       ready = false;
     }
     if (!mounted) return;
-    if (!ready) AnalyticsService.instance.logStoreUnavailable('paywall');
+    if (!ready) {
+      AnalyticsService.instance.logStoreUnavailable(
+          'paywall', PurchaseService.instance.lastLoadFailure);
+    }
     setState(() => _storeReady = ready);
   }
 

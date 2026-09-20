@@ -161,8 +161,14 @@ class AnalyticsService {
 
   /// The store could not be reached from a screen that sells — the paywall
   /// then shows a retry instead of a Buy button that does nothing.
-  Future<void> logStoreUnavailable(String where) =>
-      _safeLog('store_unavailable', {'source': where});
+  /// [reason] is [PurchaseService.lastLoadFailure] — store_unavailable,
+  /// timeout, `query_error:<code>`, `not_found:<n>` or `threw:<type>`.
+  /// Without it
+  /// the event says only that a paywall sold nothing, which is where the
+  /// Android funnel has been stuck.
+  Future<void> logStoreUnavailable(String where, [String? reason]) =>
+      _safeLog('store_unavailable',
+          {'source': where, 'reason': reason ?? 'unknown'});
 
   /// A locally-Pro device lost the entitlement on revalidation. Silent
   /// until now, and a family locked out of what they paid for is the most
