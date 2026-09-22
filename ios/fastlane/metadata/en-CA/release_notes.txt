@@ -1,9 +1,4 @@
-- A new “Let’s draw” section: five ways to draw and 21 pictures
-- “Colour it in”: pick a colour, tap a part — it fills, then says its word
-- “Listen and colour”: Bloom names a colour and your child finds it by ear
-- Stickers on the meadow: every one says its word, and the meadow keeps
-- “Mirror”: draw one half, get the whole
-- Drawing is part of the daily plan now
-- English gets the first-words plan too
+- Fixed a rare crash after the celebration at the end of a pack or a game
+- Small technical improvements
 
 Thanks for growing with us!
