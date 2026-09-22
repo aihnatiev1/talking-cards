@@ -26,6 +26,18 @@ import 'utils/app_startup.dart';
 import 'utils/app_theme.dart';
 import 'screens/splash_screen.dart';
 
+/// Lets the on-device screenshot rigs keep the test binding's own error
+/// handlers.
+///
+/// `FlutterError.onError` below belongs to Crashlytics in a real run, but a
+/// `flutter drive` rig lives inside `TestWidgetsFlutterBinding`, which
+/// expects to see errors itself; taking the handler away from it ends the
+/// run on "A test overrode FlutterError.onError…" before the first
+/// screenshot lands. The rigs set this to true before calling [main], and
+/// nothing in a shipped build ever does.
+@visibleForTesting
+bool keepTestErrorHandlers = false;
+
 void main() async {
   // Crashlytics needs all uncaught zone errors funneled through one entrypoint,
   // so the whole bootstrap runs inside runZonedGuarded.
@@ -43,11 +55,14 @@ void main() async {
     await FirebaseAnalytics.instance
         .setAnalyticsCollectionEnabled(!kDebugMode);
 
-    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
-    PlatformDispatcher.instance.onError = (error, stack) {
-      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-      return true;
-    };
+    if (!keepTestErrorHandlers) {
+      FlutterError.onError =
+          FirebaseCrashlytics.instance.recordFlutterFatalError;
+      PlatformDispatcher.instance.onError = (error, stack) {
+        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+        return true;
+      };
+    }
 
     // Load active profile BEFORE providers are created so all SharedPreferences
     // reads use the correct namespace from the very first build.

@@ -105,6 +105,7 @@ void main() {
 
   Future<void> captureFlow(WidgetTester tester, String lang) async {
     SharedPreferences.setMockInitialValues(seed(lang));
+    app.keepTestErrorHandlers = true;
     app.main();
     // Splash: services init + logo hold + fade.
     await tester.pumpAndSettle(const Duration(seconds: 3));
@@ -136,9 +137,15 @@ void main() {
       await tester.tap(sounds.first, warnIfMissed: false);
       await tester.pumpAndSettle(const Duration(seconds: 1));
       await binding.takeScreenshot('sounds-$lang');
-      await tester.tap(find.text(lang == 'en' ? 'Speech' : 'Мовлення').first,
-          warnIfMissed: false);
-      await tester.pumpAndSettle();
+      // Back to the default chip so the walk continues from a known
+      // screen. 'Speaking', not 'Speech' — `.first` on a finder that
+      // matches nothing throws Bad state: No element, which is how this
+      // step took the parent dashboard down with it.
+      final speech = find.text(lang == 'en' ? 'Speaking' : 'Мовлення');
+      if (speech.evaluate().isNotEmpty) {
+        await tester.tap(speech.first, warnIfMissed: false);
+        await tester.pumpAndSettle();
+      }
     }
 
     // 4. Parent dashboard behind the gate.

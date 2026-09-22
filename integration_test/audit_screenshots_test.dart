@@ -145,6 +145,7 @@ void main() {
 
   testWidgets('fresh install: splash + onboarding', (tester) async {
     SharedPreferences.setMockInitialValues({});
+    app.keepTestErrorHandlers = true;
     app.main();
     await tester.pump(const Duration(milliseconds: 600));
     await binding.convertFlutterSurfaceToImage();
