@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import '../utils/motion.dart';
 
+import '../utils/overlay_entry_x.dart';
+
 /// Sago Mini-style ambient delight: a tinted bubble springs from the tap point
 /// and floats all the way up to the top of the screen, popping at the edge.
 ///
@@ -23,7 +25,7 @@ void showBubblePop(BuildContext context, Offset globalPosition) {
       child: IgnorePointer(
         child: _BubbleStage(
           startGlobal: globalPosition,
-          onDone: () => entry.remove(),
+          onDone: () => entry.removeIfMounted(),
         ),
       ),
     ),

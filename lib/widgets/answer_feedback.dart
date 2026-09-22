@@ -6,6 +6,8 @@ import '../utils/motion.dart';
 import 'ambient_loop.dart';
 import 'confetti_burst.dart';
 
+import '../utils/overlay_entry_x.dart';
+
 /// What a game tile is showing about the answer it holds.
 ///
 /// There is deliberately no `wrong` value (ux-gap-audit 2026-09-13 G10;
@@ -185,7 +187,7 @@ class _AnswerFrameState extends State<AnswerFrame>
     final overlay = Overlay.maybeOf(context);
     if (box == null || !box.hasSize || overlay == null) return;
     final origin = box.localToGlobal(box.size.center(Offset.zero));
-    _burst?.remove();
+    _burst?.removeIfMounted();
     final entry = OverlayEntry(
       builder: (_) => ConfettiBurst(
         origin: origin,
@@ -196,7 +198,7 @@ class _AnswerFrameState extends State<AnswerFrame>
     overlay.insert(entry);
     Future<void>.delayed(DT.motion.confettiBurst + DT.motion.quick, () {
       if (_burst == entry) {
-        entry.remove();
+        entry.removeIfMounted();
         _burst = null;
       }
     });
@@ -204,7 +206,7 @@ class _AnswerFrameState extends State<AnswerFrame>
 
   @override
   void dispose() {
-    _burst?.remove();
+    _burst?.removeIfMounted();
     _burst = null;
     _nudgeCtrl.dispose();
     _popCtrl.dispose();

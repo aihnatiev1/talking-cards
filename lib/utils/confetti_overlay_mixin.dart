@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../widgets/confetti_burst.dart';
 
+import 'overlay_entry_x.dart';
+
 /// Inserts a [ConfettiBurst] into the nearest [Overlay] for celebratory moments
 /// (correct answer, game complete), auto-removing after [linger].
 ///
@@ -26,7 +28,7 @@ mixin ConfettiOverlayMixin<T extends ConsumerStatefulWidget> on ConsumerState<T>
     bool ignorePointer = true,
   }) {
     if (!mounted) return;
-    _confettiEntry?.remove();
+    _confettiEntry?.removeIfMounted();
     final size = MediaQuery.of(context).size;
     final burstOrigin = origin ?? Offset(size.width / 2, size.height / 3);
     final entry = OverlayEntry(
@@ -39,14 +41,14 @@ mixin ConfettiOverlayMixin<T extends ConsumerStatefulWidget> on ConsumerState<T>
     Overlay.of(context).insert(entry);
     Future.delayed(linger, () {
       if (_confettiEntry == entry) {
-        _confettiEntry?.remove();
+        _confettiEntry?.removeIfMounted();
         _confettiEntry = null;
       }
     });
   }
 
   void disposeConfetti() {
-    _confettiEntry?.remove();
+    _confettiEntry?.removeIfMounted();
     _confettiEntry = null;
   }
 }
