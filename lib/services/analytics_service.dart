@@ -16,17 +16,23 @@ class AnalyticsService {
     }
   }
 
-  /// Test seam: every event that would go to Firebase, as it is built.
+  /// Test seam: every event exactly as it would be sent to Firebase.
   /// Null in production, so nothing is recorded and nothing is kept.
   @visibleForTesting
   static void Function(String name, Map<String, Object> params)? debugSink;
 
   Future<void> _safeLog(String name, [Map<String, Object>? params]) async {
-    debugSink?.call(name, params ?? const {});
+    // Firebase rejects bool parameters. Use the same "true"/"false"
+    // strings already emitted by the older events in this service.
+    final normalized = params == null ? null : <String, Object>{
+      for (final entry in params.entries)
+        entry.key: entry.value is bool ? entry.value.toString() : entry.value,
+    };
+    debugSink?.call(name, normalized ?? const {});
     final a = _analytics;
     if (a == null) return;
     try {
-      await a.logEvent(name: name, parameters: params);
+      await a.logEvent(name: name, parameters: normalized);
     } catch (e) {
       if (kDebugMode) debugPrint('AnalyticsService: log "$name" error: $e');
     }

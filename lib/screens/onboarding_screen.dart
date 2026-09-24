@@ -19,6 +19,7 @@ import '../utils/app_startup.dart';
 import '../utils/confetti_overlay_mixin.dart';
 import '../utils/design_tokens.dart';
 import '../utils/kid_routes.dart';
+import '../utils/motion.dart';
 import '../widgets/ambient_loop.dart';
 import '../widgets/bloom_mascot.dart';
 import '../widgets/card_image.dart';
@@ -77,9 +78,18 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   static const _avatars = [
-    '👶', '👧', '👦', '🧒',
-    '🐱', '🐶', '🐻', '🐸',
-    '🦊', '🐼', '🦄', '🌟',
+    '👶',
+    '👧',
+    '👦',
+    '🧒',
+    '🐱',
+    '🐶',
+    '🐻',
+    '🐸',
+    '🦊',
+    '🐼',
+    '🦄',
+    '🌟',
   ];
 
   @override
@@ -98,10 +108,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       AnalyticsService.instance.logOnboardingNameEntered();
     }
     if (_page < _pages.length - 1) {
-      _pageCtrl.nextPage(
-        duration: const Duration(milliseconds: 350),
-        curve: Curves.easeInOut,
-      );
+      if (reduceMotionOf(context)) {
+        _pageCtrl.jumpToPage(_page + 1);
+      } else {
+        _pageCtrl.nextPage(
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeInOut,
+        );
+      }
     } else {
       _finish();
     }
@@ -120,7 +134,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final defaultId = profiles.isNotEmpty ? profiles.first.id : 'default';
     final fallbackName = _selectedLang == 'en' ? 'Kid' : 'Малюк';
     await notifier.updateProfile(
-        defaultId, name.isEmpty ? fallbackName : name, _selectedAvatar);
+      defaultId,
+      name.isEmpty ? fallbackName : name,
+      _selectedAvatar,
+    );
     await notifier.setLanguage(defaultId, _selectedLang);
     await notifier.setLevel(defaultId, _selectedLevel);
 
@@ -138,13 +155,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     // EN sees the offer here because English installs churn before they ever
     // reach locked content; UA keeps the softer flow, where the first paywall
     // touchpoint is the first locked-content tap.
-    if (RemoteConfigService.instance
-        .showOnboardingPaywallFor(_selectedLang)) {
+    if (RemoteConfigService.instance.showOnboardingPaywallFor(_selectedLang)) {
       await runPaywallFlow(context, ref, isOnboarding: true);
     }
 
     if (!mounted) return;
-    Navigator.of(context).pushReplacement(KidRoutes.replace(const HomeScreen()));
+    Navigator.of(
+      context,
+    ).pushReplacement(KidRoutes.replace(const HomeScreen()));
   }
 
   /// The magic moment drives its own CTA: when it is the last step it wraps
@@ -193,7 +211,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final hideCta = _pages[_page] == _OnbStep.magic;
     final isLast = _page == _pages.length - 1;
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF8F5),
+      backgroundColor: DT.bgWarm,
       body: SafeArea(
         child: Column(
           children: [
@@ -204,25 +222,32 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             // zero, right as the flow advances.
             AnimatedOpacity(
               opacity: hideCta ? 0 : 1,
-              duration: const Duration(milliseconds: 200),
+              duration: MotionPolicy.of(
+                context,
+              ).dur(const Duration(milliseconds: 200)),
               child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(_pages.length, (i) => AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  width: i == _page ? 24 : 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: i == _page
-                        ? DT.brand
-                        : DT.brand.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(4),
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    _pages.length,
+                    (i) => AnimatedContainer(
+                      duration: MotionPolicy.of(
+                        context,
+                      ).dur(const Duration(milliseconds: 300)),
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      width: i == _page ? 24 : 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: i == _page
+                            ? DT.brand
+                            : DT.brand.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
                   ),
-                )),
+                ),
               ),
-            ),
             ),
 
             // Pages
@@ -249,11 +274,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       child: ElevatedButton(
                         onPressed: _canProceed ? () {} : null,
                         style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(72, 72),
                           backgroundColor: DT.brand,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(18)),
+                            borderRadius: BorderRadius.circular(18),
+                          ),
                           elevation: 0,
                         ),
                         child: Text(
@@ -261,7 +288,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                               ? (isLast ? "Let's start →" : 'Next →')
                               : (isLast ? 'Почати →' : 'Далі →'),
                           style: const TextStyle(
-                              fontSize: 17, fontWeight: FontWeight.w700),
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ),
@@ -309,8 +338,7 @@ class _ChildSetupPage extends StatelessWidget {
           Center(
             child: FittedBox(
               fit: BoxFit.contain,
-              child: Text(selectedAvatar,
-                  style: const TextStyle(fontSize: 72)),
+              child: Text(selectedAvatar, style: const TextStyle(fontSize: 72)),
             ),
           ),
           const SizedBox(height: 20),
@@ -318,8 +346,9 @@ class _ChildSetupPage extends StatelessWidget {
             child: Text(
               _isEn ? 'Nice to meet you!' : 'Знайомство',
               style: TextStyle(
-                  fontSize: responsiveFont(context, 26),
-                  fontWeight: FontWeight.w800),
+                fontSize: responsiveFont(context, 26),
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
           const SizedBox(height: 24),
@@ -335,21 +364,22 @@ class _ChildSetupPage extends StatelessWidget {
               hintText: _isEn ? 'e.g. Emma' : 'Наприклад: Оленка',
               counterText: '',
               border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14)),
+                borderRadius: BorderRadius.circular(14),
+              ),
               prefixIcon: const Icon(Icons.child_care_rounded),
             ),
           ),
           const SizedBox(height: 24),
           Text(
             _isEn ? 'Choose an avatar' : 'Оберіть аватар',
-            style: const TextStyle(
-                fontWeight: FontWeight.w600, fontSize: 15),
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
           ),
           const SizedBox(height: 10),
-          Builder(
-            builder: (context) {
-              final w = MediaQuery.of(context).size.width;
-              final cols = w < kSmallScreen + 80 ? 4 : 6; // 4 cols below ~440dp
+          LayoutBuilder(
+            builder: (context, bounds) {
+              final cols = ((bounds.maxWidth + 8) / (DT.size.tapMin + 8))
+                  .floor()
+                  .clamp(1, 6);
               return GridView.count(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -357,30 +387,31 @@ class _ChildSetupPage extends StatelessWidget {
                 crossAxisSpacing: 8,
                 mainAxisSpacing: 8,
                 children: avatars.map((emoji) {
-              final isSelected = emoji == selectedAvatar;
-              return GestureDetector(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  onAvatarSelect(emoji);
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? DT.brand.withValues(alpha: 0.15)
-                        : Colors.grey.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(12),
-                    border: isSelected
-                        ? Border.all(color: DT.brand, width: 2)
-                        : null,
-                  ),
-                  child: Center(
-                    child: Text(emoji,
-                        style: const TextStyle(fontSize: 26)),
-                  ),
-                ),
-              );
-            }).toList(),
+                  final isSelected = emoji == selectedAvatar;
+                  return KidTap(
+                    onTap: () => onAvatarSelect(emoji),
+                    child: AnimatedContainer(
+                      duration: MotionPolicy.of(
+                        context,
+                      ).dur(const Duration(milliseconds: 150)),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? DT.brand.withValues(alpha: 0.15)
+                            : Colors.grey.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: isSelected
+                            ? Border.all(color: DT.brand, width: 2)
+                            : null,
+                      ),
+                      child: Center(
+                        child: Text(
+                          emoji,
+                          style: const TextStyle(fontSize: 26),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
               );
             },
           ),
@@ -432,47 +463,64 @@ class _AgePage extends StatelessWidget {
             (4, '4–5', 'років'),
           ];
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 28),
-      child: Column(
-        children: [
-          const SizedBox(height: 12),
-          Text('🎂', style: TextStyle(fontSize: screenScale(context) * 64)),
-          const SizedBox(height: 20),
-          Text(
-            _title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-                fontSize: responsiveFont(context, 26),
-                fontWeight: FontWeight.w800),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: Column(
+            children: [
+              const BloomMascot(
+                size: 80,
+                state: BloomState.still(BloomEmotion.wave),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                _title,
+                textAlign: TextAlign.center,
+                style: DT.h1.copyWith(fontSize: 26),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _isEn
+                    ? "We'll pick the right cards for their age"
+                    : 'Підберемо картки відповідно до віку',
+                textAlign: TextAlign.center,
+                style: DT.caption.copyWith(
+                  fontSize: 14,
+                  color: DT.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 24),
+              LayoutBuilder(
+                builder: (context, bounds) {
+                  final largeText =
+                      MediaQuery.textScalerOf(context).scale(36) > 50;
+                  final columns = largeText || bounds.maxWidth < 260 ? 1 : 2;
+                  final width =
+                      (bounds.maxWidth - (columns - 1) * 14) / columns;
+                  return Wrap(
+                    spacing: 14,
+                    runSpacing: 14,
+                    children: [
+                      for (final opt in options)
+                        SizedBox(
+                          width: width,
+                          child: _AgeCard(
+                            level: opt.$1,
+                            ageLabel: opt.$2,
+                            unit: opt.$3,
+                            selected: selectedLevel == opt.$1,
+                            onTap: () => onSelect(opt.$1),
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            _isEn
-                ? "We'll pick the right cards for their age"
-                : 'Підберемо картки відповідно до віку',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-          ),
-          const SizedBox(height: 32),
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            crossAxisSpacing: 14,
-            mainAxisSpacing: 14,
-            childAspectRatio: 1.15,
-            children: options
-                .map((opt) => _AgeCard(
-                      level: opt.$1,
-                      ageLabel: opt.$2,
-                      unit: opt.$3,
-                      selected: selectedLevel == opt.$1,
-                      onTap: () => onSelect(opt.$1),
-                    ))
-                .toList(),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -495,53 +543,47 @@ class _AgeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-        decoration: BoxDecoration(
-          color: selected
-              ? DT.brand.withValues(alpha: 0.1)
-              : Colors.grey.withValues(alpha: 0.07),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: selected ? DT.brand : Colors.grey.shade300,
-            width: selected ? 2.5 : 1.5,
+    const accents = [DT.coral, DT.brand, DT.teal, DT.success];
+    final accent = accents[level - 1];
+    final ink = DT.onTint(accent);
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: '$ageLabel $unit',
+      child: KidTap(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: MotionPolicy.of(
+            context,
+          ).dur(const Duration(milliseconds: 200)),
+          constraints: const BoxConstraints(minHeight: 132),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+          decoration: BoxDecoration(
+            color: selected ? accent.withValues(alpha: .14) : DT.surfaceWhite,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: selected ? accent : accent.withValues(alpha: .2),
+              width: 2,
+            ),
+            boxShadow: selected ? DT.shadowSoft(accent) : const [],
           ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              ageLabel,
-              style: TextStyle(
-                fontSize: responsiveFont(context, 36),
-                fontWeight: FontWeight.w900,
-                color: selected ? DT.brand : const Color(0xFF3F3635),
-                height: 1.0,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(ageLabel, style: DT.h1.copyWith(fontSize: 36, color: ink)),
+              const SizedBox(height: 4),
+              Text(unit, style: DT.caption.copyWith(fontSize: 14, color: ink)),
+              const SizedBox(height: 8),
+              // Reserve the same space in every state; selection never jumps.
+              AnimatedOpacity(
+                opacity: selected ? 1 : 0,
+                duration: MotionPolicy.of(
+                  context,
+                ).dur(const Duration(milliseconds: 160)),
+                child: Icon(Icons.check_circle_rounded, color: ink, size: 22),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              unit,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: selected
-                    ? DT.brand.withValues(alpha: 0.8)
-                    : Colors.grey[600],
-              ),
-            ),
-            if (selected) ...[
-              const SizedBox(height: 6),
-              const Icon(Icons.check_circle_rounded,
-                  color: DT.brand, size: 20),
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -667,8 +709,9 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
     final card = _cards[_currentIndex];
     HapticFeedback.mediumImpact();
 
-    AnalyticsService.instance
-        .logOnboardingMagicMomentCardTap(_currentIndex + 1);
+    AnalyticsService.instance.logOnboardingMagicMomentCardTap(
+      _currentIndex + 1,
+    );
 
     showConfetti();
     final wasLast = _currentIndex >= _cards.length - 1;
@@ -690,8 +733,7 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
         // and the first real card (audit #5).
         setState(() => _celebrating = true);
         showConfetti(linger: const Duration(milliseconds: 1800));
-        unawaited(
-            AudioService.instance.playPraise(isEn: _isEn, always: true));
+        unawaited(AudioService.instance.playPraise(isEn: _isEn, always: true));
         await Future<void>.delayed(const Duration(milliseconds: 1600));
         if (mounted) widget.onComplete();
       } else {
@@ -714,63 +756,79 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
 
   Widget _buildContent() {
     final card = _cards[_currentIndex];
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        children: [
-          const SizedBox(height: 4),
-          const _BouncingMascot(),
-          const SizedBox(height: 8),
-          _SpeechBubble(
-            text: _bubbleText(),
-          ),
-          const SizedBox(height: 18),
-          Expanded(
-            child: Center(
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 350),
-                switchInCurve: Curves.easeOutBack,
-                switchOutCurve: Curves.easeIn,
-                transitionBuilder: (child, anim) => FadeTransition(
-                  opacity: anim,
-                  child: ScaleTransition(
-                    scale: Tween<double>(begin: 0.85, end: 1.0).animate(anim),
-                    child: child,
+    return LayoutBuilder(
+      builder: (context, bounds) {
+        final textScale = MediaQuery.textScalerOf(context).scale(16) / 16;
+        final height = math.max(bounds.maxHeight, 500 + 150 * (textScale - 1));
+        return SingleChildScrollView(
+          child: SizedBox(
+            height: height,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                children: [
+                  const SizedBox(height: 4),
+                  const _BouncingMascot(),
+                  const SizedBox(height: 8),
+                  _SpeechBubble(text: _bubbleText()),
+                  const SizedBox(height: 18),
+                  Expanded(
+                    child: Center(
+                      child: AnimatedSwitcher(
+                        duration: MotionPolicy.of(
+                          context,
+                        ).dur(const Duration(milliseconds: 350)),
+                        switchInCurve: Curves.easeOutBack,
+                        switchOutCurve: Curves.easeIn,
+                        transitionBuilder: (child, anim) => FadeTransition(
+                          opacity: anim,
+                          child: ScaleTransition(
+                            scale: Tween<double>(
+                              begin: 0.85,
+                              end: 1.0,
+                            ).animate(anim),
+                            child: child,
+                          ),
+                        ),
+                        child: _MagicCard(
+                          key: ValueKey(card.id),
+                          card: card,
+                          speaking: AudioService.instance.isSpeaking,
+                          onTap: _onCardTap,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-                child: _MagicCard(
-                  key: ValueKey(card.id),
-                  card: card,
-                  speaking: AudioService.instance.isSpeaking,
-                  onTap: _onCardTap,
-                ),
+                  const SizedBox(height: 14),
+                  _ProgressDots(total: _cards.length, current: _currentIndex),
+                  const SizedBox(height: 14),
+                  Text(
+                    _isEn
+                        ? 'Tap the card to hear the word!'
+                        : 'Натисни на картку, щоб почути слово!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: responsiveFont(context, 16),
+                      fontWeight: FontWeight.w600,
+                      color: DT.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                ],
               ),
             ),
           ),
-          const SizedBox(height: 14),
-          _ProgressDots(total: _cards.length, current: _currentIndex),
-          const SizedBox(height: 14),
-          Text(
-            _isEn
-                ? 'Tap the card to hear the word!'
-                : 'Натисни на картку, щоб почути слово!',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: responsiveFont(context, 16),
-              fontWeight: FontWeight.w600,
-              color: DT.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 10),
-        ],
-      ),
+        );
+      },
     );
   }
 
   String _bubbleText() {
     final name = widget.childName;
     if (_celebrating) {
-      if (_isEn) return name.isEmpty ? 'You did it! 🎉' : 'You did it, $name! 🎉';
+      if (_isEn) {
+        return name.isEmpty ? 'You did it! 🎉' : 'You did it, $name! 🎉';
+      }
       return name.isEmpty ? 'Молодець! 🎉' : 'Молодець, $name! 🎉';
     }
     if (_isEn) {
@@ -876,7 +934,7 @@ class _MagicCardState extends State<_MagicCard> {
           // tall that the tap target loses the centre of the screen.
           final byWidth = constraints.maxWidth * 0.85;
           final byHeight = constraints.maxHeight * 0.92 * (280 / 320);
-          final w = math.min(byWidth, byHeight).clamp(220.0, 340.0);
+          final w = math.min(340.0, math.min(byWidth, byHeight));
           final h = w * (320 / 280);
           // Reduced motion: rests at scale 1.0 — its 3dp accent border and
           // being the only thing on screen still say "tap me".
@@ -908,8 +966,12 @@ class _MagicCardState extends State<_MagicCard> {
                       child: ValueListenableBuilder<bool>(
                         valueListenable: widget.speaking,
                         builder: (context, speaking, child) => AnimatedScale(
-                          scale: speaking ? 1.08 : 1.0,
-                          duration: const Duration(milliseconds: 220),
+                          scale: speaking && !reduceMotionOf(context)
+                              ? 1.06
+                              : 1.0,
+                          duration: MotionPolicy.of(
+                            context,
+                          ).dur(const Duration(milliseconds: 220)),
                           curve: Curves.easeOut,
                           child: child,
                         ),
@@ -955,11 +1017,13 @@ class _ProgressDots extends StatelessWidget {
         final color = done
             ? DT.brand.withValues(alpha: 0.6)
             : active
-                ? DT.brand
-                : Colors.grey.withValues(alpha: 0.3);
+            ? DT.brand
+            : Colors.grey.withValues(alpha: 0.3);
         return AnimatedContainer(
           key: ValueKey('mm-dot-$i'),
-          duration: const Duration(milliseconds: 300),
+          duration: MotionPolicy.of(
+            context,
+          ).dur(const Duration(milliseconds: 300)),
           margin: const EdgeInsets.symmetric(horizontal: 5),
           width: active ? 14 : 10,
           height: active ? 14 : 10,

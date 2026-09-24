@@ -511,10 +511,7 @@ class _PlayDisc extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    Color.lerp(accent, Colors.white, .25)!,
-                    accent,
-                  ],
+                  colors: [Color.lerp(accent, Colors.white, .25)!, accent],
                 ),
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white, width: 3),
@@ -693,35 +690,55 @@ class _StoneState extends State<_Stone> with SingleTickerProviderStateMixin {
           color: (t.isDone ? DT.success : accent).withValues(alpha: .16),
         ),
       ),
-      child: Row(
-        children: [
-          SizedBox(width: 32, height: 32, child: AppIconView(t.icon, size: 30)),
-          const SizedBox(width: 10),
-          Expanded(
-            // One line, shrinking if it has to. Three stones share a row,
-            // and «Малюємо» in the third of them broke across two lines
-            // as «Малює / мо» — a word split down the middle is the sort
-            // of thing a parent reads as a broken app.
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Text(
-                t.label,
-                maxLines: 1,
-                style: DT.caption.copyWith(
-                  fontSize: 13,
-                  height: 1.2,
-                  color: DT.textPrimary,
-                  fontWeight: FontWeight.w800,
+      child: LayoutBuilder(
+        builder: (context, bounds) {
+          final compact = bounds.maxWidth < 140;
+          final icon = Stack(
+            clipBehavior: Clip.none,
+            children: [
+              AppIconView(t.icon, size: compact ? 36 : 32),
+              if (t.isDone)
+                Positioned(
+                  right: -6,
+                  top: -4,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(
+                      color: DT.surfaceWhite,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const AppIconView(
+                      AppIcon.check,
+                      size: 16,
+                      color: DT.success,
+                    ),
+                  ),
                 ),
-              ),
+            ],
+          );
+          final label = Text(
+            t.label,
+            textAlign: compact ? TextAlign.center : TextAlign.start,
+            style: DT.caption.copyWith(
+              fontSize: 13,
+              height: 1.2,
+              color: DT.textPrimary,
+              fontWeight: FontWeight.w800,
             ),
-          ),
-          if (t.isDone) ...[
-            const SizedBox(width: 4),
-            const AppIconView(AppIcon.check, size: 19, color: DT.success),
-          ],
-        ],
+          );
+          return compact
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [icon, const SizedBox(height: 8), label],
+                )
+              : Row(
+                  children: [
+                    icon,
+                    const SizedBox(width: 10),
+                    Expanded(child: label),
+                  ],
+                );
+        },
       ),
     );
 

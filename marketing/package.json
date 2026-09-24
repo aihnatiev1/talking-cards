@@ -1,0 +1,33 @@
+{
+  "name": "talking-cards-marketing",
+  "version": "1.0.0",
+  "description": "App Store / Play Store preview videos (Remotion) for Talking Cards",
+  "scripts": {
+    "start": "remotion studio",
+    "build:uk": "remotion render AppStorePreview out/preview-uk.mp4 --props='{\"locale\":\"uk\"}'",
+    "build:en": "remotion render AppStorePreview out/preview-en.mp4 --props='{\"locale\":\"en\"}'",
+    "build:tiktok-uk": "remotion render TikTokPreview out/tiktok-uk.mp4 --props='{\"locale\":\"uk\"}'",
+    "build:tiktok-en": "remotion render TikTokPreview out/tiktok-en.mp4 --props='{\"locale\":\"en\"}'",
+    "build:all": "npm run build:uk && npm run build:en && npm run build:tiktok-uk && npm run build:tiktok-en",
+    "upgrade": "remotion upgrade",
+    "build:store": "node scripts/render-store.mjs",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.448",
+    "@remotion/cli": "4.0.448",
+    "@remotion/fonts": "4.0.448",
+    "@remotion/google-fonts": "4.0.448",
+    "@remotion/renderer": "4.0.448",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "remotion": "4.0.448",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.4.0"
+  },
+  "private": true
+}

@@ -44,15 +44,15 @@ class SpeakerButton extends StatelessWidget {
                   FeedbackService.instance.play(KidSound.tap, pitch: 0.9);
                 }
               },
-              // Pulses (1.0 → 1.2, 500 ms) while a clip plays with sound
+              // Pulses (1.0 → 1.06, 650 ms) while a clip plays with sound
               // on. Under reduced motion it rests at 1.0 — the wider shadow
               // while speaking (blurRadius 12 vs 6) still shows that audio
               // is playing.
               child: AmbientLoop(
-                period: const Duration(milliseconds: 500),
+                period: const Duration(milliseconds: 650),
                 enabled: speaking && autoOn,
                 builder: (_, t, child) => Transform.scale(
-                  scale: 1.0 + 0.2 * t,
+                  scale: 1.0 + 0.06 * t,
                   child: child,
                 ),
                 child: Container(

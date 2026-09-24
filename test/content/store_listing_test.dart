@@ -15,9 +15,9 @@ void main() {
           .toList();
 
   List<String> freeTitles(String file) => [
-        for (final p in packs(file))
-          if (!p.isLocked && !p.id.startsWith('_')) p.title,
-      ];
+    for (final p in packs(file))
+      if (!p.isLocked && !p.id.startsWith('_')) p.title,
+  ];
 
   test('Ukrainian listings name the packs that are actually free', () {
     final free = freeTitles('uk_cards.json');
@@ -71,23 +71,73 @@ void main() {
     for (final loc in ['uk', 'en-US', 'en-GB', 'en-AU', 'en-CA']) {
       final dir = 'ios/fastlane/metadata/$loc';
       final keywords = File('$dir/keywords.txt').readAsStringSync().trim();
-      expect(keywords.length, lessThanOrEqualTo(100),
-          reason: '$loc keywords are ${keywords.length} characters');
+      expect(
+        keywords.length,
+        lessThanOrEqualTo(100),
+        reason: '$loc keywords are ${keywords.length} characters',
+      );
       expect(keywords, isNot(contains(' ')), reason: '$loc wastes a space');
 
       final tokens = keywords.split(',');
-      expect(tokens.toSet(), hasLength(tokens.length),
-          reason: '$loc repeats a keyword');
+      expect(
+        tokens.toSet(),
+        hasLength(tokens.length),
+        reason: '$loc repeats a keyword',
+      );
 
-      final indexed = ('${File('$dir/name.txt').readAsStringSync()} '
-              '${File('$dir/subtitle.txt').readAsStringSync()}')
-          .toLowerCase();
+      final indexed =
+          ('${File('$dir/name.txt').readAsStringSync()} '
+                  '${File('$dir/subtitle.txt').readAsStringSync()}')
+              .toLowerCase();
       for (final token in tokens) {
         if (token.length < 4) continue; // "2", "abc" are cheap either way
-        expect(indexed, isNot(contains(token.toLowerCase())),
-            reason: '$loc spends a keyword on «$token», '
-                'which the name or subtitle already indexes');
+        expect(
+          indexed,
+          isNot(contains(token.toLowerCase())),
+          reason:
+              '$loc spends a keyword on «$token», '
+              'which the name or subtitle already indexes',
+        );
       }
+    }
+  });
+  test('listing counts match each language catalog', () {
+    for (final lang in ['uk', 'en']) {
+      final catalog = packs('${lang}_cards.json');
+      final count = catalog.fold<int>(
+        0,
+        (total, pack) => total + pack.cards.length,
+      );
+      final paths = lang == 'uk'
+          ? [
+              'ios/fastlane/metadata/uk/description.txt',
+              'android/fastlane/metadata/android/uk-UA/full_description.txt',
+            ]
+          : [
+              for (final loc in ['en-US', 'en-GB', 'en-AU', 'en-CA'])
+                'ios/fastlane/metadata/$loc/description.txt',
+              'android/fastlane/metadata/android/en-US/full_description.txt',
+            ];
+      for (final path in paths) {
+        final text = File(path).readAsStringSync();
+        expect(
+          text,
+          contains('$count'),
+          reason: '$path has a stale card count',
+        );
+        expect(
+          text,
+          contains('${catalog.length}'),
+          reason: '$path has a stale pack count',
+        );
+        expect(text.length, lessThanOrEqualTo(4000), reason: path);
+      }
+    }
+    for (final locale in ['uk-UA', 'en-US']) {
+      final text = File(
+        'android/fastlane/metadata/android/$locale/short_description.txt',
+      ).readAsStringSync().trim();
+      expect(text.length, lessThanOrEqualTo(80), reason: locale);
     }
   });
 }

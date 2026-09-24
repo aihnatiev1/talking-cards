@@ -28,7 +28,7 @@ void main() {
       'pack_id': 'animals',
       'source': 'library_grid',
       'position': 4,
-      'locked': false,
+      'locked': 'false',
     });
   });
 
@@ -58,7 +58,7 @@ void main() {
       position: 0,
     );
     expect(events.single.name, 'game_tile_tap');
-    expect(events.single.params['playable'], false);
+    expect(events.single.params['playable'], 'false');
     expect(events.single.params['game_id'], 'odd_one_out');
     expect(events.single.params['section'], 'advanced');
   });
@@ -67,4 +67,24 @@ void main() {
     await AnalyticsService.instance.logGameStart('quiz', source: 'games_tab');
     expect(events.single.params, {'game_id': 'quiz', 'source': 'games_tab'});
   });
+  test(
+    'boolean parameters are compatible with Firebase for both values',
+    () async {
+      await AnalyticsService.instance.logGameTileTap(
+        'quiz',
+        playable: true,
+        section: 'toddler',
+        position: 0,
+      );
+      await AnalyticsService.instance.logPackOpen('animals', locked: false);
+      expect(events[0].params['playable'], 'true');
+      expect(events[1].params['locked'], 'false');
+      expect(
+        events
+            .expand((event) => event.params.values)
+            .every((value) => value is String || value is num),
+        isTrue,
+      );
+    },
+  );
 }

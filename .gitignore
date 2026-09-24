@@ -55,8 +55,15 @@ app.*.map.json
 # Local audio backup (originals of batch-trimmed mp3s, kept locally only).
 assets/audio_mp3_full/
 
-# Marketing site (separate Node.js project with its own node_modules).
-marketing/
+# Keep the reproducible marketing source; captures, renders and media stay local.
+/marketing/*
+!/marketing/src/
+!/marketing/scripts/
+!/marketing/package.json
+!/marketing/package-lock.json
+!/marketing/tsconfig.json
+!/marketing/remotion.config.ts
+!/marketing/README.md
 
 # App Store Connect API key — never in the repo (leaked once, 27f1d1f)
 *.p8

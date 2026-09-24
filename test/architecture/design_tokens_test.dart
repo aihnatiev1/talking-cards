@@ -36,7 +36,6 @@ void main() {
   /// to a `DT` palette (`DT.confetti`, `DT.bloom…`) so the golden tests in
   /// F7 have one source. Everything else is plain migration debt.
   const colorLiteralDebt = {
-    'lib/screens/onboarding_screen.dart',
     'lib/screens/quest_map_screen.dart',
     'lib/services/whatsnew_service.dart',
     'lib/widgets/bubble_pop.dart',
