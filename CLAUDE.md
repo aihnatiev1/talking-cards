@@ -12,7 +12,7 @@
 
 Озвучені картки з зображеннями, розбиті на тематичні паки (Фрази, Дії, Протилежності, звукові паки Р/Л/Ш/С/З/Ж/Ч/Щ/Ц, Прикметники тощо) + 10+ міні-ігор, водна розмальовка, щоденний квест. Дитина бачить картку, чує слово + речення. Використовується батьками вдома і логопедами на заняттях.
 
-Поточний стан: **471 озвучена картка, 21 пак**, обидві мови живі (UA — основна, EN — бренд **FirstWords Cards**). У сторах: iOS (App Store), Android (Google Play).
+Поточний стан: **591 озвучена картка у 25 паках (UA), 417 у 21 (EN)** — рахуються з `assets/data/*_cards.json`, не з пам’яті; обидві мови живі (UA — основна, EN — бренд **FirstWords Cards**). У сторах: iOS (App Store), Android (Google Play).
 
 ## Tech Stack (реальний — перевірено 2026-08)
 
@@ -155,7 +155,7 @@ flutter build appbundle --release  # AAB для Play
 flutter test
 flutter analyze
 
-# Стор-скріншоти (Remotion, gitignored marketing/)
+# Стор-скріншоти (Remotion; marketing/src і package.json у git, рендери й знімки — ні)
 cd marketing && npx remotion still src/index.ts StoreScreenshot out/store-v2/slot-1-en.png --props='{"locale":"en","slot":1}'
 
 # Praise/інструкції озвучка (потрібен ELEVENLABS_API_KEY)
