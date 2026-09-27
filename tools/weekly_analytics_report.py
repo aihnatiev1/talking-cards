@@ -616,31 +616,43 @@ def platform_split(tok, days=7):
 
 def paywall_doors(tok, reviewers):
     """paywall_view → purchase_start → purchase_success by entry point
-    (`source`: locked_tile, preview_end, games_lock, coloring_gate, reminder,
-    paywall_onboarding). Which door converts and which only collects
-    cancels — the question behind the preview-first switch (Remote Config
-    `locked_pack_tap`, 1.3.11)."""
+    (`source`: paywall_screen, preview_end, games_lock, coloring_gate,
+    reminder, paywall_onboarding).
+
+    The purchase events carry `source` only from 1.4.2 (2bb4366), so older
+    builds show up as views with no checkout column. The question this
+    answers: 29 Aug–14 Sep every sale came through `paywall_screen` — a
+    parent tapping a locked pack — and 1.3.11's preview-first switch took
+    that door from 116 views to 3. Remote Config `locked_pack_tap` was set
+    back to `paywall` on 2026-09-27; the rows below are the verdict."""
+    events = ['paywall_view', 'purchase_start', 'purchase_success', 'purchase_cancel']
     r = run_report(tok, {
         'dateRanges': [{'startDate': '7daysAgo', 'endDate': 'today'}],
         'dimensions': [{'name': 'customEvent:source'}, {'name': 'appVersion'},
-                       {'name': 'date'}, {'name': 'platform'}],
+                       {'name': 'date'}, {'name': 'platform'}, {'name': 'eventName'}],
         'metrics': [{'name': 'totalUsers'}],
         'dimensionFilter': {'filter': {'fieldName': 'eventName',
-                                       'stringFilter': {'value': 'paywall_view'}}},
-        'limit': 1000,
+                                       'inListFilter': {'values': events}}},
+        'limit': 5000,
     })
     per = {}
     for row in reviewers.drop_rows(r.get('rows', []), 1, 2, 3):
         src = row['dimensionValues'][0]['value']
+        ev = row['dimensionValues'][4]['value']
         if src in ('(not set)', ''):
+            src = '(без source — білд < 1.4.2)' if ev != 'paywall_view' else None
+        if src is None:
             continue
-        per[src] = per.get(src, 0) + int(row['metricValues'][0]['value'])
+        per.setdefault(src, {})
+        per[src][ev] = per[src].get(ev, 0) + int(row['metricValues'][0]['value'])
     if not per:
         return []
     lines = ['', '### Пейвол за входом (7 дн, users)',
-             '| source | users |', '|---|---|']
-    for src, n in sorted(per.items(), key=lambda kv: -kv[1]):
-        lines.append(f'| {src} | {n} |')
+             '| source | пейвол | старти | покупок | скасувань |',
+             '|---|---|---|---|---|']
+    for src, v in sorted(per.items(), key=lambda kv: -kv[1].get('paywall_view', 0)):
+        lines.append(f"| {src} | {v.get('paywall_view', 0)} | {v.get('purchase_start', 0)} | "
+                     f"{v.get('purchase_success', 0)} | {v.get('purchase_cancel', 0)} |")
     return lines
 
 
