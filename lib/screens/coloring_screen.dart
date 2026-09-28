@@ -13,6 +13,7 @@ import '../providers/daily_quest_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../services/analytics_service.dart';
+import '../providers/bloom_reactions_provider.dart';
 import '../services/audio_service.dart';
 import '../services/feedback_service.dart';
 import '../services/paywall_flow.dart';
@@ -136,9 +137,15 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
     value: 1.0,
   );
 
+  /// One brain per route (bloom_character §5). The bar's Bloom watches
+  /// the finger; the screen tells him where it is.
+  late final BloomReactions _bloom = ref.read(bloomReactionsProvider.notifier);
+  DateTime? _lastLook;
+
   @override
   void initState() {
     super.initState();
+    _bloom.sceneEntered(this, BloomScene.coloring);
     AnalyticsService.instance.logGameStart('coloring');
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -207,9 +214,21 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
 
   @override
   void dispose() {
+    _bloom.sceneLeft(this);
     _revealCtrl.dispose();
     disposeConfetti();
     super.dispose();
+  }
+
+  /// Where the finger is, as a direction from the canvas centre — what
+  /// Bloom's pupils follow (§3.5). Outside the picture clamps to the edge.
+  Alignment _lookAt(Offset p) {
+    final r = _imageRect;
+    if (r == null || r.isEmpty) return Alignment.topCenter;
+    return Alignment(
+      ((p.dx - r.center.dx) / (r.width / 2)).clamp(-1.0, 1.0),
+      ((p.dy - r.center.dy) / (r.height / 2)).clamp(-1.0, 1.0),
+    );
   }
 
   // ─────────────────────────────────────────────
@@ -334,6 +353,8 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
 
   void _onStart(Offset p) {
     _endHandHint();
+    _bloom.watching(_lookAt(p));
+    _lastLook = DateTime.now();
     _current
       ..clear()
       ..add(p);
@@ -343,6 +364,12 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
   }
 
   void _onMove(Offset p) {
+    final now = DateTime.now();
+    final last = _lastLook;
+    if (last == null || now.difference(last) >= DT.motion.bloomLookThrottle) {
+      _lastLook = now;
+      _bloom.lookToward(_lookAt(p));
+    }
     if (_current.isNotEmpty) {
       final last = _current.last;
       if ((p - last).distance < 3) return; // downsample
@@ -409,6 +436,9 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
     final card = _card;
     final isEn = ref.read(languageProvider) == 'en';
     FeedbackService.instance.event(FeedbackEvent.correct);
+    // One hop for a finished picture (§3.5); the word that follows puts
+    // him into `listen` by itself.
+    _bloom.praised();
     _revealCtrl.animateTo(0.0, curve: Curves.easeOutCubic);
     _incrementCompletedCount();
     if (card != null) {
@@ -913,25 +943,14 @@ class _BloomCue extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          BloomMascot(
+          // Live: the screen's BloomReactions drives him — pupils on the
+          // finger while the child paints, a hop when the picture is done
+          // (§3.5). The frozen cheer/idle pair this replaced could not
+          // look anywhere.
+          const BloomMascot(
             size: _ColoringBar.bloomSize,
-            // Facing the button he is pointing the child at.
             facing: BloomFacing.right,
-            interactive: false,
             semanticsLabel: 'Bloom',
-            state: done
-                ? const BloomState(
-                    emotion: BloomEmotion.cheer,
-                    hops: 3,
-                    ambient: BloomAmbient.breathe,
-                    lookAt: Alignment.centerRight,
-                  )
-                : const BloomState(
-                    emotion: BloomEmotion.idle,
-                    hops: 0,
-                    ambient: BloomAmbient.breathe,
-                    lookAt: Alignment.centerRight,
-                  ),
           ),
           if (done)
             // Above him, negatively inset on both sides so a long word

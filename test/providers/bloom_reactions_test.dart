@@ -41,6 +41,69 @@ void main() {
     FeedbackService.debugLog.clear();
   });
 
+  group('looking (colouring book, §3.5)', () {
+    test('watching: a curious beat at the finger, then idle still looking there',
+        () {
+      fakeAsync((async) {
+        final t = make(async);
+        t.bloom.sceneEntered('coloring', BloomScene.coloring);
+        t.bloom.watching(const Alignment(0.5, -0.5));
+        expect(t.bloom.state.emotion, BloomEmotion.curious);
+        expect(t.bloom.state.lookAt, const Alignment(0.5, -0.5));
+        async.elapse(DT.motion.bloomCurious);
+        expect(t.bloom.state.emotion, BloomEmotion.idle);
+        expect(t.bloom.state.lookAt, const Alignment(0.5, -0.5));
+        // No sound: the picture is the actor, not Bloom.
+        expect(t.sounds, isEmpty);
+        t.bloom.dispose();
+      });
+    });
+
+    test('lookToward moves the pupils without a pose and sticks', () {
+      fakeAsync((async) {
+        final t = make(async);
+        t.bloom.sceneEntered('coloring', BloomScene.coloring);
+        t.bloom.lookToward(Alignment.topLeft);
+        expect(t.bloom.state.emotion, BloomEmotion.idle);
+        expect(t.bloom.state.lookAt, Alignment.topLeft);
+        async.elapse(const Duration(seconds: 5));
+        expect(t.bloom.state.lookAt, Alignment.topLeft);
+        t.bloom.lookToward(Alignment.bottomRight);
+        expect(t.bloom.state.lookAt, Alignment.bottomRight);
+        t.bloom.dispose();
+      });
+    });
+
+    test('a finished picture is one hop, and the box scene never greets',
+        () {
+      fakeAsync((async) {
+        final t = make(async);
+        t.bloom.sceneEntered('coloring', BloomScene.coloring);
+        t.bloom.praised();
+        expect(t.bloom.state.emotion, BloomEmotion.cheer);
+        expect(t.bloom.state.hops, 1);
+        t.bloom.dispose();
+
+        final w = make(async);
+        w.bloom.sceneEntered('treasure', BloomScene.treasure);
+        async.elapse(const Duration(seconds: 60));
+        expect(w.bloom.state.emotion, BloomEmotion.idle);
+        expect(w.sounds, isEmpty);
+        // The empty box: one look down, one «м-м?» — and not over a word.
+        w.speaking.value = true;
+        w.bloom.emptyBox();
+        expect(w.bloom.state.lookAt, Alignment.bottomCenter);
+        expect(w.sounds, isEmpty);
+        w.speaking.value = false;
+        async.elapse(DT.motion.bloomCurious + DT.motion.bloomNod);
+        w.bloom.emptyBox();
+        expect(w.bloom.state.emotion, BloomEmotion.curious);
+        expect(w.sounds, [BloomSound.hmm]);
+        w.bloom.dispose();
+      });
+    });
+  });
+
   group('priorities', () {
     test('cheer interrupts a lower one-shot; a lower one is dropped', () {
       fakeAsync((async) {

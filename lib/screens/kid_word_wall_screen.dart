@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
+import '../providers/bloom_reactions_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../providers/profile_provider.dart';
@@ -51,6 +52,32 @@ class _KidWordWallScreenState extends ConsumerState<KidWordWallScreen> {
   static const _learnedThreshold = 2;
 
   late TreasureTab _tab = widget.initialTab;
+
+  /// Header Bloom is live and only idles (§3.3): the treasure box is a
+  /// continuation of the session, so no greeting. The empty box gets one
+  /// «м-м?» — once per visit, never over a word.
+  late final BloomReactions _bloom = ref.read(bloomReactionsProvider.notifier);
+  bool _hmmPlayed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _bloom.sceneEntered(this, BloomScene.treasure);
+  }
+
+  @override
+  void dispose() {
+    _bloom.sceneLeft(this);
+    super.dispose();
+  }
+
+  void _hmmOnce() {
+    if (_hmmPlayed) return;
+    _hmmPlayed = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _bloom.emptyBox();
+    });
+  }
 
   void _select(TreasureTab tab) {
     if (_tab == tab) return;
@@ -110,6 +137,7 @@ class _KidWordWallScreenState extends ConsumerState<KidWordWallScreen> {
               .toList();
 
           if (learned.isEmpty) {
+            _hmmOnce();
             return _emptyState(context, isEn, s);
           }
 
@@ -154,7 +182,16 @@ class _KidWordWallScreenState extends ConsumerState<KidWordWallScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const BloomMascot(size: 96),
+            // Looking into the empty box (§3.3): a still `curious`,
+            // pupils down — not the header's live Bloom twice.
+            const BloomMascot(
+              size: 96,
+              interactive: false,
+              state: BloomState.still(
+                BloomEmotion.curious,
+                lookAt: Alignment.bottomCenter,
+              ),
+            ),
             const SizedBox(height: 20),
             Text(
               s('Скарбничка порожня', 'Treasure box is empty'),
@@ -326,10 +363,8 @@ class _Header extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const BloomMascot(
-            size: 64,
-            state: BloomState.still(BloomEmotion.wave),
-          ),
+          // Live and idle: the box is not a new meeting, so no wave.
+          const BloomMascot(size: 64, semanticsLabel: 'Bloom'),
           const SizedBox(width: 14),
           Expanded(
             child: Column(

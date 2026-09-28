@@ -545,6 +545,39 @@ class BloomReactions extends StateNotifier<BloomState> {
     );
   }
 
+  /// Keep looking at [where] until told otherwise — the colouring book
+  /// feeds the finger's position here (§3.5), throttled by the caller.
+  void lookToward(Alignment where) {
+    if (_disposed) return;
+    _lookTimer?.cancel();
+    _lookTimer = null;
+    _hintTarget = where;
+    _setState(state.copyWith(lookAt: where));
+  }
+
+  /// Something new under the child's hand: a `curious` beat looking at
+  /// [where], then idle still looking there. Dropped while a stronger
+  /// one-shot plays, like every other one-shot.
+  void watching(Alignment where) {
+    _activity();
+    _hintTarget = where;
+    _startOneShot(BloomEmotion.curious, DT.motion.bloomCurious, lookAt: where);
+  }
+
+  /// An empty treasure box (§3.3): a `curious` look down into it and one
+  /// soft «м-м?» — the sound goes through the usual gate, so never over a
+  /// word. The screen calls this once per visit.
+  void emptyBox() {
+    _activity();
+    _hintTarget = Alignment.bottomCenter;
+    _startOneShot(
+      BloomEmotion.curious,
+      DT.motion.bloomCurious,
+      lookAt: Alignment.bottomCenter,
+      sound: BloomSound.hmm,
+    );
+  }
+
   /// A quick look towards [where], back to the target after a nod's time.
   void _glance(Alignment where) {
     _lookTimer?.cancel();

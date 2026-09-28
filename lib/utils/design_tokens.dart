@@ -494,6 +494,11 @@ class DTMotion {
   /// a swipe before settling back.
   final Duration bloomNod = const Duration(milliseconds: 200);
 
+  /// How often the colouring book re-aims Bloom's pupils at the finger
+  /// (bloom_character §3.5): ten times a second reads as following,
+  /// every frame is a redraw nobody sees.
+  final Duration bloomLookThrottle = const Duration(milliseconds: 100);
+
   /// `speaking → false` is honoured only after this gap (a phrase has
   /// tiny silences inside it).
   final Duration bloomListenRelease = const Duration(milliseconds: 150);

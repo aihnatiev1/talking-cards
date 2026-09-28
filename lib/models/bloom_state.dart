@@ -124,6 +124,19 @@ class BloomScene {
     sleepAfter: Duration(seconds: 30),
   );
 
+  /// The colouring book (§3.5): Bloom sits in the bottom bar and watches
+  /// the finger — the screen feeds him where it is. He is the only actor,
+  /// but the hints are the screen's (the hand demo), not his.
+  static const coloring = BloomScene(
+    ambient: BloomAmbient.breathe,
+    soloActor: true,
+    sleepAfter: Duration(seconds: 30),
+  );
+
+  /// The treasure box (§3.3): a continuation of the session, not a new
+  /// meeting — idle and breathing in the header, no greeting.
+  static const treasure = BloomScene(ambient: BloomAmbient.breathe);
+
   /// The onboarding magic moment (§3.6): Bloom is the only actor, greets,
   /// and points at the card after a second of nothing. Sleep is off — a
   /// parent reading the bubble is not a child who wandered away.

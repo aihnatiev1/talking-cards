@@ -42,6 +42,11 @@ class SwipeHintState extends State<SwipeHint> with TickerProviderStateMixin {
     final prefs = await SharedPreferences.getInstance();
     if (prefs.getBool(_learnedKey) == true) return;
     if (!mounted || _dismissed) return;
+    // Bloom shows the swipe himself now — his second idle hint on the
+    // cards slides the paw sideways (bloom_character §3.2, wave 2.5). The
+    // pill is the reduced-motion fallback: static chevrons where a paw
+    // that does not move would show nothing.
+    if (!reduceMotionOf(context)) return;
 
     _entryCtrl = AnimationController(
       vsync: this,

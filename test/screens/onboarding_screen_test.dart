@@ -6,7 +6,6 @@ import 'package:talking_cards/screens/onboarding_screen.dart';
 import 'package:talking_cards/utils/motion.dart';
 import 'package:talking_cards/utils/app_theme.dart';
 import 'package:talking_cards/widgets/kid_tap.dart';
-import 'package:talking_cards/models/bloom_state.dart';
 import 'package:talking_cards/providers/bloom_reactions_provider.dart';
 
 /// Onboarding branches on the system locale: EN opens straight into the
