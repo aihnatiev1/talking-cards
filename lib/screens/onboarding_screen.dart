@@ -873,7 +873,7 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
       return "$greeting I'm Bloom. Tap the card!";
     }
     final greeting = name.isEmpty ? 'Привіт, друже!' : 'Привіт, $name!';
-    return '$greeting Я — Зайчик. Натисни на картку!';
+    return '$greeting Я — Блум. Натисни на картку!';
   }
 }
 

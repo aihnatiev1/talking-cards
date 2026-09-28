@@ -76,7 +76,7 @@ class _WhatsNewSheet extends StatelessWidget {
           Text(
             isEn
                 ? 'Big update — new game, a bunny friend, and a daily ritual'
-                : 'Велике оновлення — нові ігри, друг-зайчик і щоденний ритуал',
+                : 'Велике оновлення — нові ігри, друг Блум і щоденний ритуал',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 13, color: Colors.grey[500]),
           ),
@@ -122,7 +122,7 @@ const _features = [
   ('🫧', 'Нова гра «Бульбашки»',
       'Лопай бульки з картинками — Pop-It-стиль із словами',
       Color(0xFFE91E63)),
-  ('🐰', 'Зайчик Bloom вітається',
+  ('🐰', 'Блум вітається',
       'Тапни його на головній чи в грі — він підстрибне у відповідь',
       Color(0xFFF57F17)),
   ('🃏', '«Сьогодні» на головній',

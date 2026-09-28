@@ -265,7 +265,7 @@ class QuestJourneyMap extends StatelessWidget {
                                           : shift(current - 1),
                                       toShift: shift(current),
                                       cheering: q.allDone,
-                                      semanticsLabel: s('Блюм', 'Bloom'),
+                                      semanticsLabel: s('Блум', 'Bloom'),
                                   ),
                                 ),
                               ),
