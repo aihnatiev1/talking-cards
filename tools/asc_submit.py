@@ -28,6 +28,12 @@ The build is the newest VALID one whose preReleaseVersion matches the
 marketing version — Xcode Cloud numbers builds by its own counter, not by
 pubspec's +N. Release type AFTER_APPROVAL, like every release so far.
 
+Once the version is on sale, bump pubspec before the next push: Xcode
+Cloud exports a build for the marketing version in pubspec, and ASC
+refuses new builds for a released one with a misleading "Unable to
+authenticate with App Store Connect" (#76/#77, 2026-09-27; #78 passed
+the moment pubspec said 1.4.4).
+
 Auth: ASC API key ~/.private_keys/AuthKey_L47N29CGTL.p8 (ES256 JWT).
 Needs /usr/bin/python3 (has pyjwt + cryptography).
 """

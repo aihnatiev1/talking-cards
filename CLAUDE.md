@@ -93,7 +93,7 @@ assets/
 
 ## Publishing Context
 
-- **App Store:** категорія Education (4+), НЕ Kids category. Бренд EN — FirstWords Cards. Метадані версіонуються у `ios/fastlane/metadata/` (5 локалей: uk, en-US, en-GB, en-AU, en-CA), скріншоти — `ios/fastlane/screenshots/`. Xcode Cloud збирає і заливає білд на push у main (workflow "Default").
+- **App Store:** категорія Education (4+), НЕ Kids category. Бренд EN — FirstWords Cards. Метадані версіонуються у `ios/fastlane/metadata/` (5 локалей: uk, en-US, en-GB, en-AU, en-CA), скріншоти — `ios/fastlane/screenshots/`. Xcode Cloud збирає і заливає білд на push у main (workflow "Default"). **Після виходу версії в стор перший пуш має підняти `version:` у pubspec** — інакше Xcode Cloud падає на експорті з оманливим «Unable to authenticate with App Store Connect» (це не про акаунт, а про білд у вже випущену версію). Пуш без коду (docs/tools) — з `[ci skip]` у повідомленні.
 - **Google Play:** ФОП-акаунт; метадані у `android/fastlane/metadata/`.
 - ASC API-доступ налаштований (див. memory `reference_appstore_api`) — версії/метадані/скріншоти/сабміт робляться через API.
 
