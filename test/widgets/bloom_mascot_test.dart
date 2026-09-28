@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:talking_cards/models/bloom_state.dart';
 import 'package:talking_cards/providers/bloom_reactions_provider.dart';
 import 'package:talking_cards/services/feedback_service.dart';
 import 'package:talking_cards/utils/design_tokens.dart';
@@ -131,6 +132,37 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.binding.hasScheduledFrame, isFalse,
         reason: 'at rest Bloom schedules no frames — only the blink Timer');
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('an idle Bloom twitches an ear now and then — never under reduced motion',
+      (tester) async {
+    // bloom_character §2.2 / wave 2.9: a discrete event on a 15–25 s gap,
+    // idle only. Reduced motion drops it like the blink.
+    const idle = BloomState(
+      emotion: BloomEmotion.idle,
+      ambient: BloomAmbient.blinkOnly,
+      hops: 0,
+    );
+    Widget host() => const MaterialApp(
+          home: Scaffold(body: Center(child: BloomMascot(size: 96, state: idle))),
+        );
+
+    MotionPolicy.debugOverride = MotionMode.full;
+    addTearDown(() => MotionPolicy.debugOverride = MotionMode.test);
+    BloomMascot.debugEarTwitches = 0;
+    await tester.pumpWidget(host());
+    await tester.pump();
+    await tester.pump(DT.motion.bloomEarTwitchMax + const Duration(seconds: 1));
+    expect(BloomMascot.debugEarTwitches, greaterThanOrEqualTo(1));
+    await tester.pumpWidget(const SizedBox());
+
+    MotionPolicy.debugOverride = MotionMode.test;
+    BloomMascot.debugEarTwitches = 0;
+    await tester.pumpWidget(host());
+    await tester.pump();
+    await tester.pump(DT.motion.bloomEarTwitchMax + const Duration(seconds: 1));
+    expect(BloomMascot.debugEarTwitches, 0);
     await tester.pumpWidget(const SizedBox());
   });
 }

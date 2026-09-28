@@ -131,4 +131,25 @@ void main() {
       isTrue,
     );
   });
+
+  group("Bloom's lines (wave 2.8)", () {
+    test('third person, and the child\'s name where a typed name fits', () {
+      final named = NotificationService.bloomLines('uk', 'Соломійка');
+      expect(named, hasLength(5));
+      for (final (_, body) in named) {
+        expect(body, contains('Блум'));
+        expect(body, isNot(contains('{name}')));
+      }
+      expect(named.where((l) => l.$2.contains('Соломійка')).length,
+          greaterThanOrEqualTo(3));
+
+      final anon = NotificationService.bloomLines('en', null);
+      for (final (_, body) in anon) {
+        expect(body, contains('Bloom'));
+        expect(body, isNot(contains('{name}')));
+      }
+      expect(anon.where((l) => l.$2.contains('your little one')).length,
+          greaterThanOrEqualTo(2));
+    });
+  });
 }

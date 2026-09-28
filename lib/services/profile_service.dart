@@ -57,6 +57,23 @@ class ProfileService {
   }
 
   /// Switch the active profile (updates static field + persists).
+  /// The active child's name for copy that speaks about them — null when
+  /// the parent never typed one (the default profile is «Малюк»), so the
+  /// caller can fall back to a neutral word instead of printing a
+  /// placeholder.
+  static Future<String?> activeName() async {
+    final prefs = await SharedPreferences.getInstance();
+    final id = prefs.getString(_keyActiveId) ?? _defaultId;
+    final raw = prefs.getStringList(_keyProfiles) ?? [];
+    for (final entry in raw) {
+      final p = ProfileModel.fromJsonString(entry);
+      if (p.id != id) continue;
+      final name = p.name.trim();
+      return name.isEmpty || name == 'Малюк' ? null : name;
+    }
+    return null;
+  }
+
   static Future<void> setActive(String id) async {
     _activeId = id;
     final prefs = await SharedPreferences.getInstance();

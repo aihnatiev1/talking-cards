@@ -490,6 +490,12 @@ class DTMotion {
   final Duration bloomBlinkMin = const Duration(seconds: 3);
   final Duration bloomBlinkMax = const Duration(seconds: 6);
 
+  /// Once in a long while an idle Bloom's ear twitches (bloom_character
+  /// §2.2, wave 2.9): a discrete event like the blink, never a loop.
+  final Duration bloomEarTwitchMin = const Duration(seconds: 15);
+  final Duration bloomEarTwitchMax = const Duration(seconds: 25);
+  final Duration bloomEarTwitch = const Duration(milliseconds: 220);
+
   /// The "heard you" nod when a word ends; also how long the pupils follow
   /// a swipe before settling back.
   final Duration bloomNod = const Duration(milliseconds: 200);

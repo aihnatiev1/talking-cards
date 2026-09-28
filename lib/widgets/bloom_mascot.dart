@@ -57,6 +57,10 @@ class BloomMascot extends StatelessWidget {
   @Deprecated('pass state: BloomState.still(emotion) instead')
   final BloomEmotion? emotion;
 
+  /// Test seam: how many ear twitches have played since the counter was
+  /// last reset (wave 2.9). Nothing else reads it.
+  static int debugEarTwitches = 0;
+
   const BloomMascot({
     super.key,
     this.size = 120,
@@ -144,6 +148,13 @@ class _BloomBodyState extends State<_BloomBody>
   bool _reduce = false;
   bool _tickers = true;
 
+  /// The ear twitch (§2.2, wave 2.9): a timer picks a moment 15–25 s out,
+  /// the controller plays the 220 ms flick. Only while he simply idles —
+  /// a pose in transition, a gesture or a listen has its own ears.
+  Timer? _earTimer;
+  late final AnimationController _ear =
+      AnimationController(vsync: this, duration: DT.motion.bloomEarTwitch);
+
   @override
   void initState() {
     super.initState();
@@ -159,6 +170,7 @@ class _BloomBodyState extends State<_BloomBody>
     _reduce = MotionPolicy.of(context).reduce;
     _tickers = TickerMode.valuesOf(context).enabled;
     _scheduleBlink();
+    _scheduleTwitch();
   }
 
   @override
@@ -170,6 +182,8 @@ class _BloomBodyState extends State<_BloomBody>
   @override
   void dispose() {
     _blinkTimer?.cancel();
+    _earTimer?.cancel();
+    _ear.dispose();
     _pose.dispose();
     _motion.dispose();
     super.dispose();
@@ -208,6 +222,7 @@ class _BloomBodyState extends State<_BloomBody>
       _playGesture(_Gesture.nod, 1);
     }
     _scheduleBlink();
+    _scheduleTwitch();
   }
 
   BloomPose _currentPose() =>
@@ -250,6 +265,28 @@ class _BloomBodyState extends State<_BloomBody>
     _motion
       ..duration = _gestureLength(g, hops)
       ..forward(from: 0);
+  }
+
+  // ── Ear twitch: rarer still, idle only ─────────────────────────────────
+
+  bool get _mayTwitch =>
+      _mayBlink &&
+      _shown.emotion == BloomEmotion.idle &&
+      _shown.level == BloomLevel.idle;
+
+  void _scheduleTwitch() {
+    _earTimer?.cancel();
+    _earTimer = null;
+    if (!_mayTwitch) return;
+    final min = DT.motion.bloomEarTwitchMin;
+    final max = DT.motion.bloomEarTwitchMax;
+    final gap = min + (max - min) * math.Random().nextDouble();
+    _earTimer = Timer(gap, () {
+      if (!mounted || !_mayTwitch) return;
+      BloomMascot.debugEarTwitches++;
+      _ear.forward(from: 0);
+      _scheduleTwitch();
+    });
   }
 
   // ── Blink: a rare discrete event, never a loop ────────────────────────
@@ -296,9 +333,16 @@ class _BloomBodyState extends State<_BloomBody>
         : Offset(flip ? -look.x : look.x, look.y);
 
     Widget figure = AnimatedBuilder(
-      animation: Listenable.merge([_pose, _motion]),
+      animation: Listenable.merge([_pose, _motion, _ear]),
       builder: (context, _) {
-        final base = _currentPose();
+        var base = _currentPose();
+        if (_ear.isAnimating) {
+          // 8° out and back on a half sine — the right ear, the one with
+          // the bend, so the silhouette changes and reads as alive.
+          base = base.copyWith(
+            earRight: base.earRight + 0.14 * math.sin(math.pi * _ear.value),
+          );
+        }
         final frame = _MotionFrame.at(
           _gesture,
           _motion.isAnimating ? _motion.value : (_motion.value >= 1 ? 1 : 0),

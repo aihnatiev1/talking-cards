@@ -7,6 +7,7 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
 import 'analytics_service.dart';
+import 'profile_service.dart';
 import 'purchase_service.dart';
 import '../utils/uk_grammar.dart';
 
@@ -135,6 +136,31 @@ class NotificationService {
     ('🏆', 'Open the word chest — the words your little one already knows.'),
     ('💪', 'Listen to a familiar word and try saying it together.'),
   ];
+
+  // Bloom's lines (bloom_character §7, wave 2.8): third person, one
+  // concrete invitation each, the child's name where the grammar lets a
+  // typed name stand in the nominative — «{name} послухає», never «для
+  // {name}». They join the daily deck; they do not replace it.
+  static List<(String, String)> bloomLines(String lang, String? childName) {
+    if (lang == 'en') {
+      final who = childName ?? 'your little one';
+      return [
+        ('🐰', 'Bloom picked a new card. Will $who listen with you?'),
+        ('🐰', 'Bloom is awake and waiting for three cards. Will $who show him?'),
+        ('🐰', 'Bloom is pointing at the Animals pack — new words are there.'),
+        ('🐰', 'Welcome back! Bloom kept every word $who already knows.'),
+        ('🐰', 'One card and Bloom will hop. Ready to try together?'),
+      ];
+    }
+    final who = childName ?? 'малюк';
+    return [
+      ('🐰', 'Блум приготував нову картку. $who послухає її разом із вами?'),
+      ('🐰', 'Блум прокинувся і чекає на три картки. $who покаже йому?'),
+      ('🐰', 'Блум показує на пак «Тваринки» — там є нові слова.'),
+      ('🐰', 'Раді бачити! Блум зберіг усі слова, які $who уже знає.'),
+      ('🐰', 'Одна картка — і Блум підстрибне. Спробуєте разом?'),
+    ];
+  }
 
   // Win-back copy (T+48h inactivity). A pause costs nothing here: the
   // collection, the stickers and the word chest are exactly where they
@@ -551,7 +577,11 @@ class NotificationService {
       return;
     }
     final random = Random();
-    final deck = lang == 'en' ? cardsEn : cardsUk;
+    final name = await ProfileService.activeName();
+    final deck = [
+      ...(lang == 'en' ? cardsEn : cardsUk),
+      ...bloomLines(lang, name),
+    ];
     final card = deck[random.nextInt(deck.length)];
     final title = lang == 'en'
         ? '${card.$1} Card time!'
@@ -593,7 +623,11 @@ class NotificationService {
     required int hour,
   }) async {
     final random = Random();
-    final deck = lang == 'en' ? cardsEn : cardsUk;
+    final name = await ProfileService.activeName();
+    final deck = [
+      ...(lang == 'en' ? cardsEn : cardsUk),
+      ...bloomLines(lang, name),
+    ];
     final now = tz.TZDateTime.now(tz.local);
 
     for (var i = 0; i < _weeklyIds.length; i++) {
@@ -827,7 +861,16 @@ class NotificationService {
   /// whole surface to one rule: invite, never frighten.
   static List<String> allCopy() {
     final out = <String>[];
-    for (final deck in [cardsUk, cardsEn, winBackUk, winBackEn]) {
+    for (final deck in [
+      cardsUk,
+      cardsEn,
+      winBackUk,
+      winBackEn,
+      bloomLines('uk', null),
+      bloomLines('uk', 'Соломійка'),
+      bloomLines('en', null),
+      bloomLines('en', 'Emma'),
+    ]) {
       for (final card in deck) {
         out.add(card.$2);
       }
