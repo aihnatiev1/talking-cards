@@ -10,9 +10,13 @@ Play's "Billing Library" warning keyed on the oldest track, which used to
 lag years behind. Release notes come from
 android/fastlane/metadata/android/<locale>/changelogs/<versionCode>.txt.
 
-Managed publishing is ON for this app: the commit only queues the release.
-After this script, press "Огляд публікації → Надіслати на перевірку" in
-Play Console — without it nothing ships (v22/v23 were lost that way).
+Managed publishing is OFF for this app (checked in Play Console on
+2026-09-28): the edit commit *is* the submission, and the release shows
+up under «Зміни на перевірці» by itself. It used to be ON — v22/v23 were
+lost waiting for a button nobody pressed — and this docstring kept saying
+so for two releases after the switch, sending the owner to look for a
+button that no longer exists. If the mode is ever turned back on, the
+line below is where to say it.
 
 --diff compares the store listing in this repo against the one Play is
 actually serving. The App Store side had drifted — keywords tuned in the
@@ -143,7 +147,7 @@ def diff(push=False):
     print('commit', call(
         'POST', f'{BASE}/edits/{edit}:commit?changesNotSentForReview=false',
         {}).get('id'))
-    print('\nListing queued. Play Console: «Огляд публікації» → '
+    print('\nListing submitted — it reviews on its own (managed publishing is '
           '«Надіслати на перевірку».')
     return 0
 
@@ -185,7 +189,8 @@ def main(argv):
         print('track', track, '->', [(x['name'], x['status']) for x in r['releases']])
     call('POST', f'{BASE}/edits/{edit}:validate', {})
     print('commit', call('POST', f'{BASE}/edits/{edit}:commit?changesNotSentForReview=false', {}))
-    print('\nQueued. Now in Play Console: «Огляд публікації» → «Надіслати на перевірку».')
+    print('\nSubmitted for review — managed publishing is off, no button to press. '
+          'Progress: Play Console → «Огляд публікації» → «Зміни на перевірці».')
     return 0
 
 
