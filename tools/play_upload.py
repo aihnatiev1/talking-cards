@@ -147,8 +147,7 @@ def diff(push=False):
     print('commit', call(
         'POST', f'{BASE}/edits/{edit}:commit?changesNotSentForReview=false',
         {}).get('id'))
-    print('\nListing submitted — it reviews on its own (managed publishing is '
-          '«Надіслати на перевірку».')
+    print('\nListing submitted — it reviews on its own (managed publishing is off).')
     return 0
 
 
