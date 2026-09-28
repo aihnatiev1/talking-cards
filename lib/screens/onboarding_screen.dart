@@ -21,6 +21,7 @@ import '../utils/design_tokens.dart';
 import '../utils/kid_routes.dart';
 import '../utils/motion.dart';
 import '../widgets/ambient_loop.dart';
+import '../providers/bloom_reactions_provider.dart';
 import '../widgets/bloom_mascot.dart';
 import '../widgets/card_image.dart';
 import '../widgets/kid_tap.dart';
@@ -621,16 +622,43 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
 
   bool get _isEn => widget.lang == 'en';
 
+  /// Bloom greets, then behaves like a friend rather than a looping
+  /// decoration (bloom_character §3.6): a second of nothing and he points
+  /// at the card, twice at most; he listens while the word plays, hops
+  /// when it lands, and cheers on the third card.
+  late final BloomReactions _bloom = ref.read(bloomReactionsProvider.notifier);
+  Timer? _hintTimer;
+  int _hintsShown = 0;
+  static const _firstHintAfter = Duration(seconds: 1);
+  static const _hintRepeatAfter = Duration(seconds: 6);
+
   @override
   void initState() {
     super.initState();
+    _bloom.sceneEntered(this, BloomScene.magicMoment);
+    _bloom.appEntered();
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadStarterCards());
   }
 
   @override
   void dispose() {
+    _hintTimer?.cancel();
+    _bloom.sceneLeft(this);
     disposeConfetti();
     super.dispose();
+  }
+
+  void _armHint(Duration after) {
+    _hintTimer?.cancel();
+    if (_hintsShown >= 2) return;
+    _hintTimer = Timer(after, () {
+      if (!mounted || !_ready || _advancing || _celebrating) return;
+      _hintsShown += 1;
+      // The card is below him; the paw goes down, no sound of his own —
+      // the bubble already said it for the parent.
+      _bloom.pointAt(Alignment.bottomCenter);
+      _armHint(_hintRepeatAfter);
+    });
   }
 
   Future<void> _loadStarterCards() async {
@@ -657,6 +685,7 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
         _cards = pack.cards.take(3).toList();
         _ready = true;
       });
+      _armHint(_firstHintAfter);
       // The first tap must answer instantly: a cold disk load in front of
       // the very first word is latency the parent reads as "broken".
       AudioService.instance.warm(_cards.map((c) => c.audioKey));
@@ -695,6 +724,7 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
 
   Future<void> _onCardTap() async {
     if (_celebrating || _cards.isEmpty) return;
+    _hintTimer?.cancel();
     if (_advancing) {
       // A second tap while the word is still playing means "next". Taps
       // used to be swallowed here until playback ended — a toddler taps
@@ -726,6 +756,8 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
       ]);
       if (!mounted) return;
       if (wasLast) {
+        // Three cards is a finished pack to a two-year-old: three hops.
+        _bloom.packCompleted();
         AnalyticsService.instance.logOnboardingMagicMomentComplete();
         // No "You did it" modal: the mascot says it, confetti and a recorded
         // praise clip land it, and the flow moves on by itself. A dialog here
@@ -737,7 +769,9 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
         await Future<void>.delayed(const Duration(milliseconds: 1600));
         if (mounted) widget.onComplete();
       } else {
+        _bloom.success(BloomSuccessTier.micro);
         setState(() => _currentIndex += 1);
+        _armHint(_hintRepeatAfter);
       }
     } finally {
       // A frozen onboarding is the one outcome this screen may never have.
@@ -768,7 +802,10 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
               child: Column(
                 children: [
                   const SizedBox(height: 4),
-                  const _BouncingMascot(),
+                  BloomMascot(
+                    size: DT.size.mascotMd,
+                    semanticsLabel: _isEn ? 'Bloom' : 'Блум',
+                  ),
                   const SizedBox(height: 8),
                   _SpeechBubble(text: _bubbleText()),
                   const SizedBox(height: 18),
@@ -843,27 +880,6 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
 // ─────────────────────────────────────────────
 //  Magic Moment — sub-widgets
 // ─────────────────────────────────────────────
-
-/// Two bobs to say hello, then still: the only thing moving on this screen
-/// must be the card the child is meant to tap (audit #1). Reduced motion:
-/// rests at offset 0 — the mascot is waving already, the bubble says hello.
-class _BouncingMascot extends StatelessWidget {
-  const _BouncingMascot();
-
-  @override
-  Widget build(BuildContext context) {
-    return AmbientLoop(
-      period: const Duration(milliseconds: 800),
-      settleAfter: const Duration(seconds: 2),
-      builder: (_, t, child) =>
-          Transform.translate(offset: Offset(0, -8.0 * t), child: child),
-      child: const BloomMascot(
-        size: 96,
-        state: BloomState.still(BloomEmotion.wave),
-      ),
-    );
-  }
-}
 
 class _SpeechBubble extends StatelessWidget {
   final String text;

@@ -13,6 +13,8 @@ import 'package:talking_cards/services/feedback_service.dart';
 import 'package:talking_cards/widgets/quiz_option.dart';
 import 'package:talking_cards/widgets/quiz_options_board.dart';
 import '../helpers/motion.dart';
+import 'package:talking_cards/widgets/bloom_mascot.dart';
+import 'package:talking_cards/widgets/quiz_options_board.dart';
 
 const salt = CardModel(
   id: 'sc07',
@@ -33,6 +35,28 @@ const acorn = CardModel(
   audioKey: 'szh05',
   colorBg: Color(0xFFFFF8E1),
   colorAccent: Color(0xFFF57F17),
+);
+
+const third = CardModel(
+  id: 'third',
+  sound: 'ЖОЛУДЬ',
+  text: '',
+  emoji: '',
+  image: 'kotik',
+  audioKey: 'szh05',
+  colorBg: Color(0xFFFFF8E1),
+  colorAccent: Color(0xFFF57F17),
+);
+
+const fourth = CardModel(
+  id: 'fourth',
+  sound: 'СІЛЬ',
+  text: '',
+  emoji: '',
+  image: 'en_salt',
+  audioKey: 'sc07',
+  colorBg: Color(0xFFE3F2FD),
+  colorAccent: Color(0xFF1565C0),
 );
 
 void main() {
@@ -175,7 +199,9 @@ void main() {
       final tiles = find.byType(QuizOption);
       expect(tiles, findsNWidgets(2));
       expect(tester.getRect(tiles.first).top, lessThan(130));
-      expect(tester.getRect(tiles.last).bottom, greaterThan(800));
+      // Bloom's corner reserves the bottom strip (bloom_character §4.2):
+      // the board still reaches most of the way down, just not under him.
+      expect(tester.getRect(tiles.last).bottom, greaterThan(700));
       expect(tester.takeException(), isNull);
       if (const bool.fromEnvironment('GUESS_PREVIEW')) {
         final boundary = tester.renderObject<RenderRepaintBoundary>(
@@ -194,4 +220,36 @@ void main() {
       await tester.pump(const Duration(seconds: 3));
     },
   );
+
+  testWidgets('Bloom sits in the corner and never on the board', (
+    tester,
+  ) async {
+    // bloom_character §4.2: always under the learning object, never over
+    // it — including the hop, which the mascot reserves clearance for.
+    const size = Size(390, 844);
+    tester.view.physicalSize = size;
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    AudioService.debugWordSink = (_) {};
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: GuessScreen(cards: [salt, acorn, third, fourth]),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.byType(BloomMascot), findsOneWidget);
+    final bloom = tester.getRect(find.byType(BloomMascot));
+    final board = tester.getRect(find.byType(QuizOptionsBoard));
+    expect(
+      bloom.overlaps(board),
+      isFalse,
+      reason: 'Bloom $bloom overlaps the options board $board',
+    );
+    expect(bloom.bottom, lessThanOrEqualTo(size.height));
+    await tester.pumpWidget(const SizedBox());
+  });
 }

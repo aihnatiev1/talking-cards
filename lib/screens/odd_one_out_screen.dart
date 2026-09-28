@@ -10,6 +10,8 @@ import '../providers/language_provider.dart';
 import '../providers/profile_provider.dart';
 import '../services/audio_service.dart';
 import '../services/feedback_service.dart';
+import '../providers/bloom_reactions_provider.dart';
+import '../widgets/bloom_mascot.dart';
 import '../utils/game_state_mixin.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
@@ -18,6 +20,7 @@ import '../widgets/answer_feedback.dart';
 import '../widgets/card_image.dart';
 import '../widgets/game_celebration_overlay.dart';
 import '../widgets/kid_screen.dart';
+import '../widgets/quiz_options_board.dart';
 import '../widgets/kid_tap.dart';
 
 class OddOneOutScreen extends ConsumerStatefulWidget {
@@ -46,9 +49,12 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
   final Random _rng = Random();
   late _Round _round;
 
+  late final BloomReactions _bloom = ref.read(bloomReactionsProvider.notifier);
+
   @override
   void initState() {
     super.initState();
+    _bloom.sceneEntered(this, BloomScene.game);
     startGame();
     _buildRound();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -150,8 +156,17 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
       });
       if (_misses.justCrossed) {
         FeedbackService.instance.event(FeedbackEvent.lockedHint);
+        // The odd card is the last slot of the round (see _buildRound);
+        // Bloom points at the board's far side, silently.
+        _bloom.nudged(quizOptionDirection(3, 4));
       }
     }
+  }
+
+  @override
+  void dispose() {
+    _bloom.sceneLeft(this);
+    super.dispose();
   }
 
   void _showCelebration() {
@@ -181,8 +196,19 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
       accent: DT.brand,
       // Played in the games' meadow, like every other game.
       meadow: true,
+      mascotCorner: BloomMascot(
+        size: DT.size.mascotCompanionOf(context),
+        semanticsLabel: s('Блум', 'Bloom'),
+      ),
       body: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: EdgeInsets.fromLTRB(
+            24,
+            0,
+            24,
+            max(DT.size.mascotCompanionOf(context), DT.size.tapMin) +
+            BloomMascot.hopClearance +
+            DT.sp16,
+          ),
           child: Column(
             children: [
               const SizedBox(height: 8),

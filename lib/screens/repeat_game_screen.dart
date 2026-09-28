@@ -16,6 +16,8 @@ import '../providers/word_evidence_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../services/feedback_service.dart';
+import '../providers/bloom_reactions_provider.dart';
+import '../widgets/bloom_mascot.dart';
 import '../services/listen_service.dart';
 import '../services/voice_gate.dart';
 import '../utils/confetti_overlay_mixin.dart';
@@ -104,9 +106,12 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
   late Animation<double> _exitFade;
 
 
+  late final BloomReactions _bloom = ref.read(bloomReactionsProvider.notifier);
+
   @override
   void initState() {
     super.initState();
+    _bloom.sceneEntered(this, BloomScene.game);
     _deck = _dealDeck();
 
     _exitCtrl = AnimationController(
@@ -145,6 +150,7 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
 
   @override
   void dispose() {
+    _bloom.sceneLeft(this);
     _stopListening();
     _exitCtrl.dispose();
     disposeConfetti();
@@ -384,8 +390,22 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
       meadow: true,
       title: _TogetherChip(label: s('Разом із дорослим', 'With a grown-up')),
       progress: _deck.isEmpty ? null : _index / _deck.length,
+      mascotCorner: BloomMascot(
+        size: DT.size.mascotCompanionOf(context),
+        semanticsLabel: s('Блум', 'Bloom'),
+      ),
+      // The bottom inset keeps «Вийшло!» clear of Bloom's corner: the
+      // buttons are the learning object here, and a tap meant for one
+      // must never land on him (bloom_character §4.2).
       body: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: EdgeInsets.fromLTRB(
+            24,
+            0,
+            24,
+            max(DT.size.mascotCompanionOf(context), DT.size.tapMin) +
+                BloomMascot.hopClearance +
+                DT.sp16,
+          ),
           child: Column(
             children: [
               const SizedBox(height: 12),

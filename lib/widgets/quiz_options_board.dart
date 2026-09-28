@@ -3,6 +3,20 @@ import 'package:flutter/material.dart';
 import '../models/card_model.dart';
 
 /// Uses the available play area, with stacked choices on tall phones.
+/// Roughly where option [index] of [count] sits, as a direction for
+/// Bloom's paw from the [KidScreen] mascot corner (bottom-right). The
+/// board's exact geometry depends on the viewport; a child reading a
+/// pointing paw needs "up-left" versus "up", not centimetres.
+Alignment quizOptionDirection(int index, int count) {
+  final columns = count <= 2 ? count : 2;
+  final col = index % columns;
+  final row = index ~/ columns;
+  final rows = (count / columns).ceil();
+  final x = columns == 1 ? -0.4 : (col == 0 ? -0.9 : -0.25);
+  final y = rows == 1 ? -0.9 : (row == 0 ? -1.0 : -0.45);
+  return Alignment(x, y);
+}
+
 class QuizOptionsBoard extends StatelessWidget {
   const QuizOptionsBoard({
     super.key,

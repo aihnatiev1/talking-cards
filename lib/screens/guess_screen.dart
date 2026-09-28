@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,6 +16,8 @@ import '../providers/word_evidence_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../services/feedback_service.dart';
+import '../providers/bloom_reactions_provider.dart';
+import '../widgets/bloom_mascot.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../widgets/ambient_loop.dart';
@@ -61,9 +64,14 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
   late final AutoDisposeStateNotifierProvider<QuizNotifier, QuizState?>
   _provider;
 
+  /// One brain per route (bloom_character §5); this screen only tells it
+  /// what happened and where the answer is.
+  late final BloomReactions _bloom = ref.read(bloomReactionsProvider.notifier);
+
   @override
   void initState() {
     super.initState();
+    _bloom.sceneEntered(this, BloomScene.game);
     // Playable = real recorded audio only — TTS was removed from the app,
     // so a card without a recording can never be the target of a round.
     final soundCards = widget.cards
@@ -181,6 +189,14 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
       });
       if (_misses.misses == state.hintAfterMisses) {
         FeedbackService.instance.event(FeedbackEvent.lockedHint);
+        // The target tile starts breathing (G10); Bloom points the same
+        // way, silently — in a game the object makes the sound (§3.4).
+        final target = state.options.indexWhere(
+          (c) => c.id == state.correctCard.id,
+        );
+        if (target >= 0) {
+          _bloom.nudged(quizOptionDirection(target, state.options.length));
+        }
       }
       Timer(DT.motion.quizRetell, () {
         if (mounted) _playCurrentSound();
@@ -231,6 +247,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
 
   @override
   void dispose() {
+    _bloom.sceneLeft(this);
     AudioService.instance.stop();
     super.dispose();
   }
@@ -253,6 +270,13 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
           ? null
           : state.round / state.totalRounds,
       body: _buildBody(state),
+      mascotCorner: BloomMascot(
+        size: DT.size.mascotCompanionOf(context),
+        semanticsLabel: AppS(ref.watch(languageProvider) == 'en')(
+          'Блум',
+          'Bloom',
+        ),
+      ),
     );
   }
 
@@ -317,8 +341,17 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
   );
 
   Widget _buildQuiz(QuizState state) {
+    // The bottom inset keeps the board above Bloom's corner: he sits under
+    // the learning object, never on it (bloom_character §4.2).
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 10, 18, 20),
+      padding: EdgeInsets.fromLTRB(
+        18,
+        10,
+        18,
+        math.max(DT.size.mascotCompanionOf(context), DT.size.tapMin) +
+            BloomMascot.hopClearance +
+            DT.sp16,
+      ),
       child: Column(
         children: [
           // Difficulty controls the count; available space controls the

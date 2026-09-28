@@ -114,6 +114,24 @@ class BloomScene {
   /// mid-round reads as "the game ended".
   static const memory = BloomScene(ambient: BloomAmbient.blinkOnly);
 
+  /// The quiz games — Guess, Opposites, Odd one out, Repeat after me.
+  /// Bloom sits in the [KidScreen] mascot corner and only reacts: the
+  /// tiles make every sound (§3.4), so no hint sound and no idle hints of
+  /// his own — the game's `MissTracker` decides when a hint is due and
+  /// asks him to point. He does fall asleep on a board nobody touches.
+  static const game = BloomScene(
+    ambient: BloomAmbient.blinkOnly,
+    sleepAfter: Duration(seconds: 30),
+  );
+
+  /// The onboarding magic moment (§3.6): Bloom is the only actor, greets,
+  /// and points at the card after a second of nothing. Sleep is off — a
+  /// parent reading the bubble is not a child who wandered away.
+  static const magicMoment = BloomScene(
+    ambient: BloomAmbient.blinkOnly,
+    soloActor: true,
+  );
+
   /// Overlays and tests: nothing ticks.
   static const still = BloomScene(ambient: BloomAmbient.still);
 

@@ -6,6 +6,8 @@ import 'package:talking_cards/screens/onboarding_screen.dart';
 import 'package:talking_cards/utils/motion.dart';
 import 'package:talking_cards/utils/app_theme.dart';
 import 'package:talking_cards/widgets/kid_tap.dart';
+import 'package:talking_cards/models/bloom_state.dart';
+import 'package:talking_cards/providers/bloom_reactions_provider.dart';
 
 /// Onboarding branches on the system locale: EN opens straight into the
 /// magic moment (English installs churned on the keyboard page before ever
@@ -39,6 +41,26 @@ void main() {
     expect(find.byType(TextField), findsNothing);
     // Two steps only: magic moment + age.
     expect(find.text("Child's name (optional)"), findsNothing);
+
+    // bloom_character §3.6: a second of nothing and Bloom points at the
+    // card the child is meant to tap — the hint that replaced the looping
+    // bounce. Checked here rather than in a test of its own: the magic
+    // moment mounts once per test process (a second mount never leaves
+    // its spinner — pre-existing, and not this screen's doing).
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(OnboardingScreen)),
+    );
+    expect(
+      container.read(bloomReactionsProvider).emotion,
+      isNot(BloomEmotion.point),
+    );
+    await tester.pump(const Duration(milliseconds: 1100));
+    final bloom = container.read(bloomReactionsProvider);
+    expect(bloom.emotion, BloomEmotion.point);
+    expect(bloom.hintDirection, Alignment.bottomCenter);
+    // The re-armed hint timer is pending; unmount before the binding
+    // counts timers.
+    await tester.pumpWidget(const SizedBox());
   });
 
   testWidgets('UA starts on the name page', (tester) async {
