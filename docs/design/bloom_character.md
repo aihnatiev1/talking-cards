@@ -422,6 +422,9 @@ S ≤ 0.5 дня, M 1–2 дні, L 3+.
 
 ### Хвиля 2 — усі екрани
 
+> **Статус 2026-09-28:** 2.1 (Guess / Opposites / Odd one out / Repeat через слот `KidScreen`, `BloomScene.game`, `quizOptionDirection`) і 2.4 (magic moment: `wave` → `point` через 1 с → `listen` → `happy` → `cheer` ×3; `_BouncingMascot` прибрано) — зроблено, коміт 5a90da9. Ім'я «Зайчик» → «Блум» лишається рішенням власника. Bubble/memory (2.2) були в хвилі 1. Відкрито: 2.3, 2.5–2.9.
+
+
 | # | Пункт | Хто | Розмір |
 |---|---|---|---|
 | 2.1 | `KidScreen` слот Bloom + події `success/miss/hintTarget` у Guess, Opposite, OddOneOut, Repeat (після F6) | flutter-dev | M |
