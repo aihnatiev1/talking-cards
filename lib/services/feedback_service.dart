@@ -373,6 +373,26 @@ class FeedbackService {
     await audio.playBloom(BloomSound.yay.file, volume: BloomSound.yay.volume);
   }
 
+  /// Bloom's giggle for a stage where he is frozen rather than live — the
+  /// quest map draws him from a [BloomState] of its own, so
+  /// `BloomReactions.bloomTapped` is not the path. Same rules as there
+  /// (bloom_character §5.3): at most one per 1.5 s, never over a word.
+  DateTime? _lastGiggle;
+  static const _giggleGap = Duration(milliseconds: 1500);
+
+  Future<void> bloomGiggle() async {
+    if (debugMute) return;
+    final now = DateTime.now();
+    final last = _lastGiggle;
+    if (last != null && now.difference(last) < _giggleGap) return;
+    _lastGiggle = now;
+    final audio = AudioService.instance;
+    await audio.playBloom(
+      BloomSound.giggle.file,
+      volume: BloomSound.giggle.volume,
+    );
+  }
+
   /// A role by itself, at its own mix — for presses whose sound has no
   /// event row (`KidTap(sound: KidSound.flip)`) and for the speaker-off
   /// tock. Prefer [event] where one exists: Bloom hears events, not roles.

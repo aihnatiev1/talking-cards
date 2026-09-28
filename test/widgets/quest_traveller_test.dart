@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talking_cards/providers/daily_quest_provider.dart';
 import 'package:talking_cards/utils/motion.dart';
+import 'package:talking_cards/models/bloom_state.dart';
 import 'package:talking_cards/widgets/bloom_mascot.dart';
 import 'package:talking_cards/utils/design_tokens.dart';
 import 'package:talking_cards/widgets/quest_journey_map.dart';
@@ -128,5 +129,90 @@ void main() {
     await tester.pump(const Duration(milliseconds: 32));
     expect(stopUnderBloom(tester), 1);
     expect(tester.takeException(), isNull);
+  });
+
+  BloomState bloomState(WidgetTester tester) =>
+      tester.widget<BloomMascot>(find.byType(BloomMascot)).state!;
+
+  testWidgets('arriving at a new stop he looks curious, then settles',
+      (tester) async {
+    // bloom_character §3.7: the walk ends in «що тут?», not a blank stand.
+    MotionPolicy.debugOverride = MotionMode.full;
+    addTearDown(() => MotionPolicy.debugOverride = MotionMode.test);
+    tester.view.physicalSize = size;
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    Widget map(Set<QuestTask> completed) => MaterialApp(
+          home: MediaQuery(
+            data: const MediaQueryData(size: size),
+            child: Scaffold(
+              body: SafeArea(
+                child: QuestJourneyMap(
+                  quest: DailyQuestState(date: 'test', completed: completed),
+                  isEn: false,
+                  onStopTap: (_) {},
+                  onClaimTreasure: () {},
+                ),
+              ),
+            ),
+          ),
+        );
+    await tester.pumpWidget(map({}));
+    // Full motion keeps the chest's ambient sparks looping, so no settle —
+    // explicit frames, like the walk test above.
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    expect(bloomState(tester).emotion, BloomEmotion.idle);
+
+    await tester.pumpWidget(map({QuestTask.listenCardOfDay}));
+    await tester.pump();
+    await tester.pump(DT.motion.journeyStep ~/ 2);
+    expect(bloomState(tester).emotion, BloomEmotion.happy, reason: 'walking');
+    await tester.pump(DT.motion.journeyStep ~/ 2);
+    await tester.pump(const Duration(milliseconds: 20));
+    expect(bloomState(tester).emotion, BloomEmotion.curious, reason: 'arrived');
+    await tester.pump(DT.motion.bloomCurious);
+    await tester.pump(const Duration(milliseconds: 20));
+    expect(bloomState(tester).emotion, BloomEmotion.idle);
+  });
+
+  testWidgets('a tap hops him and goes nowhere', (tester) async {
+    var stopTaps = 0;
+    tester.view.physicalSize = size;
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(size: size),
+          child: Scaffold(
+            body: SafeArea(
+              child: QuestJourneyMap(
+                quest: const DailyQuestState(date: 'test', completed: {}),
+                isEn: false,
+                onStopTap: (_) => stopTaps++,
+                onClaimTreasure: () {},
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(BloomMascot));
+    await tester.pump();
+    expect(bloomState(tester).emotion, BloomEmotion.happy);
+    expect(stopTaps, 0, reason: 'a tap on Bloom never navigates (§1)');
+    await tester.pumpAndSettle();
+    expect(bloomState(tester).emotion, BloomEmotion.idle);
+  });
+
+  testWidgets('at the chest he cheers with three hops', (tester) async {
+    await show(tester, QuestTask.values.toSet());
+    final state = bloomState(tester);
+    expect(state.emotion, BloomEmotion.cheer);
+    expect(state.hops, 3);
   });
 }

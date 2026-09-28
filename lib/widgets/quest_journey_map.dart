@@ -243,10 +243,13 @@ class QuestJourneyMap extends StatelessWidget {
                                 ),
                               // The moving layer: its own repaint boundary
                               // over the static landscape.
+                              // Not behind an IgnorePointer any more: a
+                              // tap on Bloom hops him (§3.7). The stack
+                              // has no body of its own, so taps beside him
+                              // still fall through to the stops.
                               Positioned.fill(
-                                child: IgnorePointer(
-                                  child: RepaintBoundary(
-                                    child: _Traveller(
+                                child: RepaintBoundary(
+                                  child: _Traveller(
                                       index: current,
                                       anchor: centres[current] + shift(current),
                                       route: current == 0
@@ -263,7 +266,6 @@ class QuestJourneyMap extends StatelessWidget {
                                       toShift: shift(current),
                                       cheering: q.allDone,
                                       semanticsLabel: s('Блюм', 'Bloom'),
-                                    ),
                                   ),
                                 ),
                               ),
@@ -778,14 +780,47 @@ class _Traveller extends StatefulWidget {
 }
 
 class _TravellerState extends State<_Traveller>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _walk = AnimationController(
     vsync: this,
     duration: DT.motion.journeyStep,
     // Rests at the end of the walk: the sparks are gone and Bloom stands.
     value: 1,
-  );
+  )..addStatusListener(_onWalkStatus);
   PathMetric? _metric;
+
+  /// A short pose over the resting one: `curious` at a stop he has just
+  /// reached («що тут?»), `happy` when the child taps him (§3.7). A
+  /// controller rather than a timer so the test clock and reduced motion
+  /// treat it like every other beat of his.
+  late final AnimationController _beat = AnimationController(
+    vsync: this,
+    duration: DT.motion.bloomCurious,
+  )..addStatusListener((s) {
+      if (s == AnimationStatus.completed && mounted) {
+        setState(() => _beatEmotion = null);
+      }
+    });
+  BloomEmotion? _beatEmotion;
+
+  void _startBeat(BloomEmotion emotion, Duration length) {
+    _beat.duration = length;
+    setState(() => _beatEmotion = emotion);
+    _beat.forward(from: 0);
+  }
+
+  void _onWalkStatus(AnimationStatus s) {
+    if (s == AnimationStatus.completed && _metric != null) {
+      _startBeat(BloomEmotion.curious, DT.motion.bloomCurious);
+    }
+  }
+
+  /// Tapping Bloom hops him and makes him giggle; it goes nowhere (§1: a
+  /// tap on Bloom never navigates).
+  void _onTap() {
+    _startBeat(BloomEmotion.happy, DT.motion.celebrate);
+    FeedbackService.instance.bloomGiggle();
+  }
 
   @override
   void didUpdateWidget(_Traveller old) {
@@ -803,6 +838,8 @@ class _TravellerState extends State<_Traveller>
     if (MotionPolicy.of(context).reduce) {
       _metric = null;
       _walk.value = 1;
+      // No walk to arrive from, but the new stop still earns the look.
+      _startBeat(BloomEmotion.curious, DT.motion.bloomCurious);
       return;
     }
     _metric = route.computeMetrics().firstOrNull;
@@ -812,6 +849,7 @@ class _TravellerState extends State<_Traveller>
   @override
   void dispose() {
     _walk.dispose();
+    _beat.dispose();
     super.dispose();
   }
 
@@ -841,6 +879,10 @@ class _TravellerState extends State<_Traveller>
         final t = _walk.value;
         final (position, facing) = _pose(t);
         final walking = t < 1;
+        final beat = _beatEmotion;
+        final emotion = walking
+            ? BloomEmotion.happy
+            : beat ?? (widget.cheering ? BloomEmotion.cheer : BloomEmotion.idle);
         return Stack(
           children: [
             Positioned(
@@ -850,17 +892,20 @@ class _TravellerState extends State<_Traveller>
               height: size,
               child: CustomPaint(
                 foregroundPainter: _SparkPainter(t),
-                child: BloomMascot(
-                  size: size,
-                  facing: facing,
-                  interactive: false,
-                  semanticsLabel: widget.semanticsLabel,
-                  state: BloomState.still(
-                    walking
-                        ? BloomEmotion.happy
-                        : widget.cheering
-                        ? BloomEmotion.cheer
-                        : BloomEmotion.idle,
+                child: KidTap(
+                  // The giggle is the sound; no pop under it.
+                  sound: null,
+                  onTap: _onTap,
+                  child: BloomMascot(
+                    size: size,
+                    facing: facing,
+                    interactive: false,
+                    semanticsLabel: widget.semanticsLabel,
+                    state: BloomState.still(
+                      emotion,
+                      // The chest is the day's tier: three hops (§3.7).
+                      hops: widget.cheering && beat == null ? 3 : 1,
+                    ),
                   ),
                 ),
               ),

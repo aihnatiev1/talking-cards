@@ -422,7 +422,7 @@ S ≤ 0.5 дня, M 1–2 дні, L 3+.
 
 ### Хвиля 2 — усі екрани
 
-> **Статус 2026-09-28:** 2.1 (Guess / Opposites / Odd one out / Repeat через слот `KidScreen`, `BloomScene.game`, `quizOptionDirection`) і 2.4 (magic moment: `wave` → `point` через 1 с → `listen` → `happy` → `cheer` ×3; `_BouncingMascot` прибрано) — зроблено, коміт 5a90da9. Ім'я «Зайчик» → «Блум» лишається рішенням власника. Bubble/memory (2.2) були в хвилі 1. 2.3 (розмальовка: живий Bloom у барі, зіниці за пальцем через `lookToward`/`watching`, один стрибок на 85 %), 2.5 (свайп показує Bloom; пілюля `SwipeHint` — лише при reduced motion) і 2.7 (скарбничка: хедер живий `idle`, порожній стан — `curious` + один `bloom_hmm` через `emptyBox()`) — зроблено 2026-09-28. Відкрито: 2.6 (мапа), 2.8 (пуш-копі), 2.9 (вухо).
+> **Статус 2026-09-28:** 2.1 (Guess / Opposites / Odd one out / Repeat через слот `KidScreen`, `BloomScene.game`, `quizOptionDirection`) і 2.4 (magic moment: `wave` → `point` через 1 с → `listen` → `happy` → `cheer` ×3; `_BouncingMascot` прибрано) — зроблено, коміт 5a90da9. Ім'я «Зайчик» → «Блум» лишається рішенням власника. Bubble/memory (2.2) були в хвилі 1. 2.3 (розмальовка: живий Bloom у барі, зіниці за пальцем через `lookToward`/`watching`, один стрибок на 85 %), 2.5 (свайп показує Bloom; пілюля `SwipeHint` — лише при reduced motion) і 2.7 (скарбничка: хедер живий `idle`, порожній стан — `curious` + один `bloom_hmm` через `emptyBox()`) — зроблено 2026-09-28. 2.6 (мапа: мандрівник уже ходив стежкою; додано `curious` після прибуття, тап → `happy` + giggle через `FeedbackService.bloomGiggle`, три стрибки біля скрині) — зроблено 2026-09-28. Відкрито: 2.8 (пуш-копі), 2.9 (вухо).
 
 
 | # | Пункт | Хто | Розмір |
