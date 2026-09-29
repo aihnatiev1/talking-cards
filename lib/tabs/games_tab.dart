@@ -445,7 +445,9 @@ class _GamesTabState extends ConsumerState<GamesTab> {
               const SizedBox(height: 22),
               _SectionHeader(
                 title: isEn ? 'For grown-ups' : 'Для батьків',
-                subtitle: isEn ? 'speech therapy' : 'мовленнєва терапія',
+                // Not "speech therapy": the app is used by therapists but is
+                // not therapy, and the store copy stopped saying so.
+                subtitle: isEn ? 'practice together' : 'вправи разом',
                 emoji: '👨‍👧',
               ),
               const SizedBox(height: 10),

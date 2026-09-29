@@ -704,11 +704,13 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     final bonus = ref.read(bonusCardsProvider)[widget.pack.id] ?? 0;
     final remaining =
         allCards.length - widget.pack.effectiveFreePreviewCount - bonus;
-    final previewEmojis = allCards
+    // The cards that are waiting, as the pictures the child will meet —
+    // an emoji row said "more stuff" in a different visual language from
+    // everything else on the screen (release audit 2026-09-29).
+    final waiting = allCards
         .skip(widget.pack.effectiveFreePreviewCount + bonus)
-        .take(6)
-        .map((c) => c.emoji)
-        .join(' ');
+        .take(4)
+        .toList();
 
     showDialog(
       context: context,
@@ -719,7 +721,21 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(widget.pack.icon, style: const TextStyle(fontSize: 56)),
+              SizedBox(
+                width: 88,
+                height: 88,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: ColoredBox(
+                    color: widget.pack.color.withValues(alpha: 0.12),
+                    child: CardImage(
+                      name: PackCoverHero.coverOf(widget.pack),
+                      fallbackEmoji: widget.pack.icon,
+                      padding: const EdgeInsets.all(6),
+                    ),
+                  ),
+                ),
+              ),
               const SizedBox(height: 16),
               Text(
                 s(
@@ -749,8 +765,30 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
                   color: Theme.of(context).textTheme.bodyMedium?.color,
                 ),
               ),
-              const SizedBox(height: 12),
-              Text(previewEmojis, style: const TextStyle(fontSize: 28)),
+              const SizedBox(height: 14),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  for (final card in waiting)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: SizedBox(
+                        width: 52,
+                        height: 52,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: ColoredBox(
+                            color: card.colorBg,
+                            child: CardImage.forCard(
+                              card,
+                              padding: const EdgeInsets.all(3),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,

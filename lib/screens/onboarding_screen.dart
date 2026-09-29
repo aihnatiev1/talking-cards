@@ -381,6 +381,10 @@ class _ChildSetupPage extends StatelessWidget {
               final cols = ((bounds.maxWidth + 8) / (DT.size.tapMin + 8))
                   .floor()
                   .clamp(1, 6);
+              // On an iPad a tile is ~120 pt and a fixed 26 pt emoji sat in
+              // it like a dot; the face now takes ~40 % of the tile.
+              final side = (bounds.maxWidth - (cols - 1) * 8) / cols;
+              final emojiSize = (side * 0.4).clamp(26.0, 56.0);
               return GridView.count(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -407,7 +411,7 @@ class _ChildSetupPage extends StatelessWidget {
                       child: Center(
                         child: Text(
                           emoji,
-                          style: const TextStyle(fontSize: 26),
+                          style: TextStyle(fontSize: emojiSize),
                         ),
                       ),
                     ),
