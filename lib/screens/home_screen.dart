@@ -180,6 +180,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       return;
     }
     await prefs.setBool('welcome_shown', true);
+    // A first run has nothing "new" to announce. Without this the next
+    // launch took the family for an existing user and opened the
+    // «Що нового / What's new» sheet — features from releases they never
+    // had — over the child's home screen, on every new install (found on
+    // a simulator, 2026-09-29).
+    await WhatsNewService.instance.markSeen();
     if (!mounted) return;
     // A fresh install always arrives here through onboarding, whose magic
     // moment has just had the child tap three cards and hear three words.

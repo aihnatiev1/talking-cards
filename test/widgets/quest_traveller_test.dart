@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talking_cards/providers/daily_quest_provider.dart';
 import 'package:talking_cards/utils/motion.dart';
-import 'package:talking_cards/models/bloom_state.dart';
 import 'package:talking_cards/widgets/bloom_mascot.dart';
 import 'package:talking_cards/utils/design_tokens.dart';
 import 'package:talking_cards/widgets/quest_journey_map.dart';

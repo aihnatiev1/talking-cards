@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/card_model.dart';
@@ -182,6 +183,11 @@ class _GamesTabState extends ConsumerState<GamesTab> {
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        // A transparent AppBar reads as a dark background to Flutter, which
+        // then turns the status bar white — near-invisible on this cream
+        // tab and, because the tab stays mounted, on the pale game skies
+        // pushed over it. The screens under it are light: dark icons.
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
       ),
       body: packsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),

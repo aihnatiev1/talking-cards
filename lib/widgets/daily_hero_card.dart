@@ -571,10 +571,21 @@ class _StoneRow extends StatelessWidget {
     final next = tasks.indexWhere((t) => !t.isDone);
     return LayoutBuilder(
       builder: (context, box) {
-        final largeText = MediaQuery.textScalerOf(context).scale(14) > 21;
-        final count = largeText || box.maxWidth < 290
+        final scaler = MediaQuery.textScalerOf(context);
+        final largeText = scaler.scale(14) > 21;
+        final three = math.min(tasks.length, 3);
+        final threeWide = three == 0
+            ? box.maxWidth
+            : (box.maxWidth - (three - 1) * 10) / three;
+        // A fixed text-scale threshold let «Adventure» break into
+        // «Adventur / e» on a 390 pt phone at iOS XXL (≈×1.3, below the
+        // ×1.5 cut-off). Words are never split: if the longest word of any
+        // label cannot fit a third of the row, the stones stack instead.
+        final count = largeText ||
+                box.maxWidth < 290 ||
+                !_wordsFit(tasks, threeWide - _Stone.horizontalChrome, scaler)
             ? 1
-            : math.min(tasks.length, 3);
+            : three;
         final width = count == 0
             ? box.maxWidth
             : (box.maxWidth - (count - 1) * 10) / count;
@@ -599,6 +610,24 @@ class _StoneRow extends StatelessWidget {
   }
 }
 
+/// Whether every word of every label fits [inner] on one line, at the
+/// text scale the child's device asks for.
+bool _wordsFit(List<DailyTask> tasks, double inner, TextScaler scaler) {
+  for (final t in tasks) {
+    for (final word in t.label.split(RegExp(r'\s+'))) {
+      if (word.isEmpty) continue;
+      final painter = TextPainter(
+        text: TextSpan(text: word, style: _Stone.labelStyle),
+        textDirection: TextDirection.ltr,
+        textScaler: scaler,
+        maxLines: 1,
+      )..layout();
+      if (painter.width > inner) return false;
+    }
+  }
+  return true;
+}
+
 /// One 72×72 wordless step. Green with a check once done; the moment it
 /// turns green *while the child can see it* it pops and sparkles with the
 /// small-success sound (spec: `sparkle` → role `successSmall`).
@@ -616,6 +645,17 @@ class _Stone extends StatefulWidget {
     required this.accent,
     this.isNext = false,
   });
+
+  /// The label's style — shared with [_StoneRow], which measures it.
+  static final TextStyle labelStyle = DT.caption.copyWith(
+    fontSize: 13,
+    height: 1.2,
+    color: DT.textPrimary,
+    fontWeight: FontWeight.w800,
+  );
+
+  /// Horizontal padding (12 + 12) and border (1 + 1) around the label.
+  static const double horizontalChrome = 26;
 
   @override
   State<_Stone> createState() => _StoneState();
@@ -719,12 +759,7 @@ class _StoneState extends State<_Stone> with SingleTickerProviderStateMixin {
           final label = Text(
             t.label,
             textAlign: compact ? TextAlign.center : TextAlign.start,
-            style: DT.caption.copyWith(
-              fontSize: 13,
-              height: 1.2,
-              color: DT.textPrimary,
-              fontWeight: FontWeight.w800,
-            ),
+            style: _Stone.labelStyle,
           );
           return compact
               ? Column(

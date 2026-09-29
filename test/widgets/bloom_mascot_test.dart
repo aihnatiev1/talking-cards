@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:talking_cards/models/bloom_state.dart';
 import 'package:talking_cards/providers/bloom_reactions_provider.dart';
 import 'package:talking_cards/services/feedback_service.dart';
 import 'package:talking_cards/utils/design_tokens.dart';

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talking_cards/services/asset_pack_service.dart';
@@ -78,5 +79,74 @@ void main() {
         expect(taps, 1);
       });
     }
+  }
+
+  // Found on an iPhone 16e at iOS XXL (2026-09-29): three columns at ×1.3
+  // split «Adventure» into «Adventur / e». No word of a label may break.
+  for (final scale in [1.0, 1.3]) {
+    testWidgets('no step label breaks inside a word at 390 × $scale',
+        (tester) async {
+      const width = 390.0;
+      tester.view.physicalSize = const Size(width, 1100);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      AssetPackService.instance.debugConfigure(padAssets: const {}, bundled: true);
+      DailyTask task(String label, AppIcon icon) => DailyTask(
+            icon: icon,
+            label: label,
+            isDone: false,
+            isActive: false,
+            onTap: () {},
+          );
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            home: MediaQuery(
+              data: MediaQueryData(
+                size: const Size(width, 1100),
+                textScaler: TextScaler.linear(scale),
+              ),
+              child: Scaffold(
+                body: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: DailyHeroCard(
+                      title: 'BRUSH',
+                      accent: Colors.purple,
+                      onHeroTap: () {},
+                      isEn: true,
+                      progress: 0,
+                      mascot: const SizedBox(width: 72, height: 72),
+                      tasks: [
+                        task("Today's Pack", AppIcon.stepCards),
+                        task('Adventure', AppIcon.stepQuest),
+                        task('Draw', AppIcon.stepCards),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+
+      for (final word in ["Today's", 'Pack', 'Adventure', 'Draw']) {
+        final text = find.textContaining(word == "Today's" || word == 'Pack'
+            ? "Today's Pack"
+            : word);
+        final paragraph = tester.renderObject<RenderParagraph>(text);
+        final label = paragraph.text.toPlainText();
+        final start = label.indexOf(word);
+        final boxes = paragraph.getBoxesForSelection(
+          TextSelection(baseOffset: start, extentOffset: start + word.length),
+        );
+        final lines = boxes.map((b) => b.top.round()).toSet();
+        expect(lines, hasLength(1),
+            reason: '«$word» breaks across lines at ×$scale');
+      }
+    });
   }
 }
