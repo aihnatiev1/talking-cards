@@ -436,8 +436,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                         s('400+ яскравих карток зі звуком',
                             '400+ vivid cards with sound')),
                     const SizedBox(height: 10),
-                    _benefit(AppIcon.star,
-                        s('Нові розділи щомісяця', 'New packs every month')),
+                    // Was «Нові розділи щомісяця / New packs every month» — a
+                    // schedule nobody had promised to keep. Replaced with a
+                    // fact the store listing already states.
+                    _benefit(AppIcon.check, s('Без реклами', 'No ads')),
                     const SizedBox(height: 18),
                     _testimonial(s),
                     const SizedBox(height: 22),

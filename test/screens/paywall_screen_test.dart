@@ -114,7 +114,9 @@ void main() {
       expect(find.text('Розблокуй всі картки!'), findsOneWidget);
       expect(find.text('3 розділи для розвитку'), findsOneWidget);
       expect(find.textContaining('400+ яскравих карток'), findsOneWidget);
-      expect(find.textContaining('Нові розділи'), findsOneWidget);
+      expect(find.text('Без реклами'), findsOneWidget);
+      // A monthly schedule nobody promised to keep must not come back.
+      expect(find.textContaining('щомісяця'), findsNothing);
     });
 
     testWidgets('the pack count is the catalogue\'s, correctly declined',

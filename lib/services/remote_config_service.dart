@@ -35,7 +35,15 @@ class RemoteConfigService {
     // found that a toddler's tap on a lock landing on a purchase sheet is
     // the worst moment in the app; the preview *is* the demo. Console
     // switch so this can be A/B'd without a release.
-    'locked_pack_tap': 'preview',
+    //
+    // Default is 'paywall' since 2026-09-30. Between 29 Aug and 14 Sep every
+    // sale came through this door (116 paywall views → all 7 purchases);
+    // preview-first took it to 3 views and purchases to zero. The owner set
+    // the console value to 'paywall' on 27.09, but the server never returned
+    // the parameter (checked on a fresh install on 29.09 and 30.09), so the
+    // decision lives here now. The console can still say 'preview' for an
+    // A/B.
+    'locked_pack_tap': 'paywall',
   };
 
   FirebaseRemoteConfig? _cached;
@@ -100,7 +108,7 @@ class RemoteConfigService {
   int get onboardingVersion => _getInt('onboarding_version');
   bool get showOnboardingPaywall => _getBool('show_onboarding_paywall');
 
-  /// 'preview' (default) or 'paywall' — see [_defaults].
+  /// 'paywall' (default) or 'preview' — see [_defaults].
   bool get lockedPackTapOpensPreview =>
       _getString('locked_pack_tap').trim().toLowerCase() != 'paywall';
 
