@@ -3,6 +3,7 @@
 
     /usr/bin/python3 tools/asc_submit.py 1.3.10            # submit
     /usr/bin/python3 tools/asc_submit.py 1.3.10 --wait     # poll for the build first
+    /usr/bin/python3 tools/asc_submit.py 1.3.10 --wait --min-build 84  # a specific new build
     /usr/bin/python3 tools/asc_submit.py 1.3.10 --metadata # push description/keywords too
     /usr/bin/python3 tools/asc_submit.py 1.3.10 --metadata-only  # no build, no submit
     /usr/bin/python3 tools/asc_submit.py --diff            # repo vs the live listing
@@ -82,14 +83,15 @@ def get(path):
     return call('GET', path)
 
 
-def find_build(version):
+def find_build(version, min_build=0):
     builds = get(f'/v1/builds?filter[app]={APP}'
                  f'&filter[preReleaseVersion.version]={version}'
                  '&fields[builds]=version,processingState,uploadedDate,expired'
                  '&sort=-uploadedDate&limit=5')['data']
     valid = [b for b in builds
              if b['attributes']['processingState'] == 'VALID'
-             and not b['attributes']['expired']]
+             and not b['attributes']['expired']
+             and int(b['attributes']['version']) >= min_build]
     return valid[0] if valid else None
 
 
@@ -152,17 +154,24 @@ def main(argv):
         return diff()
     version = argv[0]
     wait = '--wait' in argv
+    # --min-build N: wait for (and attach) build N or newer. Without it
+    # --wait returns at once when any VALID build of the version exists —
+    # which on 2026-09-30 would have submitted 1.4.4 build 83, uploaded
+    # before the day's fixes, while the fixed build was still compiling.
+    min_build = 0
+    if '--min-build' in argv:
+        min_build = int(argv[argv.index('--min-build') + 1])
     push_metadata = '--metadata' in argv or '--metadata-only' in argv
     metadata_only = '--metadata-only' in argv
 
-    build = None if metadata_only else find_build(version)
+    build = None if metadata_only else find_build(version, min_build)
     polls = 0
     while build is None and wait and polls < POLL_MAX:
         polls += 1
         print(f'[{time.strftime("%H:%M")}] no VALID build for {version} yet, '
               f'waiting {POLL_S}s ({polls}/{POLL_MAX})', flush=True)
         time.sleep(POLL_S)
-        build = find_build(version)
+        build = find_build(version, min_build)
     if build is None and not metadata_only:
         raise SystemExit(f'no VALID build for {version} in App Store Connect')
     if build is not None:
