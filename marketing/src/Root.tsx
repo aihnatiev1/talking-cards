@@ -1,6 +1,7 @@
 import { Composition, Still } from 'remotion';
 import { AppStorePreview, previewSchema } from './AppStorePreview';
 import { StoreOverview } from './StoreOverview';
+import { PlayFeatureGraphic, playFeatureSchema } from './PlayFeatureGraphic';
 import { StoreScreenshot, storeScreenshotSchema } from './StoreScreenshot';
 import { TikTokPreview, tikTokSchema } from './TikTokPreview';
 
@@ -10,6 +11,15 @@ export const RemotionRoot: React.FC = () => {
   return (
     <>
       <Still id="StoreOverview" component={StoreOverview} width={2240} height={1480} />
+      {/* Google Play feature graphic — see PlayFeatureGraphic.tsx */}
+      <Still
+        id="PlayFeatureGraphic"
+        component={PlayFeatureGraphic}
+        width={1024}
+        height={500}
+        schema={playFeatureSchema}
+        defaultProps={{ locale: 'uk' as const }}
+      />
       {/* Static App Store screenshots, 1290×2796 — see storeShots.ts for copy */}
       <Still
         id="StoreScreenshot"
