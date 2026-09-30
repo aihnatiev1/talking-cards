@@ -9,7 +9,7 @@ void main() {
   group('trialReportFireTime', () {
     final start = DateTime(2026, 9, 7, 14, 30);
 
-    final reportDay = PurchaseService.kTrialDays - 2;
+    const reportDay = PurchaseService.kTrialDays - 2;
 
     test('is 19:00 two days before the first charge', () {
       expect(

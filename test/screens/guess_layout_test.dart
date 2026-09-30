@@ -14,7 +14,6 @@ import 'package:talking_cards/widgets/quiz_option.dart';
 import 'package:talking_cards/widgets/quiz_options_board.dart';
 import '../helpers/motion.dart';
 import 'package:talking_cards/widgets/bloom_mascot.dart';
-import 'package:talking_cards/widgets/quiz_options_board.dart';
 
 const salt = CardModel(
   id: 'sc07',
@@ -147,15 +146,15 @@ void main() {
       var replays = 0;
       AudioService.debugWordSink = (_) => replays++;
       await tester.pumpWidget(
-        ProviderScope(
+        const ProviderScope(
           child: MaterialApp(
             home: RepaintBoundary(
-              key: const ValueKey('preview'),
+              key: ValueKey('preview'),
               child: GuessScreen(
                 cards: [
                   salt,
                   acorn,
-                  const CardModel(
+                  CardModel(
                     id: 'other1',
                     sound: 'СІЛЬ',
                     text: '',
@@ -165,7 +164,7 @@ void main() {
                     colorBg: Color(0xFFE3F2FD),
                     colorAccent: Color(0xFF1565C0),
                   ),
-                  const CardModel(
+                  CardModel(
                     id: 'other2',
                     sound: 'ЖОЛУДЬ',
                     text: '',
@@ -232,7 +231,7 @@ void main() {
     addTearDown(tester.view.reset);
     AudioService.debugWordSink = (_) {};
     await tester.pumpWidget(
-      ProviderScope(
+      const ProviderScope(
         child: MaterialApp(
           home: GuessScreen(cards: [salt, acorn, third, fourth]),
         ),

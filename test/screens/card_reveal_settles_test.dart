@@ -29,14 +29,14 @@ void main() {
     colorBg: Color(0xFFFFF4E0),
     colorAccent: Color(0xFFB07A3C),
   );
-  final pack = PackModel(
+  const pack = PackModel(
     id: 'animals',
     title: 'Тваринки',
     icon: '🐾',
-    color: const Color(0xFF4ECDC4),
+    color: Color(0xFF4ECDC4),
     isLocked: false,
     isFree: true,
-    cards: const [card],
+    cards: [card],
   );
 
   Widget app({bool reduceMotion = false}) => ProviderScope(
@@ -46,7 +46,7 @@ void main() {
                 .copyWith(disableAnimations: reduceMotion),
             child: child ?? const SizedBox(),
           ),
-          home: CardRevealScreen(
+          home: const CardRevealScreen(
             card: card,
             pack: pack,
             newTotal: 12,
