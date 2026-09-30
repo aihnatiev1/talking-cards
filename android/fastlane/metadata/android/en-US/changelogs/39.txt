@@ -1,0 +1,3 @@
+• Subscribing is more reliable: if Google Play can't start the payment, the app tells you what to check and lets you try again.
+• Purchases are confirmed more reliably, even if the connection drops for a moment.
+• Tapping a locked pack shows right away what the subscription unlocks.
