@@ -53,7 +53,6 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     final i = plans.indexWhere((p) => p.productId == _selectedProductId);
     return i < 0 ? 0 : i;
   }
-  bool _canCloseEarly = false;
 
   /// Guards the single close-on-entitlement hand-off (the notifier can fire
   /// more than once — e.g. a restore right behind the purchase).
@@ -104,10 +103,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       // but this event marks the open, so it must not wait on the store.
       trial: PurchaseService.instance.trialStateFor('yearly_premium'),
     );
-    // Industry standard: give the user 3s to read the offer before exposing X.
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) setState(() => _canCloseEarly = true);
-    });
+    // The close button used to appear after 3 s, in grey[400] (~1.8:1 on
+    // this lavender). A late, faint way out reads as a trap on a screen a
+    // parent reaches from a child's tap; Apple's HIG asks a modal for an
+    // obvious dismiss. It is there from the first frame now.
     // The entitlement is the only thing that ends this screen successfully,
     // and it can arrive minutes after the sheet closes (Ask to Buy, a slow
     // verification, a retried Face ID). Listening for the whole lifetime of
@@ -389,12 +388,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               alignment: Alignment.topRight,
               child: Padding(
                 padding: const EdgeInsets.all(12),
-                child: AnimatedOpacity(
-                  duration: DT.motion.slow,
-                  opacity: _canCloseEarly ? 1.0 : 0.0,
-                  child: IgnorePointer(
-                    ignoring: !_canCloseEarly,
-                    child: IconButton(
+                child: IconButton(
                       onPressed: () {
                         AnalyticsService.instance.logPaywallDismiss(
                           widget.isOnboarding
@@ -403,11 +397,11 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                         );
                         Navigator.of(context).pop(false);
                       },
+                      // grey[700] on the lavender top: ≈5:1 (≥3:1 for UI).
+                      // IconButton's 48 pt hit area stays.
                       icon: Icon(Icons.close,
-                          color: Colors.grey[400], size: 28),
+                          color: Colors.grey[700], size: 28),
                     ),
-                  ),
-                ),
               ),
             ),
             Expanded(
@@ -898,8 +892,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       s('Оксана — App Store (Україна)',
           'Oksana, App Store review (translated)'),
     );
-    if (!widget.isOnboarding) return card;
-    // Onboarding variant: rating line + quote
+    // The rating is real only on the Ukrainian App Store (5.0, 10 ratings);
+    // the US and UK stores show none, so an English parent checking would
+    // find "Rated 5.0 by parents" untrue where they stand. The English
+    // paywall keeps the real, translated review and drops the number.
+    // Second opinion (owner's ChatGPT consultant, 2026-09-30) agreed.
+    if (!widget.isOnboarding || s.isEn) return card;
+    // Onboarding variant, Ukrainian: rating line + quote
     return Column(
       children: [
         Row(
@@ -918,7 +917,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         ),
         const SizedBox(height: 4),
         Text(
-          s('5.0 із 5 — App Store (Україна)', 'Rated 5.0 by parents'),
+          '5.0 із 5 — App Store (Україна)',
           style: TextStyle(
             fontSize: responsiveFont(context, 13),
             color: Colors.grey[600],

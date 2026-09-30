@@ -164,14 +164,16 @@ void main() {
       expect(find.textContaining("Mia's learning plan"), findsOneWidget);
     });
 
-    testWidgets('EN social proof names no storefront', (tester) async {
-      // "5.0 on the Ukrainian App Store" made a US parent read the offer
-      // as someone else's. The number and the review stay real.
+    testWidgets('EN shows the real review but no rating it cannot back',
+        (tester) async {
+      // The only ratings are on the Ukrainian App Store; a US or UK parent
+      // would see none. The translated review stays, the number goes.
       await pumpPaywall(tester,
           isOnboarding: true,
           overrides: [profileNamed('Kid', language: 'en'), packsOf(21)]);
 
-      expect(find.text('Rated 5.0 by parents'), findsOneWidget);
+      expect(find.textContaining('Rated'), findsNothing);
+      expect(find.byKey(const ValueKey('rating-star-0')), findsNothing);
       expect(find.textContaining('App Store review (translated)'),
           findsOneWidget);
       expect(find.textContaining('Ukrain'), findsNothing);
@@ -245,11 +247,15 @@ void main() {
       expect(find.textContaining('4.9'), findsNothing);
     });
 
-    testWidgets('close button appears after the 3s read delay',
+    testWidgets('the close button is there from the first frame, and visible',
         (tester) async {
-      await pumpPaywall(tester);
-
+      await tester.pumpWidget(createPaywallApp());
+      await tester.pump();
       expect(find.byIcon(Icons.close), findsOneWidget);
+      final icon = tester.widget<Icon>(find.byIcon(Icons.close));
+      expect(icon.color, Colors.grey[700]);
+      await tester.pump(PurchaseService.storeBudget);
+      await tester.pumpAndSettle();
     });
 
     testWidgets('close button pops screen', (tester) async {
