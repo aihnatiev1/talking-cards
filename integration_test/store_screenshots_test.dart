@@ -129,26 +129,7 @@ void main() {
     await tester.tapAt(const Offset(200, 80));
     await tester.pumpAndSettle();
 
-    // 3. The sound packs. Apple's own autocomplete in the Ukrainian
-    // storefront suggests «логопед р», «логопед ш», «логопед щ укр» — the
-    // packs that answer those queries were in no store screenshot at all.
-    final sounds = find.text(lang == 'en' ? 'Sounds' : 'Звуки');
-    if (sounds.evaluate().isNotEmpty) {
-      await tester.tap(sounds.first, warnIfMissed: false);
-      await tester.pumpAndSettle(const Duration(seconds: 1));
-      await binding.takeScreenshot('sounds-$lang');
-      // Back to the default chip so the walk continues from a known
-      // screen. 'Speaking', not 'Speech' — `.first` on a finder that
-      // matches nothing throws Bad state: No element, which is how this
-      // step took the parent dashboard down with it.
-      final speech = find.text(lang == 'en' ? 'Speaking' : 'Мовлення');
-      if (speech.evaluate().isNotEmpty) {
-        await tester.tap(speech.first, warnIfMissed: false);
-        await tester.pumpAndSettle();
-      }
-    }
-
-    // 4. Parent dashboard behind the gate.
+    // 3. Parent dashboard behind the gate.
     await tester.longPress(find.byIcon(Icons.info_outline_rounded),
         warnIfMissed: false);
     await tester.pumpAndSettle();
