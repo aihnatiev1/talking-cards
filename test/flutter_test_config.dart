@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// Runs once per test isolate before any test in `test/` (flutter_test picks
 /// this file up by name).
 ///
-/// Its only job is fonts. The test binding renders every glyph with the
+/// Fonts, and a fresh asset cache per test (see below). The test binding renders every glyph with the
 /// built-in `FlutterTest` face — a filled square — so a golden of a Nunito
 /// headline would otherwise be a row of boxes, and `MaterialIcons` would be
 /// boxes too. Loading here, once, means golden tests do not each carry a
@@ -27,6 +27,13 @@ import 'package:flutter_test/flutter_test.dart';
 Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   TestWidgetsFlutterBinding.ensureInitialized();
   await _loadFonts();
+  // `rootBundle` caches each asset load as the Future of the test that
+  // first asked for it — a Future born in that test's fake clock. A later
+  // test awaiting the same asset (the onboarding magic moment's
+  // en_cards.json) got that dead Future back and sat on its spinner
+  // forever, which read as "this screen can only be mounted once per
+  // file". Every test starts from an empty cache instead.
+  setUp(rootBundle.clear);
   await testMain();
 }
 

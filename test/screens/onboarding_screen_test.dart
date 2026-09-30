@@ -40,12 +40,14 @@ void main() {
     expect(find.byType(TextField), findsNothing);
     // Two steps only: magic moment + age.
     expect(find.text("Child's name (optional)"), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+  });
 
-    // bloom_character §3.6: a second of nothing and Bloom points at the
-    // card the child is meant to tap — the hint that replaced the looping
-    // bounce. Checked here rather than in a test of its own: the magic
-    // moment mounts once per test process (a second mount never leaves
-    // its spinner — pre-existing, and not this screen's doing).
+  testWidgets('Bloom points at the card after a second of nothing', (
+    tester,
+  ) async {
+    // bloom_character §3.6: the hint that replaced the looping bounce.
+    await pumpOnboarding(tester, const Locale('en'));
     final container = ProviderScope.containerOf(
       tester.element(find.byType(OnboardingScreen)),
     );
