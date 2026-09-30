@@ -319,14 +319,33 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       // A throwing `buyNonConsumable` used to fail in complete silence: the
       // spinner stopped and nothing else happened, so parents just tapped
       // Buy again. Say something instead.
-      _sayCouldNotStart(s);
+      //
+      // A throw is the store refusing the checkout itself — on 29.09 a
+      // parent met StoreKitError.unknown twice from the same tile and left.
+      // That error lives in the store account (sign-in, an expired card,
+      // Screen Time's purchase switch), which a bare "try again" cannot
+      // fix, so it names where to look and keeps the retry one tap away.
+      _sayCouldNotStart(s, storeRefused: true);
     }
   }
 
-  void _sayCouldNotStart(AppS s) {
+  void _sayCouldNotStart(AppS s, {bool storeRefused = false}) {
+    final store = Theme.of(context).platform == TargetPlatform.android
+        ? 'Google Play'
+        : 'App Store';
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(s('Не вдалося почати покупку. Спробуйте ще раз',
-          "Couldn't start the purchase. Please try again")),
+      duration: storeRefused ? DT.motion.snackLong : DT.motion.snack,
+      content: Text(storeRefused
+          ? s('Магазин не почав покупку. Перевірте вхід у $store, спосіб оплати й дозвіл на покупки в налаштуваннях',
+              "The store didn't start the purchase. Check you're signed in to $store, your payment method, and that purchases are allowed in Settings")
+          : s('Не вдалося почати покупку. Спробуйте ще раз',
+              "Couldn't start the purchase. Please try again")),
+      action: SnackBarAction(
+        label: s('Ще раз', 'Try again'),
+        onPressed: () {
+          if (mounted && !_loading) _purchase();
+        },
+      ),
     ));
   }
 

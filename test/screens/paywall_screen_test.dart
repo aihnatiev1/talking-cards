@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -461,6 +462,29 @@ void main() {
       await tester.pump();
       expect(cta().onPressed, isNotNull,
           reason: 'the store said cancel — nothing left to wait out');
+    });
+  
+    testWidgets('a store that refuses the checkout says where to look',
+        (tester) async {
+      // What StoreKitError.unknown looked like for a parent on 29.09, who
+      // got a bare "try again", tried once more and left.
+      seedStore();
+      PurchaseService.instance.debugBuy = (_) async => throw PlatformException(
+          code: 'unknown', message: 'StoreKitError');
+      addTearDown(() {
+        PurchaseService.instance.debugBuy = null;
+        PurchaseService.instance.purchaseInFlight.value = false;
+      });
+      await pumpPaywall(tester);
+
+      await tester.tap(find.byType(ElevatedButton));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 750));
+
+      expect(find.textContaining("Перевірте вхід у Google Play"),
+          findsOneWidget);
+      expect(find.widgetWithText(SnackBarAction, 'Ще раз'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 10));
     });
   });
 }

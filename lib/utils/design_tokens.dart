@@ -509,6 +509,12 @@ class DTMotion {
   /// tiny silences inside it).
   final Duration bloomListenRelease = const Duration(milliseconds: 150);
 
+  /// A parent-facing snack bar: Flutter's own default, and a longer one
+  /// for a message with something to go and check before tapping its
+  /// action (a store refusing a checkout).
+  final Duration snack = const Duration(seconds: 4);
+  final Duration snackLong = const Duration(seconds: 8);
+
   /// `wave`: two paw swings.
   final Duration bloomWave = const Duration(milliseconds: 700);
 

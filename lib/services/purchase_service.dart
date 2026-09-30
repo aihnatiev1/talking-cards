@@ -92,7 +92,7 @@ class PurchaseService {
     _sub = _iap.purchaseStream.listen(
       _onPurchaseUpdate,
       onDone: () => _sub?.cancel(),
-      onError: (_) {},
+      onError: _onPurchaseStreamError,
     );
 
     _initialized = true;
@@ -387,11 +387,22 @@ class PurchaseService {
   /// the plugin puts the Swift case in `code`, its type in `message` and a
   /// call stack in `details`, so 100 characters of it kept only the stack.
   @visibleForTesting
-  static String buyThrewReason(Object e) => switch (e) {
+  static String buyThrewReason(Object e) => 'buy_threw: ${_errorName(e)}';
+
+  static String _errorName(Object e) => switch (e) {
         PlatformException(:final code, :final message) =>
-          'buy_threw: ${message ?? 'PlatformException'}.$code',
-        _ => 'buy_threw: ${e.runtimeType}: $e',
+          '${message ?? 'PlatformException'}.$code',
+        _ => '${e.runtimeType}: $e',
       };
+
+  /// GA4 keeps 100 characters of a parameter value.
+  static String _short(String text) =>
+      text.length <= 100 ? text : text.substring(0, 100);
+
+  /// Test seam for the checkout call itself: a widget test has no store
+  /// to refuse it.
+  @visibleForTesting
+  Future<bool> Function(PurchaseParam)? debugBuy;
 
   Future<bool> _buy(ProductDetails shown) async {
     // On Play the entry the paywall displays is not the entry that carries
@@ -401,14 +412,14 @@ class PurchaseService {
     final param = PurchaseParam(productDetails: product);
     bool started;
     try {
-      started = await _iap.buyNonConsumable(purchaseParam: param);
+      final buy = debugBuy ?? (p) => _iap.buyNonConsumable(purchaseParam: p);
+      started = await buy(param);
     } catch (e) {
-      final text = buyThrewReason(e);
+      final text = _short(buyThrewReason(e));
       _resolvePurchase(
           product.id,
-          () => AnalyticsService.instance.logPurchaseError(product.id,
-              text.length <= 100 ? text : text.substring(0, 100),
-              checkoutSource));
+          () => AnalyticsService.instance
+              .logPurchaseError(product.id, text, checkoutSource));
       rethrow;
     }
     if (!started) {
@@ -507,7 +518,57 @@ class PurchaseService {
         _verifyAndDeliver(purchase);
       }
       if (purchase.pendingCompletePurchase) {
-        _iap.completePurchase(purchase);
+        unawaited(_complete(purchase));
+      }
+    }
+  }
+
+  /// A store stream that errors carries no outcome for the checkout that is
+  /// open, so without this the CTA stayed busy for the full three-minute
+  /// backstop and the error itself went nowhere.
+  void _onPurchaseStreamError(Object error) {
+    final id = _pendingPurchaseId;
+    if (id == null) return;
+    final text = 'stream_error: ${error.runtimeType}';
+    _resolvePurchase(id,
+        () => AnalyticsService.instance.logPurchaseError(id, text, checkoutSource));
+  }
+
+  @visibleForTesting
+  void debugPurchaseStreamError(Object error) => _onPurchaseStreamError(error);
+
+  /// Test seam for [_complete]: no test has a billing client to acknowledge
+  /// against.
+  @visibleForTesting
+  Future<void> Function(PurchaseDetails)? debugCompletePurchase;
+
+  /// Pause before the one retry of a failed acknowledgement.
+  @visibleForTesting
+  static Duration completeRetryDelay = const Duration(seconds: 5);
+
+  /// Finishes (StoreKit) or acknowledges (Play) a delivered purchase.
+  ///
+  /// This is money, not bookkeeping: Play refunds a purchase that is not
+  /// acknowledged within three days, and the result used to be dropped on
+  /// the floor — a failure was an unhandled async error and a silent refund
+  /// days later. One retry covers the billing client reconnecting; after
+  /// that the purchase stays unacknowledged, the store redelivers it on the
+  /// next restore (at most daily for a Pro device, see
+  /// [_revalidateEntitlement]) and this runs again. The event says how
+  /// often that happens.
+  Future<void> _complete(PurchaseDetails purchase) async {
+    final complete = debugCompletePurchase ?? _iap.completePurchase;
+    for (var attempt = 1; attempt <= 2; attempt++) {
+      try {
+        await complete(purchase);
+        return;
+      } catch (e) {
+        if (attempt == 2) {
+          AnalyticsService.instance.logPurchaseError(purchase.productID,
+              _short('complete_failed: ${_errorName(e)}'), checkoutSource);
+          return;
+        }
+        await Future<void>.delayed(completeRetryDelay);
       }
     }
   }
@@ -581,8 +642,7 @@ class PurchaseService {
   /// string is a dimension value; keep store errors short and code-first.
   static String _reason(IAPError? err) {
     if (err == null) return 'unknown';
-    final text = '${err.code}: ${err.message}';
-    return text.length <= 100 ? text : text.substring(0, 100);
+    return _short('${err.code}: ${err.message}');
   }
 
   Future<void> _recordTrialStart() async {

@@ -93,6 +93,59 @@ void main() {
       service.purchaseInFlight.value = false;
     });
 
+    test('a store stream error releases the open checkout', () {
+      service.debugBeginPurchase('yearly_premium');
+      service.debugPurchaseStreamError(Exception('billing disconnected'));
+      // Not three minutes of a spinning Buy button with nothing to come.
+      expect(service.purchaseInFlight.value, false);
+      expect(service.debugBeginPurchase('yearly_premium'), isTrue);
+    });
+
+    group('acknowledgement', () {
+      late List<String> calls;
+      setUp(() {
+        calls = [];
+        PurchaseService.completeRetryDelay = Duration.zero;
+      });
+      tearDown(() => service.debugCompletePurchase = null);
+
+      PurchaseDetails delivered() =>
+          update('yearly_premium', PurchaseStatus.purchased)
+            ..pendingCompletePurchase = true;
+
+      test('a failed acknowledgement is retried, not dropped', () async {
+        service.debugCompletePurchase = (p) async {
+          calls.add(p.productID);
+          // Play refunds what is never acknowledged; one reconnect hiccup
+          // must not be the end of it.
+          if (calls.length == 1) throw PlatformException(code: 'SERVICE_DISCONNECTED');
+        };
+        service.debugHandlePurchaseUpdate([delivered()]);
+        await pumpEventQueue();
+        expect(calls, ['yearly_premium', 'yearly_premium']);
+      });
+
+      test('an acknowledgement that keeps failing never escapes', () async {
+        service.debugCompletePurchase = (p) async {
+          calls.add(p.productID);
+          throw PlatformException(code: 'ERROR');
+        };
+        service.debugHandlePurchaseUpdate([delivered()]);
+        await pumpEventQueue();
+        // Two tries, then an event; the family keeps what it paid for.
+        expect(calls, hasLength(2));
+        expect(service.isPro.value, isTrue);
+      });
+
+      test('nothing to acknowledge, nothing sent', () async {
+        service.debugCompletePurchase = (p) async => calls.add(p.productID);
+        service.debugHandlePurchaseUpdate(
+            [update('yearly_premium', PurchaseStatus.canceled)]);
+        await pumpEventQueue();
+        expect(calls, isEmpty);
+      });
+    });
+
     test('an open checkout stays in flight until the store answers', () {
       expect(service.purchaseInFlight.value, false);
       service.debugBeginPurchase('yearly_premium');
