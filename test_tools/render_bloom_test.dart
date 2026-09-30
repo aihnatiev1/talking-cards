@@ -4,8 +4,6 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:talking_cards/models/bloom_state.dart';
-import 'package:talking_cards/widgets/bloom/bloom_pose.dart';
 import 'package:talking_cards/widgets/bloom_mascot.dart';
 
 /// Renders Bloom, straight from the app's painter, to transparent PNGs for
@@ -13,7 +11,7 @@ import 'package:talking_cards/widgets/bloom_mascot.dart';
 ///
 ///   flutter test test_tools/render_bloom_test.dart
 ///
-/// Output: marketing/public/bloom/bloom-<emotion>-<facing>.png (1200 px).
+/// Output: `marketing/public/bloom/bloom-EMOTION-FACING.png` (1328 px).
 /// Not part of `flutter test test/`: it writes files and asserts nothing
 /// about the app.
 void main() {
