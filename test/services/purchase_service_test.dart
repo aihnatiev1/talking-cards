@@ -1,5 +1,6 @@
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -284,6 +285,23 @@ void main() {
       await service.refreshTrialAvailability();
 
       expect(service.trialDaysFor('yearly_premium'), isNull);
+    });
+  });
+
+  group('buyThrewReason', () {
+    test('a native StoreKit error keeps its case, not its call stack', () {
+      final reason = PurchaseService.buyThrewReason(PlatformException(
+        code: 'unknown',
+        message: 'StoreKitError',
+        details: 'Stacktrace: ["0   in_app_purchase_storekit   0x0001" '
+            '${'x' * 200}]',
+      ));
+      expect(reason, 'buy_threw: StoreKitError.unknown');
+    });
+
+    test('anything else names its type', () {
+      expect(PurchaseService.buyThrewReason(StateError('busy')),
+          'buy_threw: StateError: Bad state: busy');
     });
   });
 }

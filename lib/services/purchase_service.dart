@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 // The facade above hides the store-specific APIs, and one of them is not
 // optional here: only StoreKit can say whether *this* Apple ID may still
@@ -381,6 +382,17 @@ class PurchaseService {
     return _buy(product);
   }
 
+  /// A thrown checkout as a short, whole reason. `$e` of a native StoreKit
+  /// error is `PlatformException(unknown, StoreKitError, Stacktrace: …)`:
+  /// the plugin puts the Swift case in `code`, its type in `message` and a
+  /// call stack in `details`, so 100 characters of it kept only the stack.
+  @visibleForTesting
+  static String buyThrewReason(Object e) => switch (e) {
+        PlatformException(:final code, :final message) =>
+          'buy_threw: ${message ?? 'PlatformException'}.$code',
+        _ => 'buy_threw: ${e.runtimeType}: $e',
+      };
+
   Future<bool> _buy(ProductDetails shown) async {
     // On Play the entry the paywall displays is not the entry that carries
     // the trial's offer token — see [_indexProducts].
@@ -391,7 +403,7 @@ class PurchaseService {
     try {
       started = await _iap.buyNonConsumable(purchaseParam: param);
     } catch (e) {
-      final text = 'buy_threw: $e';
+      final text = buyThrewReason(e);
       _resolvePurchase(
           product.id,
           () => AnalyticsService.instance.logPurchaseError(product.id,
