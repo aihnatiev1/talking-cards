@@ -12,6 +12,11 @@ asks exactly that. The first-slide headline variant ("через гру / Throug
 Play", docs/ui-aso-direction-2026-09-22.md) is the test after this one —
 against the winner, one change at a time.
 
+The iPad slot carries ios/fastlane/screenshots_ipad in both arms. Start the
+test only once a version with those real iPad frames is live — before
+that the control's iPad slot is the old generated art and iPad visitors
+would see a second difference.
+
 This only prepares. It never submits the treatment for review and never
 starts the experiment: both are the owner's call, made in App Store
 Connect (Product Page Optimization) or with a separate, explicit step.
@@ -21,7 +26,8 @@ second one, and refuses to touch one that is no longer a draft.
 import hashlib
 import sys
 
-from asc_screenshots import APP, DISPLAY, ROOT, call, slots, upload
+from asc_screenshots import (APP, DISPLAY, DISPLAY_IPAD, ROOT, SHOTS, SHOTS_IPAD,
+                             call, slots, upload)
 
 NAME = 'New 7-slide set vs live'
 TREATMENT_NAME = '1.4.3 refresh, 7 slides'
@@ -30,7 +36,7 @@ LOCALES = ('uk', 'en-US', 'en-GB', 'en-AU', 'en-CA')
 
 
 def treatment_files(locale):
-    files = slots(locale)
+    files = slots(locale, SHOTS)
     if not files:
         raise SystemExit(f'{locale}: no slides in the repo')
     return files
@@ -106,20 +112,25 @@ def main(argv):
                     'id': treat['id']}}}}})['data']
         sets = call('GET', '/v1/appStoreVersionExperimentTreatmentLocalizations/'
                     f"{tl['id']}/appScreenshotSets")['data']
-        shot_set = next((s for s in sets
-                         if s['attributes']['screenshotDisplayType'] == DISPLAY), None)
-        if shot_set is None:
-            shot_set = call('POST', '/v1/appScreenshotSets', {'data': {
-                'type': 'appScreenshotSets',
-                'attributes': {'screenshotDisplayType': DISPLAY},
-                'relationships': {'appStoreVersionExperimentTreatmentLocalization': {
-                    'data': {'type': 'appStoreVersionExperimentTreatmentLocalizations',
-                             'id': tl['id']}}}}})['data']
-        for old in call('GET', f"/v1/appScreenshotSets/{shot_set['id']}"
-                        '/appScreenshots')['data']:
-            call('DELETE', f"/v1/appScreenshots/{old['id']}")
-        print(f'{loc}:')
-        upload_set(shot_set['id'], files)
+        for display, set_files in ((DISPLAY, files),
+                                   (DISPLAY_IPAD, slots(loc, SHOTS_IPAD))):
+            if not set_files:
+                continue
+            shot_set = next((s for s in sets
+                             if s['attributes']['screenshotDisplayType'] == display),
+                            None)
+            if shot_set is None:
+                shot_set = call('POST', '/v1/appScreenshotSets', {'data': {
+                    'type': 'appScreenshotSets',
+                    'attributes': {'screenshotDisplayType': display},
+                    'relationships': {'appStoreVersionExperimentTreatmentLocalization': {
+                        'data': {'type': 'appStoreVersionExperimentTreatmentLocalizations',
+                                 'id': tl['id']}}}}})['data']
+            for old in call('GET', f"/v1/appScreenshotSets/{shot_set['id']}"
+                            '/appScreenshots')['data']:
+                call('DELETE', f"/v1/appScreenshots/{old['id']}")
+            print(f'{loc} {display}:')
+            upload_set(shot_set['id'], set_files)
 
     print(f"\nDraft ready: experiment {exp['id']}. Not submitted, not started.")
     return 0

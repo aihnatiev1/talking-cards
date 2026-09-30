@@ -10,6 +10,12 @@ that have no folder of their own take en-US's, because the alternative is
 what the store had: three listings showing a version of the app from
 months ago.
 
+--ipad does the same for the 13-inch iPad set from
+ios/fastlane/screenshots_ipad/<locale>/ — real frames from the rig
+(SHOTS_DIR=... tools/capture_store_screenshots.sh <ipad-udid>). Until
+2026-09-30 that slot held generated pictures, not the app, which is what
+guideline 2.3.3 rejects.
+
 --prune also deletes the older 6.5-inch sets, which held screenshots of
 an app that no longer looks like that. Apple shows the 6.7-inch art for
 that size class once they are gone. iPad sets are left alone: an app that
@@ -34,12 +40,15 @@ import jwt
 
 ROOT = Path(__file__).resolve().parent.parent
 SHOTS = ROOT / 'ios/fastlane/screenshots'
+SHOTS_IPAD = ROOT / 'ios/fastlane/screenshots_ipad'
 APP = '6760210043'
 KEY_ID = 'L47N29CGTL'
 ISSUER = '3d14c11e-b644-4714-8724-ed2636d79f7d'
 BASE = 'https://api.appstoreconnect.apple.com'
 # 1290 × 2796 — iPhone 15/16 Pro Max and the like.
 DISPLAY = 'APP_IPHONE_67'
+# 2048 × 2732 / 2064 × 2752 — the 13-inch iPad class.
+DISPLAY_IPAD = 'APP_IPAD_PRO_3GEN_129'
 # Locales that show another locale's art.
 BORROWS = {'en-GB': 'en-US', 'en-AU': 'en-US', 'en-CA': 'en-US'}
 # Sets we clear out with --prune: an older phone class whose screenshots
@@ -81,14 +90,16 @@ def upload(method, url, chunk, headers):
         raise SystemExit(f'{method} upload -> {e.code}: {e.read().decode()[:400]}')
 
 
-def slots(locale):
-    folder = SHOTS / BORROWS.get(locale, locale)
+def slots(locale, root=SHOTS):
+    folder = root / BORROWS.get(locale, locale)
     if not folder.is_dir():
         return []
     def order(p):
         m = re.search(r'slot-(\d+)', p.name)
         return int(m.group(1)) if m else 99
-    return sorted(folder.glob('slot-*.png'), key=order)
+    files = [p for p in folder.glob('slot-*')
+             if p.suffix in ('.png', '.jpg')]
+    return sorted(files, key=order)
 
 
 def main(argv):
@@ -97,6 +108,8 @@ def main(argv):
     version = argv[0]
     push = '--push' in argv
     prune = '--prune' in argv
+    ipad = '--ipad' in argv
+    root, display = (SHOTS_IPAD, DISPLAY_IPAD) if ipad else (SHOTS, DISPLAY)
 
     versions = call('GET', f'/v1/apps/{APP}/appStoreVersions?limit=5'
                     '&fields[appStoreVersions]=versionString,appVersionState')['data']
@@ -112,7 +125,7 @@ def main(argv):
 
     for loc in locs:
         locale = loc['attributes']['locale']
-        files = slots(locale)
+        files = slots(locale, root)
         if not files:
             print(f'{locale}: no folder, left alone')
             continue
@@ -121,14 +134,14 @@ def main(argv):
                     '/appScreenshotSets'
                     '?fields[appScreenshotSets]=screenshotDisplayType')['data']
         for old_set in sets:
-            if old_set['attributes']['screenshotDisplayType'] in STALE:
+            if not ipad and old_set['attributes']['screenshotDisplayType'] in STALE:
                 print(f"{locale}: stale "
                       f"{old_set['attributes']['screenshotDisplayType']} set")
                 if push and prune:
                     call('DELETE', f"/v1/appScreenshotSets/{old_set['id']}")
                     print('    deleted')
         existing = next((s for s in sets
-                         if s['attributes']['screenshotDisplayType'] == DISPLAY),
+                         if s['attributes']['screenshotDisplayType'] == display),
                         None)
         have = []
         if existing:
@@ -143,7 +156,7 @@ def main(argv):
         if existing is None:
             existing = call('POST', '/v1/appScreenshotSets', {'data': {
                 'type': 'appScreenshotSets',
-                'attributes': {'screenshotDisplayType': DISPLAY},
+                'attributes': {'screenshotDisplayType': display},
                 'relationships': {'appStoreVersionLocalization': {'data': {
                     'type': 'appStoreVersionLocalizations',
                     'id': loc['id']}}}}})['data']

@@ -4,6 +4,8 @@
 #
 #   tools/capture_store_screenshots.sh              # iPhone 17 Pro Max
 #   tools/capture_store_screenshots.sh <sim-udid>
+#   SHOTS_DIR=marketing/public/screenshots/ipad \
+#     tools/capture_store_screenshots.sh <ipad-udid>   # iPad set, kept apart
 #
 # The rig is integration_test/visual_refresh_test.dart. Its screenshots
 # travel back to the host in one request at the end of the run (~30 MB of
@@ -17,7 +19,8 @@ cd "$(dirname "$0")/.."
 DEVICE="${1:-$(xcrun simctl list devices available | grep 'iPhone 17 Pro Max' | head -1 | grep -oE '[0-9A-F-]{36}')}"
 [ -n "$DEVICE" ] || { echo "no simulator found"; exit 1; }
 xcrun simctl boot "$DEVICE" 2>/dev/null || true
-OUT=marketing/public/screenshots/auto
+export SHOTS_DIR="${SHOTS_DIR:-marketing/public/screenshots/auto}"
+OUT="$SHOTS_DIR"
 SCREENS=(home sounds cards game draw fill quest)
 LOG_DIR="${TMPDIR:-/tmp}/store-shots"; mkdir -p "$LOG_DIR"
 
