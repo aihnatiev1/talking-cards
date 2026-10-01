@@ -487,4 +487,50 @@ void main() {
       await tester.pump(const Duration(seconds: 10));
     });
   });
+
+  group('plan tiles on a phone', () {
+    // iPhone 17 Pro, 402 pt wide, and the owner's screenshot of 2026-10-01:
+    // the badges sat in the label row and cut it and themselves short —
+    // "Назавж…", "Вигідніш…", "Без підпи…". They now ride the tile's top
+    // edge and every word is whole.
+    for (final scale in [1.0, 1.3]) {
+      testWidgets('no plan word is cut at 402 pt, text ×$scale',
+          (tester) async {
+        tester.view.physicalSize = const Size(402 * 3, 874 * 3);
+        tester.view.devicePixelRatio = 3;
+        addTearDown(tester.view.reset);
+        PurchaseService.instance.debugIndexProducts([
+          product('yearly_premium', 14.99, '14,99 USD'),
+          product('monthly_premium', 3.49, '3,49 USD'),
+          product('lifetime_premium', 29.99, '29,99 USD'),
+        ]);
+        await tester.pumpWidget(ProviderScope(
+          child: MaterialApp(
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: TextScaler.linear(scale)),
+              child: child!,
+            ),
+            home: const PaywallScreen(),
+          ),
+        ));
+        await tester.pump(PurchaseService.storeBudget);
+        await tester.pumpAndSettle();
+
+        for (final word in [
+          'Річна',
+          'Місячна',
+          'Назавжди',
+          'Без підписки',
+          'Вигідніше на 64%',
+        ]) {
+          final finder = find.text(word);
+          expect(finder, findsOneWidget, reason: word);
+          final paragraph = tester.renderObject<RenderParagraph>(finder);
+          expect(paragraph.didExceedMaxLines, isFalse, reason: '$word is cut');
+        }
+        expect(tester.takeException(), isNull);
+      });
+    }
+  });
 }

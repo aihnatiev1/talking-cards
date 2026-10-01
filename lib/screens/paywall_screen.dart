@@ -694,7 +694,16 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       child: Semantics(
         selected: selected,
         button: true,
-        child: AnimatedContainer(
+        // The badge sits on the tile's top edge, not in the row: inside the
+        // row it shared one line with the label and the price, and on an
+        // iPhone 17 Pro both came out cut — "Назавж…", "Вигідніш…", "Без
+        // підпи…". The extra top padding is the room it overhangs into.
+        child: Padding(
+        padding: EdgeInsets.only(top: plan.badge != null ? 12 : 0),
+        child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+        AnimatedContainer(
         duration: DT.motion.base,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
@@ -740,47 +749,17 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   : null,
             ),
             const SizedBox(width: 14),
-            // Label + badge
+            // Label
             Expanded(
-              flex: 2,
-              child: Row(
-                children: [
-                  Flexible(
-                    child: Text(
-                      plan.label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: selected ? tileColor : null,
-                      ),
-                    ),
-                  ),
-                  if (plan.badge != null) ...[
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: plan.badgeColor,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          plan.badge!,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
+              child: Text(
+                plan.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: selected ? tileColor : null,
+                ),
               ),
             ),
             const SizedBox(width: 8),
@@ -811,6 +790,37 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
             ),
           ],
         ),
+      ),
+        if (plan.badge != null)
+          Positioned(
+            // Over the label's start: 16 padding + 24 radio + 14 gap.
+            left: 54,
+            right: 16,
+            top: -11,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                decoration: BoxDecoration(
+                  color: plan.badgeColor,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  plan.badge!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
       ),
       ),
     );
