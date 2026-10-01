@@ -1,7 +1,4 @@
-• Bloom now plays along: in Guess the word, Opposites, Odd one out and Repeat after me he points the way when your little one is looking for the answer.
-• In coloring, Bloom follows the finger; on the daily map he looks around at every new stop and hops when tapped.
-• Gentle reminders from Bloom — only if you have turned them on.
-• Subscribing is more reliable: if the store can't start the payment, the app tells you what to check and lets you try again.
-• Fixed: the status bar on the games screen, labels with larger text, and an unneeded "What's new" sheet after the first launch.
+• Coloring: once you subscribe, every picture opens right away, with no repeat offer.
+• Subscription screen: plans and the "Save" and "No subscription" labels now show in full on every iPhone.
 
 Thank you for discovering first words together!
