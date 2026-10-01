@@ -154,7 +154,19 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
         isEn: ref.read(languageProvider) == 'en',
       );
     });
-    _loadCompletedCount();
+    _countReady = _loadCompletedCount();
+    // A purchase made from this screen's gate — or anywhere else while it is
+    // open: an Ask to Buy approval, a restore — takes the gate down and hands
+    // the child a picture. The gate used to be decided once and then stay:
+    // a parent who had just paid was offered the same subscription again.
+    ref.listenManual(isProProvider, (prev, isPro) {
+      if (!isPro) return;
+      // After the frame: Pro also rebuilds packsProvider, whose listener
+      // below may already have dealt the picture.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _paywallGated) _resetAndPick();
+      });
+    });
     // packsProvider is async + language-aware (en_cards.json vs uk_cards.json).
     // Listen so we pick on first load AND reset if language changes out from
     // under us — otherwise a card picked in UA mode would still display its
@@ -172,11 +184,19 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
     }, fireImmediately: true);
   }
 
+  /// Completes once [_completedCount] holds the saved value. The gate is
+  /// not decided before then: the first pick used to run against a count of
+  /// zero, so every visit to the screen handed out one more free picture
+  /// whatever the count really was.
+  late final Future<void> _countReady;
+  bool _countLoaded = false;
+
   Future<void> _loadCompletedCount() async {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
     setState(() {
       _completedCount = prefs.getInt(_completedCountKey) ?? 0;
+      _countLoaded = true;
     });
   }
 
@@ -196,6 +216,12 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
   }
 
   void _resetAndPick() {
+    if (!_countLoaded) {
+      _countReady.then((_) {
+        if (mounted) _resetAndPick();
+      });
+      return;
+    }
     setState(() {
       _strokes.clear();
       _current.clear();
@@ -470,9 +496,11 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
   void _next() {
     FeedbackService.instance.event(FeedbackEvent.tap);
     if (_isGated()) {
-      // Free quota exhausted — prompt paywall instead of loading another drawing.
-      runPaywallFlow(context, ref, source: 'coloring_gate');
+      // Free quota exhausted — the gate, with the paywall over it. A
+      // purchase there takes the gate down through the isProProvider
+      // listener in initState.
       setState(() => _paywallGated = true);
+      runPaywallFlow(context, ref, source: 'coloring_gate');
       return;
     }
     setState(() {

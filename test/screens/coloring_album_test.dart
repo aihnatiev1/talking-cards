@@ -165,6 +165,39 @@ void main() {
       return container;
     }
 
+    testWidgets('a spent allowance is the gate from the first frame',
+        (tester) async {
+      // The count used to load after the first picture was already dealt,
+      // so every visit handed out one more free picture.
+      SharedPreferences.setMockInitialValues({'coloring_completed_count': 3});
+      final container = await open(tester);
+      addTearDown(container.dispose);
+
+      expect(find.textContaining('картинок чекають'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets('a purchase takes the gate down and deals a picture',
+        (tester) async {
+      // The owner's case, 2026-10-01: a parent paid from this gate and the
+      // screen kept offering the subscription they had just bought.
+      SharedPreferences.setMockInitialValues({'coloring_completed_count': 3});
+      final container = await open(tester);
+      addTearDown(container.dispose);
+      expect(find.textContaining('картинок чекають'), findsOneWidget);
+
+      container.read(isProProvider.notifier).state = true;
+      await tester.pump();
+      await tester.pump();
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await tester.pump();
+
+      expect(find.textContaining('картинок чекають'), findsNothing);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
     testWidgets('shows once per profile and never again', (tester) async {
       final container = await open(tester);
       addTearDown(container.dispose);
