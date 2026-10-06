@@ -1080,135 +1080,167 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                 // the inline subtitle here was a duplicate readout — removed.
                 const SizedBox(height: 6),
 
-                // One hero block: Continue / Card of the Day + the day's two
-                // remaining steps, all inside a single frame.
-                // Capped at heroMaxWidth and centred so a tablet gets a
-                // card, not a 150 dp strip across 1194 px.
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxWidth: DT.size.heroMaxWidth,
-                      ),
-                      child: _HeroWithBloom(
-                        semanticsLabel: isEnMode ? 'Bloom' : 'Блум',
-                        heroDone: _heroTaskDone(
-                          quest,
-                          heroIsCardOfDay: continuePack == null && cotd != null,
-                        ),
-                        builder: (context, mascot) => _buildDailyHero(
-                          context,
-                          packs: packs,
-                          cotd: cotd,
-                          cotdLocked: cotdLocked,
-                          questState: quest,
-                          completedPacks: completedPacks,
-                          continuePack: continuePack,
-                          continueProgress: continueProgress,
-                          isEn: isEnMode,
-                          mascot: mascot,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-                // First-launch coachmark for the strip — fades in on initial
-                // session and self-dismisses as soon as the kid taps any stone.
-                if (_todayPlanIntroVisible)
-                  _TodayPlanIntroHint(
-                    isEn: isEnMode,
-                    isVisible: quest.completed.isEmpty,
-                    onDismiss: _dismissTodayPlanIntro,
-                  ),
-
-                // Treasure box — kid-facing entry to learned-words collection.
-                // Hidden until at least one word is "learned" (SRS reps >= 2).
-                _TreasureBoxBanner(isEn: isEnMode),
-
-                // SRS review entry lives in the grid as the "Повторення"
-                // virtual pack — the extra banner here just stacked a third
-                // call-to-action above the fold.
-                const SizedBox(height: 6),
-
-                // Category filter. The "Library" heading above it is gone
-                // and so is the grey track behind the chips: a word no
-                // child reads and a box that only added height between the
-                // hero and the packs (playtest). The selected chip alone
-                // carries colour, which is all the grouping this needs.
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 2, 16, 2),
-                  child: Row(
-                    children: [
-                      for (int i = 0; i < allCategories.length; i++) ...[
-                        Expanded(
-                          child: _CategoryChip(
-                            label: allCategories[i],
-                            selected: allCategories[i] == _selectedCategory,
-                            onSelected: () {
-                              final newCat = allCategories[i];
-                              if (newCat != _selectedCategory) {
-                                AnalyticsService.instance.logCategorySwitch(
-                                  newCat,
-                                );
-                              }
-                              setState(() {
-                                _selectedCategory = newCat;
-                                _lastCategory = newCat;
-                              });
-                            },
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                // Grid
+                // One scroll for everything below the top bar. The hero and
+                // the category row used to sit fixed above a grid that got
+                // only what was left — on an iPhone a strip about a third
+                // of the screen tall for the packs themselves (owner,
+                // 2026-10-06). Now the hero scrolls away, the categories
+                // stay pinned, and the grid has the whole screen.
                 Expanded(
                   // The tiles arrive one after another (G11); the scope
                   // remembers when the grid appeared so a tile scrolled to
                   // later shows up at once instead of replaying the wave.
                   child: StaggerScope(
-                    child: GridView.builder(
-                      padding: EdgeInsets.fromLTRB(16 * scale, 4, 16 * scale, 8),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        // Two columns on a phone: three of them put a pack
-                        // cover under ~110 dp, below what a 1-year-old can
-                        // aim at or recognise (ux-gap G12 / А1-12). Tablets
-                        // keep three.
-                        crossAxisCount:
-                            MediaQuery.sizeOf(context).width < kMediumScreen
-                            ? 2
-                            : 3,
-                        mainAxisSpacing: 10 * scale,
-                        crossAxisSpacing: 10 * scale,
-                        childAspectRatio: 0.95,
-                      ),
-                      itemCount: gridItems.length,
-                      itemBuilder: (context, index) {
-                        final item = gridItems[index];
-                        final pack = item.pack;
-                        return StaggeredEntrance(
-                          key: ValueKey(pack.id),
-                          index: index,
-                          child: PackGridCard(
-                            pack: pack,
-                            isCompleted: completedPacks.contains(pack.id),
-                            progress: packProgress[pack.id] ?? 0,
-                            isSeasonal: item.isSeasonal,
-                            onTap: () => _onPackTap(
-                              context,
-                              pack,
-                              source: 'library_grid',
-                              position: index,
+                    child: CustomScrollView(
+                      slivers: [
+                        SliverToBoxAdapter(
+                          child: Column(
+                            children: [
+                            // One hero block: Continue / Card of the Day + the day's two
+                            // remaining steps, all inside a single frame.
+                            // Capped at heroMaxWidth and centred so a tablet gets a
+                            // card, not a 150 dp strip across 1194 px.
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                              child: Center(
+                                child: ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    maxWidth: DT.size.heroMaxWidth,
+                                  ),
+                                  child: _HeroWithBloom(
+                                    semanticsLabel: isEnMode ? 'Bloom' : 'Блум',
+                                    heroDone: _heroTaskDone(
+                                      quest,
+                                      heroIsCardOfDay: continuePack == null && cotd != null,
+                                    ),
+                                    builder: (context, mascot) => _buildDailyHero(
+                                      context,
+                                      packs: packs,
+                                      cotd: cotd,
+                                      cotdLocked: cotdLocked,
+                                      questState: quest,
+                                      completedPacks: completedPacks,
+                                      continuePack: continuePack,
+                                      continueProgress: continueProgress,
+                                      isEn: isEnMode,
+                                      mascot: mascot,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            // First-launch coachmark for the strip — fades in on initial
+                            // session and self-dismisses as soon as the kid taps any stone.
+                            if (_todayPlanIntroVisible)
+                              _TodayPlanIntroHint(
+                                isEn: isEnMode,
+                                isVisible: quest.completed.isEmpty,
+                                onDismiss: _dismissTodayPlanIntro,
+                              ),
+
+                            // Treasure box — kid-facing entry to learned-words collection.
+                            // Hidden until at least one word is "learned" (SRS reps >= 2).
+                            _TreasureBoxBanner(isEn: isEnMode),
+
+                            // SRS review entry lives in the grid as the "Повторення"
+                            // virtual pack — the extra banner here just stacked a third
+                            // call-to-action above the fold.
+                            const SizedBox(height: 6),
+
+                            ],
+                          ),
+                        ),
+                        SliverPersistentHeader(
+                          pinned: true,
+                          delegate: _PinnedCategories(
+                            background:
+                                Theme.of(context).scaffoldBackgroundColor,
+                            child: Column(
+                              children: [
+                              // Category filter. The "Library" heading above it is gone
+                              // and so is the grey track behind the chips: a word no
+                              // child reads and a box that only added height between the
+                              // hero and the packs (playtest). The selected chip alone
+                              // carries colour, which is all the grouping this needs.
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(16, 2, 16, 2),
+                                child: Row(
+                                  children: [
+                                    for (int i = 0; i < allCategories.length; i++) ...[
+                                      Expanded(
+                                        child: _CategoryChip(
+                                          label: allCategories[i],
+                                          selected: allCategories[i] == _selectedCategory,
+                                          onSelected: () {
+                                            final newCat = allCategories[i];
+                                            if (newCat != _selectedCategory) {
+                                              AnalyticsService.instance.logCategorySwitch(
+                                                newCat,
+                                              );
+                                            }
+                                            setState(() {
+                                              _selectedCategory = newCat;
+                                              _lastCategory = newCat;
+                                            });
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+
+                                const SizedBox(height: 8),
+                              ],
                             ),
                           ),
-                        );
-                      },
+                        ),
+                        SliverPadding(
+                          padding: EdgeInsets.fromLTRB(
+                              16 * scale, 4, 16 * scale, 8),
+                          sliver: SliverGrid(
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                              // Two columns on a phone: three of them put a
+                              // pack cover under ~110 dp, below what a
+                              // 1-year-old can aim at or recognise (ux-gap
+                              // G12 / А1-12). Tablets keep three.
+                              crossAxisCount:
+                                  MediaQuery.sizeOf(context).width <
+                                          kMediumScreen
+                                      ? 2
+                                      : 3,
+                              mainAxisSpacing: 10 * scale,
+                              crossAxisSpacing: 10 * scale,
+                              childAspectRatio: 0.95,
+                            ),
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                  final item = gridItems[index];
+                                  final pack = item.pack;
+                                  return StaggeredEntrance(
+                                    key: ValueKey(pack.id),
+                                    index: index,
+                                    child: PackGridCard(
+                                      pack: pack,
+                                      isCompleted: completedPacks.contains(pack.id),
+                                      progress: packProgress[pack.id] ?? 0,
+                                      isSeasonal: item.isSeasonal,
+                                      onTap: () => _onPackTap(
+                                        context,
+                                        pack,
+                                        source: 'library_grid',
+                                        position: index,
+                                      ),
+                                    ),
+                                  );
+                              },
+                              childCount: gridItems.length,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -1219,6 +1251,32 @@ class _PacksTabState extends ConsumerState<PacksTab> {
       ),
     );
   }
+}
+
+/// The category row, pinned under the top bar while the hero scrolls
+/// away. Fixed height: the chips are a fixed 64 dp (they scale their
+/// contents down, never their box), plus 2 + 2 padding and an 8 dp gap.
+class _PinnedCategories extends SliverPersistentHeaderDelegate {
+  final Widget child;
+  final Color background;
+
+  const _PinnedCategories({required this.child, required this.background});
+
+  static const double _height = 2 + 64 + 2 + 8;
+
+  @override
+  double get minExtent => _height;
+
+  @override
+  double get maxExtent => _height;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlaps) =>
+      ColoredBox(color: background, child: child);
+
+  @override
+  bool shouldRebuild(_PinnedCategories old) =>
+      old.child != child || old.background != background;
 }
 
 /// The daily hero with Bloom S peeking out from behind the illustration
