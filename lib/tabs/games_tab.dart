@@ -181,9 +181,13 @@ class _GamesTabState extends ConsumerState<GamesTab> {
     return Scaffold(
       backgroundColor: DT.bgWarm,
       appBar: AppBar(
-        title: Text(
-          isEn ? '🎮 Games' : '🎮 Ігри',
-          style: DT.h1.copyWith(fontSize: 22),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const AppArt('gamepad', size: 36),
+            const SizedBox(width: 8),
+            Text(isEn ? 'Games' : 'Ігри', style: DT.h1.copyWith(fontSize: 24)),
+          ],
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -201,7 +205,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('🐢', style: TextStyle(fontSize: 64)),
+                const AppArt('wave', size: 96),
                 const SizedBox(height: 16),
                 Text(
                   isEn ? 'Oops, didn\'t load' : 'Ой, не завантажилось',
@@ -442,7 +446,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
               _SectionHeader(
                 title: isEn ? 'For little ones' : 'Для малят',
                 subtitle: isEn ? 'ages 1–3' : '1–3 роки',
-                emoji: '🧸',
+                art: 'wave',
               ),
               const SizedBox(height: 10),
               _GameGrid(games: toddlerGames, section: 'toddler'),
@@ -452,7 +456,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                 // Not "speech therapy": the app is used by therapists but is
                 // not therapy, and the store copy stopped saying so.
                 subtitle: isEn ? 'practice together' : 'вправи разом',
-                emoji: '👨‍👧',
+                art: 'padlock',
               ),
               const SizedBox(height: 10),
               Column(
@@ -469,11 +473,9 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                             vertical: 12,
                           ),
                           leading: const CircleAvatar(
+                            radius: 26,
                             backgroundColor: Colors.white,
-                            child: AppIconView(
-                              AppIcon.gameArticulation,
-                              size: 28,
-                            ),
+                            child: AppArt('padlock', size: 34),
                           ),
                           title: Text(
                             game.title,
@@ -503,7 +505,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
               _SectionHeader(
                 title: isEn ? 'For older kids' : 'Для старших',
                 subtitle: isEn ? 'ages 3+' : '3+',
-                emoji: '🎓',
+                art: 'medal',
               ),
               const SizedBox(height: 10),
               _GameGrid(games: advancedGames, section: 'advanced'),
@@ -555,12 +557,12 @@ class _BigGame {
 class _SectionHeader extends StatelessWidget {
   final String title;
   final String subtitle;
-  final String emoji;
+  final String art;
 
   const _SectionHeader({
     required this.title,
     required this.subtitle,
-    required this.emoji,
+    required this.art,
   });
 
   @override
@@ -571,7 +573,7 @@ class _SectionHeader extends StatelessWidget {
         crossAxisAlignment: WrapCrossAlignment.center,
         runSpacing: 4,
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 22)),
+          AppArt(art, size: 32),
           const SizedBox(width: 8),
           Text(title, style: DT.h2.copyWith(fontSize: 19)),
           const SizedBox(width: 8),
@@ -620,7 +622,7 @@ class _GameGrid extends StatelessWidget {
           final title = measure(game.title, DT.tileTitle);
           final subtitle = measure(
             game.subtitle,
-            DT.body.copyWith(fontSize: 12),
+            DT.body.copyWith(fontSize: 14),
           );
           if (title > titleHeight) titleHeight = title;
           if (subtitle > subtitleHeight) subtitleHeight = subtitle;
@@ -695,7 +697,7 @@ class _BigGameTile extends StatelessWidget {
             SnackBar(
               content: Row(
                 children: [
-                  const Text('🔒', style: TextStyle(fontSize: 18)),
+                  const AppArt('padlock', size: 24),
                   const SizedBox(width: 10),
                   Expanded(child: Text(g.lockedHint)),
                 ],
@@ -809,7 +811,7 @@ class _BigGameTile extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         g.subtitle,
-                        style: DT.body.copyWith(fontSize: 12),
+                        style: DT.body.copyWith(fontSize: 14),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),

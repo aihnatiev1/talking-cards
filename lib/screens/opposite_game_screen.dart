@@ -239,15 +239,11 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text('↔️', style: TextStyle(fontSize: 22)),
-                const SizedBox(width: 8),
+                const _SwapBadge(size: 40),
+                const SizedBox(width: 10),
                 Text(
                   s('Що протилежне?', 'What is the opposite?'),
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey[600],
-                  ),
+                  style: DT.h2.copyWith(fontSize: 20, color: DT.textPrimary),
                 ),
               ],
             ),
@@ -417,7 +413,7 @@ class _PairReveal extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Expanded(child: _PairHalf(card: question)),
-          const Text('↔️', style: TextStyle(fontSize: 26)),
+          const _SwapBadge(size: 36),
           Expanded(child: _PairHalf(card: answer)),
         ],
       ),
@@ -539,4 +535,22 @@ class _OptionTile extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The two-way arrow between a word and its opposite, drawn instead of the
+/// ↔️ emoji.
+class _SwapBadge extends StatelessWidget {
+  const _SwapBadge({required this.size});
+  final double size;
+  @override
+  Widget build(BuildContext context) => Container(
+    width: size,
+    height: size,
+    decoration: BoxDecoration(
+      color: Colors.white,
+      shape: BoxShape.circle,
+      border: Border.all(color: DT.brand, width: 2.5),
+    ),
+    child: Icon(Icons.swap_horiz_rounded, size: size * .62, color: DT.brand),
+  );
 }

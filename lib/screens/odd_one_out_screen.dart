@@ -225,7 +225,7 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
                         const SizedBox(width: 6),
                       ],
                       const SizedBox(width: 6),
-                      const Text('❓', style: TextStyle(fontSize: 36)),
+                      const _QuestionBadge(),
                     ],
                   ),
                   const SizedBox(height: 6),
@@ -487,4 +487,31 @@ class _CardChip extends StatelessWidget {
       },
     );
   }
+}
+
+/// The «which is odd?» mark: a drawn badge, not the ❓ emoji, which rendered
+/// as a thin red glyph next to the painted thumbnails.
+class _QuestionBadge extends StatelessWidget {
+  const _QuestionBadge();
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 56,
+    height: 56,
+    alignment: Alignment.center,
+    decoration: BoxDecoration(
+      color: DT.violet,
+      shape: BoxShape.circle,
+      border: Border.all(color: Colors.white, width: 3),
+      boxShadow: const [BoxShadow(color: DT.outline, offset: Offset(0, 3))],
+    ),
+    child: Text(
+      '?',
+      style: DT.h1.copyWith(
+        color: Colors.white,
+        fontSize: 34,
+        fontWeight: FontWeight.w900,
+        height: 1,
+      ),
+    ),
+  );
 }
