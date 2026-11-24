@@ -1604,6 +1604,13 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     _lastPraiseIndex = i;
     _praise = words[i];
     _praiseSeq++;
+    // The cheer is on screen and in Bloom; with no recorded praise bundled
+    // it also gets a rising three-note chime, so a child who is not looking
+    // at the word still hears that this pop was a milestone.
+    FeedbackService.instance.event(
+      FeedbackEvent.progressStep,
+      step: (_popped ~/ _tuning.praiseBeatFor(_mode)).clamp(1, 6),
+    );
     _bloom.praised();
   }
 
