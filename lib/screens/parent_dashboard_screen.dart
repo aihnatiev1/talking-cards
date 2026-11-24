@@ -25,6 +25,7 @@ import '../widgets/card_image.dart';
 import '../widgets/settings_action_row.dart';
 import '../widgets/word_wall_share.dart';
 import 'voice_check_screen.dart';
+import '../widgets/profile_avatar.dart';
 
 class ParentDashboardScreen extends ConsumerWidget {
   const ParentDashboardScreen({super.key});
@@ -51,10 +52,7 @@ class ParentDashboardScreen extends ConsumerWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  profile.active?.avatarEmoji ?? '👶',
-                  style: const TextStyle(fontSize: 20),
-                ),
+                ProfileAvatar(profile.active?.avatarEmoji ?? '👶', size: 28),
                 const SizedBox(width: 6),
                 Text(
                   profile.active?.name ?? s('Малюк', 'Kiddo'),

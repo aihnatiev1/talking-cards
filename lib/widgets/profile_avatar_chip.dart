@@ -5,6 +5,7 @@ import '../providers/profile_provider.dart';
 import '../screens/profile_selector_screen.dart';
 import '../utils/design_tokens.dart';
 import 'kid_tap.dart';
+import 'profile_avatar.dart';
 
 /// Tappable avatar chip shown in the HomeScreen top bar.
 /// Displays active profile emoji + name; opens profile selector on tap.
@@ -43,7 +44,7 @@ class ProfileAvatarChip extends ConsumerWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(active.avatarEmoji, style: const TextStyle(fontSize: 16)),
+              ProfileAvatar(active.avatarEmoji, size: 24),
               if (isEn) ...[
                 const SizedBox(width: 2),
                 const Text('🇬🇧', style: TextStyle(fontSize: 12)),

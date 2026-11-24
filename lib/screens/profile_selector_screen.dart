@@ -7,6 +7,7 @@ import '../providers/language_provider.dart';
 import '../providers/profile_provider.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
+import '../widgets/profile_avatar.dart';
 
 // ─────────────────────────────────────────────
 //  Profile selector bottom sheet
@@ -251,12 +252,7 @@ class _ProfileTile extends StatelessWidget {
                 : Colors.grey.withValues(alpha: 0.12),
             shape: BoxShape.circle,
           ),
-          child: Center(
-            child: Text(
-              profile.avatarEmoji,
-              style: const TextStyle(fontSize: 22),
-            ),
-          ),
+          child: Center(child: ProfileAvatar(profile.avatarEmoji, size: 36)),
         ),
         title: Text(
           profile.name,
@@ -428,9 +424,7 @@ class _ProfileEditDialogState extends State<_ProfileEditDialog> {
                           ? Border.all(color: DT.brand, width: 2)
                           : null,
                     ),
-                    child: Center(
-                      child: Text(emoji, style: const TextStyle(fontSize: 22)),
-                    ),
+                    child: Center(child: ProfileAvatar(emoji, size: 34)),
                   ),
                 );
               }).toList(),

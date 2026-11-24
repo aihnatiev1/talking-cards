@@ -27,6 +27,7 @@ import '../widgets/play_components.dart';
 import '../widgets/pack_grid_card.dart';
 import '../widgets/home_quick_row.dart';
 import '../services/open_content_pack.dart';
+import '../widgets/profile_avatar.dart';
 
 class PlayTab extends ConsumerStatefulWidget {
   const PlayTab({super.key, this.active = true});
@@ -502,10 +503,7 @@ class _ProfileButton extends ConsumerWidget {
             shape: BoxShape.circle,
             border: Border.all(color: DT.outline, width: 2),
           ),
-          child: Text(
-            active?.avatarEmoji ?? '🙂',
-            style: const TextStyle(fontSize: 30),
-          ),
+          child: ProfileAvatar(active?.avatarEmoji ?? '🙂', size: 44),
         ),
       ),
     );

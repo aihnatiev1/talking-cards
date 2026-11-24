@@ -26,6 +26,7 @@ import '../widgets/bloom_mascot.dart';
 import '../widgets/card_image.dart';
 import '../widgets/kid_tap.dart';
 import 'home_screen.dart';
+import '../widgets/profile_avatar.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -405,10 +406,7 @@ class _ChildSetupPage extends StatelessWidget {
                             : null,
                       ),
                       child: Center(
-                        child: Text(
-                          emoji,
-                          style: TextStyle(fontSize: emojiSize),
-                        ),
+                        child: ProfileAvatar(emoji, size: emojiSize * 1.25),
                       ),
                     ),
                   );

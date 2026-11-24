@@ -7,6 +7,7 @@ import 'package:talking_cards/utils/motion.dart';
 import 'package:talking_cards/utils/app_theme.dart';
 import 'package:talking_cards/widgets/kid_tap.dart';
 import 'package:talking_cards/providers/bloom_reactions_provider.dart';
+import 'package:talking_cards/widgets/profile_avatar.dart';
 
 /// Onboarding branches on the system locale: EN opens straight into the
 /// magic moment (English installs churned on the keyboard page before ever
@@ -102,7 +103,12 @@ void main() {
             ),
           );
           await tester.pump();
-          final avatar = find.widgetWithText(KidTap, '👧');
+          final avatar = find.ancestor(
+            of: find.byWidgetPredicate(
+              (w) => w is ProfileAvatar && w.emoji == '👧',
+            ),
+            matching: find.byType(KidTap),
+          );
           expect(tester.getSize(avatar).width, greaterThanOrEqualTo(72));
           expect(tester.getSize(avatar).height, greaterThanOrEqualTo(72));
           await tester.tap(find.text('Далі'), warnIfMissed: false);

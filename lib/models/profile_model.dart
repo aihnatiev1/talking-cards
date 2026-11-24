@@ -62,26 +62,19 @@ class ProfileModel {
   String toJsonString() => json.encode(toJson());
 }
 
-/// Emoji options shown in the avatar picker (kid-friendly).
+/// Avatars offered in the picker: the twelve with a painted clay head
+/// (`ProfileAvatar`). A profile saved with any other emoji keeps showing it.
 const kAvatarEmojis = [
   '👶',
   '👧',
   '👦',
   '🧒',
-  '👩',
-  '🧑',
   '🐱',
   '🐶',
   '🐻',
   '🐸',
   '🦊',
   '🐼',
-  '🌟',
-  '🎀',
   '🦄',
-  '🌈',
-  '🎈',
-  '🍭',
-  '🚀',
-  '🌸',
+  '🌟',
 ];

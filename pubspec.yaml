@@ -73,6 +73,7 @@ flutter:
     - assets/images/games/
     - assets/images/backdrops/
     - assets/images/bloom/
+    - assets/images/avatars/
     # Articulation exercise positions, one webp per exercise id. Bundled
     # unconditionally (twelve small drawings, not paid content), which is
     # what lets ArticulationArt use a literal path.
