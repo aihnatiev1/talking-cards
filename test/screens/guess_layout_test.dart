@@ -191,7 +191,7 @@ void main() {
       }
       await tester.pumpAndSettle();
       final speaker = find.byWidgetPredicate(
-        (w) => w is AppArt && w.name == 'ear',
+        (w) => w is AppArt && w.name == 'listen',
       );
       expect(tester.getRect(speaker).bottom, lessThan(100));
       final before = replays;

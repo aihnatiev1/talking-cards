@@ -336,12 +336,10 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
           height: 72,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [DT.brandLit, _accent],
-            ),
-            border: Border.all(color: Colors.white, width: 3),
+            // A white button with the painted ear-and-sound-waves: the
+            // picture itself says "listen", a white silhouette did not.
+            color: DT.surfaceWhite,
+            border: Border.all(color: _accent, width: 3),
             boxShadow: [
               BoxShadow(
                 color: _accent.withValues(alpha: 0.35),
@@ -350,9 +348,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
               ),
             ],
           ),
-          child: const Center(
-            child: AppArt('ear', size: 48, silhouette: Colors.white),
-          ),
+          child: const Center(child: AppArt('listen', size: 54)),
         ),
       ),
     ),

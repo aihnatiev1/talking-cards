@@ -132,13 +132,8 @@ class QuestJourneyMap extends StatelessWidget {
     final current = firstOpen < 0 ? 5 : firstOpen;
     final labelStyle = DT.tileTitle.copyWith(fontSize: 14, color: _ink);
     final map = DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFFE2F5FF), Color(0xFFFFF4D8), Color(0xFFF8E5F2)],
-        ),
-      ),
+      // Transparent: the screen's painted sky shows beside a narrowed map.
+      decoration: const BoxDecoration(),
       child: LayoutBuilder(
         builder: (context, viewport) {
           return SingleChildScrollView(
@@ -150,7 +145,14 @@ class QuestJourneyMap extends StatelessWidget {
                   children: [
                     LayoutBuilder(
                       builder: (context, bounds) {
-                        final width = bounds.maxWidth;
+                        // The whole map fits the screen — a child does not
+                        // scroll to find the next stop.
+                        // Below ~300 dp the stops would crowd each other,
+                        // so only the very smallest windows still scroll.
+                        final width = math.max(
+                          math.min(bounds.maxWidth, viewport.maxHeight / 1.5),
+                          math.min(bounds.maxWidth, 300.0),
+                        );
                         // Keep the complete book visible at its original aspect ratio.
                         // Only the icon targets sit on the artwork; the current
                         // instruction lives below it so large text cannot collide.
@@ -180,6 +182,7 @@ class QuestJourneyMap extends StatelessWidget {
                             ? const Offset(-52, 6)
                             : const Offset(52, 6);
                         return SizedBox(
+                          width: width,
                           height: height,
                           child: Stack(
                             children: [

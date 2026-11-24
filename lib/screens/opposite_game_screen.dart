@@ -371,7 +371,11 @@ class _QuestionCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           // A picture of an ear says "tap to hear" to a child who cannot read.
-          AppArt('ear', size: 32, semanticLabel: s('торкнись', 'tap to hear')),
+          AppArt(
+            'listen',
+            size: 32,
+            semanticLabel: s('торкнись', 'tap to hear'),
+          ),
         ],
       ),
     );

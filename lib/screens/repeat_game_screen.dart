@@ -544,7 +544,7 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
                               child: ear,
                             ),
                             child: AppArt(
-                              'ear',
+                              'listen',
                               size: 44,
                               semanticLabel: s(
                                 'Натисни, щоб послухати',

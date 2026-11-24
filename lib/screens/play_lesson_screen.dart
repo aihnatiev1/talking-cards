@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,6 +18,8 @@ import '../widgets/kid_tap.dart';
 import '../widgets/kid_stage.dart';
 import '../widgets/meadow_scene.dart';
 import '../widgets/play_components.dart';
+import '../widgets/cue_pill.dart';
+import '../widgets/kid_screen.dart';
 
 /// The three pictures of a find question: the two others in their usual
 /// order, the target walking left → middle → right with the step.
@@ -297,12 +300,11 @@ class _PlayLessonScreenState extends ConsumerState<PlayLessonScreen>
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Row(
             children: [
-              IconButton(
-                tooltip: s('На головну', 'Home'),
-                constraints: const BoxConstraints(minWidth: 72, minHeight: 72),
-                onPressed: () => Navigator.of(context).maybePop(),
-                icon: const AppIconView(AppIcon.close, color: DT.textSecondary),
+              KidCloseButton(
+                accent: DT.brand,
+                onTap: () => Navigator.of(context).maybePop(),
               ),
+              const SizedBox(width: 12),
               Expanded(
                 child: LinearProgressIndicator(
                   value: step / 7,
@@ -362,298 +364,269 @@ class _PlayLessonScreenState extends ConsumerState<PlayLessonScreen>
           )
         else
           Expanded(
-            child: LayoutBuilder(
-              builder: (context, box) {
-                // The picture is as tall as the screen lets it be (220 was
-                // fixed, and on a tall phone left half the page empty).
-                final artHeight = (box.maxHeight - 330).clamp(220.0, 460.0);
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      DecoratedBox(
-                        // Frosted over the painted sky so the heading reads.
-                        decoration: BoxDecoration(
-                          color: DT.surfaceWhite.withValues(alpha: 0.86),
-                          borderRadius: BorderRadius.circular(DT.rLg),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
-                          child: Column(
-                            children: [
-                              Text(
-                                complete
-                                    ? s(
-                                        'Ось і новий друг!',
-                                        'Meet your new friend!',
-                                      )
-                                    : repeating
-                                    ? s(
-                                        'Спробуємо разом?',
-                                        'Shall we try together?',
-                                      )
-                                    : exploring
-                                    ? s('Торкнись і послухай', 'Tap and listen')
-                                    : s('Знайди тваринку', 'Find the animal'),
-                                style: DT.display,
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                complete
-                                    ? s(
-                                        'Він чекатиме на твоїй галявині.',
-                                        'Your friend is waiting in your garden.',
-                                      )
-                                    : repeating
-                                    ? s(
-                                        'Повторіть слово разом. Або просто послухайте ще.',
-                                        'Say the word together. Or just listen again.',
-                                      )
-                                    : exploring
-                                    ? s(
-                                        'Bloom знайомиться разом із тобою.',
-                                        'Bloom is meeting your friends, too.',
-                                      )
-                                    : s(
-                                        'Послухай слово й торкнись картинки.',
-                                        'Listen to the word, then tap the picture.',
-                                      ),
-                                style: DT.body,
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      if (exploring || repeating) ...[
-                        Semantics(
-                          button: true,
-                          label: target.sound,
-                          child: KidTap(
-                            key: const ValueKey('lesson-card'),
-                            sound: null,
-                            onTap: () {
-                              setState(() => _touched = true);
-                              _say(target);
-                            },
-                            child: PlayPanel(
-                              child: Column(
-                                children: [
-                                  AnimatedScale(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              // Everything fits on one screen: a child does not scroll to
+              // find the button. The picture takes whatever height is left.
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  CuePill(
+                    child: Text(
+                      repeating
+                          ? s('Спробуємо разом?', 'Shall we try together?')
+                          : exploring
+                          ? s('Торкнись і послухай', 'Tap and listen')
+                          : s('Знайди тваринку', 'Find the animal'),
+                      style: DT.h1,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  if (exploring || repeating)
+                    Expanded(
+                      child: Semantics(
+                        button: true,
+                        label: target.sound,
+                        child: KidTap(
+                          key: const ValueKey('lesson-card'),
+                          sound: null,
+                          onTap: () {
+                            setState(() => _touched = true);
+                            _say(target);
+                          },
+                          child: PlayPanel(
+                            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+                            child: Column(
+                              children: [
+                                Expanded(
+                                  child: AnimatedScale(
                                     scale: _speaking ? 1.05 : 1,
                                     duration: DT.motion.base,
                                     curve: Curves.easeOutBack,
-                                    child: SizedBox(
-                                      height: artHeight,
-                                      child: PlayArt(card: target),
-                                    ),
+                                    child: PlayArt(card: target),
                                   ),
-                                  Text(
-                                    target.sound,
-                                    style: DT.word,
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  const SizedBox(height: 12),
-                                  AppIconView(
-                                    _speaking ? AppIcon.sound : AppIcon.play,
-                                    size: 32,
-                                    color: DT.solid(DT.sky),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Align(
-                          alignment: Alignment.center,
-                          child: BloomMascot(
-                            size: 120,
-                            state: BloomState(
-                              emotion: _speaking
-                                  ? BloomEmotion.listen
-                                  : BloomEmotion.wave,
-                            ),
-                            interactive: false,
-                          ),
-                        ),
-                      ] else ...[
-                        Row(
-                          children: [
-                            BloomMascot(
-                              size: 80,
-                              interactive: false,
-                              state: BloomState(
-                                emotion: _correct
-                                    ? BloomEmotion.happy
-                                    : session.hint
-                                    ? BloomEmotion.point
-                                    : BloomEmotion.listen,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: PlayAction(
-                                label: target.sound,
-                                icon: AppIcon.sound,
-                                secondary: true,
-                                onPressed: () => _say(target),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        LayoutBuilder(
-                          builder: (context, box) {
-                            // Stable positions for the whole question; the target alternates.
-                            final other = cards[(step - 3 + 1) % cards.length];
-                            final level =
-                                ref.read(profileProvider).active?.level ?? 2;
-                            final helpedBefore = session.assisted.any(
-                              (question) => question < step,
-                            );
-                            final useThree =
-                                !helpedBefore &&
-                                (level >= 3 || (level >= 2 && step == 5));
-                            final options = useThree
-                                ? threeOptions(cards, step)
-                                : step.isEven
-                                ? [other, target]
-                                : [target, other];
-                            return Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                for (final card in options)
-                                  Expanded(
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 4,
+                                ),
+                                const SizedBox(height: 6),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Flexible(
+                                      child: FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          target.sound,
+                                          style: DT.word,
+                                        ),
                                       ),
-                                      child: Semantics(
-                                        button: true,
-                                        label: card.sound,
-                                        selected:
-                                            _correct && card.id == target.id,
-                                        child: KidTap(
-                                          sound: null,
-                                          key: ValueKey(
-                                            'lesson-option-${card.id}',
-                                          ),
-                                          onTap: _saving || _correct
-                                              ? null
-                                              : () => _choose(
-                                                  card,
-                                                  target,
-                                                  session,
-                                                ),
-                                          child: Container(
-                                            padding: const EdgeInsets.all(8),
-                                            decoration: BoxDecoration(
-                                              color:
-                                                  _correct &&
-                                                      card.id == target.id
-                                                  ? DT.mintTint
-                                                  : DT.surfaceWhite,
-                                              borderRadius:
-                                                  BorderRadius.circular(DT.rLg),
-                                              border: Border.all(
-                                                color:
-                                                    card.id == target.id &&
-                                                        (_correct ||
-                                                            session.hint)
-                                                    ? (_correct
-                                                          ? DT.brand
-                                                          : DT.hint)
-                                                    : DT.outline,
-                                                width: 3,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    AppArt('listen', size: 40),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  else ...[
+                    PlayAction(
+                      label: target.sound,
+                      icon: AppIcon.sound,
+                      secondary: true,
+                      onPressed: () => _say(target),
+                    ),
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: LayoutBuilder(
+                        builder: (context, box) {
+                          // Stable positions for the whole question; the target alternates.
+                          final other = cards[(step - 3 + 1) % cards.length];
+                          final level =
+                              ref.read(profileProvider).active?.level ?? 2;
+                          final helpedBefore = session.assisted.any(
+                            (question) => question < step,
+                          );
+                          final useThree =
+                              !helpedBefore &&
+                              (level >= 3 || (level >= 2 && step == 5));
+                          final options = useThree
+                              ? threeOptions(cards, step)
+                              : step.isEven
+                              ? [other, target]
+                              : [target, other];
+                          // The picture fills its tile — no empty card below.
+                          // As tall as the picture is at the tile's width, and
+                          // no taller — an empty white card is not a choice.
+                          final tileWidth =
+                              box.maxWidth / options.length - 8 - 16;
+                          final optionArt = math.min(
+                            (box.maxHeight - 48).clamp(80.0, 640.0),
+                            tileWidth * 1.4,
+                          );
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              for (final card in options)
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                    ),
+                                    child: Semantics(
+                                      button: true,
+                                      label: card.sound,
+                                      selected:
+                                          _correct && card.id == target.id,
+                                      child: KidTap(
+                                        sound: null,
+                                        key: ValueKey(
+                                          'lesson-option-${card.id}',
+                                        ),
+                                        onTap: _saving || _correct
+                                            ? null
+                                            : () => _choose(
+                                                card,
+                                                target,
+                                                session,
                                               ),
-                                              boxShadow: const [
-                                                BoxShadow(
-                                                  color: DT.outline,
-                                                  offset: Offset(0, 4),
-                                                ),
-                                              ],
+                                        child: Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                _correct && card.id == target.id
+                                                ? DT.mintTint
+                                                : DT.surfaceWhite,
+                                            borderRadius: BorderRadius.circular(
+                                              DT.rLg,
                                             ),
-                                            child: Column(
-                                              children: [
-                                                SizedBox(
-                                                  height: (artHeight * 0.62)
-                                                      .clamp(130.0, 300.0),
-                                                  child: PlayArt(
-                                                    card: card,
-                                                    padding: 0,
-                                                  ),
-                                                ),
-                                                if (_correct &&
-                                                    card.id == target.id)
-                                                  const AppIconView(
-                                                    AppIcon.check,
-                                                    color: DT.brand,
-                                                  )
-                                                else if (session.hint &&
-                                                    card.id == target.id)
-                                                  const AppIconView(
-                                                    AppIcon.hint,
-                                                    color: DT.hint,
-                                                  )
-                                                else
-                                                  const SizedBox(height: 24),
-                                              ],
+                                            border: Border.all(
+                                              color:
+                                                  card.id == target.id &&
+                                                      (_correct || session.hint)
+                                                  ? (_correct
+                                                        ? DT.brand
+                                                        : DT.hint)
+                                                  : DT.outline,
+                                              width: 3,
                                             ),
+                                            boxShadow: const [
+                                              BoxShadow(
+                                                color: DT.outline,
+                                                offset: Offset(0, 4),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Column(
+                                            children: [
+                                              SizedBox(
+                                                height: optionArt,
+                                                child: PlayArt(
+                                                  card: card,
+                                                  padding: 0,
+                                                ),
+                                              ),
+                                              if (_correct &&
+                                                  card.id == target.id)
+                                                const AppIconView(
+                                                  AppIcon.check,
+                                                  color: DT.brand,
+                                                )
+                                              else if (session.hint &&
+                                                  card.id == target.id)
+                                                const AppIconView(
+                                                  AppIcon.hint,
+                                                  color: DT.hint,
+                                                )
+                                              else
+                                                const SizedBox(height: 24),
+                                            ],
                                           ),
                                         ),
                                       ),
                                     ),
                                   ),
-                              ],
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 24),
-                        if (_feedback != null)
-                          Text(
-                            _feedback!,
-                            style: DT.h2,
-                            textAlign: TextAlign.center,
+                                ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                  if (_error != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(_error!, style: DT.body),
+                    ),
+                  const SizedBox(height: 10),
+                  // The bottom row is always there, so nothing jumps and the
+                  // button is never below the fold: Bloom on the left, the
+                  // next step (or the "show me" help) on the right.
+                  SizedBox(
+                    height: 80,
+                    child: Row(
+                      children: [
+                        BloomMascot(
+                          size: 72,
+                          interactive: false,
+                          state: BloomState(
+                            emotion: _correct
+                                ? BloomEmotion.happy
+                                : !exploring && !repeating && session.hint
+                                ? BloomEmotion.point
+                                : _speaking
+                                ? BloomEmotion.listen
+                                : BloomEmotion.wave,
                           ),
-                        if (!_correct)
-                          TextButton.icon(
-                            onPressed: _saving
-                                ? null
-                                : () => _save(
-                                    () => _journal.hint(session.topic, step),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: repeating
+                              ? PlayAction(
+                                  label: s('Завершити', 'Finish'),
+                                  icon: AppIcon.check,
+                                  onPressed: _saving
+                                      ? null
+                                      : () => _next(session),
+                                )
+                              : (exploring && _touched) ||
+                                    (!exploring && _correct)
+                              ? PlayAction(
+                                  label: s('Далі', 'Continue'),
+                                  icon: AppIcon.play,
+                                  onPressed: _saving || _speaking
+                                      ? null
+                                      : () => _next(session),
+                                )
+                              : !exploring
+                              ? Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: CuePill(
+                                    child: TextButton.icon(
+                                      onPressed: _saving
+                                          ? null
+                                          : () => _save(
+                                              () => _journal.hint(
+                                                session.topic,
+                                                step,
+                                              ),
+                                            ),
+                                      icon: const AppIconView(AppIcon.hint),
+                                      label: Text(
+                                        _feedback ??
+                                            s('Покажи мені', 'Show me'),
+                                      ),
+                                    ),
                                   ),
-                            icon: const AppIconView(AppIcon.hint),
-                            label: Text(s('Покажи мені', 'Show me')),
-                          ),
+                                )
+                              : const SizedBox.shrink(),
+                        ),
                       ],
-                      if (_error != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: Text(_error!, style: DT.body),
-                        ),
-                      const SizedBox(height: 24),
-                      if (repeating)
-                        PlayAction(
-                          label: s('Завершити', 'Finish'),
-                          icon: AppIcon.check,
-                          onPressed: _saving ? null : () => _next(session),
-                        )
-                      else if (exploring && _touched || !exploring && _correct)
-                        PlayAction(
-                          label: s('Далі', 'Continue'),
-                          icon: AppIcon.play,
-                          onPressed: _saving || _speaking
-                              ? null
-                              : () => _next(session),
-                        ),
-                    ],
+                    ),
                   ),
-                );
-              },
+                ],
+              ),
             ),
           ),
       ],
