@@ -83,6 +83,17 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
   final List<CardModel> _missed = [];
   bool _practiceRound = false;
 
+  /// The card hops when it is touched and when a word comes out: the
+  /// child's hand always gets an answer, even with the microphone off.
+  bool _hop = false;
+
+  void _hopCard() {
+    setState(() => _hop = true);
+    Future.delayed(DT.motion.successPop, () {
+      if (mounted) setState(() => _hop = false);
+    });
+  }
+
   /// A listening turn is open for the current card. The grown-up's two
   /// pills stay live throughout: the microphone is help, never a gate.
   bool _listening = false;
@@ -252,6 +263,7 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
     if (_answered) return;
     setState(() => _answered = true);
     FeedbackService.instance.event(FeedbackEvent.correct);
+    _hopCard();
     scorePoint();
     showConfetti();
     ref.read(dailyQuestProvider.notifier).recordSpeechCorrect();
@@ -273,6 +285,7 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
     // Used to be a silent haptic; a right answer now dings like every
     // other game.
     FeedbackService.instance.event(FeedbackEvent.correct);
+    _hopCard();
     scorePoint();
     showConfetti();
     // The grown-up's own judgement — the only signal in the app that comes
@@ -428,90 +441,118 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
                   // said again and the microphone gets its turns back.
                   onTap: () {
                     _listenTurns = 0;
+                    _hopCard();
                     _speakCurrent();
                   },
                   // The card speaks the word — a tock on top of the voice
                   // is one sound too many (G12).
                   sound: null,
-                  child: Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: card.colorBg,
-                      borderRadius: BorderRadius.circular(28),
-                      border: Border.all(
-                        color: card.colorAccent.withValues(alpha: 0.25),
-                        width: 1.5,
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: AudioService.instance.isSpeaking,
+                    builder: (_, speaking, body) => AmbientLoop(
+                      period: DT.motion.speakerPulse,
+                      // «Твоя черга»: once the word has been said, the card's
+                      // frame breathes for a few turns, then rests.
+                      enabled: !speaking && !_answered,
+                      settleAfter: DT.motion.lessonHint,
+                      builder: (_, t, child) => AnimatedScale(
+                        scale: _hop ? 1.06 : 1.0,
+                        duration: DT.motion.successPop,
+                        curve: Curves.easeOutBack,
+                        child: DecoratedBox(
+                          position: DecorationPosition.foreground,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(28),
+                            border: Border.all(
+                              color: card.colorAccent.withValues(
+                                alpha: 0.25 + 0.65 * t,
+                              ),
+                              width: 1.5 + 3.5 * t,
+                            ),
+                          ),
+                          child: child,
+                        ),
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.08),
-                          blurRadius: 16,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+                      child: body,
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Real webp only — plain placeholder if an
-                        // unsanitized card ever slips through (never emoji).
-                        if (card.image != null)
-                          Expanded(
-                            child: CardImage.forCard(
-                              card,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: card.colorBg,
+                        borderRadius: BorderRadius.circular(28),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 16,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Real webp only — plain placeholder if an
+                          // unsanitized card ever slips through (never emoji).
+                          if (card.image != null)
+                            Expanded(
+                              child: CardImage.forCard(
+                                card,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
+                              ),
+                            )
+                          else
+                            Expanded(
+                              child: Container(
+                                margin: const EdgeInsets.all(24),
+                                decoration: BoxDecoration(
+                                  color: card.colorAccent.withValues(
+                                    alpha: 0.25,
+                                  ),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
                               ),
                             ),
-                          )
-                        else
-                          Expanded(
-                            child: Container(
-                              margin: const EdgeInsets.all(24),
-                              decoration: BoxDecoration(
-                                color: card.colorAccent.withValues(alpha: 0.25),
-                                borderRadius: BorderRadius.circular(20),
+
+                          const SizedBox(height: 16),
+
+                          Text(
+                            card.sound,
+                            style: TextStyle(
+                              fontSize: 34,
+                              fontWeight: FontWeight.bold,
+                              color: card.colorAccent,
+                            ),
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          // The ear breathes while the word is being said, so
+                          // the card visibly "talks" and the child sees whose
+                          // turn it is.
+                          ValueListenableBuilder<bool>(
+                            valueListenable: AudioService.instance.isSpeaking,
+                            builder: (_, speaking, ear) => AmbientLoop(
+                              period: DT.motion.speakerPulse,
+                              enabled: speaking,
+                              builder: (_, t, child) => Transform.scale(
+                                scale: 1.0 + 0.18 * t,
+                                child: child,
+                              ),
+                              child: ear,
+                            ),
+                            child: AppArt(
+                              'ear',
+                              size: 44,
+                              semanticLabel: s(
+                                'Натисни, щоб послухати',
+                                'Tap to listen',
                               ),
                             ),
                           ),
-
-                        const SizedBox(height: 16),
-
-                        Text(
-                          card.sound,
-                          style: TextStyle(
-                            fontSize: 34,
-                            fontWeight: FontWeight.bold,
-                            color: card.colorAccent,
-                          ),
-                        ),
-
-                        const SizedBox(height: 8),
-
-                        // The ear breathes while the word is being said, so
-                        // the card visibly "talks" and the child sees whose
-                        // turn it is.
-                        ValueListenableBuilder<bool>(
-                          valueListenable: AudioService.instance.isSpeaking,
-                          builder: (_, speaking, ear) => AmbientLoop(
-                            period: DT.motion.speakerPulse,
-                            enabled: speaking,
-                            builder: (_, t, child) => Transform.scale(
-                              scale: 1.0 + 0.18 * t,
-                              child: child,
-                            ),
-                            child: ear,
-                          ),
-                          child: AppArt(
-                            'ear',
-                            size: 44,
-                            semanticLabel: s(
-                              'Натисни, щоб послухати',
-                              'Tap to listen',
-                            ),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
