@@ -359,11 +359,7 @@ class QuestJourneyMap extends StatelessWidget {
                           ),
                           child: Row(
                             children: [
-                              AppIconView(
-                                _icons[current],
-                                size: 34,
-                                sticker: true,
-                              ),
+                              AppArt(_art[current], size: 40),
                               const SizedBox(width: 14),
                               Expanded(
                                 child: Column(
@@ -519,10 +515,7 @@ class _PawHeader extends StatelessWidget {
                     done: done[i],
                   ),
                 const SizedBox(width: 8),
-                AppIconView(
-                  opened ? AppIcon.rewardChestOpen : AppIcon.rewardChestClosed,
-                  size: 34,
-                ),
+                AppArt(opened ? 'chest_open' : 'chest', size: 38),
               ],
             ),
           ),
@@ -604,6 +597,8 @@ class _Paw extends StatelessWidget {
   }
 }
 
+const _art = ['listen', 'cards', 'bell', 'star', 'mic', 'chest'];
+
 class _JourneyStop extends StatelessWidget {
   final int index;
   final String label;
@@ -628,7 +623,8 @@ class _JourneyStop extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = done ? const Color(0xFF79BC89) : _colors[index];
-    final icon = index == 5 && opened ? AppIcon.rewardChestOpen : _icons[index];
+    // Painted clay pictures, not line icons: a stop is a thing on the map.
+    final art = index == 5 && opened ? 'chest_open' : _art[index];
     // Three states a two-year-old can tell apart without reading a thing:
     //
     //  * pressable — full colour, full size, and the only thing on the map
@@ -677,7 +673,7 @@ class _JourneyStop extends StatelessWidget {
       alignment: Alignment.center,
       // The landmark stays when the stop is finished — a bare check says
       // "something happened" but not what.
-      child: AppIconView(icon, size: 46, sticker: true),
+      child: AppArt(art, size: 58),
     );
 
     return Semantics(
