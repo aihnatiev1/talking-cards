@@ -20,6 +20,7 @@ import '../utils/motion.dart';
 import '../widgets/answer_feedback.dart';
 import '../widgets/card_image.dart';
 import '../widgets/game_celebration_overlay.dart';
+import '../widgets/cue_pill.dart';
 import '../widgets/kid_screen.dart';
 import '../widgets/quiz_options_board.dart';
 import '../widgets/kid_tap.dart';
@@ -221,6 +222,7 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
       accent: DT.brand,
       // Played in the games' meadow, like every other game.
       meadow: true,
+      backdrop: 'assets/images/backdrops/odd_sky.webp',
       mascotCorner: BloomMascot(
         size: DT.size.mascotCompanionOf(context),
         semanticsLabel: s('Блум', 'Bloom'),
@@ -256,12 +258,14 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    s('Яка картка зайва?', 'Which is odd?'),
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: DT.onTint(hintColor),
+                  CuePill(
+                    child: Text(
+                      s('Яка картка зайва?', 'Which is odd?'),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: DT.onTint(hintColor),
+                      ),
                     ),
                   ),
                 ],

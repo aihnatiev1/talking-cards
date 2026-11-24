@@ -20,6 +20,7 @@ import '../utils/motion.dart';
 import '../widgets/answer_feedback.dart';
 import '../widgets/card_image.dart';
 import '../widgets/game_celebration_overlay.dart';
+import '../widgets/cue_pill.dart';
 import '../widgets/kid_screen.dart';
 import '../widgets/quiz_options_board.dart';
 import '../widgets/kid_tap.dart';
@@ -190,6 +191,7 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
       accent: DT.brand,
       // Played in the games' meadow, like every other game.
       meadow: true,
+      backdrop: 'assets/images/backdrops/opposites_sky.webp',
       mascotCorner: BloomMascot(
         size: DT.size.mascotCompanionOf(context),
         semanticsLabel: s('Блум', 'Bloom'),
@@ -243,9 +245,11 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
               children: [
                 const _SwapBadge(size: 40),
                 const SizedBox(width: 10),
-                Text(
-                  s('Що протилежне?', 'What is the opposite?'),
-                  style: DT.h2.copyWith(fontSize: 20, color: DT.textPrimary),
+                CuePill(
+                  child: Text(
+                    s('Що протилежне?', 'What is the opposite?'),
+                    style: DT.h2.copyWith(fontSize: 20, color: DT.textPrimary),
+                  ),
                 ),
               ],
             ),

@@ -24,6 +24,7 @@ import '../utils/l10n.dart';
 import '../utils/motion.dart';
 import '../widgets/ambient_loop.dart';
 import '../widgets/answer_feedback.dart';
+import '../widgets/cue_pill.dart';
 import '../widgets/entrance_stagger.dart';
 import '../widgets/game_celebration_overlay.dart';
 import '../widgets/kid_screen.dart';
@@ -280,6 +281,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
     return KidScreen.game(
       accent: _accent,
       // The games' meadow: the board fills only part of the screen — two
+      backdrop: 'assets/images/backdrops/guess_sky.webp',
       // pictures fill less than four — and the rest should be sky, not a
       // pastel void that reads as a screen which failed to load.
       meadow: true,
@@ -449,13 +451,15 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
                       duration: MotionPolicy.of(
                         context,
                       ).dur(DT.motion.selectionChange),
-                      child: Text(
-                        cue,
-                        key: ValueKey(cue),
-                        style: DT.caption.copyWith(
-                          fontSize: 16,
-                          height: 1.3,
-                          color: DT.textPrimary,
+                      child: CuePill(
+                        child: Text(
+                          cue,
+                          key: ValueKey(cue),
+                          style: DT.caption.copyWith(
+                            fontSize: 16,
+                            height: 1.3,
+                            color: DT.textPrimary,
+                          ),
                         ),
                       ),
                     ),

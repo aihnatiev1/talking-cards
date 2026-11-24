@@ -27,6 +27,7 @@ import '../widgets/board_mat_painter.dart';
 import '../widgets/card_back_painter.dart';
 import '../widgets/card_image.dart';
 import '../widgets/game_celebration_overlay.dart';
+import '../widgets/cue_pill.dart';
 import '../widgets/kid_screen.dart';
 import '../widgets/kid_tap.dart';
 import '../widgets/sparkle_burst.dart';
@@ -917,6 +918,7 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
       // dark mode, where a bright sky would be the one thing shouting in
       // a room deliberately turned down.
       meadow: !isDark,
+      backdrop: 'assets/images/backdrops/memory_sky.webp',
       background: isDark ? DT.bgDark : _theme.bg,
       // No title: cards may come from several packs, so naming one would be
       // wrong, and "Find the pair" is spoken, not read.
@@ -1071,7 +1073,13 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
               Expanded(
                 child: AnimatedSwitcher(
                   duration: policy.dur(DT.motion.selectionChange),
-                  child: Text(cue, key: ValueKey(cue), style: style),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: CuePill(
+                      key: ValueKey(cue),
+                      child: Text(cue, style: style),
+                    ),
+                  ),
                 ),
               ),
           ],

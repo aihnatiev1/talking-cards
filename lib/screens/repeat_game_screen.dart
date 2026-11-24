@@ -398,6 +398,7 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
       accent: DT.brand,
       // Played in the games' meadow, like every other game.
       meadow: true,
+      backdrop: 'assets/images/backdrops/repeat_sky.webp',
       title: _TogetherChip(label: s('Разом із дорослим', 'With a grown-up')),
       progress: _deck.isEmpty ? null : _index / _deck.length,
       mascotCorner: BloomMascot(
