@@ -258,6 +258,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
               color: DT.sky,
               bg: DT.skyTint,
               thumb: _pickThumb(allCards, skip: 0),
+              art: 'ear',
               badge: AppIcon.gameGuess,
               onTap: playableCount >= 4 ? () => _openQuiz(allCards) : null,
               lockedHint: isEn
@@ -273,6 +274,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
               color: DT.mint,
               bg: DT.mintTint,
               thumb: _pickThumb(allCards, skip: 5),
+              art: 'cards',
               badge: AppIcon.gameMatch,
               onTap: playableCount >= 6
                   ? () => _openMemoryMatch(allCards)
@@ -288,6 +290,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
               color: DT.coral,
               bg: DT.coralTint,
               thumb: _pickThumb(allCards, skip: 9),
+              art: 'bubbles',
               badge: AppIcon.gameBubbles,
               onTap: playableCount >= 5
                   ? () => Navigator.of(
@@ -307,6 +310,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
               color: DT.peach,
               bg: DT.peachTint,
               thumb: _pickThumb(allCards, skip: 12),
+              art: 'speech',
               badge: AppIcon.gameRepeat,
               onTap: playableCount >= 4 ? () => _openRepeatGame(packs) : null,
               lockedHint: isEn
@@ -369,6 +373,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
               color: DT.violet,
               bg: DT.violetTint,
               thumb: _pickThumb(allCards, skip: 20),
+              art: 'odd',
               badge: AppIcon.gameOdd,
               onTap: advancedPacks.length >= 2
                   ? () => _openOddOneOut(packs)
@@ -404,6 +409,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
               color: DT.sky,
               bg: DT.skyTint,
               thumb: _pickThumb(allCards, skip: 26),
+              art: 'find',
               badge: AppIcon.gameBubbles,
               onTap: playableCount >= 6
                   ? () => Navigator.of(context).push(
@@ -425,6 +431,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
               color: DT.pink,
               bg: DT.pinkTint,
               thumb: oppPack != null ? _pickThumb(oppPack.cards) : null,
+              art: 'opposites',
               badge: AppIcon.gameOpposites,
               onTap: oppPlayable ? () => _openOppositeGame(packs) : null,
               lockedHint: isEn
@@ -530,6 +537,10 @@ class _BigGame {
   final Color color;
   final Color bg;
   final CardModel? thumb;
+
+  /// A painted illustration of the game itself (`assets/images/games/`);
+  /// without one the tile falls back to a card picture.
+  final String? art;
   final AppIcon badge; // small floating sticker in the tile's corner
   final VoidCallback? onTap;
   final String lockedHint;
@@ -547,6 +558,7 @@ class _BigGame {
     required this.color,
     required this.bg,
     required this.thumb,
+    this.art,
     required this.badge,
     required this.onTap,
     required this.lockedHint,
@@ -745,39 +757,59 @@ class _BigGameTile extends StatelessWidget {
                           topRight: Radius.circular(22),
                         ),
                         child: Container(
-                          color: Colors.white.withValues(alpha: 0.5),
-                          child: CardImage(
-                            name: g.thumb?.image,
-                            // Never shown: `fallback` wins whenever there
-                            // is no picture, but the slot is non-nullable
-                            // by contract.
-                            fallbackEmoji: '•',
-                            fallback: AppIconView(g.badge, size: 64),
-                            padding: const EdgeInsets.all(4),
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Floating sticker badge
-                    Positioned(
-                      top: 10,
-                      left: 10,
-                      child: Container(
-                        padding: const EdgeInsets.all(5),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: g.color.withValues(alpha: 0.3),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.white.withValues(alpha: 0.75),
+                                g.color.withValues(alpha: 0.16),
+                              ],
                             ),
-                          ],
+                          ),
+                          child: g.art != null
+                              ? Padding(
+                                  padding: const EdgeInsets.all(10),
+                                  child: Image.asset(
+                                    'assets/images/games/${g.art}.webp',
+                                    fit: BoxFit.contain,
+                                    filterQuality: FilterQuality.medium,
+                                  ),
+                                )
+                              : CardImage(
+                                  name: g.thumb?.image,
+                                  // Never shown: `fallback` wins whenever there
+                                  // is no picture, but the slot is non-nullable
+                                  // by contract.
+                                  fallbackEmoji: '•',
+                                  fallback: AppIconView(g.badge, size: 64),
+                                  padding: const EdgeInsets.all(4),
+                                ),
                         ),
-                        child: AppIconView(g.badge, size: 24),
                       ),
                     ),
+                    // Floating sticker badge — only on tiles without their own
+                    // painted scene, which already says what the game is.
+                    if (g.art == null)
+                      Positioned(
+                        top: 10,
+                        left: 10,
+                        child: Container(
+                          padding: const EdgeInsets.all(5),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: g.color.withValues(alpha: 0.3),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: AppIconView(g.badge, size: 24),
+                        ),
+                      ),
                     if (disabled)
                       const Positioned(
                         top: 10,
