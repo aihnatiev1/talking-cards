@@ -20,7 +20,7 @@ void main() {
       await pumpGolden(
         tester,
         const _EmotionSheet(),
-        size: const Size(390, 780),
+        size: const Size(390, 900),
       );
       await expectLater(
         find.byKey(goldenKey),
@@ -40,7 +40,7 @@ class _EmotionSheet extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('S 56 — companion', style: DT.caption),
+          const Text('S 80 — companion', style: DT.caption),
           const SizedBox(height: DT.sp4),
           Wrap(
             spacing: DT.sp4,

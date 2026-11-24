@@ -18,10 +18,6 @@ class ProfileAvatarChip extends ConsumerWidget {
     final active = profileState.active;
     if (active == null) return const SizedBox.shrink();
 
-    // Only show chip if more than one profile exists, or the default was renamed
-    final showName = active.name != 'Малюк' || profileState.profiles.length > 1;
-    final isEn = active.language == 'en';
-
     return KidTap(
       onTap: () => showProfileSelector(context),
       // The selector sheet slides in with its own sound; a tock here would
@@ -31,43 +27,18 @@ class ProfileAvatarChip extends ConsumerWidget {
       // beside the streak), so the hit zone is padded out to the rule-1
       // minimum instead of the drawing.
       child: KidHitBox(
+        // The same round avatar button as on the Play home: the child's
+        // painted head, nothing else to read.
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          width: 56,
+          height: 56,
+          alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: DT.brand.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: DT.brand.withValues(alpha: 0.25),
-              width: 1,
-            ),
+            color: DT.surfaceWhite,
+            shape: BoxShape.circle,
+            border: Border.all(color: DT.outline, width: 2),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ProfileAvatar(active.avatarEmoji, size: 24),
-              if (isEn) ...[
-                const SizedBox(width: 2),
-                const Text('🇬🇧', style: TextStyle(fontSize: 12)),
-              ],
-              if (showName) ...[
-                const SizedBox(width: 5),
-                Text(
-                  active.name,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: DT.brand,
-                  ),
-                ),
-              ],
-              const SizedBox(width: 3),
-              const Icon(
-                Icons.keyboard_arrow_down_rounded,
-                size: 16,
-                color: DT.brand,
-              ),
-            ],
-          ),
+          child: ProfileAvatar(active.avatarEmoji, size: 44),
         ),
       ),
     );

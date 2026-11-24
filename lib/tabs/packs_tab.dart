@@ -51,6 +51,7 @@ import '../widgets/streak_chip.dart';
 import '../widgets/streak_milestone_overlay.dart';
 import '../widgets/kid_tap.dart';
 import '../services/open_content_pack.dart';
+import '../widgets/cue_pill.dart';
 
 class PacksTab extends ConsumerStatefulWidget {
   const PacksTab({super.key, this.catalogueOnly = false});
@@ -841,18 +842,21 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                             // scaleDown obligingly shrank a 19 sp name to
                             // something nearer 12 — the app's own name,
                             // set smaller than its captions.
-                            child: Text(
-                              widget.catalogueOnly
-                                  ? s('Картки', 'Cards')
-                                  : s(
-                                      'Картки-\nрозмовлялки',
-                                      'FirstWords\nCards',
-                                    ),
-                              maxLines: 2,
-                              style: TextStyle(
-                                fontSize: 19 * scale,
-                                height: 1.05,
-                                fontWeight: FontWeight.bold,
+                            child: CuePill(
+                              child: Text(
+                                widget.catalogueOnly
+                                    ? s('Картки', 'Cards')
+                                    : s(
+                                        'Картки-\nрозмовлялки',
+                                        'FirstWords\nCards',
+                                      ),
+                                maxLines: 2,
+                                style: TextStyle(
+                                  fontSize: 22 * scale,
+                                  height: 1.05,
+                                  fontWeight: FontWeight.w800,
+                                  color: DT.textPrimary,
+                                ),
                               ),
                             ),
                           ),
@@ -884,10 +888,17 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                         onLongPress: () => _openParentArea(context),
                         child: IconButton(
                           tooltip: s('Про додаток', 'About'),
-                          icon: Icon(
-                            Icons.info_outline_rounded,
-                            color: Colors.grey[400],
-                            size: 26,
+                          // The parents' door: the same painted padlock as
+                          // on the Play home, not a grey system "i".
+                          icon: Container(
+                            width: 48,
+                            height: 48,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: DT.surfaceWhite.withValues(alpha: .9),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const AppArt('padlock', size: 32),
                           ),
                           // About opens the privacy policy and a mail
                           // client — outside the app, so behind the gate
@@ -985,9 +996,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                         SliverPersistentHeader(
                           pinned: true,
                           delegate: _PinnedCategories(
-                            background: Theme.of(
-                              context,
-                            ).scaffoldBackgroundColor,
+                            background: DT.surfaceWhite.withValues(alpha: .85),
                             extent: ActivityCategories.heightFor(
                               context,
                               allCategories,

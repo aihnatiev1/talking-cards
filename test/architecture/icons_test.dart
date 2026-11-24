@@ -169,7 +169,6 @@ void main() {
 const _widgetDebt = {
   'lib/widgets/flash_card.dart',
   'lib/widgets/notification_toggle_tile.dart',
-  'lib/widgets/profile_avatar_chip.dart',
   'lib/widgets/settings_action_row.dart',
   'lib/widgets/srs_review_banner.dart',
   'lib/widgets/swipe_hint.dart',

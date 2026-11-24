@@ -182,14 +182,22 @@ class FlashCardState extends ConsumerState<FlashCard>
                   horizontal: 16,
                   vertical: 24,
                 ),
+                // The marshmallow frame: a thick soft white rim, a pastel
+                // glow from the card's own colour and a puffy drop shadow.
                 decoration: BoxDecoration(
                   color: cardBg,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(32),
+                  border: Border.all(color: DT.surfaceWhite, width: 7),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.10),
-                      blurRadius: 16,
-                      offset: const Offset(0, 4),
+                      color: cardBg.withValues(alpha: 0.9),
+                      blurRadius: 0,
+                      spreadRadius: 4,
+                    ),
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.12),
+                      blurRadius: 22,
+                      offset: const Offset(0, 10),
                     ),
                   ],
                 ),

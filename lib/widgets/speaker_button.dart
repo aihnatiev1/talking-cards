@@ -59,28 +59,33 @@ class SpeakerButton extends StatelessWidget {
                   // ux-gap G12) rather than the old 56.
                   width: DT.size.tapMin,
                   height: DT.size.tapMin,
+                  // A puffy white button with the painted ear-and-waves —
+                  // the same "listen" picture the games use.
                   decoration: BoxDecoration(
-                    color: autoOn ? _onColor : _offColor,
+                    color: DT.surfaceWhite,
                     shape: BoxShape.circle,
+                    border: Border.all(
+                      color: autoOn ? _onColor : _offColor,
+                      width: 4,
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: autoOn
                             ? _onColor.withValues(alpha: 0.4)
                             : _offColor.withValues(alpha: 0.3),
-                        blurRadius: speaking && autoOn ? 12 : 6,
-                        offset: const Offset(0, 2),
+                        blurRadius: speaking && autoOn ? 14 : 8,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
-                  // White paper speaker on the saturated disc; the ink
-                  // outline keeps it legible on both the teal and the red.
                   child: Center(
-                    child: AppIconView(
-                      autoOn ? AppIcon.sound : AppIcon.soundOff,
-                      // 0.53 of the disc — the ratio the 30/56 button had.
-                      size: 38,
-                      color: Colors.white,
-                    ),
+                    child: autoOn
+                        ? const AppArt('listen', size: 50)
+                        : AppIconView(
+                            AppIcon.soundOff,
+                            size: 38,
+                            color: _offColor,
+                          ),
                   ),
                 ),
               ),

@@ -63,7 +63,7 @@ class _HomeQuickRowState extends ConsumerState<HomeQuickRow> {
     final tiles = <Widget>[
       _QuestTile(
         quest: quest,
-        label: s('Завдання', 'Tasks'),
+        label: s('Скарб дня', 'Daily treasure'),
         onTap: () => Navigator.of(context).push(
           KidRoutes.content(
             QuestMapScreen(
@@ -77,6 +77,7 @@ class _HomeQuickRowState extends ConsumerState<HomeQuickRow> {
       if (daily != null)
         _CardOfDayTile(
           card: daily.$1,
+          label: s('Слово дня', 'Word of the day'),
           onTap: () {
             final card = daily.$1;
             AnalyticsService.instance.logCardOfDayTap(card.id);
@@ -213,7 +214,7 @@ class _Tile extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
 
-  static const height = 76.0;
+  static const height = 84.0;
   static final decoration = BoxDecoration(
     color: DT.surfaceWhite,
     borderRadius: BorderRadius.circular(DT.rMd),
@@ -269,25 +270,16 @@ class _QuestTile extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const AppArt('gift', size: 44),
-          const SizedBox(height: 4),
+          // A treasure chest and the words "Скарб дня": the stars alone did
+          // not say what this tile is for.
+          const AppArt('chest', size: 40),
+          const SizedBox(height: 2),
           FittedBox(
             fit: BoxFit.scaleDown,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                for (var i = 0; i < quest.totalCount; i++)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 1),
-                    child: AppIconView(
-                      AppIcon.star,
-                      size: 18,
-                      color: i < quest.doneCount || quest.allDone
-                          ? DT.sunBurst
-                          : DT.outline,
-                    ),
-                  ),
-              ],
+            child: Text(
+              '$label  ${quest.allDone ? quest.totalCount : quest.doneCount}/${quest.totalCount}',
+              style: _Tile.labelStyle,
+              maxLines: 1,
             ),
           ),
         ],
@@ -302,10 +294,12 @@ class _QuestTile extends StatelessWidget {
 class _CardOfDayTile extends StatefulWidget {
   const _CardOfDayTile({
     required this.card,
+    required this.label,
     required this.onTap,
     required this.onLongPress,
   });
   final CardModel card;
+  final String label;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
   @override
@@ -348,9 +342,10 @@ class _CardOfDayTileState extends State<_CardOfDayTile> {
           borderRadius: BorderRadius.circular(DT.rMd),
           border: Border.all(color: _playing ? DT.brand : DT.outline, width: 2),
         ),
-        child: Stack(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Positioned.fill(
+            Expanded(
               child: AnimatedScale(
                 scale: _playing ? 1.12 : 1,
                 duration: d,
@@ -358,20 +353,17 @@ class _CardOfDayTileState extends State<_CardOfDayTile> {
                 child: CardImage.forCard(widget.card, padding: EdgeInsets.zero),
               ),
             ),
-            Positioned(
-              right: 0,
-              bottom: 0,
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: const BoxDecoration(
-                  color: DT.surfaceWhite,
-                  shape: BoxShape.circle,
-                ),
-                child: AppIconView(
-                  AppIcon.sound,
-                  size: 24,
-                  color: _playing ? DT.brand : null,
-                ),
+            const SizedBox(height: 2),
+            // "Слово дня" says what the picture is: today's word, tap to hear.
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const AppArt('listen', size: 20),
+                  const SizedBox(width: 4),
+                  Text(widget.label, style: _Tile.labelStyle, maxLines: 1),
+                ],
               ),
             ),
           ],

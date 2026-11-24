@@ -873,15 +873,15 @@ class DTSize {
   /// Bloom **S**, the companion (docs/design/bloom_character.md §4.1):
   /// 56 on a phone, 72 on a tablet, 48 when the screen is under 600 dp tall.
   /// Whatever the drawing, the hit zone is [tapMin].
-  final double mascotCompanion = 56;
-  final double mascotCompanionCompact = 48;
-  final double mascotCompanionTablet = 72;
+  final double mascotCompanion = 80;
+  final double mascotCompanionCompact = 64;
+  final double mascotCompanionTablet = 104;
 
   /// The shelf Bloom sits on under the cards `PageView`: 64 phone / 80
   /// tablet / 56 on a short screen (§4.2).
-  final double bloomShelf = 64;
-  final double bloomShelfCompact = 56;
-  final double bloomShelfTablet = 80;
+  final double bloomShelf = 88;
+  final double bloomShelfCompact = 72;
+  final double bloomShelfTablet = 112;
 
   /// How much of Bloom shows above the home hero, as a share of his size.
   /// A fixed 28 dp read fine at 56 (eyes out) and as "ears stuck behind a
