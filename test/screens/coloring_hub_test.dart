@@ -98,8 +98,13 @@ void main() {
 
   testWidgets('a tile opens its screen', (tester) async {
     await open(tester);
+    await tester.ensureVisible(find.text('Дзеркальце'));
+    await tester.pump();
     await tester.tap(find.text('Дзеркальце'));
-    await tester.pumpAndSettle();
+    // The mirror sheet loops a hint hand until the first stroke, so it never
+    // «settles»: pump the page transition instead.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
     expect(find.byType(MirrorDrawScreen), findsOneWidget);
   });
 
@@ -112,8 +117,13 @@ void main() {
     addTearDown(() => AnalyticsService.debugSink = null);
 
     await open(tester, sheets: const ['lion']);
+    await tester.ensureVisible(find.text('Дзеркальце'));
+    await tester.pump();
     await tester.tap(find.text('Дзеркальце'));
-    await tester.pumpAndSettle();
+    // The mirror sheet loops a hint hand until the first stroke, so it never
+    // «settles»: pump the page transition instead.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
 
     final tap = events.firstWhere((e) => e.name == 'game_tile_tap');
     expect(tap.params['section'], 'draw');

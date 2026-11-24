@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/pack_model.dart';
+import '../models/card_model.dart';
 import '../providers/card_of_day_provider.dart';
 import '../providers/daily_quest_provider.dart';
 import '../providers/favorites_provider.dart';
@@ -11,6 +14,7 @@ import '../providers/review_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../services/open_content_pack.dart';
+import '../screens/quest_map_screen.dart';
 import '../services/widget_service.dart';
 import '../tabs/games_tab.dart';
 import '../utils/app_icons.dart';
@@ -55,8 +59,39 @@ class _HomeQuickRowState extends ConsumerState<HomeQuickRow> {
     final favCards = allCards.where((c) => favorites.contains(c.id)).toList();
     final dueCards = allCards.where((c) => due.contains(c.id)).toList();
 
+    final quest = ref.watch(dailyQuestProvider);
     final tiles = <Widget>[
-      if (daily != null) _cardOfDayTile(context, s, daily.$1),
+      _QuestTile(
+        quest: quest,
+        label: s('Завдання', 'Tasks'),
+        onTap: () => Navigator.of(context).push(
+          KidRoutes.content(
+            QuestMapScreen(
+              cardOfDay: daily?.$1,
+              cardOfDayLocked: daily?.$2 ?? false,
+              onCardOfDayTap: () {},
+            ),
+          ),
+        ),
+      ),
+      if (daily != null)
+        _CardOfDayTile(
+          card: daily.$1,
+          onTap: () {
+            final card = daily.$1;
+            AnalyticsService.instance.logCardOfDayTap(card.id);
+            AnalyticsService.instance.logFirstAction('hero_cta');
+            AudioService.instance.speakCard(
+              card.audioKey,
+              card.sound,
+              card.text,
+            );
+            ref
+                .read(dailyQuestProvider.notifier)
+                .completeTask(QuestTask.listenCardOfDay);
+          },
+          onLongPress: () => _showCardSheet(context, s, daily.$1),
+        ),
       _Tile(
         tileKey: const ValueKey('home-games'),
         icon: const AppArt('puzzle', size: 44),
@@ -111,59 +146,9 @@ class _HomeQuickRowState extends ConsumerState<HomeQuickRow> {
       children: [
         for (var i = 0; i < tiles.length; i++) ...[
           if (i > 0) const SizedBox(width: 8),
-          Expanded(flex: i == 0 && daily != null ? 3 : 2, child: tiles[i]),
+          Expanded(child: tiles[i]),
         ],
       ],
-    );
-  }
-
-  Widget _cardOfDayTile(BuildContext context, AppS s, card) {
-    return KidTap(
-      key: const ValueKey('home-card-of-day'),
-      onLongPress: () => _showCardSheet(context, s, card),
-      onTap: () {
-        AnalyticsService.instance.logCardOfDayTap(card.id);
-        AnalyticsService.instance.logFirstAction('hero_cta');
-        AudioService.instance.speakCard(card.audioKey, card.sound, card.text);
-        ref
-            .read(dailyQuestProvider.notifier)
-            .completeTask(QuestTask.listenCardOfDay);
-      },
-      child: Container(
-        height: MediaQuery.textScalerOf(context).scale(_Tile.height),
-        padding: const EdgeInsets.all(6),
-        decoration: _Tile.decoration,
-        child: Row(
-          children: [
-            Flexible(
-              child: AspectRatio(
-                aspectRatio: 1,
-                child: CardImage.forCard(card, padding: EdgeInsets.zero),
-              ),
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const AppIconView(AppIcon.sound, size: 22),
-                  const SizedBox(height: 4),
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      card.sound,
-                      style: _Tile.labelStyle,
-                      maxLines: 1,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -228,7 +213,7 @@ class _Tile extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
 
-  static const height = 84.0;
+  static const height = 76.0;
   static final decoration = BoxDecoration(
     color: DT.surfaceWhite,
     borderRadius: BorderRadius.circular(DT.rMd),
@@ -260,4 +245,138 @@ class _Tile extends StatelessWidget {
       ),
     ),
   );
+}
+
+/// Today's five tasks as a picture: the gift, five stars, lit as they are
+/// done. Opens the quest map.
+class _QuestTile extends StatelessWidget {
+  const _QuestTile({
+    required this.quest,
+    required this.label,
+    required this.onTap,
+  });
+  final DailyQuestState quest;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => KidTap(
+    key: const ValueKey('home-daily-quest'),
+    onTap: onTap,
+    child: Container(
+      height: MediaQuery.textScalerOf(context).scale(_Tile.height),
+      decoration: _Tile.decoration,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const AppArt('gift', size: 44),
+          const SizedBox(height: 4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (var i = 0; i < quest.totalCount; i++)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 1),
+                    child: AppIconView(
+                      AppIcon.star,
+                      size: 18,
+                      color: i < quest.doneCount || quest.allDone
+                          ? DT.sunBurst
+                          : DT.outline,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+/// The card of the day: its picture, and an answer to the tap — the picture
+/// hops, the frame lights up and the speaker turns to waves for as long as
+/// the word is being said.
+class _CardOfDayTile extends StatefulWidget {
+  const _CardOfDayTile({
+    required this.card,
+    required this.onTap,
+    required this.onLongPress,
+  });
+  final CardModel card;
+  final VoidCallback onTap;
+  final VoidCallback onLongPress;
+  @override
+  State<_CardOfDayTile> createState() => _CardOfDayTileState();
+}
+
+class _CardOfDayTileState extends State<_CardOfDayTile> {
+  bool _playing = false;
+  Timer? _end;
+
+  @override
+  void dispose() {
+    _end?.cancel();
+    super.dispose();
+  }
+
+  void _tap() {
+    widget.onTap();
+    setState(() => _playing = true);
+    _end?.cancel();
+    _end = Timer(DT.motion.rewardReveal, () {
+      if (mounted) setState(() => _playing = false);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final reduce = MediaQuery.disableAnimationsOf(context);
+    final d = reduce ? Duration.zero : DT.motion.base;
+    return KidTap(
+      key: const ValueKey('home-card-of-day'),
+      onLongPress: widget.onLongPress,
+      onTap: _tap,
+      child: AnimatedContainer(
+        duration: d,
+        height: MediaQuery.textScalerOf(context).scale(_Tile.height),
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: _playing ? DT.mintTint : DT.surfaceWhite,
+          borderRadius: BorderRadius.circular(DT.rMd),
+          border: Border.all(color: _playing ? DT.brand : DT.outline, width: 2),
+        ),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: AnimatedScale(
+                scale: _playing ? 1.12 : 1,
+                duration: d,
+                curve: Curves.easeOutBack,
+                child: CardImage.forCard(widget.card, padding: EdgeInsets.zero),
+              ),
+            ),
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: DT.surfaceWhite,
+                  shape: BoxShape.circle,
+                ),
+                child: AppIconView(
+                  AppIcon.sound,
+                  size: 24,
+                  color: _playing ? DT.brand : null,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

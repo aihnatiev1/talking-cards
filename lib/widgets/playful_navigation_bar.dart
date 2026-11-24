@@ -40,7 +40,7 @@ class PlayfulNavigationBar extends StatelessWidget {
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 28, 16, _bottomGap),
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, _bottomGap),
         child: DecoratedBox(
           decoration: const BoxDecoration(
             color: DT.surfaceWhite,

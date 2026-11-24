@@ -28,7 +28,7 @@ class _DrawMode {
   final String subtitleEn;
   final Color color;
   final Color tint;
-  final AppIcon badge;
+  final String art;
   final Widget Function() open;
 
   const _DrawMode({
@@ -39,7 +39,7 @@ class _DrawMode {
     required this.subtitleEn,
     required this.color,
     required this.tint,
-    required this.badge,
+    required this.art,
     required this.open,
   });
 }
@@ -80,7 +80,7 @@ class ColoringHubScreen extends ConsumerWidget {
         subtitleEn: 'Drag your finger — the colours appear',
         color: DT.sky,
         tint: DT.skyTint,
-        badge: AppIcon.navColoring,
+        art: 'water',
         open: () => const ColoringScreen(),
       ),
       if (hasSheets)
@@ -92,7 +92,7 @@ class ColoringHubScreen extends ConsumerWidget {
           subtitleEn: 'Pick a colour, tap a part',
           color: DT.coral,
           tint: DT.coralTint,
-          badge: AppIcon.gameMatch,
+          art: 'bucket',
           open: () => const FillColoringScreen(),
         ),
       if (hasSheets)
@@ -104,7 +104,7 @@ class ColoringHubScreen extends ConsumerWidget {
           subtitleEn: 'Bloom names a colour — find it',
           color: DT.peach,
           tint: DT.peachTint,
-          badge: AppIcon.catSpeech,
+          art: 'ear',
           open: () => const FillColoringScreen(byEar: true),
         ),
       _DrawMode(
@@ -115,7 +115,7 @@ class ColoringHubScreen extends ConsumerWidget {
         subtitleEn: 'Put them on the meadow and hear the word',
         color: DT.mint,
         tint: DT.mintTint,
-        badge: AppIcon.stickerRainbow,
+        art: 'stickers',
         open: () => const StickerSceneScreen(),
       ),
       if (hasFinished)
@@ -127,7 +127,7 @@ class ColoringHubScreen extends ConsumerWidget {
           subtitleEn: 'Everything you have finished',
           color: DT.teal,
           tint: DT.mintTint,
-          badge: AppIcon.rewardTrophy,
+          art: 'trophy',
           open: () => const MyMeadowScreen(),
         ),
       _DrawMode(
@@ -138,7 +138,7 @@ class ColoringHubScreen extends ConsumerWidget {
         subtitleEn: 'Draw one half — get the whole',
         color: DT.violet,
         tint: DT.violetTint,
-        badge: AppIcon.stickerButterfly,
+        art: 'butterfly',
         open: () => const MirrorDrawScreen(),
       ),
     ];
@@ -160,21 +160,38 @@ class ColoringHubScreen extends ConsumerWidget {
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 900),
-            child: GridView.builder(
-              shrinkWrap: true,
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: MediaQuery.sizeOf(context).width < 600 ? 2 : 3,
-                mainAxisSpacing: 14,
-                crossAxisSpacing: 14,
-                childAspectRatio: 0.92,
-              ),
-              itemCount: modes.length,
-              itemBuilder: (context, i) => StaggeredEntrance(
-                key: ValueKey(modes[i].id),
-                index: i,
-                child: _ModeTile(mode: modes[i], isEn: isEn, position: i),
-              ),
+            child: LayoutBuilder(
+              builder: (context, box) {
+                final cols = MediaQuery.sizeOf(context).width < 600 ? 2 : 3;
+                const gap = 14.0;
+                final w = (box.maxWidth - 32 - gap * (cols - 1)) / cols;
+                // A Wrap, centred: five tiles leave the last one in the
+                // middle of its row instead of orphaned on the left.
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: gap,
+                    runSpacing: gap,
+                    children: [
+                      for (var i = 0; i < modes.length; i++)
+                        SizedBox(
+                          width: w,
+                          height: w * 1.08,
+                          child: StaggeredEntrance(
+                            key: ValueKey(modes[i].id),
+                            index: i,
+                            child: _ModeTile(
+                              mode: modes[i],
+                              isEn: isEn,
+                              position: i,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              },
             ),
           ),
         ),
@@ -226,11 +243,7 @@ class _ModeTile extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Expanded(
-              child: Center(
-                child: AppIconView(mode.badge, size: 72, sticker: true),
-              ),
-            ),
+            Expanded(child: Center(child: AppArt(mode.art, size: 104))),
             const SizedBox(height: 8),
             Text(
               isEn ? mode.titleEn : mode.title,
@@ -245,7 +258,7 @@ class _ModeTile extends StatelessWidget {
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: DT.caption.copyWith(fontSize: 11, color: DT.textSecondary),
+              style: DT.caption.copyWith(fontSize: 13, color: DT.textSecondary),
             ),
           ],
         ),

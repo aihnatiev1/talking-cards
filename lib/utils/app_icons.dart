@@ -191,30 +191,55 @@ const _artFor = <AppIcon, String>{
   AppIcon.catWorld: 'house',
   AppIcon.navColoring: 'palette',
   AppIcon.lock: 'padlock',
+  AppIcon.stickerUnicorn: 'unicorn',
+  AppIcon.stickerDragon: 'dragon',
+  AppIcon.stickerRainbow: 'rainbow',
+  AppIcon.stickerButterfly: 'butterfly',
+  AppIcon.stickerAlbum: 'stickers',
+  AppIcon.streakFlame: 'flame',
+  AppIcon.rewardTrophy: 'trophy',
 };
 
 /// A painted icon by file name in `assets/images/icons/`.
 class AppArt extends StatelessWidget {
-  const AppArt(this.name, {super.key, this.size, this.semanticLabel = ''});
+  const AppArt(
+    this.name, {
+    super.key,
+    this.size,
+    this.semanticLabel = '',
+    this.silhouette,
+  });
   final String name;
   final double? size;
   final String semanticLabel;
 
+  /// Paints the picture as one flat shape in this colour — the album's «not
+  /// yet» state, the same idea as [AppIconView.silhouette].
+  final Color? silhouette;
+
   @override
   Widget build(BuildContext context) {
     final side = size ?? DT.size.iconMd;
+    Widget image = Image.asset(
+      'assets/images/icons/$name.webp',
+      width: side,
+      height: side,
+      fit: BoxFit.contain,
+      filterQuality: FilterQuality.medium,
+      errorBuilder: (_, __, ___) => SizedBox.square(dimension: side),
+    );
+    final flat = silhouette;
+    if (flat != null) {
+      image = ColorFiltered(
+        colorFilter: ColorFilter.mode(flat, BlendMode.srcATop),
+        child: image,
+      );
+    }
     return Semantics(
       label: semanticLabel,
       image: true,
       excludeSemantics: true,
-      child: Image.asset(
-        'assets/images/icons/$name.webp',
-        width: side,
-        height: side,
-        fit: BoxFit.contain,
-        filterQuality: FilterQuality.medium,
-        errorBuilder: (_, __, ___) => SizedBox.square(dimension: side),
-      ),
+      child: image,
     );
   }
 }
@@ -246,7 +271,7 @@ class AppIconView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final side = size ?? DT.size.iconMd;
-    final art = color == null && silhouette == null ? _artFor[icon] : null;
+    final art = color == null ? _artFor[icon] : null;
     if (art != null) {
       return AppArt(
         art,

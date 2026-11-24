@@ -14,6 +14,7 @@ import '../services/audio_service.dart';
 import '../services/feedback_service.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
+import '../utils/app_icons.dart';
 import '../widgets/ambient_loop.dart';
 import '../widgets/card_image.dart';
 import '../widgets/kid_screen.dart';
@@ -294,8 +295,22 @@ class _PlaceInvite extends StatelessWidget {
       child: AmbientLoop(
         period: DT.motion.drawingBreath,
         settleAfter: DT.motion.lessonHint * 3,
-        builder: (_, t, child) =>
-            Transform.scale(scale: .94 + .06 * t, child: child),
+        builder: (_, t, child) => Transform.scale(
+          scale: .94 + .06 * t,
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+              child!,
+              // The hand taps down on it: «touch the meadow».
+              Positioned(
+                right: -16 + 14 * t,
+                bottom: -34 + 14 * t,
+                child: const AppArt('hand', size: 92),
+              ),
+            ],
+          ),
+        ),
         child: SizedBox(
           width: side,
           height: side,

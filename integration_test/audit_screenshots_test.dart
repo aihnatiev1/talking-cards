@@ -29,6 +29,9 @@ import 'package:talking_cards/screens/repeat_game_screen.dart';
 import 'package:talking_cards/screens/rewards_screen.dart';
 import 'package:talking_cards/screens/stats_screen.dart';
 import 'package:talking_cards/screens/sticker_scene_screen.dart';
+import 'package:talking_cards/models/play_topic.dart';
+import 'package:talking_cards/providers/play_session_provider.dart';
+import 'package:talking_cards/screens/play_lesson_screen.dart';
 import 'package:talking_cards/services/audio_service.dart';
 
 /// Design-audit rig: walks every kid-facing and parent-facing screen and
@@ -57,8 +60,9 @@ void main() {
         'id': 'p1',
         'name': _lang == 'en' ? 'Emma' : 'Соломійка',
         'avatar': '👧',
-        'createdAt':
-            DateTime.now().subtract(const Duration(days: 40)).toIso8601String(),
+        'createdAt': DateTime.now()
+            .subtract(const Duration(days: 40))
+            .toIso8601String(),
         'lang': _lang,
         'level': 2,
       },
@@ -155,8 +159,9 @@ void main() {
     await shot(tester, 'a01-onboarding-1');
     // Advance through onboarding pages where a forward button exists.
     for (var i = 2; i <= 4; i++) {
-      final next = find.byWidgetPredicate((w) =>
-          w is FilledButton || w is ElevatedButton || w is TextButton);
+      final next = find.byWidgetPredicate(
+        (w) => w is FilledButton || w is ElevatedButton || w is TextButton,
+      );
       if (next.evaluate().isEmpty) break;
       await tester.tap(next.last, warnIfMissed: false);
       await settle(tester, 1200);
@@ -174,7 +179,10 @@ void main() {
     await shot(tester, 'b00-home-cards');
 
     // Tabs via the bottom navigation labels.
-    for (final (label, name) in [('Ігри', 'b01-home-games'), ('Малюємо', 'b02-home-coloring')]) {
+    for (final (label, name) in [
+      ('Ігри', 'b01-home-games'),
+      ('Малюємо', 'b02-home-coloring'),
+    ]) {
       final f = find.text(label);
       if (f.evaluate().isNotEmpty) {
         await tester.tap(f.first, warnIfMissed: false);
@@ -184,180 +192,337 @@ void main() {
         debugPrint('AUDIT_SHOT tab not found: $label');
       }
     }
-    final back = find.text('Картки');
+    for (final (label, name) in [
+      ('Мій світ', 'b03-world'),
+      ('Картки', 'b04-cards-tab'),
+    ]) {
+      final f = find.text(label);
+      if (f.evaluate().isNotEmpty) {
+        await tester.tap(f.first, warnIfMissed: false);
+        await settle(tester, 1500);
+        await shot(tester, name);
+      }
+    }
+    final back = find.text('Грати');
     if (back.evaluate().isNotEmpty) {
       await tester.tap(back.first, warnIfMissed: false);
       await settle(tester, 800);
     }
 
     final nav = tester.state<NavigatorState>(find.byType(Navigator).first);
-    final container =
-        ProviderScope.containerOf(tester.element(find.byType(MaterialApp).first));
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(MaterialApp).first),
+    );
     final packs = await container.read(packsProvider.future);
     debugPrint('AUDIT_SHOT packs=${packs.map((p) => p.id).join(',')}');
     final unlocked = packs.where((p) => p.cards.isNotEmpty).toList();
-    final pack = unlocked.firstWhere((p) => p.id == 'animals',
-        orElse: () => unlocked.first);
+    final pack = unlocked.firstWhere(
+      (p) => p.id == 'animals',
+      orElse: () => unlocked.first,
+    );
     final allCards = [for (final p in unlocked) ...p.cards];
     final playable = allCards
-        .where((c) => c.audioKey != null && c.image != null &&
-            AudioService.instance.hasSound(c.audioKey))
+        .where(
+          (c) =>
+              c.audioKey != null &&
+              c.image != null &&
+              AudioService.instance.hasSound(c.audioKey),
+        )
         .toList();
     final playablePacks = unlocked
         .where((p) => p.cards.where((c) => c.image != null).length >= 3)
         .toList();
     PackModel oppPack = unlocked.firstWhere(
-        (p) => p.id.contains('oppos') || p.id.contains('protyl'),
-        orElse: () => pack);
+      (p) => p.id.contains('oppos') || p.id.contains('protyl'),
+      orElse: () => pack,
+    );
     final CardModel card = pack.cards.first;
 
-    await pushAndShot(tester, nav, 'c00-cards-screen', () => CardsScreen(pack: pack),
-        interact: (t) async {
-      // Tap the card to hear it and show the listening state.
-      await t.tapAt(t.getCenter(find.byType(Scaffold).last));
-      await settle(t, 500);
-      await shot(t, 'c01-cards-screen-tapped');
-      // Swipe to the next card.
-      await t.fling(find.byType(Scaffold).last, const Offset(-400, 0), 1200);
-      await settle(t, 900);
-      await shot(t, 'c02-cards-screen-next');
-    });
+    await pushAndShot(
+      tester,
+      nav,
+      'c00-cards-screen',
+      () => CardsScreen(pack: pack),
+      interact: (t) async {
+        // Tap the card to hear it and show the listening state.
+        await t.tapAt(t.getCenter(find.byType(Scaffold).last));
+        await settle(t, 500);
+        await shot(t, 'c01-cards-screen-tapped');
+        // Swipe to the next card.
+        await t.fling(find.byType(Scaffold).last, const Offset(-400, 0), 1200);
+        await settle(t, 900);
+        await shot(t, 'c02-cards-screen-next');
+      },
+    );
 
-    await pushAndShot(tester, nav, 'd00-guess', () => GuessScreen(cards: playable),
-        wait: 2600, interact: (t) async {
-      final opts = find.byWidgetPredicate(
-          (w) => w.runtimeType.toString() == 'QuizOption');
-      if (opts.evaluate().isNotEmpty) {
-        await t.tap(opts.first, warnIfMissed: false);
-        await settle(t, 700);
-        await shot(t, 'd01-guess-after-tap');
-        await settle(t, 1800);
-        await shot(t, 'd02-guess-next');
+    // The lesson: explore step, the tap answer, a find step, completion.
+    {
+      final topic = PlayTopic.all.first;
+      final lessonCards = topic.cards(packs);
+      if (lessonCards.length == 3) {
+        final notifier = container.read(playSessionProvider.notifier);
+        await notifier.ready;
+        await notifier.start(topic.id, [for (final c in lessonCards) c.id]);
+        await pushAndShot(
+          tester,
+          nav,
+          'p10-lesson-explore',
+          () => PlayLessonScreen(topic: topic, cards: lessonCards),
+          wait: 2200,
+          interact: (t) async {
+            await t.tap(
+              find.text(lessonCards.first.sound),
+              warnIfMissed: false,
+            );
+            await settle(t, 300);
+            await shot(t, 'p11-lesson-tapped');
+            for (var step = 0; step < 7; step++) {
+              await notifier.advance(topic.id, step);
+              await settle(t, 500);
+              if (step == 3) await shot(t, 'p12-lesson-find');
+              if (step == 5) await shot(t, 'p13-lesson-repeat');
+            }
+            await settle(t, 900);
+            await shot(t, 'p14-lesson-complete');
+          },
+        );
       }
-    });
+    }
 
     await pushAndShot(
-        tester,
-        nav,
-        'e00-memory-match',
-        () => MemoryMatchScreen(
-            pack: pack,
-            cards: pack.cards.where((c) => c.image != null).toList(),
-            pairCount: 3),
-        wait: 2200,
-        interact: (t) async {
-      final tiles = find.byType(GestureDetector);
-      if (tiles.evaluate().length > 2) {
-        await t.tap(tiles.at(1), warnIfMissed: false);
-        await settle(t, 700);
-        await shot(t, 'e01-memory-match-flipped');
-      }
-    });
+      tester,
+      nav,
+      'd00-guess',
+      () => GuessScreen(cards: playable),
+      wait: 2600,
+      interact: (t) async {
+        final opts = find.byWidgetPredicate(
+          (w) => w.runtimeType.toString() == 'QuizOption',
+        );
+        if (opts.evaluate().isNotEmpty) {
+          await t.tap(opts.first, warnIfMissed: false);
+          await settle(t, 700);
+          await shot(t, 'd01-guess-after-tap');
+          await settle(t, 1800);
+          await shot(t, 'd02-guess-next');
+        }
+      },
+    );
 
-    await pushAndShot(tester, nav, 'f00-bubble-pop', () => const BubblePopScreen(),
-        wait: 2500, interact: (t) async {
-      await settle(t, 2000);
-      await shot(t, 'f01-bubble-pop-later');
-    });
+    await pushAndShot(
+      tester,
+      nav,
+      'e00-memory-match',
+      () => MemoryMatchScreen(
+        pack: pack,
+        cards: pack.cards.where((c) => c.image != null).toList(),
+        pairCount: 3,
+      ),
+      wait: 2200,
+      interact: (t) async {
+        final tiles = find.byType(GestureDetector);
+        if (tiles.evaluate().length > 2) {
+          await t.tap(tiles.at(1), warnIfMissed: false);
+          await settle(t, 700);
+          await shot(t, 'e01-memory-match-flipped');
+        }
+      },
+    );
 
-    await pushAndShot(tester, nav, 'g00-odd-one-out',
-        () => OddOneOutScreen(packs: playablePacks), wait: 2400);
+    await pushAndShot(
+      tester,
+      nav,
+      'f00-bubble-pop',
+      () => const BubblePopScreen(),
+      wait: 2500,
+      interact: (t) async {
+        await settle(t, 2000);
+        await shot(t, 'f01-bubble-pop-later');
+      },
+    );
 
-    await pushAndShot(tester, nav, 'h00-repeat-game',
-        () => RepeatGameScreen(cards: playable), wait: 2400);
+    await pushAndShot(
+      tester,
+      nav,
+      'g00-odd-one-out',
+      () => OddOneOutScreen(packs: playablePacks),
+      wait: 2400,
+    );
 
-    await pushAndShot(tester, nav, 'i00-articulation',
-        () => const ArticulationScreen(), wait: 1800);
+    await pushAndShot(
+      tester,
+      nav,
+      'h00-repeat-game',
+      () => RepeatGameScreen(cards: playable),
+      wait: 2400,
+    );
 
-    await pushAndShot(tester, nav, 'j00-opposites',
-        () => OppositeGameScreen(pack: oppPack), wait: 2200);
+    await pushAndShot(
+      tester,
+      nav,
+      'i00-articulation',
+      () => const ArticulationScreen(),
+      wait: 1800,
+    );
 
-    await pushAndShot(tester, nav, 'k00-coloring', () => const ColoringScreen(),
-        wait: 2000);
+    await pushAndShot(
+      tester,
+      nav,
+      'j00-opposites',
+      () => OppositeGameScreen(pack: oppPack),
+      wait: 2200,
+    );
+
+    await pushAndShot(
+      tester,
+      nav,
+      'k00-coloring',
+      () => const ColoringScreen(),
+      wait: 1200,
+      interact: (t) async {
+        // Motion can't be judged from one still: frames across the hint.
+        for (var i = 1; i <= 4; i++) {
+          await settle(t, 500);
+          await shot(t, 'k00-coloring-hint$i');
+        }
+      },
+    );
 
     // The drawing shelf and everything on it. Five ways to draw landed at
     // once and none of them was in the audit set, so nothing outside the
     // app had ever seen them.
-    await pushAndShot(tester, nav, 'k01-draw-shelf',
-        () => const ColoringHubScreen(), wait: 2000);
+    await pushAndShot(
+      tester,
+      nav,
+      'k01-draw-shelf',
+      () => const ColoringHubScreen(),
+      wait: 2000,
+    );
 
-    await pushAndShot(tester, nav, 'k02-fill-coloring',
-        () => const FillColoringScreen(sheetId: 'bear_heart'),
-        wait: 3000, interact: (t) async {
-      // Paint a few parts so the shot shows the point of the screen rather
-      // than an empty outline. The spots are taken from the drawing's own
-      // rect — hard-coded offsets missed it entirely the first time, and
-      // the result looked like a broken feature rather than a bad tap.
-      final picture = t.getRect(find.byType(CustomPaint).last);
-      for (final at in [
-        picture.center,
-        Offset(picture.center.dx, picture.top + picture.height * 0.18),
-        Offset(picture.center.dx, picture.bottom - picture.height * 0.2),
-      ]) {
-        await t.tapAt(at);
-        // The painted layer is built by ui.decodeImageFromPixels, whose
-        // callback needs the real event loop — pumping a fake clock lets
-        // the fill be recorded but never drawn, which is why the first
-        // run of this shot came back as an empty outline.
-        await t.runAsync(
-          () => Future<void>.delayed(const Duration(milliseconds: 400)),
-        );
+    await pushAndShot(
+      tester,
+      nav,
+      'k02-fill-coloring',
+      () => const FillColoringScreen(sheetId: 'bear_heart'),
+      wait: 3000,
+      interact: (t) async {
+        // Paint a few parts so the shot shows the point of the screen rather
+        // than an empty outline. The spots are taken from the drawing's own
+        // rect — hard-coded offsets missed it entirely the first time, and
+        // the result looked like a broken feature rather than a bad tap.
+        final picture = t.getRect(find.byType(CustomPaint).last);
+        for (final at in [
+          picture.center,
+          Offset(picture.center.dx, picture.top + picture.height * 0.18),
+          Offset(picture.center.dx, picture.bottom - picture.height * 0.2),
+        ]) {
+          await t.tapAt(at);
+          // The painted layer is built by ui.decodeImageFromPixels, whose
+          // callback needs the real event loop — pumping a fake clock lets
+          // the fill be recorded but never drawn, which is why the first
+          // run of this shot came back as an empty outline.
+          await t.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 400)),
+          );
+          await settle(t, 600);
+        }
         await settle(t, 600);
-      }
-      await settle(t, 600);
-      await shot(t, 'k03-fill-coloring-painted');
-    });
-
-    await pushAndShot(tester, nav, 'k04-fill-by-ear',
-        () => const FillColoringScreen(
-              sheetId: 'bear_heart',
-              byEar: true,
-            ),
-        wait: 2600);
-
-    await pushAndShot(tester, nav, 'k05-stickers',
-        () => const StickerSceneScreen(), wait: 2200);
-
-    await pushAndShot(tester, nav, 'k06-mirror-draw',
-        () => const MirrorDrawScreen(), wait: 1800);
-
-    await pushAndShot(tester, nav, 'k07-my-meadow',
-        () => const MyMeadowScreen(), wait: 2200);
-
-    await pushAndShot(tester, nav, 'l00-rewards', () => const RewardsScreen(),
-        wait: 2000);
+        await shot(t, 'k03-fill-coloring-painted');
+      },
+    );
 
     await pushAndShot(
-        tester,
-        nav,
-        'm00-quest-map',
-        () => QuestMapScreen(
-            cardOfDay: card, cardOfDayLocked: false, onCardOfDayTap: () {}),
-        wait: 2600);
+      tester,
+      nav,
+      'k04-fill-by-ear',
+      () => const FillColoringScreen(sheetId: 'bear_heart', byEar: true),
+      wait: 2600,
+    );
 
     await pushAndShot(
-        tester,
-        nav,
-        'n00-card-reveal',
-        () => CardRevealScreen(card: card, pack: pack, newTotal: 12),
-        wait: 900,
-        interact: (t) async {
-      await settle(t, 1600);
-      await shot(t, 'n01-card-reveal-settled');
-    });
+      tester,
+      nav,
+      'k05-stickers',
+      () => const StickerSceneScreen(),
+      wait: 2200,
+    );
 
-    await pushAndShot(tester, nav, 'o00-paywall',
-        () => const PaywallScreen(source: 'audit'), wait: 2200);
+    await pushAndShot(
+      tester,
+      nav,
+      'k06-mirror-draw',
+      () => const MirrorDrawScreen(),
+      wait: 1800,
+    );
 
-    await pushAndShot(tester, nav, 'p00-stats', () => const StatsScreen(),
-        wait: 1800);
+    await pushAndShot(
+      tester,
+      nav,
+      'k07-my-meadow',
+      () => const MyMeadowScreen(),
+      wait: 2200,
+    );
 
-    await pushAndShot(tester, nav, 'q00-word-wall',
-        () => const KidWordWallScreen(), wait: 2000);
+    await pushAndShot(
+      tester,
+      nav,
+      'l00-rewards',
+      () => const RewardsScreen(),
+      wait: 2000,
+    );
+
+    await pushAndShot(
+      tester,
+      nav,
+      'm00-quest-map',
+      () => QuestMapScreen(
+        cardOfDay: card,
+        cardOfDayLocked: false,
+        onCardOfDayTap: () {},
+      ),
+      wait: 2600,
+    );
+
+    await pushAndShot(
+      tester,
+      nav,
+      'n00-card-reveal',
+      () => CardRevealScreen(card: card, pack: pack, newTotal: 12),
+      wait: 900,
+      interact: (t) async {
+        await settle(t, 1600);
+        await shot(t, 'n01-card-reveal-settled');
+      },
+    );
+
+    await pushAndShot(
+      tester,
+      nav,
+      'o00-paywall',
+      () => const PaywallScreen(source: 'audit'),
+      wait: 2200,
+    );
+
+    await pushAndShot(
+      tester,
+      nav,
+      'p00-stats',
+      () => const StatsScreen(),
+      wait: 1800,
+    );
+
+    await pushAndShot(
+      tester,
+      nav,
+      'q00-word-wall',
+      () => const KidWordWallScreen(),
+      wait: 2000,
+    );
 
     // Profile selector sheet + parent dashboard behind the gate.
     final chip = find.byWidgetPredicate(
-        (w) => w.runtimeType.toString() == 'ProfileAvatarChip');
+      (w) => w.runtimeType.toString() == 'ProfileAvatarChip',
+    );
     if (chip.evaluate().isNotEmpty) {
       await tester.tap(chip.first, warnIfMissed: false);
       await settle(tester, 1200);

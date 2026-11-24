@@ -21,23 +21,34 @@ void main() {
 
     final t0 = DateTime.now();
     final available = await iap.isAvailable();
-    print('PROBE isAvailable=$available '
-        'in ${DateTime.now().difference(t0).inMilliseconds}ms');
+    print(
+      'PROBE isAvailable=$available '
+      'in ${DateTime.now().difference(t0).inMilliseconds}ms',
+    );
 
     final t1 = DateTime.now();
-    final res = await iap.queryProductDetails(
-        {'yearly_premium', 'monthly_premium', 'lifetime_premium'});
-    print('PROBE query in ${DateTime.now().difference(t1).inMilliseconds}ms '
-        'error=${res.error} notFound=${res.notFoundIDs}');
+    final res = await iap.queryProductDetails({
+      'yearly_premium',
+      'monthly_premium',
+      'lifetime_premium',
+    });
+    print(
+      'PROBE query in ${DateTime.now().difference(t1).inMilliseconds}ms '
+      'error=${res.error} notFound=${res.notFoundIDs}',
+    );
     for (final p in res.productDetails) {
-      print('PROBE product ${p.id} "${p.title}" ${p.price} '
-          'raw=${p.rawPrice} ${p.currencyCode}');
+      print(
+        'PROBE product ${p.id} "${p.title}" ${p.price} '
+        'raw=${p.rawPrice} ${p.currencyCode}',
+      );
     }
 
     final t2 = DateTime.now();
     final loaded = await PurchaseService.instance.ensureProducts();
-    print('PROBE ensureProducts=$loaded '
-        'in ${DateTime.now().difference(t2).inMilliseconds}ms '
-        'products=${PurchaseService.instance.products.map((p) => p.id).toList()}');
+    print(
+      'PROBE ensureProducts=$loaded '
+      'in ${DateTime.now().difference(t2).inMilliseconds}ms '
+      'products=${PurchaseService.instance.products.map((p) => p.id).toList()}',
+    );
   });
 }

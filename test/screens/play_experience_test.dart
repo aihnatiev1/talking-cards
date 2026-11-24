@@ -6,6 +6,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:talking_cards/widgets/playful_navigation_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talking_cards/models/pack_model.dart';
 import 'package:talking_cards/models/play_topic.dart';
@@ -180,6 +181,8 @@ void main() {
   ) async {
     await host(tester, height: 700, safeTop: 62);
     await screenshot(tester, '07-compact-home-safe-area');
+    // The owner's rule: a pack is tappable without scrolling, at 700 pt.
+    expect(find.text('Тваринки').hitTestable(), findsOneWidget);
     // One big action sits above the fold; the shelf follows it.
     expect(find.text('Привіт, тваринки!').hitTestable(), findsOneWidget);
     expect(

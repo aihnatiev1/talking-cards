@@ -303,7 +303,7 @@ class _TreasureTab extends StatelessWidget {
       child: AnimatedContainer(
         duration: MotionPolicy.of(context).dur(DT.motion.quick),
         curve: DT.motion.standard,
-        height: 84,
+        height: 96,
         decoration: BoxDecoration(
           color: selected ? palette.accent : palette.tint,
           borderRadius: BorderRadius.circular(DT.rLg),
@@ -315,7 +315,7 @@ class _TreasureTab extends StatelessWidget {
           children: [
             AppIconView(
               icon,
-              size: 40,
+              size: 52,
               sticker: selected,
               semanticLabel: label,
             ),

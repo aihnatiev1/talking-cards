@@ -11,8 +11,6 @@ import '../screens/profile_selector_screen.dart';
 import '../services/audio_service.dart';
 import '../widgets/kid_tap.dart';
 import '../providers/home_tab_provider.dart';
-import '../providers/daily_quest_provider.dart';
-import '../screens/quest_map_screen.dart';
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../providers/last_pack_provider.dart';
@@ -28,7 +26,6 @@ import '../widgets/parental_gate.dart';
 import '../widgets/play_components.dart';
 import '../widgets/pack_grid_card.dart';
 import '../widgets/home_quick_row.dart';
-import '../providers/card_of_day_provider.dart';
 import '../services/open_content_pack.dart';
 
 class PlayTab extends ConsumerStatefulWidget {
@@ -128,7 +125,6 @@ class _PlayTabState extends ConsumerState<PlayTab> {
     final isEn = ref.watch(languageProvider) == 'en';
     final s = AppS(isEn);
     final catalogue = ref.watch(packsProvider);
-    final daily = ref.watch(dailyQuestProvider);
     return SafeArea(
       bottom: false,
       child: Center(
@@ -145,95 +141,7 @@ class _PlayTabState extends ConsumerState<PlayTab> {
               Row(
                 children: [
                   const _ProfileButton(),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: TextButton(
-                      key: const ValueKey('home-daily-quest'),
-                      style: TextButton.styleFrom(
-                        minimumSize: const Size(72, 72),
-                        padding: EdgeInsets.zero,
-                      ),
-                      onPressed: () => Navigator.of(context).push(
-                        KidRoutes.content(
-                          QuestMapScreen(
-                            cardOfDay: ref
-                                .read(cardOfDaySelectorProvider)(
-                                  catalogue.valueOrNull ?? [],
-                                )
-                                ?.$1,
-                            cardOfDayLocked:
-                                ref
-                                    .read(cardOfDaySelectorProvider)(
-                                      catalogue.valueOrNull ?? [],
-                                    )
-                                    ?.$2 ??
-                                false,
-                            onCardOfDayTap: () {},
-                          ),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          const AppArt('gift', size: 48),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  s('Завдання дня', 'Daily tasks'),
-                                  style: DT.tileTitle,
-                                ),
-                                const SizedBox(height: 2),
-                                // Stars, not «1/5»: a child can count lit
-                                // stars, nobody under five reads a fraction.
-                                if (daily.rewardClaimed || daily.allDone)
-                                  Text(
-                                    daily.rewardClaimed
-                                        ? s(
-                                            'Скарб отримано',
-                                            'Treasure collected',
-                                          )
-                                        : s(
-                                            'Забрати скарб',
-                                            'Collect treasure',
-                                          ),
-                                    style: DT.caption,
-                                  )
-                                else
-                                  FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    alignment: Alignment.centerLeft,
-                                    child: Row(
-                                      children: [
-                                        for (
-                                          var i = 0;
-                                          i < daily.totalCount;
-                                          i++
-                                        )
-                                          Padding(
-                                            padding: const EdgeInsets.only(
-                                              right: 4,
-                                            ),
-                                            child: AppIconView(
-                                              AppIcon.star,
-                                              size: 22,
-                                              color: i < daily.doneCount
-                                                  ? DT.sunBurst
-                                                  : DT.outline,
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                  const Spacer(),
                   IconButton(
                     tooltip: s('Для батьків', 'For parents'),
                     constraints: const BoxConstraints(
@@ -256,7 +164,7 @@ class _PlayTabState extends ConsumerState<PlayTab> {
                 ],
               ),
               if (catalogue.hasValue) ..._hero(isEn, s),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               const HomeQuickRow(),
               if (ref.watch(playSessionProvider).hasError)
                 TextButton(
@@ -432,6 +340,8 @@ class _PlayTabState extends ConsumerState<PlayTab> {
       compact: true,
     );
 
+    final row = shelf.take(grid.crossAxisCount * 2).toList();
+
     return [
       Padding(
         padding: const EdgeInsets.only(top: 8, bottom: 4),
@@ -440,7 +350,7 @@ class _PlayTabState extends ConsumerState<PlayTab> {
             Expanded(child: Text(s('Паки карток', 'Card packs'), style: DT.h2)),
             TextButton(
               key: const ValueKey('home-all-packs'),
-              style: TextButton.styleFrom(minimumSize: const Size(72, 48)),
+              style: TextButton.styleFrom(minimumSize: const Size(72, 40)),
               onPressed: () =>
                   ref.read(homeDestinationProvider.notifier).state =
                       HomeDestination.cards,
@@ -449,7 +359,10 @@ class _PlayTabState extends ConsumerState<PlayTab> {
           ],
         ),
       ),
-      for (var start = 0; start < shelf.length; start += grid.crossAxisCount)
+      // Two rows, not the catalogue: «Усі» opens the Cards tab, so the same
+      // thirty packs are not on two tabs at once, and a tall phone is not
+      // left with a blank lower half.
+      for (var start = 0; start < row.length; start += grid.crossAxisCount)
         Padding(
           padding: const EdgeInsets.only(bottom: 18),
           child: SizedBox(
@@ -464,17 +377,17 @@ class _PlayTabState extends ConsumerState<PlayTab> {
                 ) ...[
                   if (offset > 0) const SizedBox(width: 16),
                   Expanded(
-                    child: start + offset >= shelf.length
+                    child: start + offset >= row.length
                         ? const SizedBox.shrink()
                         : _shelfItem(
                             context,
                             s,
-                            shelf[start + offset],
+                            row[start + offset],
                             start + offset,
                             isContinue: last != null && start + offset == 0,
-                            progress: progress[shelf[start + offset].id] ?? 0,
+                            progress: progress[row[start + offset].id] ?? 0,
                             completed: completed.contains(
-                              shelf[start + offset].id,
+                              row[start + offset].id,
                             ),
                           ),
                   ),
@@ -515,7 +428,7 @@ class _HeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PlayPanel(
-      padding: const EdgeInsets.all(DT.sp12),
+      padding: const EdgeInsets.all(DT.sp8),
       child: Row(
         children: [
           SizedBox(

@@ -16,11 +16,28 @@ void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   const ukWords = [
-    '', 'один', 'два', 'три', 'чотири', 'п’ять', 'шість', 'сім',
-    'вісім', 'дев’ять'
+    '',
+    'один',
+    'два',
+    'три',
+    'чотири',
+    'п’ять',
+    'шість',
+    'сім',
+    'вісім',
+    'дев’ять',
   ];
   const enWords = [
-    '', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'
+    '',
+    'one',
+    'two',
+    'three',
+    'four',
+    'five',
+    'six',
+    'seven',
+    'eight',
+    'nine',
   ];
 
   String today(int daysAgo) {
@@ -66,7 +83,12 @@ void main() {
       'p1_streak_current': 6,
       'p1_streak_last_date': today(0),
       'p1_completed_packs': [
-        'animals', 'home', 'colors', 'food', 'emotions', 'transport'
+        'animals',
+        'home',
+        'colors',
+        'food',
+        'emotions',
+        'transport',
       ],
       'p1_pack_progress_animals': 29,
       'p1_pack_progress_home': 30,
@@ -81,8 +103,11 @@ void main() {
     };
   }
 
-  Future<void> solveParentalGate(WidgetTester tester, List<String> words,
-      {required String plusWord}) async {
+  Future<void> solveParentalGate(
+    WidgetTester tester,
+    List<String> words, {
+    required String plusWord,
+  }) async {
     final questionFinder = find.textContaining(plusWord);
     expect(questionFinder, findsOneWidget);
     final question = (tester.widget<Text>(questionFinder).data ?? '');
@@ -120,7 +145,8 @@ void main() {
 
     // 2. Profile selector sheet.
     final chip = find.byWidgetPredicate(
-        (w) => w.runtimeType.toString() == 'ProfileAvatarChip');
+      (w) => w.runtimeType.toString() == 'ProfileAvatarChip',
+    );
     expect(chip, findsOneWidget);
     await tester.tap(chip.first, warnIfMissed: false);
     await tester.pumpAndSettle();
@@ -130,8 +156,10 @@ void main() {
     await tester.pumpAndSettle();
 
     // 3. Parent dashboard behind the gate.
-    await tester.longPress(find.byIcon(Icons.info_outline_rounded),
-        warnIfMissed: false);
+    await tester.longPress(
+      find.byIcon(Icons.info_outline_rounded),
+      warnIfMissed: false,
+    );
     await tester.pumpAndSettle();
     await solveParentalGate(
       tester,

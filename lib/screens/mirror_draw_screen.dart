@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,9 +6,11 @@ import '../providers/daily_quest_provider.dart';
 import '../providers/language_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/feedback_service.dart';
+import '../utils/app_icons.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../widgets/crayon_palette.dart';
+import '../widgets/ambient_loop.dart';
 import '../widgets/kid_screen.dart';
 import '../widgets/kid_tap.dart';
 
@@ -120,13 +123,36 @@ class _MirrorDrawScreenState extends ConsumerState<MirrorDrawScreen> {
                         _extend(d.localPosition + const Offset(0.5, 0.5));
                         _end();
                       },
-                      child: CustomPaint(
-                        size: Size(box.maxWidth, box.maxHeight),
-                        painter: _MirrorPainter(
-                          strokes: _strokes,
-                          current: _current,
-                          currentColor: _crayon.color,
-                        ),
+                      child: Stack(
+                        children: [
+                          CustomPaint(
+                            size: Size(box.maxWidth, box.maxHeight),
+                            painter: _MirrorPainter(
+                              strokes: _strokes,
+                              current: _current,
+                              currentColor: _crayon.color,
+                            ),
+                          ),
+                          // An empty sheet shows what to do: a hand draws an
+                          // arc on the left half, and goes when the child does.
+                          if (_strokes.isEmpty && _current.isEmpty)
+                            Positioned.fill(
+                              child: IgnorePointer(
+                                child: AmbientLoop(
+                                  period: DT.motion.drawingBreath,
+                                  reverse: false,
+                                  curve: Curves.easeInOut,
+                                  builder: (_, t, __) => Align(
+                                    alignment: Alignment(
+                                      -0.75 + 0.5 * math.sin(t * math.pi),
+                                      -0.35 + 0.7 * t,
+                                    ),
+                                    child: const AppArt('hand', size: 96),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ),

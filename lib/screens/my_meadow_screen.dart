@@ -11,7 +11,9 @@ import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
+import '../utils/app_icons.dart';
 import '../widgets/ambient_loop.dart';
+import '../widgets/play_components.dart';
 import '../widgets/card_image.dart';
 import '../widgets/colored_sheet_view.dart';
 import '../widgets/kid_screen.dart';
@@ -87,13 +89,26 @@ class _MyMeadowScreenState extends ConsumerState<MyMeadowScreen> {
           ? Center(
               child: Padding(
                 padding: const EdgeInsets.all(32),
-                child: Text(
-                  s(
-                    'Тут стануть твої малюнки',
-                    'Your drawings will stand here',
-                  ),
-                  textAlign: TextAlign.center,
-                  style: DT.tileTitle.copyWith(color: DT.textSecondary),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const AppArt('meadow', size: 150),
+                    const SizedBox(height: 12),
+                    Text(
+                      s(
+                        'Тут стануть твої малюнки',
+                        'Your drawings will stand here',
+                      ),
+                      textAlign: TextAlign.center,
+                      style: DT.h2.copyWith(color: DT.textPrimary),
+                    ),
+                    const SizedBox(height: 20),
+                    PlayAction(
+                      label: s('Малювати', 'Draw'),
+                      icon: AppIcon.navColoring,
+                      onPressed: () => Navigator.of(context).maybePop(),
+                    ),
+                  ],
                 ),
               ),
             )

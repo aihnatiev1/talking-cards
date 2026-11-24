@@ -17,6 +17,7 @@ import '../providers/bloom_reactions_provider.dart';
 import '../services/audio_service.dart';
 import '../services/feedback_service.dart';
 import '../services/paywall_flow.dart';
+import '../utils/app_icons.dart';
 import '../utils/confetti_overlay_mixin.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
@@ -119,6 +120,11 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
   /// the visit, and any real touch ends it early. This flag is the "already
   /// over" half; the "never again" half lives in [coloringAlbumProvider].
   bool _handHintOver = false;
+
+  /// The demonstration is drawing into [_current] — the same reveal the
+  /// child's own finger makes, so the hint *performs* the mechanic: colour
+  /// opens up under the ghost finger.
+  bool _demo = false;
 
   /// The first pick of this visit may resume the picture the child left
   /// unfinished; every later pick is a new one.
@@ -384,6 +390,7 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
       (math.min(r.width, r.height) * 0.085).clamp(24.0, 56.0);
 
   void _onStart(Offset p) {
+    _endDemo();
     _endHandHint();
     _bloom.watching(_lookAt(p));
     _lastLook = DateTime.now();
@@ -453,6 +460,12 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
   /// The demonstration is over the moment the child's own finger lands —
   /// forgiving input (CLAUDE.md rule 3): the hint never competes for the
   /// stroke that interrupted it.
+  void _endDemo() {
+    if (!_demo) return;
+    _demo = false;
+    _current.clear();
+  }
+
   void _endHandHint() {
     if (_handHintOver) return;
     setState(() => _handHintOver = true);
@@ -564,7 +577,7 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
         motion.mode != MotionMode.reduced &&
         _image != null &&
         _strokes.isEmpty &&
-        _current.isEmpty;
+        (_current.isEmpty || _demo);
 
     // No text title: the finger on the picture is the whole instruction.
     return KidScreen.game(
@@ -648,7 +661,18 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
                                 if (showHand)
                                   _GhostFinger(
                                     key: const ValueKey('ghost-finger'),
-                                    onDone: _endHandHint,
+                                    onTrace: (points) => setState(() {
+                                      _demo = true;
+                                      _current
+                                        ..clear()
+                                        ..addAll(points);
+                                    }),
+                                    onDone: () {
+                                      // The colour the finger opened closes
+                                      // again: it was a demonstration.
+                                      setState(_endDemo);
+                                      _endHandHint();
+                                    },
                                   ),
                               ],
                             ),
@@ -1079,8 +1103,9 @@ class _PraiseBubble extends StatelessWidget {
 /// interrupted.
 class _GhostFinger extends StatefulWidget {
   final VoidCallback onDone;
+  final ValueChanged<List<Offset>> onTrace;
 
-  const _GhostFinger({super.key, required this.onDone});
+  const _GhostFinger({super.key, required this.onDone, required this.onTrace});
 
   @override
   State<_GhostFinger> createState() => _GhostFingerState();
@@ -1100,7 +1125,21 @@ class _GhostFingerState extends State<_GhostFinger>
       ..addStatusListener((status) {
         if (status == AnimationStatus.completed) widget.onDone();
       })
+      ..addListener(_trace)
       ..forward();
+  }
+
+  void _trace() {
+    final size = context.size;
+    if (size == null || size.isEmpty) return;
+    final metric = _GhostFingerPainter.pathFor(size).computeMetrics().first;
+    final travelled = metric.length * _ctrl.value;
+    final points = <Offset>[];
+    for (var d = 0.0; d <= travelled; d += 8) {
+      final t = metric.getTangentForOffset(d);
+      if (t != null) points.add(t.position);
+    }
+    widget.onTrace(points);
   }
 
   @override
@@ -1112,98 +1151,59 @@ class _GhostFingerState extends State<_GhostFinger>
   @override
   Widget build(BuildContext context) {
     return IgnorePointer(
-      child: AnimatedBuilder(
-        animation: _ctrl,
-        builder: (_, __) => CustomPaint(
-          size: Size.infinite,
-          painter: _GhostFingerPainter(_ctrl.value),
-        ),
+      child: LayoutBuilder(
+        builder: (context, box) {
+          final size = box.biggest;
+          return AnimatedBuilder(
+            animation: _ctrl,
+            builder: (_, __) {
+              final t = _ctrl.value;
+              final metric = _GhostFingerPainter.pathFor(
+                size,
+              ).computeMetrics().first;
+              final at =
+                  metric.getTangentForOffset(metric.length * t)?.position ??
+                  Offset.zero;
+              // Fade in, hold, fade out around the pass.
+              final opacity = t < 0.08
+                  ? t / 0.08
+                  : t > 0.85
+                  ? (1 - t) / 0.15
+                  : 1.0;
+              return Stack(
+                children: [
+                  // The tip of the painted hand sits on the line; the colour
+                  // opens up under it (see `_trace`).
+                  Positioned(
+                    left: at.dx - 22,
+                    top: at.dy - 10,
+                    child: Opacity(
+                      opacity: opacity.clamp(0.0, 1.0),
+                      child: const AppArt('hand', size: 96),
+                    ),
+                  ),
+                ],
+              );
+            },
+          );
+        },
       ),
     );
   }
 }
 
-class _GhostFingerPainter extends CustomPainter {
-  _GhostFingerPainter(this.t);
-
-  /// 0 → 1 through one pass.
-  final double t;
-
-  /// Fade in, hold, fade out — as fractions of the pass.
-  static const _fadeIn = 0.08;
-  static const _fadeOut = 0.85;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final opacity = t < _fadeIn
-        ? t / _fadeIn
-        : t > _fadeOut
-        ? (1 - t) / (1 - _fadeOut)
-        : 1.0;
-    if (opacity <= 0) return;
-
-    final path = Path()
-      ..moveTo(size.width * 0.18, size.height * 0.66)
-      ..cubicTo(
-        size.width * 0.34,
-        size.height * 0.28,
-        size.width * 0.64,
-        size.height * 0.86,
-        size.width * 0.84,
-        size.height * 0.40,
-      );
-    final metric = path.computeMetrics().first;
-    final travelled = metric.length * t;
-    final trail = metric.extractPath(0, travelled);
-
-    canvas.drawPath(
-      trail,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round
-        ..strokeWidth = 30
-        ..color = Colors.white.withValues(alpha: 0.42 * opacity),
+/// The finger's route: one S-curve across the picture.
+abstract final class _GhostFingerPainter {
+  static Path pathFor(Size size) => Path()
+    ..moveTo(size.width * 0.18, size.height * 0.66)
+    ..cubicTo(
+      size.width * 0.34,
+      size.height * 0.28,
+      size.width * 0.64,
+      size.height * 0.86,
+      size.width * 0.84,
+      size.height * 0.40,
     );
-
-    final tangent = metric.getTangentForOffset(travelled);
-    final at = tangent?.position;
-    if (at == null) return;
-
-    // The finger: a pad on the line and a tapered tip leaving it — enough
-    // to read as a hand without pretending to be an illustration.
-    canvas.drawCircle(
-      at,
-      18,
-      Paint()..color = Colors.white.withValues(alpha: 0.85 * opacity),
-    );
-    canvas.drawCircle(
-      at,
-      18,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2
-        ..color = DT.bloomInk.withValues(alpha: 0.30 * opacity),
-    );
-    final tip = RRect.fromRectAndRadius(
-      Rect.fromLTWH(at.dx + 6, at.dy - 58, 22, 52),
-      const Radius.circular(11),
-    );
-    canvas.drawRRect(
-      tip,
-      Paint()..color = Colors.white.withValues(alpha: 0.70 * opacity),
-    );
-    canvas.drawRRect(
-      tip,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2
-        ..color = DT.bloomInk.withValues(alpha: 0.22 * opacity),
-    );
-  }
-
-  @override
-  bool shouldRepaint(_GhostFingerPainter old) => old.t != t;
 }
 
 class _PaywallGate extends ConsumerWidget {
