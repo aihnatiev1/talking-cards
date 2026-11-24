@@ -21,6 +21,35 @@ class AnimalFriendArt extends StatelessWidget {
       'fish' => ('farm-pond-atlas-v1.png', 3.0, Alignment.bottomRight),
       _ => null,
     };
+    // The clay friends (Firefly, same puffy style as Bloom). The flat atlas
+    // and the drawn painter remain the fallback for anything missing.
+    const clay = {
+      'cow',
+      'cat',
+      'dog',
+      'rabbit',
+      'horse',
+      'pig',
+      'chicken',
+      'duck',
+      'frog',
+      'fish',
+    };
+    if (clay.contains(animal)) {
+      return ExcludeSemantics(
+        child: RepaintBoundary(
+          child: AspectRatio(
+            aspectRatio: 1,
+            child: Image.asset(
+              'assets/images/friends/$animal.webp',
+              fit: BoxFit.contain,
+              alignment: Alignment.bottomCenter,
+              filterQuality: FilterQuality.medium,
+            ),
+          ),
+        ),
+      );
+    }
     return ExcludeSemantics(
       child: RepaintBoundary(
         child: sprite == null

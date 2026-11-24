@@ -151,8 +151,16 @@ class PlayScene extends StatelessWidget {
     height: height,
     child: ClipRRect(
       borderRadius: BorderRadius.circular(DT.rLg),
-      child: CustomPaint(
-        painter: const PlayGardenPainter(),
+      // The clay valley the games play in, cropped to the stage; the drawn
+      // garden stays underneath as the fallback.
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/backdrops/guess_sky.webp'),
+            fit: BoxFit.cover,
+            alignment: Alignment(0, 0.55),
+          ),
+        ),
         child: LayoutBuilder(
           builder: (context, box) => Stack(
             children: [
