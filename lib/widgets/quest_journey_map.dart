@@ -28,17 +28,6 @@ const _colors = [
   Color(0xFF6FBEA7),
   Color(0xFFE9B64F),
 ];
-// One drawn landmark per stop (ux-gap-audit G13): an ear to listen with,
-// a tree hung with cards, a bell to guess by, a star for the bigger batch
-// of cards, a flower-microphone to say it again — and the chest.
-const _icons = [
-  AppIcon.stepListen,
-  AppIcon.stopCardTree,
-  AppIcon.stopBell,
-  AppIcon.star,
-  AppIcon.stopMicFlower,
-  AppIcon.rewardChestClosed,
-];
 
 /// A child-sized icon plate inside an 80×80 touch target.
 const double _plate = 72;
