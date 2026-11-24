@@ -292,20 +292,26 @@ class CardBack extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(radius),
               boxShadow: [
+                // The clay art carries its own depth: only a soft contact
+                // shadow, no hard-edged box that read as a second card.
                 BoxShadow(
-                  color: theme.seal.withValues(alpha: 0.28),
-                  offset: const Offset(0, 4),
-                ),
-                BoxShadow(
-                  color: theme.seal.withValues(alpha: 0.12),
-                  offset: const Offset(0, 8),
-                  blurRadius: 14,
+                  color: Colors.black.withValues(alpha: 0.16),
+                  offset: const Offset(0, 6),
+                  blurRadius: 12,
                 ),
               ],
             ),
-            child: CustomPaint(
-              painter: CardBackPainter(theme),
-              size: Size.infinite,
+            // The painted back (Firefly clay art, four of them — bunny, sun,
+            // rainbow, moon) is chosen from the board's colour so a board
+            // keeps one back; the drawn pattern remains the fallback.
+            child: Image.asset(
+              'assets/images/memory/back_${theme.seal.toARGB32() % 4}.webp',
+              fit: BoxFit.fill,
+              filterQuality: FilterQuality.medium,
+              errorBuilder: (_, __, ___) => CustomPaint(
+                painter: CardBackPainter(theme),
+                size: Size.infinite,
+              ),
             ),
           ),
         );
