@@ -776,6 +776,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
         }
       });
       return KidScreen(
+        backdrop: 'assets/images/backdrops/home_sky.webp',
         accent: widget.pack.color,
         body: ContentDownloadView(
           state: content,
@@ -793,6 +794,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
     // accident most. The pack name is gone from the header: a two-year-old
     // does not read it and the parent saw it on the tile a second ago.
     return KidScreen(
+      backdrop: 'assets/images/backdrops/home_sky.webp',
       accent: widget.pack.color,
       progress: progress,
       // Back: Bloom waves goodbye (no sound — the button pops) while the

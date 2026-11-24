@@ -92,6 +92,7 @@ class _KidWordWallScreenState extends ConsumerState<KidWordWallScreen> {
     // No text title: the body's own header greets the child by name and
     // shows the count — that is the "Treasure box" a non-reader gets.
     return KidScreen(
+      backdrop: 'assets/images/backdrops/treasure_sky.webp',
       accent: DT.brand,
       body: Column(
         children: [
@@ -190,25 +191,41 @@ class _KidWordWallScreenState extends ConsumerState<KidWordWallScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            Text(
-              s('Тут будуть твої скарби', 'Your treasures will live here'),
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: responsiveFont(context, 18),
-                fontWeight: FontWeight.w800,
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: DT.surfaceWhite.withValues(alpha: 0.86),
+                borderRadius: BorderRadius.circular(DT.rLg),
               ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              s(
-                'Грай — і слова та наліпки збиратимуться сюди!',
-                'Play, and the words and stickers you earn collect here!',
-              ),
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: responsiveFont(context, 14),
-                color: Colors.grey[600],
-                height: 1.4,
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  children: [
+                    Text(
+                      s(
+                        'Тут будуть твої скарби',
+                        'Your treasures will live here',
+                      ),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: responsiveFont(context, 18),
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      s(
+                        'Грай — і слова та наліпки збиратимуться сюди!',
+                        'Play, and the words and stickers you earn collect here!',
+                      ),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: responsiveFont(context, 14),
+                        color: Colors.grey[600],
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 20),

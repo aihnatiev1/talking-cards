@@ -230,7 +230,14 @@ class _PlayLessonScreenState extends ConsumerState<PlayLessonScreen>
         backgroundColor: DT.sceneSkyTop,
         body: Stack(
           children: [
-            const Positioned.fill(child: MeadowScene()),
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/backdrops/guess_sky.webp',
+                fit: BoxFit.cover,
+                alignment: Alignment.bottomCenter,
+                errorBuilder: (_, __, ___) => const MeadowScene(),
+              ),
+            ),
             SafeArea(
               child: Center(
                 child: ConstrainedBox(
@@ -365,40 +372,60 @@ class _PlayLessonScreenState extends ConsumerState<PlayLessonScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(
-                        complete
-                            ? s('Ось і новий друг!', 'Meet your new friend!')
-                            : repeating
-                            ? s('Спробуємо разом?', 'Shall we try together?')
-                            : exploring
-                            ? s('Торкнись і послухай', 'Tap and listen')
-                            : s('Знайди тваринку', 'Find the animal'),
-                        style: DT.display,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        complete
-                            ? s(
-                                'Він чекатиме на твоїй галявині.',
-                                'Your friend is waiting in your garden.',
-                              )
-                            : repeating
-                            ? s(
-                                'Повторіть слово разом. Або просто послухайте ще.',
-                                'Say the word together. Or just listen again.',
-                              )
-                            : exploring
-                            ? s(
-                                'Bloom знайомиться разом із тобою.',
-                                'Bloom is meeting your friends, too.',
-                              )
-                            : s(
-                                'Послухай слово й торкнись картинки.',
-                                'Listen to the word, then tap the picture.',
+                      DecoratedBox(
+                        // Frosted over the painted sky so the heading reads.
+                        decoration: BoxDecoration(
+                          color: DT.surfaceWhite.withValues(alpha: 0.86),
+                          borderRadius: BorderRadius.circular(DT.rLg),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+                          child: Column(
+                            children: [
+                              Text(
+                                complete
+                                    ? s(
+                                        'Ось і новий друг!',
+                                        'Meet your new friend!',
+                                      )
+                                    : repeating
+                                    ? s(
+                                        'Спробуємо разом?',
+                                        'Shall we try together?',
+                                      )
+                                    : exploring
+                                    ? s('Торкнись і послухай', 'Tap and listen')
+                                    : s('Знайди тваринку', 'Find the animal'),
+                                style: DT.display,
+                                textAlign: TextAlign.center,
                               ),
-                        style: DT.body,
-                        textAlign: TextAlign.center,
+                              const SizedBox(height: 8),
+                              Text(
+                                complete
+                                    ? s(
+                                        'Він чекатиме на твоїй галявині.',
+                                        'Your friend is waiting in your garden.',
+                                      )
+                                    : repeating
+                                    ? s(
+                                        'Повторіть слово разом. Або просто послухайте ще.',
+                                        'Say the word together. Or just listen again.',
+                                      )
+                                    : exploring
+                                    ? s(
+                                        'Bloom знайомиться разом із тобою.',
+                                        'Bloom is meeting your friends, too.',
+                                      )
+                                    : s(
+                                        'Послухай слово й торкнись картинки.',
+                                        'Listen to the word, then tap the picture.',
+                                      ),
+                                style: DT.body,
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 20),
                       if (exploring || repeating) ...[

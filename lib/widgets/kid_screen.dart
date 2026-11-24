@@ -8,6 +8,7 @@ import '../utils/design_tokens.dart';
 import '../utils/kid_routes.dart';
 import '../utils/motion.dart';
 import 'kid_tap.dart';
+import 'cue_pill.dart';
 import 'meadow_scene.dart';
 
 /// The one scaffold for every child-facing screen (architecture-gap-audit
@@ -170,6 +171,7 @@ class KidScreen extends StatelessWidget {
                         : const SizedBox.square(dimension: 72),
                     title: title,
                     trailing: trailing,
+                    frost: backdrop != null,
                   ),
                 if (progressValue != null)
                   Padding(
@@ -213,14 +215,14 @@ Widget _behindTheGame({
   String? backdrop,
   required Widget child,
 }) {
-  if (!meadow) return child;
+  if (!meadow && backdrop == null) return child;
   return Stack(
     children: [
       Positioned.fill(
         child: backdrop == null
             ? const MeadowScene()
             : Image.asset(
-                backdrop,
+                backdrop!,
                 fit: BoxFit.cover,
                 alignment: Alignment.bottomCenter,
                 errorBuilder: (_, __, ___) => const MeadowScene(),
@@ -245,15 +247,20 @@ class _Header extends StatelessWidget {
     required this.leading,
     required this.title,
     required this.trailing,
+    this.frost = false,
   });
 
   final Widget leading;
   final Widget? title;
   final Widget? trailing;
 
+  /// Over a painted backdrop a text title sits on a frosted pill.
+  final bool frost;
+
   @override
   Widget build(BuildContext context) {
-    final centre = title;
+    final t = title;
+    final centre = frost && t is Text ? CuePill(child: t) : t;
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: DT.sp12,

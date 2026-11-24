@@ -27,6 +27,7 @@ import '../widgets/content_download_view.dart';
 import '../widgets/bloom_mascot.dart';
 import '../widgets/kid_screen.dart';
 import '../widgets/kid_tap.dart';
+import '../widgets/cue_pill.dart';
 
 /// Water-reveal coloring screen.
 ///
@@ -581,6 +582,7 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
 
     // No text title: the finger on the picture is the whole instruction.
     return KidScreen.game(
+      backdrop: 'assets/images/backdrops/studio_sky.webp',
       accent: DT.brand,
       background: DT.violetTint,
       // The X is back: this is a pushed route again now that the tab is
@@ -610,16 +612,18 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                  child: Text(
-                    s(
-                      'Проведи пальцем по картинці — проявляться кольори',
-                      'Drag your finger — the colors appear',
-                    ),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade700,
-                      fontWeight: FontWeight.w500,
+                  child: CuePill(
+                    child: Text(
+                      s(
+                        'Проведи пальцем по картинці — проявляться кольори',
+                        'Drag your finger — the colors appear',
+                      ),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        color: DT.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ),

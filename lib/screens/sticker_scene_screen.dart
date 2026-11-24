@@ -99,6 +99,7 @@ class _StickerSceneScreenState extends ConsumerState<StickerSceneScreen> {
     if (_held == null && pool.isNotEmpty) _held = pool.first;
 
     return KidScreen.game(
+      backdrop: 'assets/images/backdrops/guess_sky.webp',
       accent: DT.brand,
       meadow: true,
       trailing: IconButton(
@@ -130,7 +131,15 @@ class _StickerSceneScreenState extends ConsumerState<StickerSceneScreen> {
                         onTapUp: (d) => _place(d.localPosition, field),
                         child: Stack(
                           children: [
-                            const Positioned.fill(child: MeadowScene()),
+                            Positioned.fill(
+                              child: Image.asset(
+                                'assets/images/backdrops/guess_sky.webp',
+                                fit: BoxFit.cover,
+                                alignment: Alignment.bottomCenter,
+                                errorBuilder: (_, __, ___) =>
+                                    const MeadowScene(),
+                              ),
+                            ),
                             // An empty meadow is an invitation, not a
                             // blank: the sticker in hand hovers where the
                             // next tap will put it. Gone with the first one.

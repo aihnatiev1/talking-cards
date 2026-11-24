@@ -317,31 +317,42 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       // The tabs scroll *behind* the floating bar (and fade out under it)
       // instead of being sliced flat at its top edge.
       extendBody: true,
-      body: AnimatedBuilder(
-        animation: _fadeCtrl,
-        builder: (_, child) => IgnorePointer(
-          // A tap on a half-faded tab would land on whichever tab happens to
-          // be in the stack at that instant; hold input for 180 ms instead.
-          ignoring: _fadeCtrl.isAnimating,
-          child: child,
+      backgroundColor: DT.bgWarm,
+      body: DecoratedBox(
+        // One calm painted sky behind every tab.
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/backdrops/home_sky.webp'),
+            fit: BoxFit.cover,
+            alignment: Alignment.bottomCenter,
+          ),
         ),
-        child: FadeTransition(
-          opacity: _fade,
-          child: IndexedStack(
-            index: _visibleTab,
-            children: [
-              TickerMode(
-                enabled: _visibleTab == 0,
-                child: PlayTab(active: _tab == 0 && _visibleTab == 0),
-              ),
-              TickerMode(
-                enabled: _visibleTab == 1,
-                child: _visited.contains(1)
-                    ? const PacksTab(catalogueOnly: true)
-                    : const SizedBox.shrink(),
-              ),
-              TickerMode(enabled: _visibleTab == 2, child: const WorldTab()),
-            ],
+        child: AnimatedBuilder(
+          animation: _fadeCtrl,
+          builder: (_, child) => IgnorePointer(
+            // A tap on a half-faded tab would land on whichever tab happens to
+            // be in the stack at that instant; hold input for 180 ms instead.
+            ignoring: _fadeCtrl.isAnimating,
+            child: child,
+          ),
+          child: FadeTransition(
+            opacity: _fade,
+            child: IndexedStack(
+              index: _visibleTab,
+              children: [
+                TickerMode(
+                  enabled: _visibleTab == 0,
+                  child: PlayTab(active: _tab == 0 && _visibleTab == 0),
+                ),
+                TickerMode(
+                  enabled: _visibleTab == 1,
+                  child: _visited.contains(1)
+                      ? const PacksTab(catalogueOnly: true)
+                      : const SizedBox.shrink(),
+                ),
+                TickerMode(enabled: _visibleTab == 2, child: const WorldTab()),
+              ],
+            ),
           ),
         ),
       ),

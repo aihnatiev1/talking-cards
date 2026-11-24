@@ -83,6 +83,7 @@ class _MirrorDrawScreenState extends ConsumerState<MirrorDrawScreen> {
     final isEn = ref.watch(languageProvider) == 'en';
     final s = AppS(isEn);
     return KidScreen.game(
+      backdrop: 'assets/images/backdrops/studio_sky.webp',
       accent: DT.brand,
       background: DT.violetTint,
       title: Text(

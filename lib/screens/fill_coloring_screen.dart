@@ -392,6 +392,7 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
     final sheet = _sheet;
 
     return KidScreen.game(
+      backdrop: 'assets/images/backdrops/studio_sky.webp',
       accent: DT.brand,
       background: DT.violetTint,
       trailing: sheet == null

@@ -630,6 +630,8 @@ class _PacksTabState extends ConsumerState<PacksTab> {
     }
 
     return Scaffold(
+      // The home's painted sky shows through.
+      backgroundColor: Colors.transparent,
       body: GestureDetector(
         // Sago Mini-style ambient delight: tap on empty area spawns a bubble
         // that floats up and pops. Translucent so children still get taps.

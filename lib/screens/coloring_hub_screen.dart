@@ -144,6 +144,7 @@ class ColoringHubScreen extends ConsumerWidget {
     ];
 
     return KidScreen(
+      backdrop: 'assets/images/backdrops/studio_sky.webp',
       accent: DT.brand,
       background: DT.violetTint,
       // Pushed over the home screen (shortcut, My world, quest), where

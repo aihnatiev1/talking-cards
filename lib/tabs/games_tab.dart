@@ -178,347 +178,364 @@ class _GamesTabState extends ConsumerState<GamesTab> {
     final packsAsync = ref.watch(packsProvider);
     final isEn = ref.watch(languageProvider) == 'en';
 
-    return Scaffold(
-      backgroundColor: DT.bgWarm,
-      appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const AppArt('gamepad', size: 36),
-            const SizedBox(width: 8),
-            Text(isEn ? 'Games' : 'Ігри', style: DT.h1.copyWith(fontSize: 24)),
-          ],
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        color: DT.bgWarm,
+        image: DecorationImage(
+          image: AssetImage('assets/images/backdrops/home_sky.webp'),
+          fit: BoxFit.cover,
+          alignment: Alignment.bottomCenter,
         ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        // A transparent AppBar reads as a dark background to Flutter, which
-        // then turns the status bar white — near-invisible on this cream
-        // tab and, because the tab stays mounted, on the pale game skies
-        // pushed over it. The screens under it are light: dark icons.
-        systemOverlayStyle: SystemUiOverlayStyle.dark,
       ),
-      body: packsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const AppArt('wave', size: 96),
-                const SizedBox(height: 16),
-                Text(
-                  isEn ? 'Oops, didn\'t load' : 'Ой, не завантажилось',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  onPressed: () => ref.invalidate(packsProvider),
-                  icon: const AppIconView(AppIcon.replay, size: 22),
-                  label: Text(isEn ? 'Try again' : 'Спробувати ще раз'),
-                ),
-              ],
-            ),
-          ),
-        ),
-        data: (packs) {
-          // Word-based games (Guess, Memory, thumbnails) must not pull cards
-          // from phrase/verse/babble packs, or a poem plays instead of a word.
-          // …nor from paid packs whose illustrations are still arriving via
-          // the Play asset pack — a game with blank tiles is worse than a
-          // game with fewer cards.
-          final contentReady = ref.watch(contentPackProvider).isReady;
-          final allCards = packs
-              .where((p) => !PackModel.nonWordPackIds.contains(p.id))
-              .where((p) => contentReady || p.isFree)
-              .expand((p) => p.cards)
-              .toList();
-          final playableCount = isEn
-              ? allCards
-                    .where(
-                      (c) =>
-                          c.image != null &&
-                          AudioService.instance.hasSound(c.audioKey),
-                    )
-                    .length
-              : allCards
-                    .where((c) => c.audioKey != null && c.image != null)
-                    .length;
-
-          final toddlerGames = <_BigGame>[
-            _BigGame(
-              id: 'quiz',
-              title: isEn ? 'Guess the word' : 'Вгадай звук',
-              subtitle: isEn
-                  ? 'Listen and tap the card'
-                  : 'Слухай і тисни картку',
-              color: DT.sky,
-              bg: DT.skyTint,
-              thumb: _pickThumb(allCards, skip: 0),
-              art: 'ear',
-              badge: AppIcon.gameGuess,
-              onTap: playableCount >= 4 ? () => _openQuiz(allCards) : null,
-              lockedHint: isEn
-                  ? 'Open more cards in Packs first'
-                  : 'Спочатку відкрий більше карток',
-            ),
-            _BigGame(
-              id: 'memory_match',
-              title: isEn ? 'Find the pair' : 'Знайди пару',
-              subtitle: isEn
-                  ? 'Flip cards, match pairs'
-                  : 'Відкривай і шукай пари',
-              color: DT.mint,
-              bg: DT.mintTint,
-              thumb: _pickThumb(allCards, skip: 5),
-              art: 'cards',
-              badge: AppIcon.gameMatch,
-              onTap: playableCount >= 6
-                  ? () => _openMemoryMatch(allCards)
-                  : null,
-              lockedHint: isEn
-                  ? 'Open more cards in Packs first'
-                  : 'Спочатку відкрий більше карток',
-            ),
-            _BigGame(
-              id: 'bubble_pop_free',
-              title: isEn ? 'Pop the bubbles' : 'Лопай бульбашки',
-              subtitle: isEn ? 'Pop, pop, pop!' : 'Лоп-лоп-лоп!',
-              color: DT.coral,
-              bg: DT.coralTint,
-              thumb: _pickThumb(allCards, skip: 9),
-              art: 'bubbles',
-              badge: AppIcon.gameBubbles,
-              onTap: playableCount >= 5
-                  ? () => Navigator.of(
-                      context,
-                    ).push(KidRoutes.game(const BubblePopScreen()))
-                  : null,
-              lockedHint: isEn
-                  ? 'Open more cards in Packs first'
-                  : 'Спочатку відкрий більше карток',
-            ),
-            _BigGame(
-              id: 'repeat',
-              title: isEn ? 'Repeat after me' : 'Повтори за мною',
-              subtitle: isEn
-                  ? 'Say the word, grown-up taps'
-                  : 'Скажи слово, дорослий натискає',
-              color: DT.peach,
-              bg: DT.peachTint,
-              thumb: _pickThumb(allCards, skip: 12),
-              art: 'speech',
-              badge: AppIcon.gameRepeat,
-              onTap: playableCount >= 4 ? () => _openRepeatGame(packs) : null,
-              lockedHint: isEn
-                  ? 'Open more cards in Packs first'
-                  : 'Спочатку відкрий більше карток',
-            ),
-          ];
-
-          final parentGames = <_BigGame>[
-            _BigGame(
-              id: 'articulation',
-              title: isEn ? 'Articulation' : 'Артикуляційна',
-              subtitle: isEn
-                  ? 'Daily tongue & lip workout'
-                  : 'Щоденна гімнастика язика',
-              color: DT.violet,
-              bg: DT.violetTint,
-              thumb: null,
-              badge: AppIcon.gameArticulation,
-              onTap: _openArticulation,
-              lockedHint: '',
-            ),
-          ];
-
-          final advancedPacks = packs
-              .where(
-                (p) =>
-                    !p.id.startsWith('_') &&
-                    !p.isLocked &&
-                    !_oddOneOutExclude.contains(p.id) &&
-                    p.cards.length >= 4 &&
-                    (isEn ? p.cards.any((c) => c.image != null) : true),
-              )
-              .toList();
-          // Whether buying would actually help: a locked pack that would
-          // qualify if it were open. Without this the hint can send a
-          // parent to the paywall for something a purchase cannot fix.
-          final oddUnlockable = packs.any(
-            (p) =>
-                !p.id.startsWith('_') &&
-                p.isLocked &&
-                !_oddOneOutExclude.contains(p.id) &&
-                p.cards.length >= 4 &&
-                (isEn ? p.cards.any((c) => c.image != null) : true),
-          );
-          final oddShort = 2 - advancedPacks.length;
-
-          final oppPackId = isEn ? 'en_opposites' : 'opposites';
-          final oppPack = packs.where((p) => p.id == oppPackId).firstOrNull;
-          final oppLocked = oppPack?.isLocked ?? false;
-          final oppPlayable =
-              oppPack != null && !oppPack.isLocked && oppPack.cards.length >= 4;
-          final advancedGames = <_BigGame>[
-            _BigGame(
-              id: 'odd_one_out',
-              title: isEn ? 'Odd one out' : 'Знайди зайве',
-              subtitle: isEn
-                  ? 'Spot the different one'
-                  : 'Знайди не таке, як інші',
-              color: DT.violet,
-              bg: DT.violetTint,
-              thumb: _pickThumb(allCards, skip: 20),
-              art: 'odd',
-              badge: AppIcon.gameOdd,
-              onTap: advancedPacks.length >= 2
-                  ? () => _openOddOneOut(packs)
-                  : null,
-              // "Open at least 2 packs" said nothing a parent could act
-              // on: which packs, opened how, and why two. Name the number
-              // still missing, say that unlocking is what does it, and
-              // make the tap go there.
-              lockedHint: isEn
-                  ? (oddUnlockable
-                        ? 'This game needs 2 open packs — '
-                              '${oddShort == 1 ? "unlock one more" : "unlock two"}'
-                        : 'This game needs 2 packs with pictures')
-                  : (oddUnlockable
-                        ? 'Грі потрібні 2 відкриті паки — '
-                              'розблокуй ще ${oddShort == 1 ? "один" : "два"}'
-                        : 'Грі потрібні 2 паки з картинками'),
-              onLockedTap: oddUnlockable
-                  ? () => runPaywallFlow(context, ref, source: 'games_lock')
-                  : null,
-            ),
-            // «Знайди бульбашку» — the same sky, one thing to look for
-            // (bubble_pop_redesign §5, experience audit п. 23). Free
-            // popping keeps its own tile above: this is an extra way to
-            // play, not a replacement, and nothing here punishes a child
-            // who pops the wrong one.
-            _BigGame(
-              id: 'bubble_pop_find',
-              title: isEn ? 'Find the bubble' : 'Знайди бульбашку',
-              subtitle: isEn
-                  ? 'Pop the one Bloom shows'
-                  : 'Лопни ту, що показує Блум',
-              color: DT.sky,
-              bg: DT.skyTint,
-              thumb: _pickThumb(allCards, skip: 26),
-              art: 'find',
-              badge: AppIcon.gameBubbles,
-              onTap: playableCount >= 6
-                  ? () => Navigator.of(context).push(
-                      KidRoutes.game(
-                        const BubblePopScreen(mode: BubbleMode.find),
-                      ),
-                    )
-                  : null,
-              lockedHint: isEn
-                  ? 'Open more cards in Packs first'
-                  : 'Спочатку відкрий більше карток',
-            ),
-            _BigGame(
-              id: 'opposites',
-              title: isEn ? 'Opposites' : 'Протилежності',
-              subtitle: isEn
-                  ? 'Big↔small, hot↔cold'
-                  : 'Великий↔малий, тепло↔холод',
-              color: DT.pink,
-              bg: DT.pinkTint,
-              thumb: oppPack != null ? _pickThumb(oppPack.cards) : null,
-              art: 'opposites',
-              badge: AppIcon.gameOpposites,
-              onTap: oppPlayable ? () => _openOppositeGame(packs) : null,
-              lockedHint: isEn
-                  ? (oppLocked
-                        ? 'Subscribe to unlock Opposites'
-                        : 'Opposites pack is empty')
-                  : (oppLocked
-                        ? 'Розблокуй пак «Протилежності»'
-                        : 'Пак «Протилежності» порожній'),
-              onLockedTap: oppLocked
-                  ? () => runPaywallFlow(context, ref, source: 'games_lock')
-                  : null,
-            ),
-          ];
-
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              _SectionHeader(
-                title: isEn ? 'For little ones' : 'Для малят',
-                subtitle: isEn ? 'ages 1–3' : '1–3 роки',
-                art: 'wave',
+              const AppArt('gamepad', size: 36),
+              const SizedBox(width: 8),
+              Text(
+                isEn ? 'Games' : 'Ігри',
+                style: DT.h1.copyWith(fontSize: 24),
               ),
-              const SizedBox(height: 10),
-              _GameGrid(games: toddlerGames, section: 'toddler'),
-              const SizedBox(height: 22),
-              _SectionHeader(
-                title: isEn ? 'For grown-ups' : 'Для батьків',
-                // Not "speech therapy": the app is used by therapists but is
-                // not therapy, and the store copy stopped saying so.
-                subtitle: isEn ? 'practice together' : 'вправи разом',
-                art: 'padlock',
-              ),
-              const SizedBox(height: 10),
-              Column(
+            ],
+          ),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          // A transparent AppBar reads as a dark background to Flutter, which
+          // then turns the status bar white — near-invisible on this cream
+          // tab and, because the tab stays mounted, on the pale game skies
+          // pushed over it. The screens under it are light: dark icons.
+          systemOverlayStyle: SystemUiOverlayStyle.dark,
+        ),
+        body: packsAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (_, __) => Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  for (final game in parentGames)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Material(
-                        color: DT.violetTint,
-                        borderRadius: BorderRadius.circular(22),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 18,
-                            vertical: 12,
-                          ),
-                          leading: const CircleAvatar(
-                            radius: 26,
-                            backgroundColor: Colors.white,
-                            child: AppArt('padlock', size: 34),
-                          ),
-                          title: Text(
-                            game.title,
-                            style: DT.tileTitle.copyWith(color: DT.textPrimary),
-                          ),
-                          subtitle: Text(game.subtitle),
-                          trailing: const AppIconView(
-                            AppIcon.play,
-                            size: 18,
-                            color: DT.textMuted,
-                          ),
-                          onTap: () {
-                            KidTap.feedback();
-                            AnalyticsService.instance.logGameTileTap(
-                              game.id,
-                              playable: game.onTap != null,
-                              section: 'parent',
-                            );
-                            game.onTap?.call();
-                          },
-                        ),
-                      ),
+                  const AppArt('wave', size: 96),
+                  const SizedBox(height: 16),
+                  Text(
+                    isEn ? 'Oops, didn\'t load' : 'Ой, не завантажилось',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () => ref.invalidate(packsProvider),
+                    icon: const AppIconView(AppIcon.replay, size: 22),
+                    label: Text(isEn ? 'Try again' : 'Спробувати ще раз'),
+                  ),
                 ],
               ),
-              const SizedBox(height: 22),
-              _SectionHeader(
-                title: isEn ? 'For older kids' : 'Для старших',
-                subtitle: isEn ? 'ages 3+' : '3+',
-                art: 'medal',
+            ),
+          ),
+          data: (packs) {
+            // Word-based games (Guess, Memory, thumbnails) must not pull cards
+            // from phrase/verse/babble packs, or a poem plays instead of a word.
+            // …nor from paid packs whose illustrations are still arriving via
+            // the Play asset pack — a game with blank tiles is worse than a
+            // game with fewer cards.
+            final contentReady = ref.watch(contentPackProvider).isReady;
+            final allCards = packs
+                .where((p) => !PackModel.nonWordPackIds.contains(p.id))
+                .where((p) => contentReady || p.isFree)
+                .expand((p) => p.cards)
+                .toList();
+            final playableCount = isEn
+                ? allCards
+                      .where(
+                        (c) =>
+                            c.image != null &&
+                            AudioService.instance.hasSound(c.audioKey),
+                      )
+                      .length
+                : allCards
+                      .where((c) => c.audioKey != null && c.image != null)
+                      .length;
+
+            final toddlerGames = <_BigGame>[
+              _BigGame(
+                id: 'quiz',
+                title: isEn ? 'Guess the word' : 'Вгадай звук',
+                subtitle: isEn
+                    ? 'Listen and tap the card'
+                    : 'Слухай і тисни картку',
+                color: DT.sky,
+                bg: DT.skyTint,
+                thumb: _pickThumb(allCards, skip: 0),
+                art: 'ear',
+                badge: AppIcon.gameGuess,
+                onTap: playableCount >= 4 ? () => _openQuiz(allCards) : null,
+                lockedHint: isEn
+                    ? 'Open more cards in Packs first'
+                    : 'Спочатку відкрий більше карток',
               ),
-              const SizedBox(height: 10),
-              _GameGrid(games: advancedGames, section: 'advanced'),
-            ],
-          );
-        },
+              _BigGame(
+                id: 'memory_match',
+                title: isEn ? 'Find the pair' : 'Знайди пару',
+                subtitle: isEn
+                    ? 'Flip cards, match pairs'
+                    : 'Відкривай і шукай пари',
+                color: DT.mint,
+                bg: DT.mintTint,
+                thumb: _pickThumb(allCards, skip: 5),
+                art: 'cards',
+                badge: AppIcon.gameMatch,
+                onTap: playableCount >= 6
+                    ? () => _openMemoryMatch(allCards)
+                    : null,
+                lockedHint: isEn
+                    ? 'Open more cards in Packs first'
+                    : 'Спочатку відкрий більше карток',
+              ),
+              _BigGame(
+                id: 'bubble_pop_free',
+                title: isEn ? 'Pop the bubbles' : 'Лопай бульбашки',
+                subtitle: isEn ? 'Pop, pop, pop!' : 'Лоп-лоп-лоп!',
+                color: DT.coral,
+                bg: DT.coralTint,
+                thumb: _pickThumb(allCards, skip: 9),
+                art: 'bubbles',
+                badge: AppIcon.gameBubbles,
+                onTap: playableCount >= 5
+                    ? () => Navigator.of(
+                        context,
+                      ).push(KidRoutes.game(const BubblePopScreen()))
+                    : null,
+                lockedHint: isEn
+                    ? 'Open more cards in Packs first'
+                    : 'Спочатку відкрий більше карток',
+              ),
+              _BigGame(
+                id: 'repeat',
+                title: isEn ? 'Repeat after me' : 'Повтори за мною',
+                subtitle: isEn
+                    ? 'Say the word, grown-up taps'
+                    : 'Скажи слово, дорослий натискає',
+                color: DT.peach,
+                bg: DT.peachTint,
+                thumb: _pickThumb(allCards, skip: 12),
+                art: 'speech',
+                badge: AppIcon.gameRepeat,
+                onTap: playableCount >= 4 ? () => _openRepeatGame(packs) : null,
+                lockedHint: isEn
+                    ? 'Open more cards in Packs first'
+                    : 'Спочатку відкрий більше карток',
+              ),
+            ];
+
+            final parentGames = <_BigGame>[
+              _BigGame(
+                id: 'articulation',
+                title: isEn ? 'Articulation' : 'Артикуляційна',
+                subtitle: isEn
+                    ? 'Daily tongue & lip workout'
+                    : 'Щоденна гімнастика язика',
+                color: DT.violet,
+                bg: DT.violetTint,
+                thumb: null,
+                badge: AppIcon.gameArticulation,
+                onTap: _openArticulation,
+                lockedHint: '',
+              ),
+            ];
+
+            final advancedPacks = packs
+                .where(
+                  (p) =>
+                      !p.id.startsWith('_') &&
+                      !p.isLocked &&
+                      !_oddOneOutExclude.contains(p.id) &&
+                      p.cards.length >= 4 &&
+                      (isEn ? p.cards.any((c) => c.image != null) : true),
+                )
+                .toList();
+            // Whether buying would actually help: a locked pack that would
+            // qualify if it were open. Without this the hint can send a
+            // parent to the paywall for something a purchase cannot fix.
+            final oddUnlockable = packs.any(
+              (p) =>
+                  !p.id.startsWith('_') &&
+                  p.isLocked &&
+                  !_oddOneOutExclude.contains(p.id) &&
+                  p.cards.length >= 4 &&
+                  (isEn ? p.cards.any((c) => c.image != null) : true),
+            );
+            final oddShort = 2 - advancedPacks.length;
+
+            final oppPackId = isEn ? 'en_opposites' : 'opposites';
+            final oppPack = packs.where((p) => p.id == oppPackId).firstOrNull;
+            final oppLocked = oppPack?.isLocked ?? false;
+            final oppPlayable =
+                oppPack != null &&
+                !oppPack.isLocked &&
+                oppPack.cards.length >= 4;
+            final advancedGames = <_BigGame>[
+              _BigGame(
+                id: 'odd_one_out',
+                title: isEn ? 'Odd one out' : 'Знайди зайве',
+                subtitle: isEn
+                    ? 'Spot the different one'
+                    : 'Знайди не таке, як інші',
+                color: DT.violet,
+                bg: DT.violetTint,
+                thumb: _pickThumb(allCards, skip: 20),
+                art: 'odd',
+                badge: AppIcon.gameOdd,
+                onTap: advancedPacks.length >= 2
+                    ? () => _openOddOneOut(packs)
+                    : null,
+                // "Open at least 2 packs" said nothing a parent could act
+                // on: which packs, opened how, and why two. Name the number
+                // still missing, say that unlocking is what does it, and
+                // make the tap go there.
+                lockedHint: isEn
+                    ? (oddUnlockable
+                          ? 'This game needs 2 open packs — '
+                                '${oddShort == 1 ? "unlock one more" : "unlock two"}'
+                          : 'This game needs 2 packs with pictures')
+                    : (oddUnlockable
+                          ? 'Грі потрібні 2 відкриті паки — '
+                                'розблокуй ще ${oddShort == 1 ? "один" : "два"}'
+                          : 'Грі потрібні 2 паки з картинками'),
+                onLockedTap: oddUnlockable
+                    ? () => runPaywallFlow(context, ref, source: 'games_lock')
+                    : null,
+              ),
+              // «Знайди бульбашку» — the same sky, one thing to look for
+              // (bubble_pop_redesign §5, experience audit п. 23). Free
+              // popping keeps its own tile above: this is an extra way to
+              // play, not a replacement, and nothing here punishes a child
+              // who pops the wrong one.
+              _BigGame(
+                id: 'bubble_pop_find',
+                title: isEn ? 'Find the bubble' : 'Знайди бульбашку',
+                subtitle: isEn
+                    ? 'Pop the one Bloom shows'
+                    : 'Лопни ту, що показує Блум',
+                color: DT.sky,
+                bg: DT.skyTint,
+                thumb: _pickThumb(allCards, skip: 26),
+                art: 'find',
+                badge: AppIcon.gameBubbles,
+                onTap: playableCount >= 6
+                    ? () => Navigator.of(context).push(
+                        KidRoutes.game(
+                          const BubblePopScreen(mode: BubbleMode.find),
+                        ),
+                      )
+                    : null,
+                lockedHint: isEn
+                    ? 'Open more cards in Packs first'
+                    : 'Спочатку відкрий більше карток',
+              ),
+              _BigGame(
+                id: 'opposites',
+                title: isEn ? 'Opposites' : 'Протилежності',
+                subtitle: isEn
+                    ? 'Big↔small, hot↔cold'
+                    : 'Великий↔малий, тепло↔холод',
+                color: DT.pink,
+                bg: DT.pinkTint,
+                thumb: oppPack != null ? _pickThumb(oppPack.cards) : null,
+                art: 'opposites',
+                badge: AppIcon.gameOpposites,
+                onTap: oppPlayable ? () => _openOppositeGame(packs) : null,
+                lockedHint: isEn
+                    ? (oppLocked
+                          ? 'Subscribe to unlock Opposites'
+                          : 'Opposites pack is empty')
+                    : (oppLocked
+                          ? 'Розблокуй пак «Протилежності»'
+                          : 'Пак «Протилежності» порожній'),
+                onLockedTap: oppLocked
+                    ? () => runPaywallFlow(context, ref, source: 'games_lock')
+                    : null,
+              ),
+            ];
+
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
+              children: [
+                _SectionHeader(
+                  title: isEn ? 'For little ones' : 'Для малят',
+                  subtitle: isEn ? 'ages 1–3' : '1–3 роки',
+                  art: 'wave',
+                ),
+                const SizedBox(height: 10),
+                _GameGrid(games: toddlerGames, section: 'toddler'),
+                const SizedBox(height: 22),
+                _SectionHeader(
+                  title: isEn ? 'For grown-ups' : 'Для батьків',
+                  // Not "speech therapy": the app is used by therapists but is
+                  // not therapy, and the store copy stopped saying so.
+                  subtitle: isEn ? 'practice together' : 'вправи разом',
+                  art: 'padlock',
+                ),
+                const SizedBox(height: 10),
+                Column(
+                  children: [
+                    for (final game in parentGames)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Material(
+                          color: DT.violetTint,
+                          borderRadius: BorderRadius.circular(22),
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 12,
+                            ),
+                            leading: const CircleAvatar(
+                              radius: 26,
+                              backgroundColor: Colors.white,
+                              child: AppArt('padlock', size: 34),
+                            ),
+                            title: Text(
+                              game.title,
+                              style: DT.tileTitle.copyWith(
+                                color: DT.textPrimary,
+                              ),
+                            ),
+                            subtitle: Text(game.subtitle),
+                            trailing: const AppIconView(
+                              AppIcon.play,
+                              size: 18,
+                              color: DT.textMuted,
+                            ),
+                            onTap: () {
+                              KidTap.feedback();
+                              AnalyticsService.instance.logGameTileTap(
+                                game.id,
+                                playable: game.onTap != null,
+                                section: 'parent',
+                              );
+                              game.onTap?.call();
+                            },
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 22),
+                _SectionHeader(
+                  title: isEn ? 'For older kids' : 'Для старших',
+                  subtitle: isEn ? 'ages 3+' : '3+',
+                  art: 'medal',
+                ),
+                const SizedBox(height: 10),
+                _GameGrid(games: advancedGames, section: 'advanced'),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

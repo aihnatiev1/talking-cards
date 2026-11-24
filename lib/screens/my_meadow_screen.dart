@@ -18,6 +18,7 @@ import '../widgets/card_image.dart';
 import '../widgets/colored_sheet_view.dart';
 import '../widgets/kid_screen.dart';
 import '../widgets/kid_tap.dart';
+import '../widgets/cue_pill.dart';
 
 /// Everything the child has finished, standing together on the meadow.
 ///
@@ -79,6 +80,7 @@ class _MyMeadowScreenState extends ConsumerState<MyMeadowScreen> {
     ];
 
     return KidScreen(
+      backdrop: 'assets/images/backdrops/guess_sky.webp',
       accent: DT.brand,
       meadow: true,
       title: Text(
@@ -94,13 +96,15 @@ class _MyMeadowScreenState extends ConsumerState<MyMeadowScreen> {
                   children: [
                     const AppArt('meadow', size: 150),
                     const SizedBox(height: 12),
-                    Text(
-                      s(
-                        'Тут стануть твої малюнки',
-                        'Your drawings will stand here',
+                    CuePill(
+                      child: Text(
+                        s(
+                          'Тут стануть твої малюнки',
+                          'Your drawings will stand here',
+                        ),
+                        textAlign: TextAlign.center,
+                        style: DT.h2.copyWith(color: DT.textPrimary),
                       ),
-                      textAlign: TextAlign.center,
-                      style: DT.h2.copyWith(color: DT.textPrimary),
                     ),
                     const SizedBox(height: 20),
                     PlayAction(

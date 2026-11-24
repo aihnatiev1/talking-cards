@@ -107,11 +107,11 @@ class _CardRevealScreenState extends ConsumerState<CardRevealScreen>
     return Scaffold(
       backgroundColor: DT.rewardPaper,
       body: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: RadialGradient(
-            center: const Alignment(0, -.35),
-            radius: 1.1,
-            colors: [Color.lerp(accent, Colors.white, .88)!, DT.rewardPaper],
+        // The treasure room: a painted clay sky of confetti and gold.
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/backdrops/treasure_sky.webp'),
+            fit: BoxFit.cover,
           ),
         ),
         child: SafeArea(
@@ -200,32 +200,48 @@ class _CardRevealScreenState extends ConsumerState<CardRevealScreen>
                           },
                         ),
                         const SizedBox(height: 16),
-                        Text(
-                          widget.pack.title,
-                          textAlign: TextAlign.center,
-                          style: DT.tileTitle.copyWith(color: ink),
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: DT.surfaceWhite.withValues(alpha: .9),
+                            borderRadius: BorderRadius.circular(DT.rLg),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(14, 8, 14, 10),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Text(
+                                  widget.pack.title,
+                                  textAlign: TextAlign.center,
+                                  style: DT.tileTitle.copyWith(color: ink),
+                                ),
+                                const SizedBox(height: 8),
+                                if (total > 0) ...[
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: LinearProgressIndicator(
+                                      value: unlocked / total,
+                                      minHeight: 8,
+                                      color: accent,
+                                      backgroundColor: accent.withValues(
+                                        alpha: .12,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    s(
+                                      '$unlocked з $total карток відкрито',
+                                      '$unlocked of $total cards unlocked',
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    style: DT.caption,
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
                         ),
-                        const SizedBox(height: 8),
-                        if (total > 0) ...[
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: LinearProgressIndicator(
-                              value: unlocked / total,
-                              minHeight: 8,
-                              color: accent,
-                              backgroundColor: accent.withValues(alpha: .12),
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            s(
-                              '$unlocked з $total карток відкрито',
-                              '$unlocked of $total cards unlocked',
-                            ),
-                            textAlign: TextAlign.center,
-                            style: DT.caption,
-                          ),
-                        ],
                       ],
                     );
                   },
@@ -262,6 +278,7 @@ class _CardRevealScreenState extends ConsumerState<CardRevealScreen>
                       onPressed: _leave,
                       style: TextButton.styleFrom(
                         foregroundColor: ink,
+                        backgroundColor: DT.surfaceWhite.withValues(alpha: .9),
                         minimumSize: const Size(160, 56),
                       ),
                       child: Text(s('На головну', 'Home')),

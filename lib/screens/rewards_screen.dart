@@ -33,8 +33,11 @@ class RewardsScreen extends StatelessWidget {
   const RewardsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) =>
-      const KidScreen(accent: DT.peach, body: RewardsAlbum());
+  Widget build(BuildContext context) => const KidScreen(
+    accent: DT.peach,
+    backdrop: 'assets/images/backdrops/treasure_sky.webp',
+    body: RewardsAlbum(),
+  );
 }
 
 /// The album page: Bloom holding it in the header, then the sticker sheet.
