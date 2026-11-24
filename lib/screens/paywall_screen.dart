@@ -40,8 +40,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   /// Whether the buying controls are occupied. [_loading] covers the local
   /// awaits; the store covers the part that outlives them — while a
   /// checkout is open the CTA must not offer to start a second one.
-  bool get _busy =>
-      _loading || PurchaseService.instance.purchaseInFlight.value;
+  bool get _busy => _loading || PurchaseService.instance.purchaseInFlight.value;
 
   /// Selection is by product, never by position: the catalogue can come
   /// back without a SKU (lifetime until it exists in a console, yearly in an
@@ -84,11 +83,12 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     // in the console must not create a third bucket that saw yearly.
     final defaultPlan =
         RemoteConfigService.instance.paywallDefaultPlan.trim().toLowerCase() ==
-                'monthly'
-            ? 'monthly'
-            : 'yearly';
-    _selectedProductId =
-        defaultPlan == 'monthly' ? 'monthly_premium' : 'yearly_premium';
+            'monthly'
+        ? 'monthly'
+        : 'yearly';
+    _selectedProductId = defaultPlan == 'monthly'
+        ? 'monthly_premium'
+        : 'yearly_premium';
     AnalyticsService.instance.setPaywallDefaultPlanProperty(defaultPlan);
     final name = ref.read(profileProvider).active?.name.trim() ?? '';
     final variant = _learnedCount >= _minLearnedForAnchor
@@ -160,7 +160,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     if (!mounted) return;
     if (!ready) {
       AnalyticsService.instance.logStoreUnavailable(
-          'paywall', PurchaseService.instance.lastLoadFailure);
+        'paywall',
+        PurchaseService.instance.lastLoadFailure,
+      );
     }
     setState(() => _storeReady = ready);
   }
@@ -208,29 +210,50 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       return [
         // 649/(149×12) → −64%; 29.99/(7.99×12) → −69% (matches the
         // fallback price strings below).
-        _Plan(labelYearly, s('649 грн', '\$29.99'), perYear,
-            s('Вигідніше на 64%', 'Save 69%'),
-            productId: 'yearly_premium'),
-        _Plan(labelMonthly, s('149 грн', '\$7.99'), perMonth, null,
-            productId: 'monthly_premium'),
-        _Plan(s('Назавжди', 'Lifetime'), s('1299 грн', '\$59.99'),
-            s('одноразово', 'one-time'), s('Без підписки', 'No subscription'),
-            productId: 'lifetime_premium'),
+        _Plan(
+          labelYearly,
+          s('649 грн', '\$29.99'),
+          perYear,
+          s('Вигідніше на 64%', 'Save 69%'),
+          productId: 'yearly_premium',
+        ),
+        _Plan(
+          labelMonthly,
+          s('149 грн', '\$7.99'),
+          perMonth,
+          null,
+          productId: 'monthly_premium',
+        ),
+        _Plan(
+          s('Назавжди', 'Lifetime'),
+          s('1299 грн', '\$59.99'),
+          s('одноразово', 'one-time'),
+          s('Без підписки', 'No subscription'),
+          productId: 'lifetime_premium',
+        ),
       ];
     }
 
     return products.map((p) {
       switch (p.id) {
         case 'yearly_premium':
-          return _Plan(labelYearly, p.price, perYear, badgeBest,
-              productId: p.id);
+          return _Plan(
+            labelYearly,
+            p.price,
+            perYear,
+            badgeBest,
+            productId: p.id,
+          );
         case 'monthly_premium':
-          return _Plan(labelMonthly, p.price, perMonth, null,
-              productId: p.id);
+          return _Plan(labelMonthly, p.price, perMonth, null, productId: p.id);
         case 'lifetime_premium':
-          return _Plan(s('Назавжди', 'Lifetime'), p.price,
-              s('одноразово', 'one-time'), s('Без підписки', 'No subscription'),
-              productId: p.id);
+          return _Plan(
+            s('Назавжди', 'Lifetime'),
+            p.price,
+            s('одноразово', 'one-time'),
+            s('Без підписки', 'No subscription'),
+            productId: p.id,
+          );
         default:
           return _Plan(p.title, p.price, '', null, productId: p.id);
       }
@@ -267,8 +290,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     // The colon phrasing keeps the name in nominative case — no Ukrainian
     // declension needed for arbitrary names.
     if (!hasName) {
-      return s(RemoteConfigService.instance.paywallTitle,
-          'Unlock full potential');
+      return s(
+        RemoteConfigService.instance.paywallTitle,
+        'Unlock full potential',
+      );
     }
     const ages = {1: '1–2', 2: '2–3', 3: '3–4', 4: '4–5'};
     final age = ages[profile?.level ?? 0];
@@ -277,20 +302,26 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     }
     // NBSP glues "(2–3 р.)" together — with a plain space the closing
     // "р.)" wraps onto its own line for longer names.
-    return s('План розвитку: $name ($age р.)',
-        "$name's learning plan (age $age)");
+    return s(
+      'План розвитку: $name ($age р.)',
+      "$name's learning plan (age $age)",
+    );
   }
 
   Future<void> _purchase() async {
     final s = AppS(ref.read(languageProvider) == 'en');
     final plans = _buildPlans(s);
     final plan = plans[_selectedIndex(plans)];
-    AnalyticsService.instance.logPurchaseStart(plan.productId,
-        PurchaseService.instance.trialStateFor(plan.productId), _source);
+    AnalyticsService.instance.logPurchaseStart(
+      plan.productId,
+      PurchaseService.instance.trialStateFor(plan.productId),
+      _source,
+    );
     setState(() => _loading = true);
     try {
-      final success =
-          await PurchaseService.instance.purchaseByProductId(plan.productId);
+      final success = await PurchaseService.instance.purchaseByProductId(
+        plan.productId,
+      );
       if (!mounted) return;
       // Outcome events (success / cancel / error) are logged by
       // PurchaseService off the store stream — it outlives this screen,
@@ -333,20 +364,28 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     final store = Theme.of(context).platform == TargetPlatform.android
         ? 'Google Play'
         : 'App Store';
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      duration: storeRefused ? DT.motion.snackLong : DT.motion.snack,
-      content: Text(storeRefused
-          ? s('Магазин не почав покупку. Перевірте вхід у $store, спосіб оплати й дозвіл на покупки в налаштуваннях',
-              "The store didn't start the purchase. Check you're signed in to $store, your payment method, and that purchases are allowed in Settings")
-          : s('Не вдалося почати покупку. Спробуйте ще раз',
-              "Couldn't start the purchase. Please try again")),
-      action: SnackBarAction(
-        label: s('Ще раз', 'Try again'),
-        onPressed: () {
-          if (mounted && !_loading) _purchase();
-        },
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        duration: storeRefused ? DT.motion.snackLong : DT.motion.snack,
+        content: Text(
+          storeRefused
+              ? s(
+                  'Магазин не почав покупку. Перевірте вхід у $store, спосіб оплати й дозвіл на покупки в налаштуваннях',
+                  "The store didn't start the purchase. Check you're signed in to $store, your payment method, and that purchases are allowed in Settings",
+                )
+              : s(
+                  'Не вдалося почати покупку. Спробуйте ще раз',
+                  "Couldn't start the purchase. Please try again",
+                ),
+        ),
+        action: SnackBarAction(
+          label: s('Ще раз', 'Try again'),
+          onPressed: () {
+            if (mounted && !_loading) _purchase();
+          },
+        ),
       ),
-    ));
+    );
   }
 
   Future<void> _restore() async {
@@ -369,7 +408,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       final s = AppS(ref.read(languageProvider) == 'en');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text(s('Підписку не знайдено', 'No subscription found'))),
+          content: Text(s('Підписку не знайдено', 'No subscription found')),
+        ),
       );
     }
   }
@@ -382,8 +422,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     // Every trial claim on this screen hangs off this one value: the store
     // decides, not us. Null means the selected plan gets no free days —
     // a spent introductory offer, or the lifetime unlock.
-    final trialDays =
-        PurchaseService.instance.trialDaysFor(plans[_selectedIndex(plans)].productId);
+    final trialDays = PurchaseService.instance.trialDaysFor(
+      plans[_selectedIndex(plans)].productId,
+    );
     // Null until the catalogue for the active language has loaded (or when
     // it failed): the copy then names no number rather than a stale one.
     final packCount = ref.watch(packsProvider).asData?.value.length;
@@ -401,108 +442,118 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           ),
         ),
         child: SafeArea(
-        child: Column(
-          children: [
-            Align(
-              alignment: Alignment.topRight,
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: IconButton(
-                      onPressed: () {
-                        AnalyticsService.instance.logPaywallDismiss(
-                          widget.isOnboarding
-                              ? 'paywall_onboarding'
-                              : 'paywall_screen',
-                        );
-                        Navigator.of(context).pop(false);
-                      },
-                      // grey[700] on the lavender top: ≈5:1 (≥3:1 for UI).
-                      // IconButton's 48 pt hit area stays.
-                      icon: Icon(Icons.close,
-                          color: Colors.grey[700], size: 28),
-                    ),
-              ),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 28),
-                child: Column(
-                  children: [
-                    _trialBanner(context, s, trialDays, packCount),
-                    const SizedBox(height: 18),
-                    Text(
-                      _headline(s),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: responsiveFont(context, 22),
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).textTheme.headlineSmall?.color,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    _benefit(AppIcon.stepCards, _packsBenefit(s, packCount)),
-                    const SizedBox(height: 10),
-                    _benefit(
-                        AppIcon.sound,
-                        s('400+ яскравих карток зі звуком',
-                            '400+ vivid cards with sound')),
-                    const SizedBox(height: 10),
-                    // Was «Нові розділи щомісяця / New packs every month» — a
-                    // schedule nobody had promised to keep. Replaced with a
-                    // fact the store listing already states.
-                    _benefit(AppIcon.check, s('Без реклами', 'No ads')),
-                    const SizedBox(height: 18),
-                    _testimonial(s),
-                    const SizedBox(height: 22),
-                    ...List.generate(plans.length, (i) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: _planTile(i, plans),
+          child: Column(
+            children: [
+              Align(
+                alignment: Alignment.topRight,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: IconButton(
+                    onPressed: () {
+                      AnalyticsService.instance.logPaywallDismiss(
+                        widget.isOnboarding
+                            ? 'paywall_onboarding'
+                            : 'paywall_screen',
                       );
-                    }),
-                    const SizedBox(height: 16),
-                    TextButton(
-                      onPressed: _busy ? null : _restore,
-                      child: Text(
-                        s('Відновити покупки', 'Restore purchases'),
+                      Navigator.of(context).pop(false);
+                    },
+                    // grey[700] on the lavender top: ≈5:1 (≥3:1 for UI).
+                    // IconButton's 48 pt hit area stays.
+                    icon: Icon(Icons.close, color: Colors.grey[700], size: 28),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 28),
+                  child: Column(
+                    children: [
+                      _trialBanner(context, s, trialDays, packCount),
+                      const SizedBox(height: 18),
+                      Text(
+                        _headline(s),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
+                          fontSize: responsiveFont(context, 22),
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(
+                            context,
+                          ).textTheme.headlineSmall?.color,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      _benefit(AppIcon.stepCards, _packsBenefit(s, packCount)),
+                      const SizedBox(height: 10),
+                      _benefit(
+                        AppIcon.sound,
+                        s(
+                          '400+ яскравих карток зі звуком',
+                          '400+ vivid cards with sound',
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      // Was «Нові розділи щомісяця / New packs every month» — a
+                      // schedule nobody had promised to keep. Replaced with a
+                      // fact the store listing already states.
+                      _benefit(AppIcon.check, s('Без реклами', 'No ads')),
+                      const SizedBox(height: 18),
+                      _testimonial(s),
+                      const SizedBox(height: 22),
+                      ...List.generate(plans.length, (i) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: _planTile(i, plans),
+                        );
+                      }),
+                      const SizedBox(height: 16),
+                      TextButton(
+                        onPressed: _busy ? null : _restore,
+                        child: Text(
+                          s('Відновити покупки', 'Restore purchases'),
+                          style: TextStyle(
                             color: Colors.grey[700],
                             fontSize: responsiveFont(context, 15),
-                            fontWeight: FontWeight.w500),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 12,
-                        runSpacing: 8,
-                        children: [
-                          _legalLink(
+                      const SizedBox(height: 20),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: 12,
+                          runSpacing: 8,
+                          children: [
+                            _legalLink(
                               s('Умови використання', 'Terms of Use'),
                               isEn
                                   ? 'https://aihnatiev1.github.io/talking-cards/terms-en.html'
-                                  : 'https://aihnatiev1.github.io/talking-cards/terms.html'),
-                          _legalLink('EULA', 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/'),
-                          _legalLink(
+                                  : 'https://aihnatiev1.github.io/talking-cards/terms.html',
+                            ),
+                            _legalLink(
+                              'EULA',
+                              'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/',
+                            ),
+                            _legalLink(
                               s('Конфіденційність', 'Privacy'),
                               isEn
                                   ? 'https://aihnatiev1.github.io/talking-cards/privacy-policy-en.html'
-                                  : 'https://aihnatiev1.github.io/talking-cards/privacy-policy.html'),
-                        ],
+                                  : 'https://aihnatiev1.github.io/talking-cards/privacy-policy.html',
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                  ],
+                      const SizedBox(height: 24),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            _stickyCta(context, s, plans, trialDays),
-          ],
-        ),
+              _stickyCta(context, s, plans, trialDays),
+            ],
+          ),
         ),
       ),
     );
@@ -513,7 +564,11 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   /// asked for a decision the user could not see how to accept. Matters most
   /// for the onboarding variant, where this is a cold first-session sell.
   Widget _stickyCta(
-      BuildContext context, AppS s, List<_Plan> plans, int? trialDays) {
+    BuildContext context,
+    AppS s,
+    List<_Plan> plans,
+    int? trialDays,
+  ) {
     return Container(
       padding: const EdgeInsets.fromLTRB(28, 12, 28, 8),
       decoration: BoxDecoration(
@@ -546,7 +601,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   ? null
                   : (_storeReady! ? _purchase : _loadStore),
               style: ElevatedButton.styleFrom(
-                backgroundColor: DT.brand,
+                // The raw green carries white at 3.0:1; solid() darkens it
+                // until the label clears AA.
+                backgroundColor: DT.solid(DT.brand),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 shape: RoundedRectangleBorder(
@@ -573,13 +630,15 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                         // right away. Both used to promise free days, and
                         // parents backed out of the contradiction.
                         _storeReady == false
-                            ? s('Стор недоступний — спробувати ще',
-                                'Store unavailable — try again')
+                            ? s(
+                                'Стор недоступний — спробувати ще',
+                                'Store unavailable — try again',
+                              )
                             : trialDays == null
                             ? (plans[_selectedIndex(plans)].productId ==
-                                    'lifetime_premium'
-                                ? s('Купити назавжди', 'Buy lifetime')
-                                : s('Оформити підписку', 'Subscribe'))
+                                      'lifetime_premium'
+                                  ? s('Купити назавжди', 'Buy lifetime')
+                                  : s('Оформити підписку', 'Subscribe'))
                             // Composed here, not read from Remote Config:
                             // the number has to be the one the native
                             // sheet will show, and a remote string cannot
@@ -600,30 +659,35 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           const SizedBox(height: 8),
           Text(
             PurchaseService.instance.awaitingApproval.value
-                ? s('Очікуємо підтвердження покупки (Ask to Buy)',
-                    'Waiting for purchase approval (Ask to Buy)')
+                ? s(
+                    'Очікуємо підтвердження покупки (Ask to Buy)',
+                    'Waiting for purchase approval (Ask to Buy)',
+                  )
                 : _storeReady == false
-                ? s('Немає зв\'язку з App Store / Google Play. Перевірте інтернет',
-                    'Can\'t reach the App Store / Google Play. Check your connection')
+                ? s(
+                    'Немає зв\'язку з App Store / Google Play. Перевірте інтернет',
+                    'Can\'t reach the App Store / Google Play. Check your connection',
+                  )
                 : plans[_selectedIndex(plans)].productId == 'lifetime_premium'
                 ? s(
                     'Одна покупка ${plans[_selectedIndex(plans)].price} • без підписки, назавжди',
                     'One-time ${plans[_selectedIndex(plans)].price} • no subscription, forever',
                   )
                 : trialDays == null
-                    ? s(
-                        '${plans[_selectedIndex(plans)].price}${plans[_selectedIndex(plans)].period} • Скасувати будь-коли',
-                        '${plans[_selectedIndex(plans)].price}${plans[_selectedIndex(plans)].period} • Cancel anytime',
-                      )
-                    : s(
-                        '$trialDays ${dayWord(trialDays)} безкоштовно, потім ${plans[_selectedIndex(plans)].price}${plans[_selectedIndex(plans)].period} • Скасувати будь-коли',
-                        '$trialDays days free, then ${plans[_selectedIndex(plans)].price}${plans[_selectedIndex(plans)].period} • Cancel anytime',
-                      ),
+                ? s(
+                    '${plans[_selectedIndex(plans)].price}${plans[_selectedIndex(plans)].period} • Скасувати будь-коли',
+                    '${plans[_selectedIndex(plans)].price}${plans[_selectedIndex(plans)].period} • Cancel anytime',
+                  )
+                : s(
+                    '$trialDays ${dayWord(trialDays)} безкоштовно, потім ${plans[_selectedIndex(plans)].price}${plans[_selectedIndex(plans)].period} • Скасувати будь-коли',
+                    '$trialDays days free, then ${plans[_selectedIndex(plans)].price}${plans[_selectedIndex(plans)].period} • Cancel anytime',
+                  ),
             textAlign: TextAlign.center,
             style: TextStyle(
-                fontSize: responsiveFont(context, 13),
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500),
+              fontSize: responsiveFont(context, 13),
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
           ),
           // The escape hatch stays next to the CTA and has to read as a
           // real choice, not fine print: at 13sp grey a parent holding a
@@ -637,8 +701,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                 onPressed: _loading
                     ? null
                     : () {
-                        AnalyticsService.instance
-                            .logPaywallDismiss('paywall_onboarding_skip');
+                        AnalyticsService.instance.logPaywallDismiss(
+                          'paywall_onboarding_skip',
+                        );
                         Navigator.of(context).pop(false);
                       },
                 style: TextButton.styleFrom(
@@ -646,13 +711,16 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   minimumSize: const Size.fromHeight(56),
                 ),
                 child: Text(
-                  s('Продовжити з безкоштовними розділами',
-                      'Continue with free packs'),
+                  s(
+                    'Продовжити з безкоштовними розділами',
+                    'Continue with free packs',
+                  ),
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                      color: DT.textSecondary,
-                      fontSize: responsiveFont(context, 16),
-                      fontWeight: FontWeight.w700),
+                    color: DT.textSecondary,
+                    fontSize: responsiveFont(context, 16),
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),
@@ -661,13 +729,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     );
   }
 
-
   Widget _legalLink(String title, String url) {
     return GestureDetector(
-      onTap: () => launchUrl(
-        Uri.parse(url),
-        mode: LaunchMode.externalApplication,
-      ),
+      onTap: () =>
+          launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
       child: Text(
         title,
         style: TextStyle(
@@ -699,129 +764,139 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         // iPhone 17 Pro both came out cut — "Назавж…", "Вигідніш…", "Без
         // підпи…". The extra top padding is the room it overhangs into.
         child: Padding(
-        padding: EdgeInsets.only(top: plan.badge != null ? 12 : 0),
-        child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-        AnimatedContainer(
-        duration: DT.motion.base,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        decoration: BoxDecoration(
-          color: selected
-              ? tileColor.withValues(alpha: 0.10)
-              : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: selected ? tileColor : Colors.grey.shade200,
-            width: selected ? 3 : 1.5,
-          ),
-          boxShadow: [
-            if (selected)
-              BoxShadow(
-                color: tileColor.withValues(alpha: 0.18),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              )
-            else
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // Radio dot
-            Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: selected ? tileColor : Colors.grey.shade400,
-                  width: 2,
+          padding: EdgeInsets.only(top: plan.badge != null ? 12 : 0),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              AnimatedContainer(
+                duration: DT.motion.base,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
                 ),
-                color: selected ? tileColor : Colors.transparent,
-              ),
-              child: selected
-                  ? const Icon(Icons.check, size: 16, color: Colors.white)
-                  : null,
-            ),
-            const SizedBox(width: 14),
-            // Label
-            Expanded(
-              child: Text(
-                plan.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: selected ? tileColor : null,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            // Price
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  plan.price,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: selected ? tileColor : Colors.grey[700],
-                  ),
-                ),
-                if (plan.period.isNotEmpty)
-                  Text(
-                    plan.period,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey[500]),
-                  ),
-              ],
-            ),
-          ],
-        ),
-      ),
-        if (plan.badge != null)
-          Positioned(
-            // Over the label's start: 16 padding + 24 radio + 14 gap.
-            left: 54,
-            right: 16,
-            top: -11,
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                 decoration: BoxDecoration(
-                  color: plan.badgeColor,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  plan.badge!,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
+                  color: selected
+                      ? tileColor.withValues(alpha: 0.10)
+                      : Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: selected ? tileColor : Colors.grey.shade200,
+                    width: selected ? 3 : 1.5,
                   ),
+                  boxShadow: [
+                    if (selected)
+                      BoxShadow(
+                        color: tileColor.withValues(alpha: 0.18),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      )
+                    else
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    // Radio dot
+                    Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: selected ? tileColor : Colors.grey.shade400,
+                          width: 2,
+                        ),
+                        color: selected ? tileColor : Colors.transparent,
+                      ),
+                      child: selected
+                          ? const Icon(
+                              Icons.check,
+                              size: 16,
+                              color: Colors.white,
+                            )
+                          : null,
+                    ),
+                    const SizedBox(width: 14),
+                    // Label
+                    Expanded(
+                      child: Text(
+                        plan.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: selected ? DT.brandInk : null,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Price
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          plan.price,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: selected ? DT.brandInk : Colors.grey[700],
+                          ),
+                        ),
+                        if (plan.period.isNotEmpty)
+                          Text(
+                            plan.period,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey[500],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-            ),
+              if (plan.badge != null)
+                Positioned(
+                  // Over the label's start: 16 padding + 24 radio + 14 gap.
+                  left: 54,
+                  right: 16,
+                  top: -11,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: plan.badgeColor,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        plan.badge!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
-        ],
-      ),
-      ),
+        ),
       ),
     );
   }
@@ -831,13 +906,21 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   /// the native sheet is about to refuse. [packCount] follows the same rule
   /// as the benefit list, so the screen quotes one number, not two.
   Widget _trialBanner(
-      BuildContext context, AppS s, int? trialDays, int? packCount) {
+    BuildContext context,
+    AppS s,
+    int? trialDays,
+    int? packCount,
+  ) {
     final isOnb = widget.isOnboarding;
     final allPacks = packCount == null || packCount == 0
-        ? s('Усі розділи і всі ігри — скасуй будь-коли',
-            'Every pack and every game — cancel anytime')
-        : s('Усі $packCount ${packWord(packCount)} і всі ігри — скасуй будь-коли',
-            'All $packCount packs and every game — cancel anytime');
+        ? s(
+            'Усі розділи і всі ігри — скасуй будь-коли',
+            'Every pack and every game — cancel anytime',
+          )
+        : s(
+            'Усі $packCount ${packWord(packCount)} і всі ігри — скасуй будь-коли',
+            'All $packCount packs and every game — cancel anytime',
+          );
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
@@ -856,8 +939,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       child: Column(
         children: [
           PaywallHeroArt(
-            semanticsLabel: s('Блум і картки — усе, що відкриється',
-                'Bloom and the cards this unlocks'),
+            semanticsLabel: s(
+              'Блум і картки — усе, що відкриється',
+              'Bloom and the cards this unlocks',
+            ),
           ),
           const SizedBox(height: 6),
           if (isOnb && trialDays != null) ...[
@@ -875,13 +960,15 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
           Text(
             trialDays == null
                 ? s('ПОВНИЙ ДОСТУП', 'FULL ACCESS')
-                : s('$trialDays ${dayWord(trialDays).toUpperCase()} БЕЗКОШТОВНО',
-                    '$trialDays DAYS FREE'),
+                : s(
+                    '$trialDays ${dayWord(trialDays).toUpperCase()} БЕЗКОШТОВНО',
+                    '$trialDays DAYS FREE',
+                  ),
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: responsiveFont(context, 24),
               fontWeight: FontWeight.w900,
-              color: DT.brand,
+              color: DT.brandInk,
               letterSpacing: 0.5,
             ),
           ),
@@ -890,10 +977,14 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
             trialDays == null
                 ? allPacks
                 : isOnb
-                    ? s('Подарунок для нових родин — скасуй будь-коли',
-                        'A gift for new families — cancel anytime')
-                    : s('Без зобов\'язань — скасуй будь-коли',
-                        'No commitment — cancel anytime'),
+                ? s(
+                    'Подарунок для нових родин — скасуй будь-коли',
+                    'A gift for new families — cancel anytime',
+                  )
+                : s(
+                    'Без зобов\'язань — скасуй будь-коли',
+                    'No commitment — cancel anytime',
+                  ),
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: responsiveFont(context, 13),
@@ -918,8 +1009,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         '«Дуже подобається додаток, дякую!\nДитина в захваті 😍»',
         '“Love this app, thank you!\nMy kid is obsessed 😍”',
       ),
-      s('Оксана — App Store (Україна)',
-          'Oksana, App Store review (translated)'),
+      s(
+        'Оксана — App Store (Україна)',
+        'Oksana, App Store review (translated)',
+      ),
     );
     // The rating is real only on the Ukrainian App Store (5.0, 10 ratings);
     // the US and UK stores show none, so an English parent checking would
@@ -966,8 +1059,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       decoration: BoxDecoration(
         color: DT.sunTint,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-            color: DT.sunBurst.withValues(alpha: 0.55)),
+        border: Border.all(color: DT.sunBurst.withValues(alpha: 0.55)),
       ),
       child: Column(
         children: [
@@ -1020,8 +1112,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     if (count == null || count == 0) {
       return s('Розділи на кожну тему', 'Learning packs for every topic');
     }
-    return s('$count ${packWord(count)} для розвитку',
-        '$count learning ${count == 1 ? 'pack' : 'packs'}');
+    return s(
+      '$count ${packWord(count)} для розвитку',
+      '$count learning ${count == 1 ? 'pack' : 'packs'}',
+    );
   }
 
   /// One benefit line. The glyph is an [AppIcon] — the same drawing the

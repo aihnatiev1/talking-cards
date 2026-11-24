@@ -6,13 +6,13 @@ import 'package:talking_cards/models/pack_model.dart';
 import 'package:talking_cards/utils/pack_categories.dart';
 
 CardModel _card(String id) => CardModel(
-      id: id,
-      sound: id,
-      text: id,
-      emoji: '🎴',
-      colorBg: const Color(0xFFFFFFFF),
-      colorAccent: const Color(0xFF000000),
-    );
+  id: id,
+  sound: id,
+  text: id,
+  emoji: '🎴',
+  colorBg: const Color(0xFFFFFFFF),
+  colorAccent: const Color(0xFF000000),
+);
 
 PackModel _pack(String id, List<CardModel> cards, {bool locked = false}) =>
     PackModel(
@@ -43,39 +43,52 @@ void main() {
     });
 
     test('marks card from locked pack as locked', () {
-      final result = cardOfTheDay([_pack('p', [_card('x')], locked: true)]);
+      final result = cardOfTheDay([
+        _pack('p', [_card('x')], locked: true),
+      ]);
       expect(result, isNotNull);
       expect(result!.$2, isTrue);
     });
 
     test('marks card from unlocked pack as unlocked', () {
-      final result = cardOfTheDay([_pack('p', [_card('x')], locked: false)]);
+      final result = cardOfTheDay([
+        _pack('p', [_card('x')], locked: false),
+      ]);
       expect(result!.$2, isFalse);
     });
 
-    test('deterministic for the same date — two calls return the same card', () {
-      final cards = List.generate(20, (i) => _card('c$i'));
-      final packs = [_pack('p', cards)];
-      final a = cardOfTheDay(packs);
-      final b = cardOfTheDay(packs);
-      expect(a!.$1.id, b!.$1.id);
-    });
+    test(
+      'deterministic for the same date — two calls return the same card',
+      () {
+        final cards = List.generate(20, (i) => _card('c$i'));
+        final packs = [_pack('p', cards)];
+        final a = cardOfTheDay(packs);
+        final b = cardOfTheDay(packs);
+        expect(a!.$1.id, b!.$1.id);
+      },
+    );
   });
 
   group('category constants', () {
     test('allCategoriesUk covers all pack ids', () {
       final usedCategories = packCategoriesUk.values.toSet();
       for (final cat in usedCategories) {
-        expect(allCategoriesUk.contains(cat), isTrue,
-            reason: '"$cat" missing from allCategoriesUk');
+        expect(
+          allCategoriesUk.contains(cat),
+          isTrue,
+          reason: '"$cat" missing from allCategoriesUk',
+        );
       }
     });
 
     test('allCategoriesEn covers all pack ids', () {
       final usedCategories = packCategoriesEn.values.toSet();
       for (final cat in usedCategories) {
-        expect(allCategoriesEn.contains(cat), isTrue,
-            reason: '"$cat" missing from allCategoriesEn');
+        expect(
+          allCategoriesEn.contains(cat),
+          isTrue,
+          reason: '"$cat" missing from allCategoriesEn',
+        );
       }
     });
 

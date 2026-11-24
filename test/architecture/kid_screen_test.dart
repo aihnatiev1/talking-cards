@@ -46,7 +46,8 @@ void main() {
     expect(
       offenders,
       isEmpty,
-      reason: 'Build the screen with KidScreen / KidScreen.game '
+      reason:
+          'Build the screen with KidScreen / KidScreen.game '
           '(lib/widgets/kid_screen.dart). The header — back/close, title '
           'slot, progress pill — is the shell\'s job.',
     );
@@ -57,12 +58,14 @@ void main() {
       for (final path in kidZone)
         if (!read(path).contains('KidScreen')) path,
     ];
-    expect(missing, isEmpty,
-        reason: 'These screens do not use the shell at all.');
+    expect(
+      missing,
+      isEmpty,
+      reason: 'These screens do not use the shell at all.',
+    );
   });
 
-  test('the shell itself has no AppBar and keeps one Scaffold underneath',
-      () {
+  test('the shell itself has no AppBar and keeps one Scaffold underneath', () {
     final shell = read('lib/widgets/kid_screen.dart');
     expect(shell, isNot(contains('AppBar(')));
     // ScaffoldMessenger / Overlay / resizeToAvoidBottomInset still need it.
@@ -80,8 +83,11 @@ void main() {
             read(path).contains('Icons.close'))
           path,
     ];
-    expect(offenders, isEmpty,
-        reason: 'Use KidBackButton / KidCloseButton, not a raw glyph.');
+    expect(
+      offenders,
+      isEmpty,
+      reason: 'Use KidBackButton / KidCloseButton, not a raw glyph.',
+    );
   });
 
   test('the parent zone may keep AppBar', () {

@@ -47,8 +47,10 @@ void main() {
         _product('monthly_premium', 149, '149,00 ₴'),
       ]);
 
-      expect(service.products.map((p) => p.id),
-          ['yearly_premium', 'monthly_premium']);
+      expect(service.products.map((p) => p.id), [
+        'yearly_premium',
+        'monthly_premium',
+      ]);
       // The tile must quote what the parent will be charged, never the
       // trial's zero.
       expect(service.products.first.rawPrice, 649);
@@ -74,22 +76,24 @@ void main() {
 
   group('purchase outcomes', () {
     PurchaseDetails update(String id, PurchaseStatus status) => PurchaseDetails(
-          productID: id,
-          verificationData: PurchaseVerificationData(
-              localVerificationData: '',
-              serverVerificationData: '',
-              source: 'test'),
-          transactionDate: null,
-          status: status,
-        );
+      productID: id,
+      verificationData: PurchaseVerificationData(
+        localVerificationData: '',
+        serverVerificationData: '',
+        source: 'test',
+      ),
+      transactionDate: null,
+      status: status,
+    );
 
     tearDown(() {
       service.awaitingApproval.value = false;
       service.isPro.value = false;
       service.trialStartedAt = null;
       // Drain the checkout so the 3-minute backstop is not left pending.
-      service.debugHandlePurchaseUpdate(
-          [update('yearly_premium', PurchaseStatus.canceled)]);
+      service.debugHandlePurchaseUpdate([
+        update('yearly_premium', PurchaseStatus.canceled),
+      ]);
       service.purchaseInFlight.value = false;
     });
 
@@ -118,7 +122,8 @@ void main() {
           calls.add(p.productID);
           // Play refunds what is never acknowledged; one reconnect hiccup
           // must not be the end of it.
-          if (calls.length == 1) throw PlatformException(code: 'SERVICE_DISCONNECTED');
+          if (calls.length == 1)
+            throw PlatformException(code: 'SERVICE_DISCONNECTED');
         };
         service.debugHandlePurchaseUpdate([delivered()]);
         await pumpEventQueue();
@@ -139,8 +144,9 @@ void main() {
 
       test('nothing to acknowledge, nothing sent', () async {
         service.debugCompletePurchase = (p) async => calls.add(p.productID);
-        service.debugHandlePurchaseUpdate(
-            [update('yearly_premium', PurchaseStatus.canceled)]);
+        service.debugHandlePurchaseUpdate([
+          update('yearly_premium', PurchaseStatus.canceled),
+        ]);
         await pumpEventQueue();
         expect(calls, isEmpty);
       });
@@ -151,8 +157,9 @@ void main() {
       service.debugBeginPurchase('yearly_premium');
       expect(service.purchaseInFlight.value, true);
 
-      service.debugHandlePurchaseUpdate(
-          [update('yearly_premium', PurchaseStatus.canceled)]);
+      service.debugHandlePurchaseUpdate([
+        update('yearly_premium', PurchaseStatus.canceled),
+      ]);
       // The outcome releases the CTA, not a wall clock on the paywall: a
       // flat ten-second wait kept the button dead for whatever was left of
       // it after the parent had already dismissed the sheet.
@@ -173,8 +180,9 @@ void main() {
     test('an Ask to Buy wait leaves the family able to buy again', () {
       FakeAsync().run((async) {
         service.debugBeginPurchase('yearly_premium');
-        service.debugHandlePurchaseUpdate(
-            [update('yearly_premium', PurchaseStatus.pending)]);
+        service.debugHandlePurchaseUpdate([
+          update('yearly_premium', PurchaseStatus.pending),
+        ]);
         async.elapse(const Duration(minutes: 4));
 
         // The wait is real and the paywall says so.
@@ -192,16 +200,17 @@ void main() {
       });
     });
 
-    test('an approval that lands after the window closed still grants Pro',
-        () {
+    test('an approval that lands after the window closed still grants Pro', () {
       FakeAsync().run((async) {
         service.debugBeginPurchase('yearly_premium');
-        service.debugHandlePurchaseUpdate(
-            [update('yearly_premium', PurchaseStatus.pending)]);
+        service.debugHandlePurchaseUpdate([
+          update('yearly_premium', PurchaseStatus.pending),
+        ]);
         // Hours later, in this or a later session, the parent approves.
         async.elapse(const Duration(hours: 2));
-        service.debugHandlePurchaseUpdate(
-            [update('yearly_premium', PurchaseStatus.purchased)]);
+        service.debugHandlePurchaseUpdate([
+          update('yearly_premium', PurchaseStatus.purchased),
+        ]);
         async.flushMicrotasks();
 
         expect(service.isPro.value, true);
@@ -214,30 +223,35 @@ void main() {
         service.debugBeginPurchase('monthly_premium');
         // The first checkout still owns the window; its outcome must not
         // be orphaned by an id that moved under it.
-        service.debugHandlePurchaseUpdate(
-            [update('yearly_premium', PurchaseStatus.canceled)]);
+        service.debugHandlePurchaseUpdate([
+          update('yearly_premium', PurchaseStatus.canceled),
+        ]);
         expect(service.purchaseInFlight.value, false);
       });
     });
 
-    test('Ask to Buy leaves the checkout visibly waiting, not failed',
-        () async {
-      FakeAsync().run((async) {
-        service.debugBeginPurchase('yearly_premium');
-        service.debugHandlePurchaseUpdate(
-            [update('yearly_premium', PurchaseStatus.pending)]);
+    test(
+      'Ask to Buy leaves the checkout visibly waiting, not failed',
+      () async {
+        FakeAsync().run((async) {
+          service.debugBeginPurchase('yearly_premium');
+          service.debugHandlePurchaseUpdate([
+            update('yearly_premium', PurchaseStatus.pending),
+          ]);
 
-        expect(service.awaitingApproval.value, true);
-        // The backstop used to fire here and file the family's wait as
-        // `no_outcome_in_3min`; a pending outcome cancels it instead.
-        async.elapse(const Duration(minutes: 4));
-        expect(service.awaitingApproval.value, true);
+          expect(service.awaitingApproval.value, true);
+          // The backstop used to fire here and file the family's wait as
+          // `no_outcome_in_3min`; a pending outcome cancels it instead.
+          async.elapse(const Duration(minutes: 4));
+          expect(service.awaitingApproval.value, true);
 
-        service.debugHandlePurchaseUpdate(
-            [update('yearly_premium', PurchaseStatus.canceled)]);
-        expect(service.awaitingApproval.value, false);
-      });
-    });
+          service.debugHandlePurchaseUpdate([
+            update('yearly_premium', PurchaseStatus.canceled),
+          ]);
+          expect(service.awaitingApproval.value, false);
+        });
+      },
+    );
 
     test('a purchase that started the free trial is remembered', () async {
       // Only a trial the store has confirmed as offered counts — an
@@ -251,8 +265,9 @@ void main() {
       await service.refreshTrialAvailability();
 
       service.debugBeginPurchase('yearly_premium');
-      service.debugHandlePurchaseUpdate(
-          [update('yearly_premium', PurchaseStatus.purchased)]);
+      service.debugHandlePurchaseUpdate([
+        update('yearly_premium', PurchaseStatus.purchased),
+      ]);
       await Future<void>.delayed(Duration.zero);
 
       expect(service.trialStartedAt, isNotNull);
@@ -269,8 +284,9 @@ void main() {
       service.trialStartedAt = null;
 
       service.debugBeginPurchase('monthly_premium');
-      service.debugHandlePurchaseUpdate(
-          [update('monthly_premium', PurchaseStatus.purchased)]);
+      service.debugHandlePurchaseUpdate([
+        update('monthly_premium', PurchaseStatus.purchased),
+      ]);
       await Future<void>.delayed(Duration.zero);
 
       expect(service.trialStartedAt, isNull);
@@ -279,23 +295,28 @@ void main() {
     test('restore never hangs when the store throws', () async {
       // There is no billing client here, exactly like a tablet offline: the
       // Restore button used to await this forever, with Buy disabled too.
-      final restored = await service
-          .restore()
-          .timeout(const Duration(seconds: 15), onTimeout: () => throw 'hung');
+      final restored = await service.restore().timeout(
+        const Duration(seconds: 15),
+        onTimeout: () => throw 'hung',
+      );
       expect(restored, false);
     });
 
     test('an outcome for a product we did not start is ignored', () {
       service.debugBeginPurchase('yearly_premium');
-      service.debugHandlePurchaseUpdate(
-          [update('monthly_premium', PurchaseStatus.pending)]);
+      service.debugHandlePurchaseUpdate([
+        update('monthly_premium', PurchaseStatus.pending),
+      ]);
       expect(service.awaitingApproval.value, false);
     });
   });
 
   group('trial availability', () {
     test('promised while the store has not answered', () {
-      expect(service.trialDaysFor('yearly_premium'), PurchaseService.kTrialDays);
+      expect(
+        service.trialDaysFor('yearly_premium'),
+        PurchaseService.kTrialDays,
+      );
     });
 
     test('never promised for the one-time lifetime unlock', () {
@@ -325,11 +346,13 @@ void main() {
 
       await service.refreshTrialAvailability();
 
-      expect(service.trialDaysFor('yearly_premium'), PurchaseService.kTrialDays);
+      expect(
+        service.trialDaysFor('yearly_premium'),
+        PurchaseService.kTrialDays,
+      );
     });
 
-    test('Play returning only a paid offer means the trial is spent',
-        () async {
+    test('Play returning only a paid offer means the trial is spent', () async {
       // Play filters offers by eligibility, so no free phase coming back
       // for a loaded SKU is the store saying "not for this account".
       debugDefaultTargetPlatformOverride = TargetPlatform.android;
@@ -343,18 +366,23 @@ void main() {
 
   group('buyThrewReason', () {
     test('a native StoreKit error keeps its case, not its call stack', () {
-      final reason = PurchaseService.buyThrewReason(PlatformException(
-        code: 'unknown',
-        message: 'StoreKitError',
-        details: 'Stacktrace: ["0   in_app_purchase_storekit   0x0001" '
-            '${'x' * 200}]',
-      ));
+      final reason = PurchaseService.buyThrewReason(
+        PlatformException(
+          code: 'unknown',
+          message: 'StoreKitError',
+          details:
+              'Stacktrace: ["0   in_app_purchase_storekit   0x0001" '
+              '${'x' * 200}]',
+        ),
+      );
       expect(reason, 'buy_threw: StoreKitError.unknown');
     });
 
     test('anything else names its type', () {
-      expect(PurchaseService.buyThrewReason(StateError('busy')),
-          'buy_threw: StateError: Bad state: busy');
+      expect(
+        PurchaseService.buyThrewReason(StateError('busy')),
+        'buy_threw: StateError: Bad state: busy',
+      );
     });
   });
 }

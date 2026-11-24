@@ -20,8 +20,7 @@ void main() {
   useTestMotion();
 
   group('parent-zone art', () {
-    testWidgets('paywall banner, logo mark and benefit glyphs',
-        (tester) async {
+    testWidgets('paywall banner, logo mark and benefit glyphs', (tester) async {
       await pumpGolden(
         tester,
         const _ParentArtSheet(),
@@ -91,7 +90,11 @@ class _ParentArtSheet extends StatelessWidget {
                       color: DT.brand.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(DT.rSm),
                     ),
-                    child: AppIconView(icon, key: ValueKey(icon.name), size: 26),
+                    child: AppIconView(
+                      icon,
+                      key: ValueKey(icon.name),
+                      size: 26,
+                    ),
                   ),
                 ),
             ],

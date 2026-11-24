@@ -137,12 +137,14 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
       // The tile itself pops, frames in success and bursts (AnswerFrame).
       setState(() => _answered = true);
       FeedbackService.instance.event(FeedbackEvent.correct);
-      AudioService.instance
-          .playPraise(isEn: ref.read(languageProvider) == 'en');
+      AudioService.instance.playPraise(
+        isEn: ref.read(languageProvider) == 'en',
+      );
       scorePoint();
       // Play the opposite word so child hears both words of the pair
       Future.delayed(DT.motion.pairEcho, () {
-        if (mounted) AudioService.instance.playWordOnly(card.audioKey, card.sound);
+        if (mounted)
+          AudioService.instance.playWordOnly(card.audioKey, card.sound);
       });
       // The pair now stands side by side under the question (п. 22); the
       // next question waits for that to be seen, not just heard.
@@ -191,99 +193,100 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
         semanticsLabel: s('Блум', 'Bloom'),
       ),
       body: Padding(
-          padding: EdgeInsets.fromLTRB(
-            20,
-            0,
-            20,
-            max(DT.size.mascotCompanionOf(context), DT.size.tapMin) +
-            BloomMascot.hopClearance +
-            DT.sp16,
-          ),
-          child: Column(
-            children: [
-              const SizedBox(height: 8),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          0,
+          20,
+          max(DT.size.mascotCompanionOf(context), DT.size.tapMin) +
+              BloomMascot.hopClearance +
+              DT.sp16,
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 8),
 
-              // Question card — large, tappable for audio (word only — kids
-              // get confused if the full example sentence plays each tap).
-              // Once answered it makes room for the pair: the two opposites
-              // stand next to each other, which is the thing to understand
-              // (experience audit п. 22) — the tap was only the way there.
-              KidTap(
-                onTap: () => AudioService.instance
-                    .playWordOnly(question.audioKey, question.sound),
-                // The word itself is the answer to this tap.
-                sound: null,
-                child: AnimatedSwitcher(
-                  duration: motion.dur(DT.motion.pairReveal),
-                  child: _answered
-                      ? _PairReveal(
-                          key: ValueKey('pair-${question.id}'),
-                          question: question,
-                          answer: correct,
-                        )
-                      : _QuestionCard(
-                          key: ValueKey(question.id),
-                          card: question,
-                          s: s,
-                        ),
-                ),
+            // Question card — large, tappable for audio (word only — kids
+            // get confused if the full example sentence plays each tap).
+            // Once answered it makes room for the pair: the two opposites
+            // stand next to each other, which is the thing to understand
+            // (experience audit п. 22) — the tap was only the way there.
+            KidTap(
+              onTap: () => AudioService.instance.playWordOnly(
+                question.audioKey,
+                question.sound,
               ),
-
-              const SizedBox(height: 8),
-
-              // Arrow + label
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text('↔️', style: TextStyle(fontSize: 22)),
-                  const SizedBox(width: 8),
-                  Text(
-                    s('Що протилежне?', 'What is the opposite?'),
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              // Answer options — vertical stack for big tap targets
-              Expanded(
-                child: Column(
-                  children: _round.options.map((card) {
-                    final isCorrectCard = card.id == correct.id;
-                    final mark = !isCorrectCard
-                        ? AnswerMark.none
-                        : _answered
-                            ? AnswerMark.correct
-                            : _misses.showHint
-                                ? AnswerMark.hint
-                                : AnswerMark.none;
-
-                    return Expanded(
-                      key: ValueKey(card.id),
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: _OptionTile(
-                          card: card,
-                          mark: mark,
-                          nudge: _nudges[card.id] ?? 0,
-                          onTap: () => _onTap(card),
-                        ),
+              // The word itself is the answer to this tap.
+              sound: null,
+              child: AnimatedSwitcher(
+                duration: motion.dur(DT.motion.pairReveal),
+                child: _answered
+                    ? _PairReveal(
+                        key: ValueKey('pair-${question.id}'),
+                        question: question,
+                        answer: correct,
+                      )
+                    : _QuestionCard(
+                        key: ValueKey(question.id),
+                        card: question,
+                        s: s,
                       ),
-                    );
-                  }).toList(),
-                ),
               ),
-            ],
-          ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // Arrow + label
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('↔️', style: TextStyle(fontSize: 22)),
+                const SizedBox(width: 8),
+                Text(
+                  s('Що протилежне?', 'What is the opposite?'),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // Answer options — vertical stack for big tap targets
+            Expanded(
+              child: Column(
+                children: _round.options.map((card) {
+                  final isCorrectCard = card.id == correct.id;
+                  final mark = !isCorrectCard
+                      ? AnswerMark.none
+                      : _answered
+                      ? AnswerMark.correct
+                      : _misses.showHint
+                      ? AnswerMark.hint
+                      : AnswerMark.none;
+
+                  return Expanded(
+                    key: ValueKey(card.id),
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: _OptionTile(
+                        card: card,
+                        mark: mark,
+                        nudge: _nudges[card.id] ?? 0,
+                        onTap: () => _onTap(card),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
-
 }
 
 // ─────────────────────────────────────────────
@@ -340,13 +343,13 @@ class _QuestionCard extends StatelessWidget {
           // slips through (never emoji in gameplay).
           if (card.image != null)
             SizedBox(
-              height: 110,
+              height: 150,
               child: CardImage.forCard(card, padding: EdgeInsets.zero),
             )
           else
             Container(
               width: 110,
-              height: 110,
+              height: 150,
               decoration: BoxDecoration(
                 color: card.colorAccent.withValues(alpha: 0.25),
                 borderRadius: BorderRadius.circular(18),
@@ -368,8 +371,7 @@ class _QuestionCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.volume_up_rounded,
-                  color: Colors.grey[400], size: 14),
+              Icon(Icons.volume_up_rounded, color: Colors.grey[400], size: 14),
               const SizedBox(width: 4),
               Text(
                 s('торкнись', 'tap to hear'),
@@ -398,11 +400,7 @@ class _PairReveal extends StatelessWidget {
   final CardModel question;
   final CardModel answer;
 
-  const _PairReveal({
-    super.key,
-    required this.question,
-    required this.answer,
-  });
+  const _PairReveal({super.key, required this.question, required this.answer});
 
   @override
   Widget build(BuildContext context) {
@@ -412,10 +410,7 @@ class _PairReveal extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: DT.success.withValues(alpha: 0.35),
-          width: 2,
-        ),
+        border: Border.all(color: DT.success.withValues(alpha: 0.35), width: 2),
         boxShadow: DT.shadowSoft(DT.success),
       ),
       child: Row(
@@ -501,40 +496,45 @@ class _OptionTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         // Image on the left, word beside it — matches the question card
         // above so the whole screen reads as a column of big pictures.
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (card.image != null)
-              SizedBox(
-                width: 80,
-                height: 80,
-                child: CardImage.forCard(card, padding: EdgeInsets.zero),
-              )
-            else
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: card.colorAccent.withValues(alpha: 0.25),
-                  borderRadius: BorderRadius.circular(16),
+        child: LayoutBuilder(
+          builder: (context, box) {
+            final art = (box.maxHeight - 16).clamp(56.0, 104.0);
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (card.image != null)
+                  SizedBox(
+                    width: art,
+                    height: art,
+                    child: CardImage.forCard(card, padding: EdgeInsets.zero),
+                  )
+                else
+                  Container(
+                    width: art,
+                    height: art,
+                    decoration: BoxDecoration(
+                      color: card.colorAccent.withValues(alpha: 0.25),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    card.sound,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
+                      color: DT.onTint(card.colorAccent),
+                    ),
+                  ),
                 ),
-              ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                card.sound,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: card.colorAccent,
-                ),
-              ),
-            ),
-            // Room for the corner sticker so it never covers the word.
-            const SizedBox(width: 36),
-          ],
+                // Room for the corner sticker so it never covers the word.
+                const SizedBox(width: 36),
+              ],
+            );
+          },
         ),
       ),
     );

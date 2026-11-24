@@ -69,13 +69,7 @@ enum KidSound {
 
   /// One muted low marimba note. The placeholder pop is dropped to 0.7 so
   /// a miss still reads lower than a tap until the real file arrives.
-  miss(
-    'miss',
-    fallback: 'pop',
-    volume: 0.4,
-    spread: 0.05,
-    fallbackPitch: 0.7,
-  ),
+  miss('miss', fallback: 'pop', volume: 0.4, spread: 0.05, fallbackPitch: 0.7),
 
   /// A real soap bubble. Games only — never a button.
   pop('pop', fallback: 'pop', volume: 0.7, transient: true, variants: 3),
@@ -141,7 +135,8 @@ enum KidSound {
   String get assetPath => '$dir/$file.wav';
 
   /// Path of variant [i] (1-based), or [assetPath] for a single-take role.
-  String variantPath(int i) => variants == 1 ? assetPath : '$dir/${file}_$i.wav';
+  String variantPath(int i) =>
+      variants == 1 ? assetPath : '$dir/${file}_$i.wav';
   String get fallbackPath => '$dir/$fallback.wav';
 
   /// The seven roles `AudioService.warmSfx` decodes on the splash so the

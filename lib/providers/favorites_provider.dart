@@ -4,8 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/analytics_service.dart';
 import '../services/profile_service.dart';
 
-final favoritesProvider =
-    StateNotifierProvider<FavoritesNotifier, Set<String>>(
+final favoritesProvider = StateNotifierProvider<FavoritesNotifier, Set<String>>(
   (ref) => FavoritesNotifier(),
 );
 

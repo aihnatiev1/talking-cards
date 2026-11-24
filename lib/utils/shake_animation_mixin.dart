@@ -18,7 +18,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 ///   Widget _buildTile(CardModel c) => wrapShake(MyTile(c), id: c.id);
 /// }
 /// ```
-mixin ShakeAnimationMixin<T extends ConsumerStatefulWidget> on ConsumerState<T> {
+mixin ShakeAnimationMixin<T extends ConsumerStatefulWidget>
+    on ConsumerState<T> {
   late AnimationController shakeController;
   late Animation<double> shakeOffset;
   String? _shakingId;
@@ -34,9 +35,18 @@ mixin ShakeAnimationMixin<T extends ConsumerStatefulWidget> on ConsumerState<T> 
     );
     shakeOffset = TweenSequence<double>([
       TweenSequenceItem(tween: Tween(begin: 0.0, end: -amplitude), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: -amplitude, end: amplitude), weight: 2),
-      TweenSequenceItem(tween: Tween(begin: amplitude, end: -amplitude), weight: 2),
-      TweenSequenceItem(tween: Tween(begin: -amplitude, end: amplitude), weight: 2),
+      TweenSequenceItem(
+        tween: Tween(begin: -amplitude, end: amplitude),
+        weight: 2,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: amplitude, end: -amplitude),
+        weight: 2,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: -amplitude, end: amplitude),
+        weight: 2,
+      ),
       TweenSequenceItem(tween: Tween(begin: amplitude, end: 0.0), weight: 1),
     ]).animate(shakeController);
     shakeController.addStatusListener((s) {

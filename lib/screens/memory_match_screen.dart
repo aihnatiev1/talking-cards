@@ -26,7 +26,7 @@ import '../widgets/bloom_mascot.dart';
 import '../widgets/board_mat_painter.dart';
 import '../widgets/card_back_painter.dart';
 import '../widgets/card_image.dart';
-import '../widgets/celebration.dart';
+import '../widgets/game_celebration_overlay.dart';
 import '../widgets/kid_screen.dart';
 import '../widgets/kid_tap.dart';
 import '../widgets/sparkle_burst.dart';
@@ -245,6 +245,7 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
   /// a dead screen on device and fails every widget test that touches it.
   final List<Timer> _timers = [];
   int _voiceWaits = 0;
+  Timer? _wordCue;
 
   /// The shared celebration is up: the in-scene Bloom fades so there is
   /// one Bloom on screen.
@@ -312,6 +313,7 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
 
   @override
   void dispose() {
+    _wordCue?.cancel();
     _holdTimer?.cancel();
     _roundEndTimer?.cancel();
     _nudgeTimer?.cancel();
@@ -329,6 +331,11 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
   /// hand out five tiles while the counter waited for six pairs, and the
   /// round could never be won.
   void _deal() {
+    _wordCue?.cancel();
+    for (final timer in _timers) {
+      timer.cancel();
+    }
+    _timers.clear();
     _holdTimer?.cancel();
     _roundEndTimer?.cancel();
     _nudgeTimer?.cancel();
@@ -626,13 +633,16 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
   /// card is still turning (п. 11).
   void _say(CardModel card, {bool onlyWhenQuiet = false}) {
     if (onlyWhenQuiet && AudioService.instance.isSpeaking.value) return;
+    _wordCue?.cancel();
     final delay = _reduce ? Duration.zero : DT.motion.memoryWordCue;
     if (delay == Duration.zero) {
       AudioService.instance.playWordOnly(card.audioKey, card.sound);
       return;
     }
-    _after(delay, () {
-      AudioService.instance.playWordOnly(card.audioKey, card.sound);
+    _wordCue = Timer(delay, () {
+      if (mounted) {
+        AudioService.instance.playWordOnly(card.audioKey, card.sound);
+      }
     });
   }
 
@@ -793,9 +803,8 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
 
     setState(() => _celebrating = true);
     // Any completion is a full win — no attempts, no stars, no time.
-    celebrate(
+    showGameCelebration(
       context,
-      tier: CelebrationTier.round,
       isEn: ref.read(languageProvider) == 'en',
       childName: ref.read(profileProvider).active?.name ?? '',
       onAgain: _deal,
@@ -930,11 +939,19 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
             onLongPress: _showParentTools,
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
-              child: _ProgressStars(
-                pairs: _activePairs,
-                matched: _matched,
-                theme: _theme,
-                policy: policy,
+              child: Semantics(
+                liveRegion: true,
+                label: AppS(ref.watch(languageProvider) == 'en')(
+                  'Знайдено пар: $_matched з $_activePairs',
+                  'Pairs found: $_matched of $_activePairs',
+                ),
+                excludeSemantics: true,
+                child: _ProgressStars(
+                  pairs: _activePairs,
+                  matched: _matched,
+                  theme: _theme,
+                  policy: policy,
+                ),
               ),
             ),
           ),
@@ -1004,7 +1021,7 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
                 padding: const EdgeInsets.fromLTRB(20, 8, 0, 16),
                 child: Align(
                   alignment: Alignment.centerLeft,
-                  child: _bloomZone(policy),
+                  child: _bloomWithCue(policy),
                 ),
               ),
             ),
@@ -1018,6 +1035,48 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
   /// bottom); beside the mat he takes only his own width.
   static const _bloomStrip = 112.0;
   static const _sideModeSpare = 216.0;
+
+  Widget _bloomWithCue(MotionPolicy policy) {
+    final s = AppS(ref.watch(languageProvider) == 'en');
+    final cue = _matched == _activePairs
+        ? s('Усі пари знайдено!', 'All pairs found!')
+        : _isLocked
+        ? s('Спробуємо інші картки', 'Let’s try other cards')
+        : _firstIndex != null
+        ? s('Де така сама?', 'Where is its twin?')
+        : s('Відкрий дві картки', 'Turn over two cards');
+    final style = DT.caption.copyWith(
+      fontSize: 20,
+      fontWeight: FontWeight.w800,
+      height: 1.25,
+      color: _theme.ink,
+    );
+    return LayoutBuilder(
+      builder: (context, bounds) {
+        final width = max(1.0, bounds.maxWidth - 112);
+        final painter = TextPainter(
+          text: TextSpan(text: cue, style: style),
+          textDirection: Directionality.of(context),
+          textScaler: MediaQuery.textScalerOf(context),
+        )..layout(maxWidth: width);
+        final fits = painter.height <= bounds.maxHeight;
+        painter.dispose();
+        return Row(
+          children: [
+            _bloomZone(policy),
+            const SizedBox(width: 16),
+            if (fits)
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: policy.dur(DT.motion.selectionChange),
+                  child: Text(cue, key: ValueKey(cue), style: style),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
 
   Widget _bloomZone(MotionPolicy policy, {double size = 88}) {
     return AnimatedOpacity(
@@ -1557,7 +1616,7 @@ class _ProgressStars extends StatelessWidget {
     required this.policy,
   });
 
-  static const _size = 16.0;
+  static const _size = 28.0;
 
   @override
   Widget build(BuildContext context) {

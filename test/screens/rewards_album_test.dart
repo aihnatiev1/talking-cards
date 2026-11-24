@@ -58,13 +58,14 @@ void main() {
   }
 
   Finder stickerArt(int days) => find.descendant(
-        of: find.byKey(ValueKey('sticker_$days')),
-        matching: find.byType(AppIconView),
-      );
+    of: find.byKey(ValueKey('sticker_$days')),
+    matching: find.byType(AppIconView),
+  );
 
   group('RewardsAlbum', () {
-    testWidgets('an earned sticker hops and plays the success row',
-        (tester) async {
+    testWidgets('an earned sticker hops and plays the success row', (
+      tester,
+    ) async {
       await pumpAlbum(tester);
 
       final before = tester.getSize(stickerArt(3));
@@ -85,8 +86,9 @@ void main() {
       expect(tester.getRect(stickerArt(3)).width, closeTo(before.width, 0.5));
     });
 
-    testWidgets('a silhouette is harmless: no bounce, no success',
-        (tester) async {
+    testWidgets('a silhouette is harmless: no bounce, no success', (
+      tester,
+    ) async {
       await pumpAlbum(tester);
 
       final before = tester.getRect(stickerArt(30));
@@ -109,8 +111,9 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('earned and unearned stickers are both on the sheet',
-        (tester) async {
+    testWidgets('earned and unearned stickers are both on the sheet', (
+      tester,
+    ) async {
       await pumpAlbum(tester);
       for (final days in [3, 7, 14, 30]) {
         expect(find.byKey(ValueKey('sticker_$days')), findsOneWidget);
@@ -151,8 +154,9 @@ void main() {
       }
     });
 
-    testWidgets('the words tab is one tap away from the stickers',
-        (tester) async {
+    testWidgets('the words tab is one tap away from the stickers', (
+      tester,
+    ) async {
       setGoldenSurface(tester, const Size(390, 844));
       await tester.pumpWidget(
         const ProviderScope(
@@ -217,7 +221,8 @@ void main() {
       expect(
         offenders,
         isEmpty,
-        reason: 'Call StatsScreen.open(context, isEn: …) — it asks the '
+        reason:
+            'Call StatsScreen.open(context, isEn: …) — it asks the '
             'parental gate first (CLAUDE.md rule 7).',
       );
     });

@@ -28,8 +28,7 @@ class SrsState {
 // ─────────────────────────────────────────────
 
 class SrsNotifier extends StateNotifier<SrsState> {
-  SrsNotifier()
-      : super(const SrsState(cards: {}, dueIds: [])) {
+  SrsNotifier() : super(const SrsState(cards: {}, dueIds: [])) {
     _load();
   }
 
@@ -45,8 +44,7 @@ class SrsNotifier extends StateNotifier<SrsState> {
     try {
       final map = json.decode(raw) as Map<String, dynamic>;
       final cards = map.map(
-        (k, v) => MapEntry(
-            k, SrsCardState.fromJson(v as Map<String, dynamic>)),
+        (k, v) => MapEntry(k, SrsCardState.fromJson(v as Map<String, dynamic>)),
       );
       state = SrsState(cards: cards, dueIds: _due(cards));
     } catch (_) {
@@ -56,8 +54,7 @@ class SrsNotifier extends StateNotifier<SrsState> {
 
   Future<void> _save(Map<String, SrsCardState> cards) async {
     final prefs = await SharedPreferences.getInstance();
-    final encoded =
-        json.encode(cards.map((k, v) => MapEntry(k, v.toJson())));
+    final encoded = json.encode(cards.map((k, v) => MapEntry(k, v.toJson())));
     await prefs.setString(_prefixedKey, encoded);
   }
 
@@ -71,8 +68,7 @@ class SrsNotifier extends StateNotifier<SrsState> {
   ///   4 = card viewed (passive)
   ///   2 = wrong answer in quiz
   Future<void> recordAnswer(String cardId, int quality) async {
-    final current =
-        state.cards[cardId] ?? SrsCardState.initial(cardId);
+    final current = state.cards[cardId] ?? SrsCardState.initial(cardId);
     final updated = Sm2Service.update(current, quality);
     final newCards = Map<String, SrsCardState>.from(state.cards)
       ..[cardId] = updated;
@@ -82,23 +78,18 @@ class SrsNotifier extends StateNotifier<SrsState> {
 
   /// Mark a card as reviewed without changing its SRS state
   /// (e.g., after completing the review session).
-  Future<void> markReviewed(String cardId) =>
-      recordAnswer(cardId, 4);
+  Future<void> markReviewed(String cardId) => recordAnswer(cardId, 4);
 
   // ── Helpers ─────────────────────────────────
 
   static List<String> _due(Map<String, SrsCardState> cards) =>
-      cards.values
-          .where((s) => s.isDueToday)
-          .map((s) => s.cardId)
-          .toList();
+      cards.values.where((s) => s.isDueToday).map((s) => s.cardId).toList();
 }
 
 // ─────────────────────────────────────────────
 //  Provider
 // ─────────────────────────────────────────────
 
-final srsProvider =
-    StateNotifierProvider<SrsNotifier, SrsState>(
+final srsProvider = StateNotifierProvider<SrsNotifier, SrsState>(
   (ref) => SrsNotifier(),
 );

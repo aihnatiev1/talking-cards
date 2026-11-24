@@ -10,8 +10,8 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     // Geometry below assumes a 390×844 phone, not the 800×600 default.
-    final view = TestWidgetsFlutterBinding.instance.platformDispatcher.views
-        .first;
+    final view =
+        TestWidgetsFlutterBinding.instance.platformDispatcher.views.first;
     view.physicalSize = const Size(390, 844);
     view.devicePixelRatio = 1;
     addTearDown(view.reset);
@@ -32,9 +32,9 @@ void main() {
             body: Center(
               child: TextButton(
                 key: const Key('open'),
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(builder: (_) => screen),
-                ),
+                onPressed: () => Navigator.of(
+                  context,
+                ).push(MaterialPageRoute<void>(builder: (_) => screen)),
                 child: const Text('open'),
               ),
             ),
@@ -48,10 +48,7 @@ void main() {
 
   group('header controls', () {
     testWidgets('back button pops', (tester) async {
-      await pumpPushed(
-        tester,
-        const KidScreen(body: Text('inside')),
-      );
+      await pumpPushed(tester, const KidScreen(body: Text('inside')));
       expect(find.text('inside'), findsOneWidget);
       expect(find.byType(KidBackButton), findsOneWidget);
       expect(find.byType(KidCloseButton), findsNothing);
@@ -64,10 +61,7 @@ void main() {
     });
 
     testWidgets('game close button pops', (tester) async {
-      await pumpPushed(
-        tester,
-        const KidScreen.game(body: Text('inside')),
-      );
+      await pumpPushed(tester, const KidScreen.game(body: Text('inside')));
       expect(find.byType(KidCloseButton), findsOneWidget);
       expect(find.byType(KidBackButton), findsNothing);
 
@@ -77,8 +71,9 @@ void main() {
       expect(find.text('inside'), findsNothing);
     });
 
-    testWidgets('back and close are at least 72 dp on both axes',
-        (tester) async {
+    testWidgets('back and close are at least 72 dp on both axes', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(home: KidScreen(body: SizedBox())),
       );
@@ -94,8 +89,7 @@ void main() {
       expect(close.height, greaterThanOrEqualTo(DT.size.tapMin));
     });
 
-    testWidgets('the control is top-left inside the safe area',
-        (tester) async {
+    testWidgets('the control is top-left inside the safe area', (tester) async {
       await tester.pumpWidget(
         const MediaQuery(
           data: MediaQueryData(
@@ -110,8 +104,9 @@ void main() {
       expect(rect.top, 47 + DT.sp8);
     });
 
-    testWidgets('a custom leading and onTap override the default',
-        (tester) async {
+    testWidgets('a custom leading and onTap override the default', (
+      tester,
+    ) async {
       var tapped = 0;
       await tester.pumpWidget(
         MaterialApp(
@@ -126,8 +121,9 @@ void main() {
       expect(tapped, 1);
     });
 
-    testWidgets('showLeading: false keeps the slot, hides the control',
-        (tester) async {
+    testWidgets('showLeading: false keeps the slot, hides the control', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: KidScreen(
@@ -162,14 +158,15 @@ void main() {
       expect(find.byType(KidProgressPill), findsNothing);
     });
 
-    testWidgets('is 8 dp tall and its width follows the value',
-        (tester) async {
+    testWidgets('is 8 dp tall and its width follows the value', (tester) async {
       final half = await fillWidth(tester, 0.5);
       final full = await fillWidth(tester, 1.0);
       final none = await fillWidth(tester, 0.0);
 
-      expect(tester.getSize(find.byType(KidProgressPill)).height,
-          KidScreen.progressHeight);
+      expect(
+        tester.getSize(find.byType(KidProgressPill)).height,
+        KidScreen.progressHeight,
+      );
       expect(none, 0);
       expect(half, closeTo(full / 2, 0.5));
       // Track spans the screen minus the horizontal inset on both sides.
@@ -185,8 +182,9 @@ void main() {
   });
 
   group('slots', () {
-    testWidgets('bottom sits under the body, mascot corner bottom-right',
-        (tester) async {
+    testWidgets('bottom sits under the body, mascot corner bottom-right', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: KidScreen(
@@ -215,10 +213,12 @@ void main() {
           home: KidScreen(
             accent: DT.coral,
             background: DT.skyTint,
-            body: Builder(builder: (context) {
-              seen = KidScreen.accentOf(context);
-              return const SizedBox();
-            }),
+            body: Builder(
+              builder: (context) {
+                seen = KidScreen.accentOf(context);
+                return const SizedBox();
+              },
+            ),
           ),
         ),
       );
@@ -229,15 +229,18 @@ void main() {
   });
 
   group('showKidOverlay', () {
-    testWidgets('queues: the second overlay waits for the first to close',
-        (tester) async {
+    testWidgets('queues: the second overlay waits for the first to close', (
+      tester,
+    ) async {
       late BuildContext ctx;
       await tester.pumpWidget(
         MaterialApp(
-          home: Builder(builder: (context) {
-            ctx = context;
-            return const Scaffold(body: Text('home'));
-          }),
+          home: Builder(
+            builder: (context) {
+              ctx = context;
+              return const Scaffold(body: Text('home'));
+            },
+          ),
         ),
       );
 
@@ -265,15 +268,18 @@ void main() {
       expect(isKidOverlayShowing, isFalse);
     });
 
-    testWidgets('the screen underneath stays visible (non-opaque route)',
-        (tester) async {
+    testWidgets('the screen underneath stays visible (non-opaque route)', (
+      tester,
+    ) async {
       late BuildContext ctx;
       await tester.pumpWidget(
         MaterialApp(
-          home: Builder(builder: (context) {
-            ctx = context;
-            return const Scaffold(body: Text('home'));
-          }),
+          home: Builder(
+            builder: (context) {
+              ctx = context;
+              return const Scaffold(body: Text('home'));
+            },
+          ),
         ),
       );
       showKidOverlay<void>(ctx, const Text('over'));
@@ -283,8 +289,9 @@ void main() {
     });
   });
 
-  testWidgets('an empty header band collapses instead of sitting there',
-      (tester) async {
+  testWidgets('an empty header band collapses instead of sitting there', (
+    tester,
+  ) async {
     // Colouring hides the control and has no title: 88 dp of nothing above
     // the picture is a gap, not a header.
     await tester.pumpWidget(

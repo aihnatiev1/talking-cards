@@ -45,10 +45,7 @@ void main() {
 
   /// Files that may call `playSfx(` / `playSfxVaried(`: the service that
   /// owns the table and the audio layer that defines the methods.
-  const sfxOwners = {
-    hapticOwner,
-    'lib/services/audio_service.dart',
-  };
+  const sfxOwners = {hapticOwner, 'lib/services/audio_service.dart'};
 
   bool haptics(String s) => s.contains('HapticFeedback.');
   bool sfx(String s) => s.contains('playSfx(') || s.contains('playSfxVaried(');
@@ -56,31 +53,28 @@ void main() {
   List<String> offenders(
     bool Function(String source) hasProblem, {
     required Set<String> allowed,
-  }) =>
-      [
-        for (final f in dart)
-          if (!allowed.contains(f.path) && hasProblem(f.readAsStringSync()))
-            f.path,
-      ];
+  }) => [
+    for (final f in dart)
+      if (!allowed.contains(f.path) && hasProblem(f.readAsStringSync())) f.path,
+  ];
 
   List<String> stale(
     bool Function(String source) hasProblem, {
     required Set<String> debt,
-  }) =>
-      [
-        for (final path in debt)
-          if (!File(path).existsSync() ||
-              !hasProblem(File(path).readAsStringSync()))
-            path,
-      ];
+  }) => [
+    for (final path in debt)
+      if (!File(path).existsSync() ||
+          !hasProblem(File(path).readAsStringSync()))
+        path,
+  ];
 
   group('HapticFeedback.', () {
-    test('is called only by FeedbackService and the shrink-only debt list',
-        () {
+    test('is called only by FeedbackService and the shrink-only debt list', () {
       expect(
         offenders(haptics, allowed: {hapticOwner, ...hapticDebt}),
         isEmpty,
-        reason: 'Call FeedbackService.instance.event(FeedbackEvent.x) '
+        reason:
+            'Call FeedbackService.instance.event(FeedbackEvent.x) '
             'instead. Do not add this file to hapticDebt — that list only '
             'shrinks.',
       );
@@ -90,13 +84,13 @@ void main() {
       expect(
         stale(haptics, debt: hapticDebt),
         isEmpty,
-        reason: 'These files no longer call HapticFeedback themselves — '
+        reason:
+            'These files no longer call HapticFeedback themselves — '
             'remove them from hapticDebt so they stay clean.',
       );
     });
 
-    test('FeedbackService itself is the one place the platform is asked',
-        () {
+    test('FeedbackService itself is the one place the platform is asked', () {
       final source = File(hapticOwner).readAsStringSync();
       expect(haptics(source), isTrue);
     });
@@ -107,7 +101,8 @@ void main() {
       expect(
         offenders(sfx, allowed: sfxOwners),
         isEmpty,
-        reason: 'Name the event: FeedbackService.instance.event(...). A new '
+        reason:
+            'Name the event: FeedbackService.instance.event(...). A new '
             'sound gets a row in the table, not a call site.',
       );
     });
@@ -115,8 +110,11 @@ void main() {
 
   test('the old celebration surfaces are gone', () {
     // Three overlays with two confetti painters became one Celebration.
-    expect(File('lib/widgets/celebration_overlay.dart').existsSync(), isFalse,
-        reason: 'Use celebrate(tier: CelebrationTier.pack).');
+    expect(
+      File('lib/widgets/celebration_overlay.dart').existsSync(),
+      isFalse,
+      reason: 'Use celebrate(tier: CelebrationTier.pack).',
+    );
     expect(
       offenders((s) => s.contains('showGeneralDialog('), allowed: const {}),
       isEmpty,

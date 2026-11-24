@@ -44,9 +44,13 @@ void main() {
             missing.add('$packId/${card['id']}: images/webp/$image.webp');
           }
         }
-        expect(missing, isEmpty,
-            reason: 'named in $file, absent from the build:\n'
-                '${missing.join('\n')}');
+        expect(
+          missing,
+          isEmpty,
+          reason:
+              'named in $file, absent from the build:\n'
+              '${missing.join('\n')}',
+        );
       });
 
       test('every named clip is a known key and its file exists', () {
@@ -68,12 +72,20 @@ void main() {
             missing.add('$packId/${card['id']}: audio_mp3/$clip.mp3');
           }
         }
-        expect(unknown, isEmpty,
-            reason: 'not in the audio map, so never played:\n'
-                '${unknown.join('\n')}');
-        expect(missing, isEmpty,
-            reason: 'named in $file, absent from the build:\n'
-                '${missing.join('\n')}');
+        expect(
+          unknown,
+          isEmpty,
+          reason:
+              'not in the audio map, so never played:\n'
+              '${unknown.join('\n')}',
+        );
+        expect(
+          missing,
+          isEmpty,
+          reason:
+              'named in $file, absent from the build:\n'
+              '${missing.join('\n')}',
+        );
       });
     });
   }

@@ -1,0 +1,12 @@
+Built-in image_gen. Style reference: animal-friends-concept-v3.png.
+
+Create a new production character sprite atlas in the EXACT same appealing simple 2D animation art direction as the reference: large white expressive eyes, chunky carefully shaped silhouettes, no outlines, warm clean colors, minimal shading. The reference is STYLE ONLY. SIX NEW animals, no cow cat dog rabbit.
+Landscape canvas aspect ratio 3:2, divided into THREE EQUAL COLUMNS and TWO EQUAL ROWS. Each cell is square. Invisible grid, no lines or labels.
+Top row left: chestnut baby horse with cream muzzle and dark mane, full body four legs.
+Top row middle: pink piglet with round snout and curled tail, full body.
+Top row right: cream hen with red comb, orange beak and two feet.
+Bottom row left: yellow duckling with orange broad bill and webbed feet.
+Bottom row middle: cheerful green frog, big eyes and recognizable bent hind legs, seated.
+Bottom row right: coral orange fish with visible tail and fins, side view and large friendly eye.
+Each animal alone, centered within its own exact grid cell with at least 12 percent clear padding on ALL sides. No part crosses cell boundaries. Equal visual scale. Anatomically recognizable for toddlers, distinct individual expressions, consistent professional character design matching the provided artwork.
+REAL transparent background with alpha. Absolutely no background color, no floor, no cast shadow, no scenery, no text, no watermark. Clean smooth edges without speckles. Whole animals including feet tails ears must fit.

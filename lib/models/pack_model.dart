@@ -11,11 +11,13 @@ class PackModel {
   final bool isLocked;
   final bool isFree; // originally free in JSON (not unlocked by purchase)
   final List<CardModel> cards;
+
   /// Optional dedicated cover image (webp asset name, no extension) used as
   /// the pack's thumbnail on the main grid. Falls back to the first card's
   /// illustration when null. Lets sound-packs display a drawn letter as cover
   /// while keeping real illustrations on the cards inside.
   final String? cover;
+
   /// Per-pack override for free preview count. Falls back to the global
   /// [freePreviewCount] when null. Set in JSON via "freePreviewCount": N.
   final int? freePreviewCountOverride;
@@ -100,6 +102,6 @@ class PackModel {
 /// (experience audit 2026-09-13 §19), so the call site that still has the
 /// packs builds this map alongside the list.
 Map<String, String> cardGroupsOf(Iterable<PackModel> packs) => {
-      for (final p in packs)
-        for (final c in p.cards) c.id: p.id,
-    };
+  for (final p in packs)
+    for (final c in p.cards) c.id: p.id,
+};

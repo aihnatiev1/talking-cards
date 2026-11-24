@@ -63,10 +63,7 @@ class RepeatGameScreen extends ConsumerStatefulWidget {
 }
 
 class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
-    with
-        SingleTickerProviderStateMixin,
-        ConfettiOverlayMixin,
-        GameStateMixin {
+    with SingleTickerProviderStateMixin, ConfettiOverlayMixin, GameStateMixin {
   @override
   String get gameId => 'repeat_game';
 
@@ -104,7 +101,6 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
   late AnimationController _exitCtrl;
   late Animation<double> _exitSlide;
   late Animation<double> _exitFade;
-
 
   late final BloomReactions _bloom = ref.read(bloomReactionsProvider.notifier);
 
@@ -398,203 +394,201 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
       // buttons are the learning object here, and a tap meant for one
       // must never land on him (bloom_character §4.2).
       body: Padding(
-          padding: EdgeInsets.fromLTRB(
-            24,
-            0,
-            24,
-            max(DT.size.mascotCompanionOf(context), DT.size.tapMin) +
-                BloomMascot.hopClearance +
-                DT.sp16,
-          ),
-          child: Column(
-            children: [
-              const SizedBox(height: 12),
+        padding: EdgeInsets.fromLTRB(
+          24,
+          0,
+          24,
+          max(DT.size.mascotCompanionOf(context), DT.size.tapMin) +
+              BloomMascot.hopClearance +
+              DT.sp16,
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
 
-              // Card
-              Expanded(
-                flex: 5,
-                child: AnimatedBuilder(
-                  animation: _exitCtrl,
-                  // The card is a static picture for the whole exit: the
-                  // boundary inside the `Opacity` turns a full-card
-                  // `saveLayer` per frame into one retained layer the
-                  // compositor slides and fades (motion_language.md §7.1).
-                  builder: (_, child) => Transform.translate(
-                    offset: Offset(0, _exitSlide.value),
-                    child: Opacity(
-                      opacity: _exitFade.value,
-                      child: RepaintBoundary(child: child),
-                    ),
+            // Card
+            Expanded(
+              flex: 5,
+              child: AnimatedBuilder(
+                animation: _exitCtrl,
+                // The card is a static picture for the whole exit: the
+                // boundary inside the `Opacity` turns a full-card
+                // `saveLayer` per frame into one retained layer the
+                // compositor slides and fades (motion_language.md §7.1).
+                builder: (_, child) => Transform.translate(
+                  offset: Offset(0, _exitSlide.value),
+                  child: Opacity(
+                    opacity: _exitFade.value,
+                    child: RepaintBoundary(child: child),
                   ),
-                  child: KidTap(
-                    // A deliberate tap is a fresh invitation: the word is
-                    // said again and the microphone gets its turns back.
-                    onTap: () {
-                      _listenTurns = 0;
-                      _speakCurrent();
-                    },
-                    // The card speaks the word — a tock on top of the voice
-                    // is one sound too many (G12).
-                    sound: null,
-                    child: Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: card.colorBg,
-                        borderRadius: BorderRadius.circular(28),
-                        border: Border.all(
-                          color: card.colorAccent.withValues(alpha: 0.25),
-                          width: 1.5,
+                ),
+                child: KidTap(
+                  // A deliberate tap is a fresh invitation: the word is
+                  // said again and the microphone gets its turns back.
+                  onTap: () {
+                    _listenTurns = 0;
+                    _speakCurrent();
+                  },
+                  // The card speaks the word — a tock on top of the voice
+                  // is one sound too many (G12).
+                  sound: null,
+                  child: Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: card.colorBg,
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(
+                        color: card.colorAccent.withValues(alpha: 0.25),
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.08),
-                            blurRadius: 16,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // Real webp only — plain placeholder if an
-                          // unsanitized card ever slips through (never emoji).
-                          if (card.image != null)
-                            Expanded(
-                              child: CardImage.forCard(
-                                card,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                ),
-                              ),
-                            )
-                          else
-                            Expanded(
-                              child: Container(
-                                margin: const EdgeInsets.all(24),
-                                decoration: BoxDecoration(
-                                  color: card.colorAccent.withValues(
-                                    alpha: 0.25,
-                                  ),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Real webp only — plain placeholder if an
+                        // unsanitized card ever slips through (never emoji).
+                        if (card.image != null)
+                          Expanded(
+                            child: CardImage.forCard(
+                              card,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
                               ),
                             ),
-
-                          const SizedBox(height: 16),
-
-                          Text(
-                            card.sound,
-                            style: TextStyle(
-                              fontSize: 34,
-                              fontWeight: FontWeight.bold,
-                              color: card.colorAccent,
+                          )
+                        else
+                          Expanded(
+                            child: Container(
+                              margin: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                color: card.colorAccent.withValues(alpha: 0.25),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
                             ),
                           ),
 
-                          const SizedBox(height: 8),
+                        const SizedBox(height: 16),
 
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.volume_up_rounded,
+                        Text(
+                          card.sound,
+                          style: TextStyle(
+                            fontSize: 34,
+                            fontWeight: FontWeight.bold,
+                            color: card.colorAccent,
+                          ),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.volume_up_rounded,
+                              color: Colors.grey[400],
+                              size: 16,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              s('Натисни, щоб послухати', 'Tap to listen'),
+                              style: TextStyle(
+                                fontSize: 11,
                                 color: Colors.grey[400],
-                                size: 16,
                               ),
-                              const SizedBox(width: 4),
-                              Text(
-                                s('Натисни, щоб послухати', 'Tap to listen'),
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey[400],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
+            ),
 
-              const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-              // Parent controls
-              // The instruction the grown-up reads out loud — the point of
-              // the screen, not a footnote. It was 16 sp of the system face
-              // in the default grey and disappeared under the picture.
+            // Parent controls
+            // The instruction the grown-up reads out loud — the point of
+            // the screen, not a footnote. It was 16 sp of the system face
+            // in the default grey and disappeared under the picture.
+            Text(
+              s('Скажи: «$prompt»', 'Say: «$prompt»'),
+              textAlign: TextAlign.center,
+              style: DT.h2.copyWith(color: DT.textPrimary),
+            ),
+            // Why the ask grew. Without this line a parent whose child
+            // has been saying «мама» for a week meets a whole phrase and
+            // reads it as the app losing the plot.
+            if (_step.playsSentence) ...[
+              const SizedBox(height: 4),
               Text(
-                s('Скажи: «$prompt»', 'Say: «$prompt»'),
+                s(
+                  'Це слово вже виходить — пробуємо фразою',
+                  'This word is coming along — try the phrase',
+                ),
                 textAlign: TextAlign.center,
-                style: DT.h2.copyWith(color: DT.textPrimary),
+                style: DT.caption.copyWith(
+                  fontSize: 12,
+                  color: DT.textSecondary,
+                ),
               ),
-              // Why the ask grew. Without this line a parent whose child
-              // has been saying «мама» for a week meets a whole phrase and
-              // reads it as the app losing the plot.
-              if (_step.playsSentence) ...[
-                const SizedBox(height: 4),
-                Text(
-                  s(
-                    'Це слово вже виходить — пробуємо фразою',
-                    'This word is coming along — try the phrase',
+            ],
+            const SizedBox(height: 12),
+
+            // The only thing on screen that says the microphone is open,
+            // and it says it to the child, not the parent: a row of dots
+            // that grows with her own voice. No countdown, no score, and
+            // nothing that could be read as a verdict — when the window
+            // closes quietly the row simply disappears.
+            SizedBox(
+              height: 26,
+              child: _listening
+                  ? _ListeningDots(level: ListenService.instance.level)
+                  : null,
+            ),
+            const SizedBox(height: 12),
+
+            // Two supportive pills for the grown-up. Neither is a
+            // verdict and neither claims to have *heard* anything: the
+            // app cannot listen, so it never pretends to (§21). One says
+            // "that came out", the other "let's try that one again".
+            Row(
+              children: [
+                Expanded(
+                  child: _ParentPill(
+                    label: s('Спробуємо ще', 'Try again'),
+                    icon: AppIcon.replay,
+                    background: DT.surfaceWhite,
+                    foreground: DT.brand,
+                    border: DT.brand.withValues(alpha: 0.35),
+                    enabled: !_answered,
+                    onTap: _onWrong,
                   ),
-                  textAlign: TextAlign.center,
-                  style: DT.caption.copyWith(
-                    fontSize: 12,
-                    color: DT.textSecondary,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _ParentPill(
+                    label: s('Вийшло!', 'Nice!'),
+                    icon: AppIcon.check,
+                    background: DT.success,
+                    foreground: Colors.white,
+                    enabled: !_answered,
+                    onTap: _onCorrect,
                   ),
                 ),
               ],
-              const SizedBox(height: 12),
+            ),
 
-              // The only thing on screen that says the microphone is open,
-              // and it says it to the child, not the parent: a row of dots
-              // that grows with her own voice. No countdown, no score, and
-              // nothing that could be read as a verdict — when the window
-              // closes quietly the row simply disappears.
-              SizedBox(
-                height: 26,
-                child: _listening
-                    ? _ListeningDots(level: ListenService.instance.level)
-                    : null,
-              ),
-              const SizedBox(height: 12),
-
-              // Two supportive pills for the grown-up. Neither is a
-              // verdict and neither claims to have *heard* anything: the
-              // app cannot listen, so it never pretends to (§21). One says
-              // "that came out", the other "let's try that one again".
-              Row(
-                children: [
-                  Expanded(
-                    child: _ParentPill(
-                      label: s('Спробуємо ще', 'Try again'),
-                      icon: AppIcon.replay,
-                      background: DT.surfaceWhite,
-                      foreground: DT.brand,
-                      border: DT.brand.withValues(alpha: 0.35),
-                      enabled: !_answered,
-                      onTap: _onWrong,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _ParentPill(
-                      label: s('Вийшло!', 'Nice!'),
-                      icon: AppIcon.check,
-                      background: DT.success,
-                      foreground: Colors.white,
-                      enabled: !_answered,
-                      onTap: _onCorrect,
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 24),
-            ],
-          ),
+            const SizedBox(height: 24),
+          ],
+        ),
       ),
     );
   }
@@ -735,9 +729,7 @@ class _ListeningDots extends StatelessWidget {
                 width: i < lit ? 18 : 12,
                 height: i < lit ? 18 : 12,
                 decoration: BoxDecoration(
-                  color: i < lit
-                      ? DT.brand
-                      : DT.brand.withValues(alpha: 0.22),
+                  color: i < lit ? DT.brand : DT.brand.withValues(alpha: 0.22),
                   shape: BoxShape.circle,
                 ),
               ),

@@ -25,28 +25,26 @@ void main() {
   }) {
     return ProviderScope(
       overrides: overrides,
-      child: MaterialApp(
-        home: PaywallScreen(isOnboarding: isOnboarding),
-      ),
+      child: MaterialApp(home: PaywallScreen(isOnboarding: isOnboarding)),
     );
   }
 
   /// A catalogue of [n] packs, so the copy's number is under the test's
   /// control rather than whatever the bundled JSON happens to hold today.
   Override packsOf(int n) => packsProvider.overrideWith(
-        (ref) async => List.generate(
-          n,
-          (i) => PackModel(
-            id: 'p$i',
-            title: 'Pack $i',
-            icon: '🐶',
-            color: const Color(0xFF000000),
-            isLocked: true,
-            isFree: false,
-            cards: const [],
-          ),
-        ),
-      );
+    (ref) async => List.generate(
+      n,
+      (i) => PackModel(
+        id: 'p$i',
+        title: 'Pack $i',
+        icon: '🐶',
+        color: const Color(0xFF000000),
+        isLocked: true,
+        isFree: false,
+        cards: const [],
+      ),
+    ),
+  );
 
   /// An active profile as onboarding would have saved it; [language] also
   /// drives [languageProvider], so 'en' renders the English paywall.
@@ -71,7 +69,8 @@ void main() {
     bool isOnboarding = false,
   }) async {
     await tester.pumpWidget(
-        createPaywallApp(overrides: overrides, isOnboarding: isOnboarding));
+      createPaywallApp(overrides: overrides, isOnboarding: isOnboarding),
+    );
     await tester.pump(const Duration(seconds: 3));
     // Let the catalogue load give up: there is no billing client here, and
     // the CTA spins until the store answers or the budget runs out.
@@ -80,13 +79,13 @@ void main() {
   }
 
   ProductDetails product(String id, double raw, String price) => ProductDetails(
-        id: id,
-        title: id,
-        description: id,
-        price: price,
-        rawPrice: raw,
-        currencyCode: 'UAH',
-      );
+    id: id,
+    title: id,
+    description: id,
+    price: price,
+    rawPrice: raw,
+    currencyCode: 'UAH',
+  );
 
   /// A store that has answered: the CTA can sell. Without this the test
   /// environment has no billing client, so the screen correctly shows its
@@ -120,8 +119,9 @@ void main() {
       expect(find.textContaining('щомісяця'), findsNothing);
     });
 
-    testWidgets('the pack count is the catalogue\'s, correctly declined',
-        (tester) async {
+    testWidgets('the pack count is the catalogue\'s, correctly declined', (
+      tester,
+    ) async {
       // Two literals on this screen used to disagree (19 vs 21) while the
       // app shipped neither. 21 is also the awkward Ukrainian case: a
       // numeral ending in 1 takes the singular.
@@ -131,57 +131,83 @@ void main() {
       expect(find.textContaining('19'), findsNothing);
     });
 
-    testWidgets('no catalogue yet means no number, not a stale one',
-        (tester) async {
+    testWidgets('no catalogue yet means no number, not a stale one', (
+      tester,
+    ) async {
       // A load that never settles: the first frame on a cold start, or an
       // asset failure. Either way the copy must not invent a count.
-      await pumpPaywall(tester, overrides: [
-        packsProvider
-            .overrideWith((ref) => Completer<List<PackModel>>().future),
-      ]);
+      await pumpPaywall(
+        tester,
+        overrides: [
+          packsProvider.overrideWith(
+            (ref) => Completer<List<PackModel>>().future,
+          ),
+        ],
+      );
 
       expect(find.text('Розділи на кожну тему'), findsOneWidget);
       expect(find.textContaining('розділів для розвитку'), findsNothing);
     });
 
-    testWidgets('the EN placeholder name "Kid" is not personalised',
-        (tester) async {
+    testWidgets('the EN placeholder name "Kid" is not personalised', (
+      tester,
+    ) async {
       // Onboarding saves 'Kid' when the EN parent skips the name field —
       // the same placeholder as «Малюк», and it used to open the paywall
       // with "Kid's learning plan (age 2–3)".
-      await pumpPaywall(tester,
-          overrides: [profileNamed('Kid', language: 'en'), packsOf(21)]);
+      await pumpPaywall(
+        tester,
+        overrides: [
+          profileNamed('Kid', language: 'en'),
+          packsOf(21),
+        ],
+      );
 
       expect(find.text('Unlock full potential'), findsOneWidget);
       expect(find.textContaining("Kid's"), findsNothing);
     });
 
-    testWidgets('a real EN name still personalises the headline',
-        (tester) async {
-      await pumpPaywall(tester,
-          overrides: [profileNamed('Mia', language: 'en'), packsOf(21)]);
+    testWidgets('a real EN name still personalises the headline', (
+      tester,
+    ) async {
+      await pumpPaywall(
+        tester,
+        overrides: [
+          profileNamed('Mia', language: 'en'),
+          packsOf(21),
+        ],
+      );
 
       // Prefix only: the age suffix is glued with an NBSP by design.
       expect(find.textContaining("Mia's learning plan"), findsOneWidget);
     });
 
-    testWidgets('EN shows the real review but no rating it cannot back',
-        (tester) async {
+    testWidgets('EN shows the real review but no rating it cannot back', (
+      tester,
+    ) async {
       // The only ratings are on the Ukrainian App Store; a US or UK parent
       // would see none. The translated review stays, the number goes.
-      await pumpPaywall(tester,
-          isOnboarding: true,
-          overrides: [profileNamed('Kid', language: 'en'), packsOf(21)]);
+      await pumpPaywall(
+        tester,
+        isOnboarding: true,
+        overrides: [
+          profileNamed('Kid', language: 'en'),
+          packsOf(21),
+        ],
+      );
 
       expect(find.textContaining('Rated'), findsNothing);
       expect(find.byKey(const ValueKey('rating-star-0')), findsNothing);
-      expect(find.textContaining('App Store review (translated)'),
-          findsOneWidget);
+      expect(
+        find.textContaining('App Store review (translated)'),
+        findsOneWidget,
+      );
       expect(find.textContaining('Ukrain'), findsNothing);
     });
 
-    testWidgets('the onboarding skip link reads as a real choice',
-        (tester) async {
+    testWidgets('the onboarding skip link reads as a real choice', (
+      tester,
+    ) async {
       // 13sp grey under the CTA looked like fine print; with the X hidden
       // for 3s a parent saw no way out and killed the app.
       await pumpPaywall(tester, isOnboarding: true, overrides: [packsOf(21)]);
@@ -192,8 +218,10 @@ void main() {
       expect(style?.fontSize, greaterThanOrEqualTo(16));
       expect(style?.fontWeight, FontWeight.w700);
 
-      final button =
-          find.ancestor(of: label, matching: find.byType(TextButton));
+      final button = find.ancestor(
+        of: label,
+        matching: find.byType(TextButton),
+      );
       final size = tester.getSize(button);
       expect(size.height, greaterThanOrEqualTo(56));
       // Full width inside the CTA column's 28dp side padding (800dp surface).
@@ -241,15 +269,17 @@ void main() {
       expect(find.text('Конфіденційність'), findsOneWidget);
     });
 
-    testWidgets('honest social proof: no fabricated 4.9 rating',
-        (tester) async {
+    testWidgets('honest social proof: no fabricated 4.9 rating', (
+      tester,
+    ) async {
       await pumpPaywall(tester);
 
       expect(find.textContaining('4.9'), findsNothing);
     });
 
-    testWidgets('the close button is there from the first frame, and visible',
-        (tester) async {
+    testWidgets('the close button is there from the first frame, and visible', (
+      tester,
+    ) async {
       await tester.pumpWidget(createPaywallApp());
       await tester.pump();
       expect(find.byIcon(Icons.close), findsOneWidget);
@@ -322,8 +352,9 @@ void main() {
       expect(find.textContaining('Скасувати будь-коли'), findsAtLeast(1));
     });
 
-    testWidgets('an unreachable store is said out loud, with a retry',
-        (tester) async {
+    testWidgets('an unreachable store is said out loud, with a retry', (
+      tester,
+    ) async {
       // No billing client here, exactly like a tablet with no Wi-Fi. The
       // old screen kept its Buy button, which then did nothing at all.
       await pumpPaywall(tester);
@@ -336,11 +367,13 @@ void main() {
       expect(button.onPressed, isNotNull);
     });
 
-    testWidgets('a purchase waiting on Ask to Buy is shown as such',
-        (tester) async {
+    testWidgets('a purchase waiting on Ask to Buy is shown as such', (
+      tester,
+    ) async {
       seedStore();
       addTearDown(
-          () => PurchaseService.instance.awaitingApproval.value = false);
+        () => PurchaseService.instance.awaitingApproval.value = false,
+      );
       await pumpPaywall(tester);
 
       PurchaseService.instance.awaitingApproval.value = true;
@@ -349,8 +382,9 @@ void main() {
       expect(find.textContaining('Ask to Buy'), findsOneWidget);
     });
 
-    testWidgets('a late entitlement closes the paywall and unlocks Pro',
-        (tester) async {
+    testWidgets('a late entitlement closes the paywall and unlocks Pro', (
+      tester,
+    ) async {
       // The store can grant Pro long after the purchase sheet closes (Ask to
       // Buy, a slow verification). The screen must still end successfully —
       // it used to give up after 10 seconds and leave a paying family here.
@@ -370,7 +404,8 @@ void main() {
                       onPressed: () async {
                         result = await Navigator.of(context).push<bool>(
                           MaterialPageRoute(
-                              builder: (_) => const PaywallScreen()),
+                            builder: (_) => const PaywallScreen(),
+                          ),
                         );
                       },
                       child: const Text('Open'),
@@ -414,19 +449,22 @@ void main() {
       await tester.tap(monthly);
       await tester.pumpAndSettle();
 
-      SemanticsNode tileOf(Finder label) => tester.getSemantics(find
-          .ancestor(of: label, matching: find.byType(Semantics))
-          .first);
+      SemanticsNode tileOf(Finder label) => tester.getSemantics(
+        find.ancestor(of: label, matching: find.byType(Semantics)).first,
+      );
       expect(tileOf(monthly).hasFlag(SemanticsFlag.isSelected), isTrue);
-      expect(tileOf(find.text('Річна')).hasFlag(SemanticsFlag.isSelected),
-          isFalse);
+      expect(
+        tileOf(find.text('Річна')).hasFlag(SemanticsFlag.isSelected),
+        isFalse,
+      );
       // And the CTA sub-line now quotes the monthly price.
       expect(find.textContaining('149 грн/місяць'), findsOneWidget);
       semantics.dispose();
     });
 
-    testWidgets('an open checkout holds the CTA until the store answers',
-        (tester) async {
+    testWidgets('an open checkout holds the CTA until the store answers', (
+      tester,
+    ) async {
       // The CTA used to come back on a flat ten-second timer that ignored
       // the store: it kept spinning after a parent had already dismissed
       // the sheet, then went live again with nothing behind it. That is
@@ -434,7 +472,8 @@ void main() {
       // and 33 purchase_cancel events, about four rounds each.
       seedStore();
       addTearDown(
-          () => PurchaseService.instance.purchaseInFlight.value = false);
+        () => PurchaseService.instance.purchaseInFlight.value = false,
+      );
       await pumpPaywall(tester);
 
       ElevatedButton cta() =>
@@ -452,25 +491,30 @@ void main() {
         PurchaseDetails(
           productID: 'yearly_premium',
           verificationData: PurchaseVerificationData(
-              localVerificationData: '',
-              serverVerificationData: '',
-              source: 'test'),
+            localVerificationData: '',
+            serverVerificationData: '',
+            source: 'test',
+          ),
           transactionDate: null,
           status: PurchaseStatus.canceled,
         ),
       ]);
       await tester.pump();
-      expect(cta().onPressed, isNotNull,
-          reason: 'the store said cancel — nothing left to wait out');
+      expect(
+        cta().onPressed,
+        isNotNull,
+        reason: 'the store said cancel — nothing left to wait out',
+      );
     });
-  
-    testWidgets('a store that refuses the checkout says where to look',
-        (tester) async {
+
+    testWidgets('a store that refuses the checkout says where to look', (
+      tester,
+    ) async {
       // What StoreKitError.unknown looked like for a parent on 29.09, who
       // got a bare "try again", tried once more and left.
       seedStore();
-      PurchaseService.instance.debugBuy = (_) async => throw PlatformException(
-          code: 'unknown', message: 'StoreKitError');
+      PurchaseService.instance.debugBuy = (_) async =>
+          throw PlatformException(code: 'unknown', message: 'StoreKitError');
       addTearDown(() {
         PurchaseService.instance.debugBuy = null;
         PurchaseService.instance.purchaseInFlight.value = false;
@@ -481,8 +525,10 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 750));
 
-      expect(find.textContaining("Перевірте вхід у Google Play"),
-          findsOneWidget);
+      expect(
+        find.textContaining("Перевірте вхід у Google Play"),
+        findsOneWidget,
+      );
       expect(find.widgetWithText(SnackBarAction, 'Ще раз'), findsOneWidget);
       await tester.pump(const Duration(seconds: 10));
     });
@@ -494,8 +540,9 @@ void main() {
     // "Назавж…", "Вигідніш…", "Без підпи…". They now ride the tile's top
     // edge and every word is whole.
     for (final scale in [1.0, 1.3]) {
-      testWidgets('no plan word is cut at 402 pt, text ×$scale',
-          (tester) async {
+      testWidgets('no plan word is cut at 402 pt, text ×$scale', (
+        tester,
+      ) async {
         tester.view.physicalSize = const Size(402 * 3, 874 * 3);
         tester.view.devicePixelRatio = 3;
         addTearDown(tester.view.reset);
@@ -504,16 +551,19 @@ void main() {
           product('monthly_premium', 3.49, '3,49 USD'),
           product('lifetime_premium', 29.99, '29,99 USD'),
         ]);
-        await tester.pumpWidget(ProviderScope(
-          child: MaterialApp(
-            builder: (context, child) => MediaQuery(
-              data: MediaQuery.of(context)
-                  .copyWith(textScaler: TextScaler.linear(scale)),
-              child: child!,
+        await tester.pumpWidget(
+          ProviderScope(
+            child: MaterialApp(
+              builder: (context, child) => MediaQuery(
+                data: MediaQuery.of(
+                  context,
+                ).copyWith(textScaler: TextScaler.linear(scale)),
+                child: child!,
+              ),
+              home: const PaywallScreen(),
             ),
-            home: const PaywallScreen(),
           ),
-        ));
+        );
         await tester.pump(PurchaseService.storeBudget);
         await tester.pumpAndSettle();
 

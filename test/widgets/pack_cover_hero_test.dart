@@ -18,20 +18,22 @@ import 'package:talking_cards/widgets/pack_grid_card.dart';
 /// `FlutterError.onError` to Crashlytics).
 void main() {
   setUp(() {
-    AssetPackService.instance
-        .debugConfigure(padAssets: const {}, bundled: true);
+    AssetPackService.instance.debugConfigure(
+      padAssets: const {},
+      bundled: true,
+    );
   });
 
   CardModel card(String id) => CardModel(
-        id: id,
-        sound: id,
-        text: id,
-        emoji: '🐶',
-        colorBg: DT.surfaceWhite,
-        colorAccent: DT.textPrimary,
-        image: null,
-        audioKey: id,
-      );
+    id: id,
+    sound: id,
+    text: id,
+    emoji: '🐶',
+    colorBg: DT.surfaceWhite,
+    colorAccent: DT.textPrimary,
+    image: null,
+    audioKey: id,
+  );
 
   final pack = PackModel(
     id: 'animals',
@@ -46,28 +48,29 @@ void main() {
   /// Home tile → a stand-in for the `CardsScreen` header: the same widget
   /// the screen uses, at the size it uses it.
   Widget app() => ProviderScope(
-        child: MaterialApp(
-          home: Builder(
-            builder: (context) => Scaffold(
-              body: Center(
-                child: SizedBox(
-                  width: 160,
-                  height: 190,
-                  child: PackGridCard(
-                    pack: pack,
-                    onTap: () => Navigator.of(context).push(
-                      KidRoutes.content(_HeaderScreen(pack: pack)),
-                    ),
-                  ),
-                ),
+    child: MaterialApp(
+      home: Builder(
+        builder: (context) => Scaffold(
+          body: Center(
+            child: SizedBox(
+              width: 160,
+              height: 190,
+              child: PackGridCard(
+                pack: pack,
+                onTap: () => Navigator.of(
+                  context,
+                ).push(KidRoutes.content(_HeaderScreen(pack: pack))),
               ),
             ),
           ),
         ),
-      );
+      ),
+    ),
+  );
 
-  testWidgets('one hero takes off from the tile and lands in the header',
-      (tester) async {
+  testWidgets('one hero takes off from the tile and lands in the header', (
+    tester,
+  ) async {
     await tester.pumpWidget(app());
     expect(find.byType(PackCoverHero), findsOneWidget);
 
@@ -84,12 +87,15 @@ void main() {
     expect(find.byType(PackCoverHero), findsOneWidget);
   });
 
-  testWidgets('the flight survives art that has not arrived yet',
-      (tester) async {
+  testWidgets('the flight survives art that has not arrived yet', (
+    tester,
+  ) async {
     // `ArtPending` / `ArtMissing` must not throw out of the shuttle: both
     // ends name the same picture, and CardImage answers with the emoji.
-    AssetPackService.instance
-        .debugConfigure(padAssets: const {}, bundled: false);
+    AssetPackService.instance.debugConfigure(
+      padAssets: const {},
+      bundled: false,
+    );
     await tester.pumpWidget(app());
     await tester.tap(find.byType(PackGridCard));
     await tester.pump();
@@ -103,8 +109,9 @@ void main() {
     setUp(() => MotionPolicy.debugOverride = MotionMode.test);
     tearDown(() => MotionPolicy.debugOverride = null);
 
-    testWidgets('the hero is switched off and pumpAndSettle terminates',
-        (tester) async {
+    testWidgets('the hero is switched off and pumpAndSettle terminates', (
+      tester,
+    ) async {
       await tester.pumpWidget(app());
       final mode = tester.widget<HeroMode>(
         find.descendant(

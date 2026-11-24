@@ -41,68 +41,80 @@ bool keepTestErrorHandlers = false;
 void main() async {
   // Crashlytics needs all uncaught zone errors funneled through one entrypoint,
   // so the whole bootstrap runs inside runZonedGuarded.
-  await runZonedGuarded<Future<void>>(() async {
-    AppStartup.begin();
-    WidgetsFlutterBinding.ensureInitialized();
-    _capImageCache();
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-    // Disable collection in debug so dev crashes don't pollute prod dashboards.
-    await FirebaseCrashlytics.instance
-        .setCrashlyticsCollectionEnabled(!kDebugMode);
-    // Same for Analytics — emulator/dev runs were showing up as real "new
-    // users" and skewing the funnel (e.g. the fake 12.08 spike).
-    await FirebaseAnalytics.instance
-        .setAnalyticsCollectionEnabled(!kDebugMode);
-
-    if (!keepTestErrorHandlers) {
-      FlutterError.onError =
-          FirebaseCrashlytics.instance.recordFlutterFatalError;
-      PlatformDispatcher.instance.onError = (error, stack) {
-        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-        return true;
-      };
-    }
-
-    // Load active profile BEFORE providers are created so all SharedPreferences
-    // reads use the correct namespace from the very first build.
-    final profiles = await ProfileService.init();
-
-    // Seed Firebase user properties for cohort slicing on D1/D7/D30 dashboards.
-    if (profiles.isNotEmpty) {
-      final active = profiles.firstWhere(
-        (p) => p.id == ProfileService.activeId,
-        orElse: () => profiles.first,
+  await runZonedGuarded<Future<void>>(
+    () async {
+      AppStartup.begin();
+      WidgetsFlutterBinding.ensureInitialized();
+      _capImageCache();
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
       );
-      AnalyticsService.instance.setLanguageProperty(active.language);
-      AnalyticsService.instance.setAgeLevelProperty(active.level);
-    }
 
-    // Phones stay portrait; tablets may lie flat "like the TV" — many
-    // families hand the child an old tablet in landscape (audit #29). The
-    // 600dp shortest side is Android's own tablet threshold.
-    final view = WidgetsBinding.instance.platformDispatcher.views.first;
-    final shortestDp =
-        view.physicalSize.shortestSide / view.devicePixelRatio;
-    await SystemChrome.setPreferredOrientations(shortestDp >= 600
-        ? DeviceOrientation.values
-        : const [DeviceOrientation.portraitUp]);
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarBrightness: Brightness.light,
-      statusBarIconBrightness: Brightness.dark,
-    ));
-    runApp(ProviderScope(
-      overrides: [
-        profileProvider.overrideWith(
-          (ref) => ProfileNotifier(ref, profiles),
+      // Disable collection in debug so dev crashes don't pollute prod dashboards.
+      await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
+        !kDebugMode,
+      );
+      // Same for Analytics — emulator/dev runs were showing up as real "new
+      // users" and skewing the funnel (e.g. the fake 12.08 spike).
+      await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(
+        !kDebugMode,
+      );
+
+      if (!keepTestErrorHandlers) {
+        FlutterError.onError =
+            FirebaseCrashlytics.instance.recordFlutterFatalError;
+        PlatformDispatcher.instance.onError = (error, stack) {
+          FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+          return true;
+        };
+      }
+
+      // Load active profile BEFORE providers are created so all SharedPreferences
+      // reads use the correct namespace from the very first build.
+      final profiles = await ProfileService.init();
+
+      // Seed Firebase user properties for cohort slicing on D1/D7/D30 dashboards.
+      if (profiles.isNotEmpty) {
+        final active = profiles.firstWhere(
+          (p) => p.id == ProfileService.activeId,
+          orElse: () => profiles.first,
+        );
+        AnalyticsService.instance.setLanguageProperty(active.language);
+        AnalyticsService.instance.setAgeLevelProperty(active.level);
+      }
+
+      // Phones stay portrait; tablets may lie flat "like the TV" — many
+      // families hand the child an old tablet in landscape (audit #29). The
+      // 600dp shortest side is Android's own tablet threshold.
+      final view = WidgetsBinding.instance.platformDispatcher.views.first;
+      final shortestDp = view.physicalSize.shortestSide / view.devicePixelRatio;
+      await SystemChrome.setPreferredOrientations(
+        shortestDp >= 600
+            ? DeviceOrientation.values
+            : const [DeviceOrientation.portraitUp],
+      );
+      SystemChrome.setSystemUIOverlayStyle(
+        const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarBrightness: Brightness.light,
+          statusBarIconBrightness: Brightness.dark,
         ),
-      ],
-      child: const TalkingCardsApp(),
-    ));
-  }, (error, stack) {
-    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-  });
+      );
+      runApp(
+        ProviderScope(
+          overrides: [
+            profileProvider.overrideWith(
+              (ref) => ProfileNotifier(ref, profiles),
+            ),
+          ],
+          child: const TalkingCardsApp(),
+        ),
+      );
+    },
+    (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    },
+  );
 }
 
 /// Flutter's default image cache is 100 MB / 1000 entries — a ceiling
@@ -245,8 +257,12 @@ class _TalkingCardsAppState extends ConsumerState<TalkingCardsApp>
     if (state != AppLifecycleState.resumed) return;
     final pausedAt = _pausedAt;
     _pausedAt = null;
-    ref.read(bloomReactionsProvider.notifier).appResumed(
-          pausedAt == null ? Duration.zero : DateTime.now().difference(pausedAt),
+    ref
+        .read(bloomReactionsProvider.notifier)
+        .appResumed(
+          pausedAt == null
+              ? Duration.zero
+              : DateTime.now().difference(pausedAt),
         );
     // Refresh engagement reminders only on resume (never in build).
     _refreshEngagement();

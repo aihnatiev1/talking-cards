@@ -64,9 +64,10 @@ class _SplashScreenState extends State<SplashScreen>
       duration: const Duration(milliseconds: 600),
     );
     _fadeAnim = CurvedAnimation(parent: _ctrl, curve: Curves.easeIn);
-    _scaleAnim = Tween<double>(begin: 0.85, end: 1.0).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeOutBack),
-    );
+    _scaleAnim = Tween<double>(
+      begin: 0.85,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutBack));
 
     // Start loading in background
     _initServices();
@@ -127,13 +128,12 @@ class _SplashScreenState extends State<SplashScreen>
 
   /// One init, time-boxed, with the timeout reported so analytics can name
   /// the service that blocks real devices.
-  Future<void> _guard(String name, Future<void> Function() body) =>
-      runGuarded(
-        name,
-        body,
-        budget: _inTest ? null : _initBudget,
-        onTimeout: AnalyticsService.instance.logSplashTimeout,
-      );
+  Future<void> _guard(String name, Future<void> Function() body) => runGuarded(
+    name,
+    body,
+    budget: _inTest ? null : _initBudget,
+    onTimeout: AnalyticsService.instance.logSplashTimeout,
+  );
 
   Future<void> _initServices() async {
     // Local prefs first: the onboarding decision has to be right even if a
@@ -178,9 +178,10 @@ class _SplashScreenState extends State<SplashScreen>
       // StreakNotifier auto-writes that on every cold start, so a fresh
       // install would already look "existing" by the time splash reads
       // prefs and the kid would never see onboarding (iOS first launch bug).
-      final hasExistingData = prefs.getKeys().any((k) =>
-          k.startsWith('pack_progress_') ||
-          k.startsWith('completed_packs'));
+      final hasExistingData = prefs.getKeys().any(
+        (k) =>
+            k.startsWith('pack_progress_') || k.startsWith('completed_packs'),
+      );
       if (hasExistingData) {
         // Silently mark done — don't interrupt an existing user with onboarding
         await prefs.setBool('onboarding_done', true);
@@ -198,7 +199,9 @@ class _SplashScreenState extends State<SplashScreen>
     _navigated = true;
     _watchdog?.cancel();
 
-    Widget dest = _showOnboarding ? const OnboardingScreen() : const HomeScreen();
+    Widget dest = _showOnboarding
+        ? const OnboardingScreen()
+        : const HomeScreen();
 
     // Handle deep links: talkingcards://cards/{packId} → CardsScreen
     // talkingcards://home or unknown → HomeScreen
@@ -232,36 +235,36 @@ class _SplashScreenState extends State<SplashScreen>
       body: Center(
         child: _imageReady
             ? FadeTransition(
-          opacity: _fadeAnim,
-          child: ScaleTransition(
-            scale: _scaleAnim,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // No wordmark here: the splash stays language-neutral so new
-                // locales need zero design work. The icon alone carries the brand.
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(64),
-                  child: Image.asset(
-                    'assets/images/webp/splash.webp',
-                    width: 280,
-                    height: 280,
-                    fit: BoxFit.contain,
+                opacity: _fadeAnim,
+                child: ScaleTransition(
+                  scale: _scaleAnim,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // No wordmark here: the splash stays language-neutral so new
+                      // locales need zero design work. The icon alone carries the brand.
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(64),
+                        child: Image.asset(
+                          'assets/images/webp/splash.webp',
+                          width: 280,
+                          height: 280,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      const SizedBox(
+                        width: 32,
+                        height: 32,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 3,
+                          color: DT.brand,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 32),
-                const SizedBox(
-                  width: 32,
-                  height: 32,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 3,
-                    color: DT.brand,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        )
+              )
             : const SizedBox.shrink(),
       ),
     );

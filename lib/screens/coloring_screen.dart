@@ -46,8 +46,10 @@ class ColoringScreen extends ConsumerStatefulWidget {
   /// no verse packs, no negative-mood images (design audit 2026-09-08, #25 —
   /// the first picture a child saw could be a crying boy).
   static List<CardModel> coloringPool(Iterable<PackModel> packs) => packs
-      .where((p) =>
-          !p.id.startsWith('_') && !PackModel.nonWordPackIds.contains(p.id))
+      .where(
+        (p) =>
+            !p.id.startsWith('_') && !PackModel.nonWordPackIds.contains(p.id),
+      )
       .expand((p) => p.cards)
       .where((c) {
         final image = c.image;
@@ -70,8 +72,9 @@ class ColoringScreen extends ConsumerStatefulWidget {
     math.Random rng,
   ) {
     assert(pool.isNotEmpty);
-    final currentIndex =
-        current == null ? -1 : pool.indexWhere((c) => c.id == current.id);
+    final currentIndex = current == null
+        ? -1
+        : pool.indexWhere((c) => c.id == current.id);
     if (currentIndex < 0 || pool.length == 1) {
       return pool[rng.nextInt(pool.length)];
     }
@@ -174,7 +177,8 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
     ref.listenManual(packsProvider, (prev, next) {
       final packs = next.valueOrNull;
       if (packs == null || packs.isEmpty) return;
-      final inPool = _card != null &&
+      final inPool =
+          _card != null &&
           packs
               .expand((p) => p.cards)
               .any((c) => c.id == _card!.id && c.sound == _card!.sound);
@@ -349,8 +353,10 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
           // Bytes present but undecodable: a corrupt file rather than a
           // missing one. Same dead end for the child, so same exit.
           if (!mounted || gen != _loadGen) return;
-          AnalyticsService.instance
-              .logAssetUnavailable('coloring', 'decode_failed');
+          AnalyticsService.instance.logAssetUnavailable(
+            'coloring',
+            'decode_failed',
+          );
           _afterFailedLoad();
           return;
         }
@@ -550,7 +556,8 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
     // the OS flag means "do not animate a hand at me", while the *test*
     // override only freezes idle loops, and this hint is the thing under
     // test. Under real reduced motion it simply stays unseen and waits.
-    final showHand = album.loaded &&
+    final showHand =
+        album.loaded &&
         !album.handHintSeen &&
         !_handHintOver &&
         !_done &&
@@ -569,7 +576,8 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
       body: _paywallGated
           ? _PaywallGate(
               onUnlock: () =>
-                  runPaywallFlow(context, ref, source: 'coloring_gate'))
+                  runPaywallFlow(context, ref, source: 'coloring_gate'),
+            )
           : _contentUnavailable
           ? ContentDownloadView(
               state: ref.watch(contentPackProvider),
@@ -579,90 +587,93 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
           : card == null
           ? Center(
               child: Text(
-                s('Відкрий хоча б один пак з картками',
-                    'Open at least one pack with images first'),
+                s(
+                  'Відкрий хоча б один пак з картками',
+                  'Open at least one pack with images first',
+                ),
               ),
             )
           : Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                    child: Text(
-                      s('Проведи пальцем по картинці — проявляться кольори',
-                          'Drag your finger — the colors appear'),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade700,
-                        fontWeight: FontWeight.w500,
-                      ),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                  child: Text(
+                    s(
+                      'Проведи пальцем по картинці — проявляться кольори',
+                      'Drag your finger — the colors appear',
+                    ),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade700,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: LayoutBuilder(
-                        builder: (ctx, box) {
-                          return Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(24),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: card.colorAccent
-                                      .withValues(alpha: 0.15),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 6),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: LayoutBuilder(
+                      builder: (ctx, box) {
+                        return Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: card.colorAccent.withValues(alpha: 0.15),
+                                blurRadius: 20,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(24),
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                AnimatedBuilder(
+                                  animation: _revealCtrl,
+                                  builder: (_, __) => _ColoringCanvas(
+                                    image: _image,
+                                    strokes: _strokes,
+                                    current: _current,
+                                    overlayOpacity: _revealCtrl.value,
+                                    onRectChanged: (r) => _imageRect = r,
+                                    onStart: _onStart,
+                                    onMove: _onMove,
+                                    onEnd: _onEnd,
+                                  ),
                                 ),
+                                if (showHand)
+                                  _GhostFinger(
+                                    key: const ValueKey('ghost-finger'),
+                                    onDone: _endHandHint,
+                                  ),
                               ],
                             ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(24),
-                              child: Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  AnimatedBuilder(
-                                    animation: _revealCtrl,
-                                    builder: (_, __) => _ColoringCanvas(
-                                      image: _image,
-                                      strokes: _strokes,
-                                      current: _current,
-                                      overlayOpacity: _revealCtrl.value,
-                                      onRectChanged: (r) => _imageRect = r,
-                                      onStart: _onStart,
-                                      onMove: _onMove,
-                                      onEnd: _onEnd,
-                                    ),
-                                  ),
-                                  if (showHand)
-                                    _GhostFinger(
-                                      key: const ValueKey('ghost-finger'),
-                                      onDone: _endHandHint,
-                                    ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+                          ),
+                        );
+                      },
                     ),
                   ),
-                  // Both states share one height so the canvas (and the
-                  // strokes' local coordinates) never resize mid-drawing.
-                  SizedBox(
-                    height: _bottomBarHeight,
-                    // No `AnimatedSwitcher`: it is one bar in two moods,
-                    // and its Stack clipped Bloom's bubble at the bar's
-                    // edge. The bubble animates itself in instead.
-                    child: _ColoringBar(
-                      done: _done,
-                      onNext: _next,
-                      label: s('Нова картинка', 'New picture'),
-                      praise: _praise(s, card.id),
-                    ),
+                ),
+                // Both states share one height so the canvas (and the
+                // strokes' local coordinates) never resize mid-drawing.
+                SizedBox(
+                  height: _bottomBarHeight,
+                  // No `AnimatedSwitcher`: it is one bar in two moods,
+                  // and its Stack clipped Bloom's bubble at the bar's
+                  // edge. The bubble animates itself in instead.
+                  child: _ColoringBar(
+                    done: _done,
+                    onNext: _next,
+                    label: s('Нова картинка', 'New picture'),
+                    praise: _praise(s, card.id),
                   ),
-                ],
-              ),
+                ),
+              ],
+            ),
     );
   }
 }
@@ -721,8 +732,10 @@ class _ColoringCanvas extends StatelessWidget {
               strokes: strokes,
               current: current,
               overlayOpacity: overlayOpacity,
-              brushRadius:
-                  (math.min(rect.width, rect.height) * 0.085).clamp(24.0, 56.0),
+              brushRadius: (math.min(rect.width, rect.height) * 0.085).clamp(
+                24.0,
+                56.0,
+              ),
             ),
           ),
         );
@@ -738,11 +751,19 @@ Rect _fitContained(Rect dst, Size src) {
   if (srcAspect > dstAspect) {
     final h = dst.width / srcAspect;
     return Rect.fromLTWH(
-        dst.left, dst.top + (dst.height - h) / 2, dst.width, h);
+      dst.left,
+      dst.top + (dst.height - h) / 2,
+      dst.width,
+      h,
+    );
   } else {
     final w = dst.height * srcAspect;
     return Rect.fromLTWH(
-        dst.left + (dst.width - w) / 2, dst.top, w, dst.height);
+      dst.left + (dst.width - w) / 2,
+      dst.top,
+      w,
+      dst.height,
+    );
   }
 }
 
@@ -768,16 +789,36 @@ class _ColoringPainter extends CustomPainter {
   // out = 0.3*R + 0.59*G + 0.11*B + 55 (human-eye weights + lift).
   // Pure black lands at ~55 (medium gray contour); pure white near 255.
   static const ColorFilter _desatFilter = ColorFilter.matrix([
-    0.30, 0.59, 0.11, 0, 55,
-    0.30, 0.59, 0.11, 0, 55,
-    0.30, 0.59, 0.11, 0, 55,
-    0,    0,    0,    1, 0,
+    0.30,
+    0.59,
+    0.11,
+    0,
+    55,
+    0.30,
+    0.59,
+    0.11,
+    0,
+    55,
+    0.30,
+    0.59,
+    0.11,
+    0,
+    55,
+    0,
+    0,
+    0,
+    1,
+    0,
   ]);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final srcRect =
-        Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble());
+    final srcRect = Rect.fromLTWH(
+      0,
+      0,
+      image.width.toDouble(),
+      image.height.toDouble(),
+    );
 
     // Layer 1: full-color image (what gets revealed).
     final basePaint = Paint()..filterQuality = FilterQuality.medium;
@@ -787,8 +828,7 @@ class _ColoringPainter extends CustomPainter {
     // The saveLayer paint's alpha fades the WHOLE overlay at completion so
     // the remaining contour bits melt away without the child hunting pixels.
     if (overlayOpacity <= 0.001) return;
-    final layerPaint = Paint()
-      ..color = Color.fromRGBO(0, 0, 0, overlayOpacity);
+    final layerPaint = Paint()..color = Color.fromRGBO(0, 0, 0, overlayOpacity);
     canvas.saveLayer(fittedRect, layerPaint);
     final desatPaint = Paint()
       ..filterQuality = FilterQuality.medium
@@ -815,8 +855,7 @@ class _ColoringPainter extends CustomPainter {
     canvas.restore();
   }
 
-  void _drawStroke(
-      Canvas canvas, List<Offset> stroke, Paint line, Paint dot) {
+  void _drawStroke(Canvas canvas, List<Offset> stroke, Paint line, Paint dot) {
     if (stroke.isEmpty) return;
     if (stroke.length == 1) {
       canvas.drawCircle(stroke.first, brushRadius, dot);
@@ -1023,11 +1062,7 @@ class _PraiseBubble extends StatelessWidget {
           borderRadius: BorderRadius.circular(DT.rLg),
           boxShadow: DT.shadowSoft(DT.violet),
         ),
-        child: Text(
-          text,
-          maxLines: 1,
-          style: DT.h2.copyWith(color: DT.violet),
-        ),
+        child: Text(text, maxLines: 1, style: DT.h2.copyWith(color: DT.violet)),
       ),
     );
   }
@@ -1103,8 +1138,8 @@ class _GhostFingerPainter extends CustomPainter {
     final opacity = t < _fadeIn
         ? t / _fadeIn
         : t > _fadeOut
-            ? (1 - t) / (1 - _fadeOut)
-            : 1.0;
+        ? (1 - t) / (1 - _fadeOut)
+        : 1.0;
     if (opacity <= 0) return;
 
     final path = Path()
@@ -1193,8 +1228,10 @@ class _PaywallGate extends ConsumerWidget {
             const Text('🎨', style: TextStyle(fontSize: 96)),
             const SizedBox(height: 16),
             Text(
-              s('Понад $hundreds картинок чекають!',
-                  '$hundreds+ pictures waiting!'),
+              s(
+                'Понад $hundreds картинок чекають!',
+                '$hundreds+ pictures waiting!',
+              ),
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
@@ -1203,9 +1240,10 @@ class _PaywallGate extends ConsumerWidget {
               // Honest about what this is: colours appear under a finger.
               // No brush, no palette — do not promise free drawing (п. 24).
               s(
-                  'Розблокуй усі картинки — проявляй кольори пальчиком щодня.',
-                  'Unlock all pictures — reveal the colors with a finger, '
-                      'every day.'),
+                'Розблокуй усі картинки — проявляй кольори пальчиком щодня.',
+                'Unlock all pictures — reveal the colors with a finger, '
+                    'every day.',
+              ),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 15,
@@ -1233,12 +1271,16 @@ class _PaywallGate extends ConsumerWidget {
                   backgroundColor: DT.brand,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 28, vertical: 14),
+                    horizontal: 28,
+                    vertical: 14,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(22),
                   ),
                   textStyle: const TextStyle(
-                      fontSize: 17, fontWeight: FontWeight.bold),
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
@@ -1248,4 +1290,3 @@ class _PaywallGate extends ConsumerWidget {
     );
   }
 }
-

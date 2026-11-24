@@ -96,53 +96,53 @@ enum AppIcon {
   /// the parent's assistive tech speaks whatever language it is set to;
   /// call sites that know the locale pass `semanticLabel` instead.
   String get label => switch (this) {
-        AppIcon.back => 'Back',
-        AppIcon.close => 'Close',
-        AppIcon.sound => 'Sound on',
-        AppIcon.soundOff => 'Sound off',
-        AppIcon.play => 'Play',
-        AppIcon.replay => 'Replay',
-        AppIcon.shuffle => 'Shuffle',
-        AppIcon.home => 'Home',
-        AppIcon.check => 'Done',
-        AppIcon.lock => 'Locked',
-        AppIcon.star => 'Star',
-        AppIcon.parent => 'Parents',
-        AppIcon.catSpeech => 'Speech',
-        AppIcon.catSounds => 'Sounds',
-        AppIcon.catWorld => 'World',
-        AppIcon.gameGuess => 'Guess the word',
-        AppIcon.gameMatch => 'Find the pair',
-        AppIcon.gameBubbles => 'Pop the bubbles',
-        AppIcon.gameRepeat => 'Repeat after me',
-        AppIcon.gameOdd => 'Odd one out',
-        AppIcon.gameOpposites => 'Opposites',
-        AppIcon.gameArticulation => 'Articulation',
-        AppIcon.gameSort => 'Sort it',
-        AppIcon.gameSyllables => 'Count syllables',
-        AppIcon.stepListen => 'Listen',
-        AppIcon.stepCards => 'Cards',
-        AppIcon.stepQuest => 'Quest',
-        AppIcon.stopCardTree => 'Card tree',
-        AppIcon.stopBell => 'Bell',
-        AppIcon.stopMicFlower => 'Flower microphone',
-        AppIcon.pawStep => 'Step',
-        AppIcon.rewardChestClosed => 'Treasure chest',
-        AppIcon.rewardChestOpen => 'Open treasure chest',
-        AppIcon.rewardGift => 'Gift',
-        AppIcon.rewardTrophy => 'Trophy',
-        AppIcon.streakFlame => 'Streak',
-        AppIcon.hint => 'Hint',
-        AppIcon.stickerUnicorn => 'Unicorn sticker',
-        AppIcon.stickerDragon => 'Dragon sticker',
-        AppIcon.stickerRainbow => 'Rainbow sticker',
-        AppIcon.stickerButterfly => 'Butterfly sticker',
-        AppIcon.stickerAlbum => 'Sticker album',
-        AppIcon.calendar => 'Days',
-        AppIcon.navCards => 'Cards',
-        AppIcon.navGames => 'Games',
-        AppIcon.navColoring => 'Coloring',
-      };
+    AppIcon.back => 'Back',
+    AppIcon.close => 'Close',
+    AppIcon.sound => 'Sound on',
+    AppIcon.soundOff => 'Sound off',
+    AppIcon.play => 'Play',
+    AppIcon.replay => 'Replay',
+    AppIcon.shuffle => 'Shuffle',
+    AppIcon.home => 'Home',
+    AppIcon.check => 'Done',
+    AppIcon.lock => 'Locked',
+    AppIcon.star => 'Star',
+    AppIcon.parent => 'Parents',
+    AppIcon.catSpeech => 'Speech',
+    AppIcon.catSounds => 'Sounds',
+    AppIcon.catWorld => 'World',
+    AppIcon.gameGuess => 'Guess the word',
+    AppIcon.gameMatch => 'Find the pair',
+    AppIcon.gameBubbles => 'Pop the bubbles',
+    AppIcon.gameRepeat => 'Repeat after me',
+    AppIcon.gameOdd => 'Odd one out',
+    AppIcon.gameOpposites => 'Opposites',
+    AppIcon.gameArticulation => 'Articulation',
+    AppIcon.gameSort => 'Sort it',
+    AppIcon.gameSyllables => 'Count syllables',
+    AppIcon.stepListen => 'Listen',
+    AppIcon.stepCards => 'Cards',
+    AppIcon.stepQuest => 'Quest',
+    AppIcon.stopCardTree => 'Card tree',
+    AppIcon.stopBell => 'Bell',
+    AppIcon.stopMicFlower => 'Flower microphone',
+    AppIcon.pawStep => 'Step',
+    AppIcon.rewardChestClosed => 'Treasure chest',
+    AppIcon.rewardChestOpen => 'Open treasure chest',
+    AppIcon.rewardGift => 'Gift',
+    AppIcon.rewardTrophy => 'Trophy',
+    AppIcon.streakFlame => 'Streak',
+    AppIcon.hint => 'Hint',
+    AppIcon.stickerUnicorn => 'Unicorn sticker',
+    AppIcon.stickerDragon => 'Dragon sticker',
+    AppIcon.stickerRainbow => 'Rainbow sticker',
+    AppIcon.stickerButterfly => 'Butterfly sticker',
+    AppIcon.stickerAlbum => 'Sticker album',
+    AppIcon.calendar => 'Days',
+    AppIcon.navCards => 'Cards',
+    AppIcon.navGames => 'Games',
+    AppIcon.navColoring => 'Coloring',
+  };
 }
 
 /// The glyph of one game, by its `gameDefinitions` id
@@ -154,17 +154,17 @@ enum AppIcon {
 /// before it has art) falls back to the generic games glyph rather than
 /// throwing on a parent's screen.
 AppIcon appIconForGame(String id) => switch (id) {
-      'quiz' => AppIcon.gameGuess,
-      'memory' => AppIcon.gameMatch,
-      'sort' => AppIcon.gameSort,
-      'odd_one_out' => AppIcon.gameOdd,
-      'opposite_game' => AppIcon.gameOpposites,
-      'syllable_game' => AppIcon.gameSyllables,
-      'repeat_game' => AppIcon.gameRepeat,
-      'bubble_pop' => AppIcon.gameBubbles,
-      'articulation' => AppIcon.gameArticulation,
-      _ => AppIcon.navGames,
-    };
+  'quiz' => AppIcon.gameGuess,
+  'memory' => AppIcon.gameMatch,
+  'sort' => AppIcon.gameSort,
+  'odd_one_out' => AppIcon.gameOdd,
+  'opposite_game' => AppIcon.gameOpposites,
+  'syllable_game' => AppIcon.gameSyllables,
+  'repeat_game' => AppIcon.gameRepeat,
+  'bubble_pop' => AppIcon.gameBubbles,
+  'articulation' => AppIcon.gameArticulation,
+  _ => AppIcon.navGames,
+};
 
 /// Renders one [AppIcon].
 ///
@@ -177,6 +177,48 @@ AppIcon appIconForGame(String id) => switch (id) {
 /// Each icon is wrapped in a `RepaintBoundary`: the art is static, so a
 /// pulsing parent (`AmbientLoop`) does not re-rasterise the vector every
 /// frame.
+/// Painted app icons (generated art, transparent, 256 px) for the places a
+/// child *navigates*: nav tabs, the games/draw/world doors, the treasure
+/// chest, the parent padlock. State glyphs — stars, checks, close, the album
+/// silhouettes — stay vector because they are tinted and animated.
+///
+/// Used through [AppIconView] when no [AppIconView.color] / `silhouette` is
+/// asked for (a tinted icon is a glyph by definition), or directly by name
+/// through [AppArt].
+const _artFor = <AppIcon, String>{
+  AppIcon.navGames: 'gamepad',
+  AppIcon.navCards: 'cards',
+  AppIcon.catWorld: 'house',
+  AppIcon.navColoring: 'palette',
+  AppIcon.lock: 'padlock',
+};
+
+/// A painted icon by file name in `assets/images/icons/`.
+class AppArt extends StatelessWidget {
+  const AppArt(this.name, {super.key, this.size, this.semanticLabel = ''});
+  final String name;
+  final double? size;
+  final String semanticLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final side = size ?? DT.size.iconMd;
+    return Semantics(
+      label: semanticLabel,
+      image: true,
+      excludeSemantics: true,
+      child: Image.asset(
+        'assets/images/icons/$name.webp',
+        width: side,
+        height: side,
+        fit: BoxFit.contain,
+        filterQuality: FilterQuality.medium,
+        errorBuilder: (_, __, ___) => SizedBox.square(dimension: side),
+      ),
+    );
+  }
+}
+
 class AppIconView extends StatelessWidget {
   final AppIcon icon;
   final double? size;
@@ -204,6 +246,14 @@ class AppIconView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final side = size ?? DT.size.iconMd;
+    final art = color == null && silhouette == null ? _artFor[icon] : null;
+    if (art != null) {
+      return AppArt(
+        art,
+        size: side,
+        semanticLabel: semanticLabel ?? icon.label,
+      );
+    }
     return Semantics(
       label: semanticLabel ?? icon.label,
       image: true,

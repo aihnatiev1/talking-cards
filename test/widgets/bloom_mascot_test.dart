@@ -23,22 +23,25 @@ void main() {
   });
 
   Widget host(Widget child, {ProviderContainer? container}) {
-    final app = MaterialApp(home: Scaffold(body: Center(child: child)));
+    final app = MaterialApp(
+      home: Scaffold(body: Center(child: child)),
+    );
     if (container == null) return ProviderScope(child: app);
     return UncontrolledProviderScope(container: container, child: app);
   }
 
   testWidgets('hit zone is 72 dp around a 56 dp drawing', (tester) async {
     MotionPolicy.debugOverride = MotionMode.test;
-    await tester.pumpWidget(host(
-      const BloomMascot(size: 56, state: BloomState.still(BloomEmotion.idle)),
-    ));
+    await tester.pumpWidget(
+      host(
+        const BloomMascot(size: 56, state: BloomState.still(BloomEmotion.idle)),
+      ),
+    );
     expect(tester.getSize(find.byType(BloomMascot)), const Size(72, 72));
     expect(tester.getSize(find.byType(CustomPaint).last), const Size(56, 56));
   });
 
-  testWidgets('a frozen state renders without a ProviderScope',
-      (tester) async {
+  testWidgets('a frozen state renders without a ProviderScope', (tester) async {
     MotionPolicy.debugOverride = MotionMode.test;
     await tester.pumpWidget(
       const MaterialApp(
@@ -60,10 +63,9 @@ void main() {
     MotionPolicy.debugOverride = MotionMode.test;
     final container = ProviderContainer();
     addTearDown(container.dispose);
-    await tester.pumpWidget(host(
-      const BloomMascot(size: 56),
-      container: container,
-    ));
+    await tester.pumpWidget(
+      host(const BloomMascot(size: 56), container: container),
+    );
     await tester.tap(find.byType(BloomMascot));
     await tester.pump();
     expect(container.read(bloomReactionsProvider).emotion, BloomEmotion.happy);
@@ -76,9 +78,9 @@ void main() {
 
   testWidgets('interactive: false is decorative', (tester) async {
     MotionPolicy.debugOverride = MotionMode.test;
-    await tester.pumpWidget(host(
-      const BloomMascot(size: 56, interactive: false),
-    ));
+    await tester.pumpWidget(
+      host(const BloomMascot(size: 56, interactive: false)),
+    );
     expect(find.byType(KidTap), findsNothing);
     final semantics = tester.getSemantics(find.byType(BloomMascot));
     expect(semantics.label, 'Bloom');
@@ -88,10 +90,9 @@ void main() {
     MotionPolicy.debugOverride = MotionMode.test;
     final container = ProviderContainer();
     addTearDown(container.dispose);
-    await tester.pumpWidget(host(
-      const BloomMascot(size: 56),
-      container: container,
-    ));
+    await tester.pumpWidget(
+      host(const BloomMascot(size: 56), container: container),
+    );
     final brain = container.read(bloomReactionsProvider.notifier);
     brain.sceneEntered('cards', BloomScene.cards);
     brain.packOpened();
@@ -111,57 +112,71 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('with motion on, a one-shot ticks and then rests',
-      (tester) async {
+  testWidgets('with motion on, a one-shot ticks and then rests', (
+    tester,
+  ) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
-    await tester.pumpWidget(host(
-      const BloomMascot(size: 56),
-      container: container,
-    ));
+    await tester.pumpWidget(
+      host(const BloomMascot(size: 56), container: container),
+    );
     final brain = container.read(bloomReactionsProvider.notifier);
     brain.bloomTapped();
     await tester.pump();
-    expect(tester.binding.hasScheduledFrame, isTrue,
-        reason: 'the hop is playing');
+    expect(
+      tester.binding.hasScheduledFrame,
+      isTrue,
+      reason: 'the hop is playing',
+    );
     await tester.pump(DT.motion.celebrate);
     await tester.pump(DT.motion.bloomPose);
     await tester.pump();
     expect(container.read(bloomReactionsProvider).emotion, BloomEmotion.idle);
     await tester.pumpAndSettle();
-    expect(tester.binding.hasScheduledFrame, isFalse,
-        reason: 'at rest Bloom schedules no frames — only the blink Timer');
-    await tester.pumpWidget(const SizedBox());
-  });
-
-  testWidgets('an idle Bloom twitches an ear now and then — never under reduced motion',
-      (tester) async {
-    // bloom_character §2.2 / wave 2.9: a discrete event on a 15–25 s gap,
-    // idle only. Reduced motion drops it like the blink.
-    const idle = BloomState(
-      emotion: BloomEmotion.idle,
-      ambient: BloomAmbient.blinkOnly,
-      hops: 0,
+    expect(
+      tester.binding.hasScheduledFrame,
+      isFalse,
+      reason: 'at rest Bloom schedules no frames — only the blink Timer',
     );
-    Widget host() => const MaterialApp(
-          home: Scaffold(body: Center(child: BloomMascot(size: 96, state: idle))),
-        );
-
-    MotionPolicy.debugOverride = MotionMode.full;
-    addTearDown(() => MotionPolicy.debugOverride = MotionMode.test);
-    BloomMascot.debugEarTwitches = 0;
-    await tester.pumpWidget(host());
-    await tester.pump();
-    await tester.pump(DT.motion.bloomEarTwitchMax + const Duration(seconds: 1));
-    expect(BloomMascot.debugEarTwitches, greaterThanOrEqualTo(1));
-    await tester.pumpWidget(const SizedBox());
-
-    MotionPolicy.debugOverride = MotionMode.test;
-    BloomMascot.debugEarTwitches = 0;
-    await tester.pumpWidget(host());
-    await tester.pump();
-    await tester.pump(DT.motion.bloomEarTwitchMax + const Duration(seconds: 1));
-    expect(BloomMascot.debugEarTwitches, 0);
     await tester.pumpWidget(const SizedBox());
   });
+
+  testWidgets(
+    'an idle Bloom twitches an ear now and then — never under reduced motion',
+    (tester) async {
+      // bloom_character §2.2 / wave 2.9: a discrete event on a 15–25 s gap,
+      // idle only. Reduced motion drops it like the blink.
+      const idle = BloomState(
+        emotion: BloomEmotion.idle,
+        ambient: BloomAmbient.blinkOnly,
+        hops: 0,
+      );
+      Widget host() => const MaterialApp(
+        home: Scaffold(
+          body: Center(child: BloomMascot(size: 96, state: idle)),
+        ),
+      );
+
+      MotionPolicy.debugOverride = MotionMode.full;
+      addTearDown(() => MotionPolicy.debugOverride = MotionMode.test);
+      BloomMascot.debugEarTwitches = 0;
+      await tester.pumpWidget(host());
+      await tester.pump();
+      await tester.pump(
+        DT.motion.bloomEarTwitchMax + const Duration(seconds: 1),
+      );
+      expect(BloomMascot.debugEarTwitches, greaterThanOrEqualTo(1));
+      await tester.pumpWidget(const SizedBox());
+
+      MotionPolicy.debugOverride = MotionMode.test;
+      BloomMascot.debugEarTwitches = 0;
+      await tester.pumpWidget(host());
+      await tester.pump();
+      await tester.pump(
+        DT.motion.bloomEarTwitchMax + const Duration(seconds: 1),
+      );
+      expect(BloomMascot.debugEarTwitches, 0);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
 }

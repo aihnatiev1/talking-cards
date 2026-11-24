@@ -25,7 +25,7 @@ import '../utils/l10n.dart';
 import '../utils/motion.dart';
 import '../widgets/bloom_mascot.dart';
 import '../widgets/card_image.dart';
-import '../widgets/celebration.dart';
+import '../widgets/game_celebration_overlay.dart';
 import '../widgets/confetti_burst.dart';
 import '../widgets/kid_screen.dart';
 
@@ -91,20 +91,20 @@ enum BubbleDeviceClass {
 
   /// Diameter multiplier over the phone numbers.
   double get sizeFactor => switch (this) {
-        phone => 1.0,
-        tabletS => 1.2,
-        tabletL => 1.35,
-      };
+    phone => 1.0,
+    tabletS => 1.2,
+    tabletL => 1.35,
+  };
 
   /// Bubble rim stroke.
   double get rimWidth => this == phone ? 3 : 4;
 
   /// Bloom S on the grass (spec §2: 112 / 150 / 176 dp).
   double get bloomSize => switch (this) {
-        phone => 112,
-        tabletS => 150,
-        tabletL => 176,
-      };
+    phone => 112,
+    tabletS => 150,
+    tabletL => 176,
+  };
 
   /// Droplets per pop.
   int get droplets => this == phone ? 8 : 10;
@@ -209,83 +209,83 @@ class BubbleTuning {
     final pop = DT.motion.bubblePop;
     return switch (level) {
       <= 1 => BubbleTuning(
-          level: 1,
-          device: device,
-          targetPops: 8,
-          findPops: 3,
-          roundSeconds: 45,
-          minDiameter: 120 * f,
-          maxDiameter: 176 * f,
-          crossSlowSec: 20,
-          crossFastSec: 14,
-          maxAlive: switch (device) {
-            BubbleDeviceClass.phone => 2,
-            BubbleDeviceClass.tabletS => 3,
-            BubbleDeviceClass.tabletL => 4,
-          },
-          spawnMinMs: 900,
-          spawnMaxMs: 1500,
-          swayMin: 10,
-          swayMax: 16,
-          hitSlop: 28,
-          praiseEvery: 3,
-          idleHintSec: 4,
-          missesToCurious: 2,
-          minHold: pop * 0.7,
-          popDuration: pop * 1.2,
-        ),
+        level: 1,
+        device: device,
+        targetPops: 8,
+        findPops: 3,
+        roundSeconds: 45,
+        minDiameter: 120 * f,
+        maxDiameter: 176 * f,
+        crossSlowSec: 20,
+        crossFastSec: 14,
+        maxAlive: switch (device) {
+          BubbleDeviceClass.phone => 2,
+          BubbleDeviceClass.tabletS => 3,
+          BubbleDeviceClass.tabletL => 4,
+        },
+        spawnMinMs: 900,
+        spawnMaxMs: 1500,
+        swayMin: 10,
+        swayMax: 16,
+        hitSlop: 28,
+        praiseEvery: 3,
+        idleHintSec: 4,
+        missesToCurious: 2,
+        minHold: pop * 0.7,
+        popDuration: pop * 1.2,
+      ),
       2 => BubbleTuning(
-          level: 2,
-          device: device,
-          targetPops: 12,
-          findPops: 4,
-          roundSeconds: 50,
-          minDiameter: 104 * f,
-          maxDiameter: 160 * f,
-          crossSlowSec: 15,
-          crossFastSec: 10,
-          maxAlive: switch (device) {
-            BubbleDeviceClass.phone => 3,
-            BubbleDeviceClass.tabletS => 4,
-            BubbleDeviceClass.tabletL => 5,
-          },
-          spawnMinMs: 800,
-          spawnMaxMs: 1300,
-          swayMin: 14,
-          swayMax: 24,
-          hitSlop: 20,
-          praiseEvery: 4,
-          idleHintSec: 5,
-          missesToCurious: 3,
-          minHold: pop * 0.5,
-          popDuration: pop,
-        ),
+        level: 2,
+        device: device,
+        targetPops: 12,
+        findPops: 4,
+        roundSeconds: 50,
+        minDiameter: 104 * f,
+        maxDiameter: 160 * f,
+        crossSlowSec: 15,
+        crossFastSec: 10,
+        maxAlive: switch (device) {
+          BubbleDeviceClass.phone => 3,
+          BubbleDeviceClass.tabletS => 4,
+          BubbleDeviceClass.tabletL => 5,
+        },
+        spawnMinMs: 800,
+        spawnMaxMs: 1300,
+        swayMin: 14,
+        swayMax: 24,
+        hitSlop: 20,
+        praiseEvery: 4,
+        idleHintSec: 5,
+        missesToCurious: 3,
+        minHold: pop * 0.5,
+        popDuration: pop,
+      ),
       _ => BubbleTuning(
-          level: 3,
-          device: device,
-          targetPops: 20,
-          findPops: 6,
-          roundSeconds: 60,
-          minDiameter: 88 * f,
-          maxDiameter: 144 * f,
-          crossSlowSec: 12,
-          crossFastSec: 7,
-          maxAlive: switch (device) {
-            BubbleDeviceClass.phone => 3,
-            BubbleDeviceClass.tabletS => 5,
-            BubbleDeviceClass.tabletL => 6,
-          },
-          spawnMinMs: device == BubbleDeviceClass.tabletL ? 500 : 600,
-          spawnMaxMs: device == BubbleDeviceClass.tabletL ? 900 : 1100,
-          swayMin: 18,
-          swayMax: 32,
-          hitSlop: 12,
-          praiseEvery: 5,
-          idleHintSec: 6,
-          missesToCurious: 3,
-          minHold: pop * 0.4,
-          popDuration: pop * 0.9,
-        ),
+        level: 3,
+        device: device,
+        targetPops: 20,
+        findPops: 6,
+        roundSeconds: 60,
+        minDiameter: 88 * f,
+        maxDiameter: 144 * f,
+        crossSlowSec: 12,
+        crossFastSec: 7,
+        maxAlive: switch (device) {
+          BubbleDeviceClass.phone => 3,
+          BubbleDeviceClass.tabletS => 5,
+          BubbleDeviceClass.tabletL => 6,
+        },
+        spawnMinMs: device == BubbleDeviceClass.tabletL ? 500 : 600,
+        spawnMaxMs: device == BubbleDeviceClass.tabletL ? 900 : 1100,
+        swayMin: 18,
+        swayMax: 32,
+        hitSlop: 12,
+        praiseEvery: 5,
+        idleHintSec: 6,
+        missesToCurious: 3,
+        minHold: pop * 0.4,
+        popDuration: pop * 0.9,
+      ),
     };
   }
 }
@@ -318,6 +318,45 @@ abstract final class BubbleStage {
   /// because the sky is crowded.
   static const double spreadMargin = DT.sp24;
   static const int spreadAttempts = 4;
+
+  /// The spring can briefly pass its resting scale. Reserve that entire
+  /// envelope, plus the 8dp upward lift, before clamping the card centre.
+  static BubbleRevealPlacement revealPlacement({
+    required Size body,
+    required double bubbleSize,
+    required Offset origin,
+  }) {
+    const springEnvelope = 1.32;
+    final naturalWidth = bubbleSize * _CardInside.widthFactor * springEnvelope;
+    final naturalHeight = naturalWidth * _CardInside.cardAspect;
+    final availableWidth = max(0.0, body.width - 32);
+    final availableHeight = max(0.0, body.height - 32);
+    final scale = naturalWidth <= 0 || naturalHeight <= 0
+        ? 0.0
+        : min(
+            1.0,
+            min(availableWidth / naturalWidth, availableHeight / naturalHeight),
+          );
+    final width = naturalWidth * scale;
+    final height = naturalHeight * scale;
+    double centre(double position, double length, double extent) {
+      final lower = 16 + extent / 2;
+      final upper = length - 16 - extent / 2;
+      return upper < lower
+          ? length / 2
+          : position.clamp(lower, upper).toDouble();
+    }
+
+    final target = Offset(
+      centre(origin.dx, body.width, width),
+      centre(origin.dy, body.height, height),
+    );
+    return BubbleRevealPlacement(
+      scale: scale,
+      shift: target - origin,
+      envelope: Rect.fromCenter(center: target, width: width, height: height),
+    );
+  }
 
   /// Anchor X for a new bubble of [size] swinging ±[amplitude].
   ///
@@ -359,6 +398,18 @@ abstract final class BubbleStage {
     }
     return x;
   }
+}
+
+@immutable
+class BubbleRevealPlacement {
+  const BubbleRevealPlacement({
+    required this.scale,
+    required this.shift,
+    required this.envelope,
+  });
+  final double scale;
+  final Offset shift;
+  final Rect envelope;
 }
 
 // Excluded packs (apply to both modes): phrase/verse/babble packs (shared
@@ -575,11 +626,6 @@ class _PopRequest {
   final double posX;
   final double posY;
 
-  /// Where the revealed card sits relative to the burst: the card is
-  /// bigger than the bubble, so its centre is nudged back inside the play
-  /// area when the bubble popped near an edge or under the top bar (§3).
-  final Offset cardShift;
-
   /// This pop's place in the narrator's queue; `null` for a cascade pop
   /// at the end of a round, which is a sound and not a lesson.
   final BubbleWord? word;
@@ -591,7 +637,6 @@ class _PopRequest {
     required this.tint,
     required this.posX,
     required this.posY,
-    this.cardShift = Offset.zero,
     this.word,
   });
 }
@@ -740,8 +785,7 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
   // Cached at build because we ticker-update without [setState].
   Size? _screenSize;
   BubbleDeviceClass _device = BubbleDeviceClass.phone;
-  BubbleTuning _tuning =
-      BubbleTuning.forLevel(2, BubbleDeviceClass.phone);
+  BubbleTuning _tuning = BubbleTuning.forLevel(2, BubbleDeviceClass.phone);
   bool _reduce = false;
 
   /// Whether the physics ticker may run. Off under `MotionMode.test` only:
@@ -834,10 +878,12 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
       newMode = BubbleMode.all;
       pool = _buildPool(BubbleMode.all);
       if (!silent) {
-        _showSnack(AppS(isEn)(
-          'Замало складних слів — переходимо до всіх слів',
-          'Not enough tricky words yet — switching to all words',
-        ));
+        _showSnack(
+          AppS(isEn)(
+            'Замало складних слів — переходимо до всіх слів',
+            'Not enough tricky words yet — switching to all words',
+          ),
+        );
       }
     }
 
@@ -851,10 +897,12 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
         newMode = BubbleMode.all;
         targets = const [];
         if (!silent) {
-          _showSnack(AppS(isEn)(
-            'Замало різних карток — просто лопаємо бульбашки',
-            'Not enough different cards yet — just popping bubbles',
-          ));
+          _showSnack(
+            AppS(isEn)(
+              'Замало різних карток — просто лопаємо бульбашки',
+              'Not enough different cards yet — just popping bubbles',
+            ),
+          );
         }
       }
     }
@@ -1001,9 +1049,8 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     final s = AppS(ref.read(languageProvider) == 'en');
     // No subtitle with the count: the shared card carries no scores, and
     // the child has already seen the number in the pill.
-    celebrate(
+    showGameCelebration(
       context,
-      tier: CelebrationTier.round,
       isEn: s.isEn,
       childName: _childName,
       onAgain: () => _startRound(mode: _mode),
@@ -1020,8 +1067,9 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     // webp illustration (because the bubble renders the image, not emoji).
     bool isPlayable(CardModel c) => c.audioKey != null && c.image != null;
 
-    final allowedPacks =
-        packs.where((p) => !p.isLocked && !_isExcludedPack(p)).toList();
+    final allowedPacks = packs
+        .where((p) => !p.isLocked && !_isExcludedPack(p))
+        .toList();
 
     // Find plays over the same open catalogue as free popping; only the
     // *targets* are chosen with more care (see [_findTargets]).
@@ -1038,8 +1086,10 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     final due = ref.read(srsProvider).dueIds;
     final ids = <String>{...mistakes, ...due};
 
-    final allowedCards =
-        allowedPacks.expand((p) => p.cards).where(isPlayable).toList();
+    final allowedCards = allowedPacks
+        .expand((p) => p.cards)
+        .where(isPlayable)
+        .toList();
     final byId = {for (final c in allowedCards) c.id: c};
     return ids.map((id) => byId[id]).whereType<CardModel>().toList();
   }
@@ -1182,8 +1232,10 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
       // Arrival (spec §2.7) and the hint's wiggle-glow: both are plain
       // 0 → 1 clocks the Flow delegate reads, so nothing rebuilds.
       if (b.spawnT < 1) {
-        b.spawnT =
-            min(1.0, b.spawnT + dtMs / DT.motion.bubbleSpawn.inMilliseconds);
+        b.spawnT = min(
+          1.0,
+          b.spawnT + dtMs / DT.motion.bubbleSpawn.inMilliseconds,
+        );
       }
       final hint = b.hintT;
       if (hint != null) {
@@ -1235,7 +1287,8 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
   /// What ends the round: pops, or finds in [BubbleMode.find].
   int get _goal => _tuning.goalFor(_mode);
 
-  int _randomSpawnInterval() => _tuning.spawnMinMs +
+  int _randomSpawnInterval() =>
+      _tuning.spawnMinMs +
       _rng.nextInt(_tuning.spawnMaxMs - _tuning.spawnMinMs);
 
   /// Time without a touch before the (first / next) hint: the tuning
@@ -1260,10 +1313,12 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     if (body != null) {
       final bloom = BubbleStage.bloomRect(body, _device).center;
       // From Bloom towards the bubble, in his own -1..1 space.
-      _bloom.pointAt(Alignment(
-        ((target.posX - bloom.dx) / (body.width / 2)).clamp(-1.0, 1.0),
-        ((target.posY - bloom.dy) / (body.height / 2)).clamp(-1.0, 1.0),
-      ));
+      _bloom.pointAt(
+        Alignment(
+          ((target.posX - bloom.dx) / (body.width / 2)).clamp(-1.0, 1.0),
+          ((target.posY - bloom.dy) / (body.height / 2)).clamp(-1.0, 1.0),
+        ),
+      );
     }
     if (_mode == BubbleMode.find) {
       // The sign already says what to look for; the reminder is its word.
@@ -1342,7 +1397,9 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
 
   Color _nextTint() {
     var tint = _kRims[_rng.nextInt(_kRims.length)];
-    if (tint == _lastTint) tint = _kRims[(_kRims.indexOf(tint) + 1) % _kRims.length];
+    if (tint == _lastTint) {
+      tint = _kRims[(_kRims.indexOf(tint) + 1) % _kRims.length];
+    }
     _lastTint = tint;
     return tint;
   }
@@ -1359,7 +1416,8 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     if (_pool.isEmpty) return;
     final t = _tuning;
     final card = _findCardToSpawn() ?? _drawCard();
-    final size = t.minDiameter + _rng.nextDouble() * (t.maxDiameter - t.minDiameter);
+    final size =
+        t.minDiameter + _rng.nextDouble() * (t.maxDiameter - t.minDiameter);
     // Bigger bubble → slower: the crossing time interpolates between the
     // small/fast and large/slow ends of the table, and the velocity is
     // whatever crosses this play area in that time.
@@ -1373,7 +1431,8 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     final amplitude = t.swayMin + _rng.nextDouble() * (t.swayMax - t.swayMin);
     final periodMs = 2400.0 + _rng.nextDouble() * 1200.0;
 
-    final anchor = at?.dx ??
+    final anchor =
+        at?.dx ??
         BubbleStage.spawnAnchorX(
           rng: _rng,
           width: screen.width,
@@ -1387,7 +1446,8 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
           ],
         );
     // Default: start just below the visible area.
-    final posY = at?.dy ??
+    final posY =
+        at?.dy ??
         (startYFactor != null
             ? screen.height * startYFactor
             : screen.height + size);
@@ -1395,21 +1455,23 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     // The arrival is worth seeing for the youngest two levels; L3+ play
     // fast enough that a bubble growing in would be one more thing to
     // wait for. Reduced motion keeps the fade only (handled in paint).
-    _live.add(_LiveBubble(
-      id: _nextBubbleId++,
-      card: card,
-      size: size,
-      tint: tint,
-      velocityY: velY,
-      driftPhase: phase,
-      driftAmplitude: amplitude,
-      driftPeriodMs: periodMs,
-      anchorX: anchor,
-      bornAtMs: nowMs,
-      posX: anchor,
-      posY: posY,
-      spawnT: t.level >= 3 ? 1.0 : 0.0,
-    ));
+    _live.add(
+      _LiveBubble(
+        id: _nextBubbleId++,
+        card: card,
+        size: size,
+        tint: tint,
+        velocityY: velY,
+        driftPhase: phase,
+        driftAmplitude: amplitude,
+        driftPeriodMs: periodMs,
+        anchorX: anchor,
+        bornAtMs: nowMs,
+        posX: anchor,
+        posY: posY,
+        spawnT: t.level >= 3 ? 1.0 : 0.0,
+      ),
+    );
     _precacheDeck();
   }
 
@@ -1461,33 +1523,15 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     return p;
   }
 
-  /// The revealed card is bigger than the bubble it came out of: nudge it
-  /// back inside the play area so its top never hides under the top bar
-  /// and its sides stay 16 dp in (spec §3).
-  Offset _cardShift(double size, double posX, double posY) {
-    final body = _screenSize;
-    if (body == null) return Offset.zero;
-    final w = size * _CardInside.widthFactor * _CardInside.peakScale;
-    final h = w * _CardInside.cardAspect;
-    final minX = w / 2 + DT.sp16;
-    final maxX = body.width - w / 2 - DT.sp16;
-    final minY = h / 2 + DT.sp8;
-    final maxY = body.height - h / 2 - DT.sp8;
-    final cx = maxX >= minX ? posX.clamp(minX, maxX) : body.width / 2;
-    final cy = maxY >= minY ? posY.clamp(minY, maxY) : body.height / 2;
-    return Offset(cx - posX, cy - posY);
-  }
-
   _PopRequest _popRequestFor(_LiveBubble b, {BubbleWord? word}) => _PopRequest(
-        id: b.id,
-        card: b.card,
-        size: b.size,
-        tint: b.tint,
-        posX: b.posX,
-        posY: b.posY,
-        cardShift: _cardShift(b.size, b.posX, b.posY),
-        word: word,
-      );
+    id: b.id,
+    card: b.card,
+    size: b.size,
+    tint: b.tint,
+    posX: b.posX,
+    posY: b.posY,
+    word: word,
+  );
 
   void _popBubble(_LiveBubble b) {
     if (_ended) return;
@@ -1597,8 +1641,7 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
   /// (`curious`) and the biggest bubble in the sky wiggles and glows.
   /// Should the run repeat, he stops wondering and points.
   void _noteMissRun() {
-    if (_elapsedMs - _lastMissMs >
-        DT.motion.bubbleMissWindow.inMilliseconds) {
+    if (_elapsedMs - _lastMissMs > DT.motion.bubbleMissWindow.inMilliseconds) {
       _missRun = 0;
     }
     _lastMissMs = _elapsedMs;
@@ -1625,10 +1668,12 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
       final bloom = BubbleStage.bloomRect(body, _device).center;
       // Give his brain the direction first: the second run of misses is
       // a pointed paw, and a paw needs somewhere to point.
-      _bloom.hintTargetChanged(Alignment(
-        ((target.posX - bloom.dx) / (body.width / 2)).clamp(-1.0, 1.0),
-        ((target.posY - bloom.dy) / (body.height / 2)).clamp(-1.0, 1.0),
-      ));
+      _bloom.hintTargetChanged(
+        Alignment(
+          ((target.posX - bloom.dx) / (body.width / 2)).clamp(-1.0, 1.0),
+          ((target.posY - bloom.dy) / (body.height / 2)).clamp(-1.0, 1.0),
+        ),
+      );
     }
     // First run of the round → `curious`; the ones after → the paw.
     _bloom.miss(_noticedMissRuns);
@@ -1662,11 +1707,13 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     final m = ScaffoldMessenger.maybeOf(context);
     if (m == null) return;
     m.clearSnackBars();
-    m.showSnackBar(SnackBar(
-      content: Text(msg),
-      behavior: SnackBarBehavior.floating,
-      duration: const Duration(seconds: 3),
-    ));
+    m.showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
 
   @override
@@ -1824,6 +1871,11 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
                     child: _PoppingBubble(
                       key: ValueKey(p.id),
                       request: p,
+                      placement: BubbleStage.revealPlacement(
+                        body: body,
+                        bubbleSize: p.size,
+                        origin: Offset(p.posX, p.posY),
+                      ),
                       tuning: _tuning,
                       reduce: _reduce,
                       onComplete: () => _onPopComplete(p.id),
@@ -1834,9 +1886,7 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
               // The round's last beat: confetti out of Bloom's corner
               // while he cheers, before the shared card arrives.
               if (_finale && !_celebrating)
-                Positioned.fill(
-                  child: ConfettiBurst(origin: bloomRect.center),
-                ),
+                Positioned.fill(child: ConfettiBurst(origin: bloomRect.center)),
 
               // Praise: Bloom's line, rising from over his head. Above the
               // bubbles so it reads, below the celebration overlay, and
@@ -1931,9 +1981,7 @@ class _BubbleFlowDelegate extends FlowDelegate {
       final scale = (reduce || t >= 1)
           ? 1.0
           : 0.6 + 0.4 * Curves.elasticOut.transform(t);
-      final fade = t >= 1
-          ? 1.0
-          : (reduce ? t : min(1.0, t / 0.4));
+      final fade = t >= 1 ? 1.0 : (reduce ? t : min(1.0, t / 0.4));
 
       final hint = b.hintT;
       final wiggle = (hint == null || reduce)
@@ -1993,8 +2041,10 @@ class _TargetSign extends StatelessWidget {
   static Rect rectFor(Size body, Rect bloom, BubbleDeviceClass device) {
     final w = widthFor(device);
     final h = w * _CardInside.cardAspect;
-    final left =
-        (bloom.center.dx - w / 2).clamp(DT.sp8, max(DT.sp8, body.width - w - DT.sp8));
+    final left = (bloom.center.dx - w / 2).clamp(
+      DT.sp8,
+      max(DT.sp8, body.width - w - DT.sp8),
+    );
     final top = max(DT.sp8, bloom.top - DT.sp8 - h);
     return Rect.fromLTWH(left.toDouble(), top, w, h);
   }
@@ -2168,7 +2218,11 @@ class _GlassPainter extends CustomPainter {
     canvas.save();
     canvas.translate(c.dx - 0.45 * r, c.dy - 0.5 * r);
     canvas.rotate(-35 * pi / 180);
-    final hi = Rect.fromCenter(center: Offset.zero, width: 0.28 * d, height: 0.16 * d);
+    final hi = Rect.fromCenter(
+      center: Offset.zero,
+      width: 0.28 * d,
+      height: 0.16 * d,
+    );
     canvas.drawOval(
       hi,
       Paint()
@@ -2210,12 +2264,14 @@ class _GlassPainter extends CustomPainter {
 class _PoppingBubble extends StatefulWidget {
   final _PopRequest request;
   final BubbleTuning tuning;
+  final BubbleRevealPlacement placement;
   final bool reduce;
   final VoidCallback onComplete;
 
   const _PoppingBubble({
     super.key,
     required this.request,
+    required this.placement,
     required this.tuning,
     required this.reduce,
     required this.onComplete,
@@ -2250,15 +2306,13 @@ class _PoppingBubbleState extends State<_PoppingBubble>
       final base = i * (2 * pi / n);
       return base + (rng.nextDouble() - 0.5) * 0.3;
     });
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: widget.tuning.popDuration,
-    )
-      ..addStatusListener((s) {
-        if (s == AnimationStatus.completed) widget.onComplete();
-      })
-      ..addListener(_hold)
-      ..forward();
+    _ctrl =
+        AnimationController(vsync: this, duration: widget.tuning.popDuration)
+          ..addStatusListener((s) {
+            if (s == AnimationStatus.completed) widget.onComplete();
+          })
+          ..addListener(_hold)
+          ..forward();
   }
 
   /// The picture waits for its word (spec §3): when the reveal has landed
@@ -2282,7 +2336,8 @@ class _PoppingBubbleState extends State<_PoppingBubble>
     }
     if (!_waitedMinHold && t >= _CardInside.exitStart) {
       _waitedMinHold = true;
-      final shown = widget.tuning.popDuration *
+      final shown =
+          widget.tuning.popDuration *
           (_CardInside.exitStart - _CardInside.holdStart);
       final owed = widget.tuning.minHold - shown;
       if (owed > Duration.zero) _pause(owed);
@@ -2339,14 +2394,19 @@ class _PoppingBubbleState extends State<_PoppingBubble>
                 Positioned.fill(
                   child: Opacity(
                     opacity: (1 - t / 0.12).clamp(0.0, 1.0),
-                    child: _BubbleGlass(card: req.card, tint: req.tint, rimWidth: rim),
+                    child: _BubbleGlass(
+                      card: req.card,
+                      tint: req.tint,
+                      rimWidth: rim,
+                    ),
                   ),
                 ),
               _CardInside(
                 card: req.card,
                 boxSize: req.size,
                 t: t,
-                shift: req.cardShift,
+                shift: widget.placement.shift,
+                fitScale: widget.placement.scale,
                 reduce: true,
               ),
             ],
@@ -2361,7 +2421,11 @@ class _PoppingBubbleState extends State<_PoppingBubble>
                 child: Transform.scale(
                   scaleX: 1 + 0.10 * (t / _squashEnd),
                   scaleY: 1 - 0.10 * (t / _squashEnd),
-                  child: _BubbleGlass(card: req.card, tint: req.tint, rimWidth: rim),
+                  child: _BubbleGlass(
+                    card: req.card,
+                    tint: req.tint,
+                    rimWidth: rim,
+                  ),
                 ),
               )
             else if (t < _burstEnd)
@@ -2381,7 +2445,8 @@ class _PoppingBubbleState extends State<_PoppingBubble>
               card: req.card,
               boxSize: req.size,
               t: t,
-              shift: req.cardShift,
+              shift: widget.placement.shift,
+              fitScale: widget.placement.scale,
               reduce: false,
             ),
           ],
@@ -2432,7 +2497,11 @@ class _RimBurst extends StatelessWidget {
   final double rimWidth;
   final double t; // 0..1
 
-  const _RimBurst({required this.tint, required this.rimWidth, required this.t});
+  const _RimBurst({
+    required this.tint,
+    required this.rimWidth,
+    required this.t,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -2508,6 +2577,7 @@ class _CardInside extends StatelessWidget {
   /// edge or just under the top bar.
   final Offset shift;
   final bool reduce;
+  final double fitScale;
 
   const _CardInside({
     required this.card,
@@ -2515,6 +2585,7 @@ class _CardInside extends StatelessWidget {
     required this.t,
     required this.shift,
     required this.reduce,
+    required this.fitScale,
   });
 
   /// Card width as a share of the bubble's diameter, its 3:4 shape, and
@@ -2578,43 +2649,48 @@ class _CardInside extends StatelessWidget {
           child: Opacity(
             opacity: opacity,
             child: Transform.scale(
-              scale: scale,
-              child: SizedBox(
-                width: width,
-                height: height,
-                child: ClipPath(
-                  clipper: ShapeBorderClipper(
-                    shape: ShapeBorder.lerp(
-                      const CircleBorder(),
-                      RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(width * _radiusFactor),
-                      ),
-                      morph,
-                    )!, // lerp of two non-null ShapeBorders is never null
-                  ),
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      // The flight crop hands over to the whole picture.
-                      if (morph < 1)
+              scale: scale * fitScale,
+              child: OverflowBox(
+                maxWidth: double.infinity,
+                maxHeight: double.infinity,
+                child: SizedBox(
+                  width: width,
+                  height: height,
+                  child: ClipPath(
+                    clipper: ShapeBorderClipper(
+                      shape: ShapeBorder.lerp(
+                        const CircleBorder(),
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            width * _radiusFactor,
+                          ),
+                        ),
+                        morph,
+                      )!, // lerp of two non-null ShapeBorders is never null
+                    ),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        // The flight crop hands over to the whole picture.
+                        if (morph < 1)
+                          Opacity(
+                            opacity: 1 - morph,
+                            child: CardImage.forCard(
+                              card,
+                              fit: BoxFit.cover,
+                              alignment: _BubbleGlass.artAlignment,
+                              padding: EdgeInsets.zero,
+                            ),
+                          ),
                         Opacity(
-                          opacity: 1 - morph,
+                          opacity: morph,
                           child: CardImage.forCard(
                             card,
-                            fit: BoxFit.cover,
-                            alignment: _BubbleGlass.artAlignment,
                             padding: EdgeInsets.zero,
                           ),
                         ),
-                      Opacity(
-                        opacity: morph,
-                        child: CardImage.forCard(
-                          card,
-                          padding: EdgeInsets.zero,
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -2884,8 +2960,8 @@ class _PraiseFlashState extends State<_PraiseFlash>
             fade = t < _inEnd
                 ? t / _inEnd
                 : t < _holdEnd
-                    ? 1
-                    : 1 - (t - _holdEnd) / (1 - _holdEnd);
+                ? 1
+                : 1 - (t - _holdEnd) / (1 - _holdEnd);
           } else {
             scale = t < _inEnd
                 ? 0.6 + 0.4 * Curves.easeOutBack.transform(t / _inEnd)

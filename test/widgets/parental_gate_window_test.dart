@@ -6,18 +6,23 @@ import 'package:talking_cards/widgets/parental_gate.dart';
 void main() {
   setUp(debugResetParentalGate);
 
-  testWidgets('a solved gate opens the next door without asking again',
-      (tester) async {
+  testWidgets('a solved gate opens the next door without asking again', (
+    tester,
+  ) async {
     // The ⓘ button and «Parent area» sit on the same path: the sheet the
     // first gate opens is where the second one lived. A grown-up answered
     // the same sum twice; a toddler was stopped by neither more nor less.
     late BuildContext ctx;
-    await tester.pumpWidget(MaterialApp(
-      home: Builder(builder: (c) {
-        ctx = c;
-        return const SizedBox();
-      }),
-    ));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (c) {
+            ctx = c;
+            return const SizedBox();
+          },
+        ),
+      ),
+    );
 
     expect(parentalGateIsOpen, isFalse);
 
@@ -29,7 +34,10 @@ void main() {
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
     expect(await first, isFalse);
-    expect(parentalGateIsOpen, isFalse,
-        reason: 'a dismissed gate must not open anything');
+    expect(
+      parentalGateIsOpen,
+      isFalse,
+      reason: 'a dismissed gate must not open anything',
+    );
   });
 }

@@ -151,13 +151,17 @@ class _AnswerFrameState extends State<AnswerFrame>
   );
   late final Animation<double> _pop = TweenSequence<double>([
     TweenSequenceItem(
-      tween: Tween(begin: 1.0, end: AnswerFrame.popScale)
-          .chain(CurveTween(curve: DT.motion.emphasized)),
+      tween: Tween(
+        begin: 1.0,
+        end: AnswerFrame.popScale,
+      ).chain(CurveTween(curve: DT.motion.emphasized)),
       weight: 1,
     ),
     TweenSequenceItem(
-      tween: Tween(begin: AnswerFrame.popScale, end: 1.0)
-          .chain(CurveTween(curve: DT.motion.standard)),
+      tween: Tween(
+        begin: AnswerFrame.popScale,
+        end: 1.0,
+      ).chain(CurveTween(curve: DT.motion.standard)),
       weight: 1,
     ),
   ]).animate(_popCtrl);
@@ -189,10 +193,8 @@ class _AnswerFrameState extends State<AnswerFrame>
     final origin = box.localToGlobal(box.size.center(Offset.zero));
     _burst?.removeIfMounted();
     final entry = OverlayEntry(
-      builder: (_) => ConfettiBurst(
-        origin: origin,
-        count: AnswerFrame.burstCount,
-      ),
+      builder: (_) =>
+          ConfettiBurst(origin: origin, count: AnswerFrame.burstCount),
     );
     _burst = entry;
     overlay.insert(entry);
@@ -243,28 +245,28 @@ class _AnswerFrameState extends State<AnswerFrame>
             ),
             boxShadow: switch (mark) {
               AnswerMark.none => [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.07),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.07),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
               AnswerMark.correct => [
-                  BoxShadow(
-                    color: DT.success.withValues(alpha: 0.35),
-                    blurRadius: 16,
-                    spreadRadius: 2,
-                  ),
-                ],
+                BoxShadow(
+                  color: DT.success.withValues(alpha: 0.35),
+                  blurRadius: 16,
+                  spreadRadius: 2,
+                ),
+              ],
               // t = 0 is still a visible glow — the rest pose under
               // reduced motion and after the loop settles.
               AnswerMark.hint => [
-                  BoxShadow(
-                    color: DT.hint.withValues(alpha: 0.28 + 0.32 * t),
-                    blurRadius: 14 + 10 * t,
-                    spreadRadius: 1 + 3 * t,
-                  ),
-                ],
+                BoxShadow(
+                  color: DT.hint.withValues(alpha: 0.28 + 0.32 * t),
+                  blurRadius: 14 + 10 * t,
+                  spreadRadius: 1 + 3 * t,
+                ),
+              ],
             },
           ),
           child: content,
@@ -284,10 +286,10 @@ class _AnswerFrameState extends State<AnswerFrame>
                   AnswerMark.none => const SizedBox.shrink(),
                   AnswerMark.correct => const _CheckSticker(),
                   AnswerMark.hint => AppIconView(
-                      AppIcon.hint,
-                      size: DT.size.iconMd,
-                      sticker: true,
-                    ),
+                    AppIcon.hint,
+                    size: DT.size.iconMd,
+                    sticker: true,
+                  ),
                 },
               ),
             ),

@@ -43,15 +43,15 @@ void main() {
   ];
 
   CardModel card(String image) => CardModel(
-        id: image,
-        sound: image,
-        text: image,
-        emoji: '🐱',
-        colorBg: const Color(0xFFFFFFFF),
-        colorAccent: const Color(0xFF000000),
-        image: image,
-        audioKey: 'no_such_$image', // unknown key → AudioService stays quiet
-      );
+    id: image,
+    sound: image,
+    text: image,
+    emoji: '🐱',
+    colorBg: const Color(0xFFFFFFFF),
+    colorAccent: const Color(0xFF000000),
+    image: image,
+    audioKey: 'no_such_$image', // unknown key → AudioService stays quiet
+  );
 
   final pack = PackModel(
     id: 'animals',
@@ -84,7 +84,10 @@ void main() {
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
-    AssetPackService.instance.debugConfigure(padAssets: const {}, bundled: true);
+    AssetPackService.instance.debugConfigure(
+      padAssets: const {},
+      bundled: true,
+    );
     FeedbackService.debugMute = true;
     FeedbackService.debugLog.clear();
     debugResetKidOverlayQueue();
@@ -111,10 +114,12 @@ void main() {
   /// so the outgoing card is gone and only one is in the frame.
   String? signImage(WidgetTester tester) {
     final images = tester
-        .widgetList<CardImage>(find.descendant(
-          of: find.byKey(const ValueKey('find_sign')),
-          matching: find.byType(CardImage),
-        ))
+        .widgetList<CardImage>(
+          find.descendant(
+            of: find.byKey(const ValueKey('find_sign')),
+            matching: find.byType(CardImage),
+          ),
+        )
         .map((w) => w.name)
         .toList();
     return images.isEmpty ? null : images.last;
@@ -124,16 +129,19 @@ void main() {
   Map<String, String?> liveBubbles(WidgetTester tester) {
     final out = <String, String?>{};
     final finder = find.byWidgetPredicate(
-      (w) => w.key is ValueKey<String> &&
+      (w) =>
+          w.key is ValueKey<String> &&
           (w.key! as ValueKey<String>).value.startsWith('bubble_'),
     );
     for (final element in finder.evaluate()) {
       final key = (element.widget.key! as ValueKey<String>).value;
       final image = tester
-          .widgetList<CardImage>(find.descendant(
-            of: find.byKey(ValueKey(key)),
-            matching: find.byType(CardImage),
-          ))
+          .widgetList<CardImage>(
+            find.descendant(
+              of: find.byKey(ValueKey(key)),
+              matching: find.byType(CardImage),
+            ),
+          )
           .first
           .name;
       out[key] = image;
@@ -142,8 +150,9 @@ void main() {
   }
 
   group('«Знайди бульбашку» — one thing to look for (§5, audit п. 23)', () {
-    testWidgets('exactly one live bubble is the one on the sign',
-        (tester) async {
+    testWidgets('exactly one live bubble is the one on the sign', (
+      tester,
+    ) async {
       await open(tester);
       // The two pre-seeded bubbles are up before the first tick: the sign
       // must not be a question the sky cannot answer even then.
@@ -161,14 +170,20 @@ void main() {
       for (var i = 0; i < 24; i++) {
         await tester.pump(const Duration(milliseconds: 700));
         final target = signImage(tester);
-        final up =
-            liveBubbles(tester).values.where((image) => image == target);
-        expect(up.length, lessThanOrEqualTo(1),
-            reason: 'two of the same picture is not a question');
+        final up = liveBubbles(tester).values.where((image) => image == target);
+        expect(
+          up.length,
+          lessThanOrEqualTo(1),
+          reason: 'two of the same picture is not a question',
+        );
         absent = up.isEmpty ? absent + 1 : 0;
-        expect(absent, lessThanOrEqualTo(2),
-            reason: '§5: the target is back in the sky at the first spawn '
-                'after it left');
+        expect(
+          absent,
+          lessThanOrEqualTo(2),
+          reason:
+              '§5: the target is back in the sky at the first spawn '
+              'after it left',
+        );
       }
 
       await tester.pumpWidget(const SizedBox());
@@ -181,9 +196,9 @@ void main() {
 
       final target = signImage(tester);
       final other = liveBubbles(tester).entries.firstWhere(
-            (e) => e.value != target,
-            orElse: () => throw StateError('needed a second picture up'),
-          );
+        (e) => e.value != target,
+        orElse: () => throw StateError('needed a second picture up'),
+      );
 
       await tester.tap(find.byKey(ValueKey(other.key)));
       await tester.pump();
@@ -205,15 +220,16 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     });
 
-    testWidgets('finding it counts, sounds and turns the sign over',
-        (tester) async {
+    testWidgets('finding it counts, sounds and turns the sign over', (
+      tester,
+    ) async {
       await open(tester);
       await tester.pump(const Duration(milliseconds: 700));
 
       final target = signImage(tester);
-      final hit = liveBubbles(tester)
-          .entries
-          .firstWhere((e) => e.value == target);
+      final hit = liveBubbles(
+        tester,
+      ).entries.firstWhere((e) => e.value == target);
 
       await tester.tap(find.byKey(ValueKey(hit.key)));
       await tester.pump();
@@ -237,15 +253,17 @@ void main() {
       expect(
         liveBubbles(tester).values.where((image) => image == next),
         hasLength(1),
-        reason: '§5: the sky always has something to find in it — the '
+        reason:
+            '§5: the sky always has something to find in it — the '
             'first spawn after the sign turns over carries it',
       );
 
       await tester.pumpWidget(const SizedBox());
     });
 
-    testWidgets('free popping is untouched: every bubble counts',
-        (tester) async {
+    testWidgets('free popping is untouched: every bubble counts', (
+      tester,
+    ) async {
       await open(tester, mode: BubbleMode.all);
       expect(find.byKey(const ValueKey('find_sign')), findsNothing);
       expect(find.text('0/20'), findsOneWidget);
@@ -275,8 +293,9 @@ void main() {
     /// through the middle of [key].
     Future<void> wipeThrough(WidgetTester tester, String key) async {
       final body = tester.getRect(find.byType(KidScreen));
-      final gesture =
-          await tester.startGesture(Offset(body.width * 0.5, body.top + 140));
+      final gesture = await tester.startGesture(
+        Offset(body.width * 0.5, body.top + 140),
+      );
       await tester.pump();
       await gesture.moveTo(tester.getCenter(find.byKey(ValueKey(key))));
       await tester.pump();
@@ -284,8 +303,9 @@ void main() {
       await tester.pump();
     }
 
-    testWidgets('L1: the bubble the finger travels through bursts',
-        (tester) async {
+    testWidgets('L1: the bubble the finger travels through bursts', (
+      tester,
+    ) async {
       await open(tester, level: 1, mode: BubbleMode.all);
       expect(find.text('0/8'), findsOneWidget);
 
@@ -316,8 +336,8 @@ void main() {
   group('A run of misses (3.2) — help, never judgement', () {
     /// Bloom's pose, read out of the brain the screen is talking to.
     BloomEmotion emotion(WidgetTester tester) => ProviderScope.containerOf(
-          tester.element(find.byType(BubblePopScreen)),
-        ).read(bloomReactionsProvider).emotion;
+      tester.element(find.byType(BubblePopScreen)),
+    ).read(bloomReactionsProvider).emotion;
 
     Future<void> missOnce(WidgetTester tester) async {
       final body = tester.getRect(find.byType(KidScreen));
@@ -325,14 +345,19 @@ void main() {
       await tester.pump();
     }
 
-    testWidgets('one miss is nothing; three in four seconds is noticed',
-        (tester) async {
+    testWidgets('one miss is nothing; three in four seconds is noticed', (
+      tester,
+    ) async {
       await open(tester, level: 2, mode: BubbleMode.all);
 
       await missOnce(tester);
-      expect(emotion(tester), isNot(BloomEmotion.curious),
-          reason: 'a single miss earns nothing — fingers land next to '
-              'things all day');
+      expect(
+        emotion(tester),
+        isNot(BloomEmotion.curious),
+        reason:
+            'a single miss earns nothing — fingers land next to '
+            'things all day',
+      );
 
       await missOnce(tester);
       await missOnce(tester); // L2: three in a row is a child trying
@@ -362,8 +387,9 @@ void main() {
   });
 
   group('Calibration (3.3) — aggregates, never a child', () {
-    testWidgets('hit_rate is pops over taps, with the level and the device',
-        (tester) async {
+    testWidgets('hit_rate is pops over taps, with the level and the device', (
+      tester,
+    ) async {
       final events = <(String, Map<String, Object>)>[];
       AnalyticsService.debugSink = (name, params) => events.add((name, params));
 

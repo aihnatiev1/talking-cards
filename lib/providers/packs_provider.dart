@@ -42,9 +42,10 @@ final packsProvider = FutureProvider<List<PackModel>>((ref) async {
 });
 
 /// Tracks completed pack IDs in SharedPreferences
-final completedPacksProvider = StateNotifierProvider<CompletedPacksNotifier, Set<String>>(
-  (ref) => CompletedPacksNotifier(),
-);
+final completedPacksProvider =
+    StateNotifierProvider<CompletedPacksNotifier, Set<String>>(
+      (ref) => CompletedPacksNotifier(),
+    );
 
 class CompletedPacksNotifier extends StateNotifier<Set<String>> {
   CompletedPacksNotifier() : super({}) {
@@ -75,9 +76,10 @@ class CompletedPacksNotifier extends StateNotifier<Set<String>> {
 }
 
 /// Tracks max card index reached per pack
-final packProgressProvider = StateNotifierProvider<PackProgressNotifier, Map<String, int>>(
-  (ref) => PackProgressNotifier(),
-);
+final packProgressProvider =
+    StateNotifierProvider<PackProgressNotifier, Map<String, int>>(
+      (ref) => PackProgressNotifier(),
+    );
 
 class PackProgressNotifier extends StateNotifier<Map<String, int>> {
   PackProgressNotifier() : super({}) {

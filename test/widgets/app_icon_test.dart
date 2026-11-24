@@ -11,7 +11,9 @@ import 'package:talking_cards/widgets/app_icon_painters.dart';
 void main() {
   Future<void> pump(WidgetTester tester, Widget child) async {
     await tester.pumpWidget(
-      MaterialApp(home: Scaffold(body: Center(child: child))),
+      MaterialApp(
+        home: Scaffold(body: Center(child: child)),
+      ),
     );
     await tester.pump();
     expect(tester.takeException(), isNull);
@@ -27,8 +29,9 @@ void main() {
         });
       }
 
-      testWidgets('paints in sticker mode and with a colour override',
-          (tester) async {
+      testWidgets('paints in sticker mode and with a colour override', (
+        tester,
+      ) async {
         await pump(
           tester,
           Row(
@@ -56,8 +59,9 @@ void main() {
     );
   });
 
-  testWidgets('a non-square box keeps the art square and centred',
-      (tester) async {
+  testWidgets('a non-square box keeps the art square and centred', (
+    tester,
+  ) async {
     await pump(
       tester,
       const SizedBox(

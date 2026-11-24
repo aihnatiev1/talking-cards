@@ -79,7 +79,9 @@ const _audioMap = {
   'овал': 'oval', 'ромб': 'diamond', 'великий': 'big',
   'маленький': 'little', 'довгий': 'long', 'круглий': 'round',
   'пухнастий': 'fluffy', 'яскравий': 'bright', 'смугастий': 'striped',
-  'плямистий': 'spotted', 'прозорий': 'transparent', 'різнобарвний': 'variegated',
+  'плямистий': 'spotted',
+  'прозорий': 'transparent',
+  'різнобарвний': 'variegated',
   // Частини тіла
   'ніс': 'nose', 'голова': 'head', 'очі': 'eyes', 'вуха': 'ears',
   'рот': 'mouse', 'зуби': 'teeth', 'язик': 'tonge',
@@ -110,9 +112,13 @@ const _audioMap = {
   'en_bee': 'en_bee', 'en_snail': 'en_snail', 'en_bunny': 'en_bunny',
   'en_bear': 'en_bear', 'en_fox': 'en_fox', 'en_wolf': 'en_wolf',
   'en_deer': 'en_deer', 'en_hedgehog': 'en_hedgehog', 'en_owl': 'en_owl',
-  'en_penguin': 'en_penguin', 'en_elephant': 'en_elephant', 'en_lion': 'en_lion',
+  'en_penguin': 'en_penguin',
+  'en_elephant': 'en_elephant',
+  'en_lion': 'en_lion',
   'en_monkey': 'en_monkey', 'en_crocodile': 'en_crocodile',
-  'en_turtle': 'en_turtle', 'en_dolphin': 'en_dolphin', 'en_squirrel': 'en_squirrel',
+  'en_turtle': 'en_turtle',
+  'en_dolphin': 'en_dolphin',
+  'en_squirrel': 'en_squirrel',
   // EN — Home & Family
   'en_mommy': 'en_mommy', 'en_dad': 'en_dad', 'en_grandma': 'en_grandma',
   'en_grandpa': 'en_grandpa', 'en_baby': 'en_baby', 'en_family': 'en_family',
@@ -126,12 +132,16 @@ const _audioMap = {
   'en_love': 'en_love', 'en_home': 'en_home', 'en_play': 'en_play',
   // EN — Feelings
   'en_happy': 'en_happy', 'en_sad': 'en_sad', 'en_angry': 'en_angry',
-  'en_scared': 'en_scared', 'en_tired': 'en_tired', 'en_surprised': 'en_surprised',
+  'en_scared': 'en_scared',
+  'en_tired': 'en_tired',
+  'en_surprised': 'en_surprised',
   'en_excited': 'en_excited', 'en_calm': 'en_calm', 'en_shy': 'en_shy',
   'en_silly': 'en_silly', 'en_proud': 'en_proud', 'en_loved': 'en_loved',
   // EN — Transport
   'en_car': 'en_car', 'en_bus': 'en_bus', 'en_train': 'en_train',
-  'en_airplane': 'en_airplane', 'en_ship': 'en_ship', 'en_bicycle': 'en_bicycle',
+  'en_airplane': 'en_airplane',
+  'en_ship': 'en_ship',
+  'en_bicycle': 'en_bicycle',
   'en_motorcycle': 'en_motorcycle', 'en_helicopter': 'en_helicopter',
   'en_tram': 'en_tram', 'en_subway': 'en_subway', 'en_taxi': 'en_taxi',
   'en_fire_truck': 'en_fire_truck', 'en_ambulance': 'en_ambulance',
@@ -142,14 +152,24 @@ const _audioMap = {
   'en_skateboard': 'en_skateboard', 'en_excavator': 'en_excavator',
   'en_submarine': 'en_submarine',
   // EN — Food & Fruits (APPLE/PORRIDGE differ from Home: _f suffix)
-  'en_apple_f': 'en_apple_f', 'en_banana': 'en_banana', 'en_grapes': 'en_grapes',
+  'en_apple_f': 'en_apple_f',
+  'en_banana': 'en_banana',
+  'en_grapes': 'en_grapes',
   'en_orange': 'en_orange', 'en_strawberry': 'en_strawberry',
-  'en_watermelon': 'en_watermelon', 'en_pear': 'en_pear', 'en_cherry': 'en_cherry',
+  'en_watermelon': 'en_watermelon',
+  'en_pear': 'en_pear',
+  'en_cherry': 'en_cherry',
   'en_peach': 'en_peach', 'en_lemon': 'en_lemon', 'en_bread': 'en_bread',
-  'en_milk': 'en_milk', 'en_cheese': 'en_cheese', 'en_porridge_f': 'en_porridge_f',
+  'en_milk': 'en_milk',
+  'en_cheese': 'en_cheese',
+  'en_porridge_f': 'en_porridge_f',
   'en_soup': 'en_soup', 'en_pie': 'en_pie', 'en_cookie': 'en_cookie',
-  'en_cake': 'en_cake', 'en_ice_cream': 'en_ice_cream', 'en_pancake': 'en_pancake',
-  'en_carrot': 'en_carrot', 'en_cucumber': 'en_cucumber', 'en_tomato': 'en_tomato',
+  'en_cake': 'en_cake',
+  'en_ice_cream': 'en_ice_cream',
+  'en_pancake': 'en_pancake',
+  'en_carrot': 'en_carrot',
+  'en_cucumber': 'en_cucumber',
+  'en_tomato': 'en_tomato',
   'en_potato': 'en_potato', 'en_corn': 'en_corn', 'en_pumpkin': 'en_pumpkin',
   'en_honey': 'en_honey', 'en_egg': 'en_egg', 'en_candy': 'en_candy',
   'en_juice': 'en_juice',
@@ -160,10 +180,14 @@ const _audioMap = {
   'en_brown': 'en_brown', 'en_gray': 'en_gray', 'en_sky_blue': 'en_sky_blue',
   'en_gold': 'en_gold', 'en_circle': 'en_circle', 'en_square': 'en_square',
   'en_triangle': 'en_triangle', 'en_star': 'en_star', 'en_heart': 'en_heart',
-  'en_oval': 'en_oval', 'en_diamond': 'en_diamond', 'en_rectangle': 'en_rectangle',
+  'en_oval': 'en_oval',
+  'en_diamond': 'en_diamond',
+  'en_rectangle': 'en_rectangle',
   'en_cross': 'en_cross', 'en_arrow': 'en_arrow', 'en_moon': 'en_moon',
   'en_flower': 'en_flower', 'en_spiral': 'en_spiral', 'en_cloud': 'en_cloud',
-  'en_lightning': 'en_lightning', 'en_rainbow': 'en_rainbow', 'en_sun': 'en_sun',
+  'en_lightning': 'en_lightning',
+  'en_rainbow': 'en_rainbow',
+  'en_sun': 'en_sun',
   // EN — Body Parts (HEART/HANDS/TEETH/SMILE overlap other packs: _b suffix)
   'en_head': 'en_head', 'en_eyes': 'en_eyes', 'en_ears': 'en_ears',
   'en_nose': 'en_nose', 'en_mouth': 'en_mouth', 'en_teeth_b': 'en_teeth_b',
@@ -172,7 +196,9 @@ const _audioMap = {
   'en_fingers': 'en_fingers', 'en_tummy': 'en_tummy', 'en_back': 'en_back',
   'en_legs': 'en_legs', 'en_knees': 'en_knees', 'en_feet': 'en_feet',
   'en_heart_b': 'en_heart_b', 'en_lungs': 'en_lungs', 'en_elbow': 'en_elbow',
-  'en_palms': 'en_palms', 'en_eyebrows': 'en_eyebrows', 'en_cheeks': 'en_cheeks',
+  'en_palms': 'en_palms',
+  'en_eyebrows': 'en_eyebrows',
+  'en_cheeks': 'en_cheeks',
   'en_forehead': 'en_forehead', 'en_chin': 'en_chin', 'en_nails': 'en_nails',
   'en_skin': 'en_skin', 'en_belly_button': 'en_belly_button',
   'en_smile_b': 'en_smile_b', 'en_toes': 'en_toes',
@@ -205,19 +231,25 @@ const _audioMap = {
   'en_i_love_you': 'en_i_love_you', 'en_hug_me': 'en_hug_me',
   'en_thank_you_p': 'en_thank_you_p', 'en_please_p': 'en_please_p',
   'en_sorry': 'en_sorry', 'en_hello': 'en_hello', 'en_bye_bye': 'en_bye_bye',
-  'en_give_me': 'en_give_me', 'en_help_me': 'en_help_me', 'en_again': 'en_again',
+  'en_give_me': 'en_give_me',
+  'en_help_me': 'en_help_me',
+  'en_again': 'en_again',
   'en_no': 'en_no', 'en_wait': 'en_wait', 'en_it_hurts': 'en_it_hurts',
   'en_im_sad': 'en_im_sad', 'en_im_happy': 'en_im_happy',
   'en_im_scared': 'en_im_scared', 'en_i_dont_know': 'en_i_dont_know',
   // EN — Adjectives
-  'en_fluffy': 'en_fluffy', 'en_prickly': 'en_prickly', 'en_smooth': 'en_smooth',
+  'en_fluffy': 'en_fluffy',
+  'en_prickly': 'en_prickly',
+  'en_smooth': 'en_smooth',
   'en_slimy': 'en_slimy', 'en_bumpy': 'en_bumpy', 'en_sticky': 'en_sticky',
   'en_sweet': 'en_sweet', 'en_sour': 'en_sour', 'en_bitter': 'en_bitter',
   'en_salty': 'en_salty', 'en_spicy': 'en_spicy', 'en_juicy': 'en_juicy',
   'en_crunchy': 'en_crunchy',
   // EN — Sound R (RED/CARROT/STAR/ROCKET/RAINBOW overlap: _r suffix)
   'en_rabbit': 'en_rabbit', 'en_rocket_r': 'en_rocket_r',
-  'en_rainbow_r': 'en_rainbow_r', 'en_river': 'en_river', 'en_robot': 'en_robot',
+  'en_rainbow_r': 'en_rainbow_r',
+  'en_river': 'en_river',
+  'en_robot': 'en_robot',
   'en_ring': 'en_ring', 'en_rose': 'en_rose', 'en_rain': 'en_rain',
   'en_road': 'en_road', 'en_red_r': 'en_red_r', 'en_carrot_r': 'en_carrot_r',
   'en_tiger': 'en_tiger', 'en_zebra': 'en_zebra', 'en_giraffe': 'en_giraffe',
@@ -249,12 +281,18 @@ const _audioMap = {
   'en_fish_sh': 'en_fish_sh', 'en_dish': 'en_dish', 'en_brush': 'en_brush',
   'en_wash_sh': 'en_wash_sh', 'en_push': 'en_push', 'en_bushy': 'en_bushy',
   // EN — Sound ZH
-  'en_vision': 'en_vision', 'en_treasure': 'en_treasure', 'en_garage': 'en_garage',
-  'en_beige': 'en_beige', 'en_measure': 'en_measure', 'en_pleasure': 'en_pleasure',
+  'en_vision': 'en_vision',
+  'en_treasure': 'en_treasure',
+  'en_garage': 'en_garage',
+  'en_beige': 'en_beige',
+  'en_measure': 'en_measure',
+  'en_pleasure': 'en_pleasure',
   // EN — Sound CH (CHEESE/CHICKEN/CHERRY/CHIN/LUNCH/PEACH overlap: _ch suffix)
   'en_chair': 'en_chair', 'en_cheese_ch': 'en_cheese_ch',
   'en_chicken_ch': 'en_chicken_ch', 'en_cherry_ch': 'en_cherry_ch',
-  'en_church': 'en_church', 'en_chocolate': 'en_chocolate', 'en_chips': 'en_chips',
+  'en_church': 'en_church',
+  'en_chocolate': 'en_chocolate',
+  'en_chips': 'en_chips',
   'en_chin_ch': 'en_chin_ch', 'en_beach': 'en_beach', 'en_teach': 'en_teach',
   'en_watch': 'en_watch', 'en_match': 'en_match', 'en_lunch_ch': 'en_lunch_ch',
   'en_peach_ch': 'en_peach_ch', 'en_bench': 'en_bench',
@@ -272,19 +310,47 @@ const _audioMap = {
   'en_winter': 'en_winter', 'en_web': 'en_web', 'en_wolf_w': 'en_wolf_w',
   'en_worm': 'en_worm', 'en_white_w': 'en_white_w',
   // EN — Consonant Blends (many overlap: _bl suffix)
-  'en_spoon_bl': 'en_spoon_bl', 'en_star_bl': 'en_star_bl', 'en_snow': 'en_snow',
-  'en_smile_bl': 'en_smile_bl', 'en_skate': 'en_skate', 'en_sleep_bl': 'en_sleep_bl',
+  'en_spoon_bl': 'en_spoon_bl',
+  'en_star_bl': 'en_star_bl',
+  'en_snow': 'en_snow',
+  'en_smile_bl': 'en_smile_bl',
+  'en_skate': 'en_skate',
+  'en_sleep_bl': 'en_sleep_bl',
   'en_swing': 'en_swing', 'en_train_bl': 'en_train_bl', 'en_tree': 'en_tree',
-  'en_truck_bl': 'en_truck_bl', 'en_drum_bl': 'en_drum_bl', 'en_dragon': 'en_dragon',
-  'en_bridge': 'en_bridge', 'en_bread_bl': 'en_bread_bl', 'en_clock': 'en_clock',
+  'en_truck_bl': 'en_truck_bl',
+  'en_drum_bl': 'en_drum_bl',
+  'en_dragon': 'en_dragon',
+  'en_bridge': 'en_bridge',
+  'en_bread_bl': 'en_bread_bl',
+  'en_clock': 'en_clock',
   'en_cloud_bl': 'en_cloud_bl', 'en_flower_bl': 'en_flower_bl',
   'en_frog_bl': 'en_frog_bl',
   // UA — Phrases (ph01..ph25) and Actions (act01..act25) — identity mapping
-  'ph01': 'ph01', 'ph02': 'ph02', 'ph03': 'ph03', 'ph04': 'ph04', 'ph05': 'ph05',
-  'ph06': 'ph06', 'ph07': 'ph07', 'ph08': 'ph08', 'ph09': 'ph09', 'ph10': 'ph10',
-  'ph11': 'ph11', 'ph12': 'ph12', 'ph13': 'ph13', 'ph14': 'ph14', 'ph15': 'ph15',
-  'ph16': 'ph16', 'ph17': 'ph17', 'ph18': 'ph18', 'ph19': 'ph19', 'ph20': 'ph20',
-  'ph21': 'ph21', 'ph22': 'ph22', 'ph23': 'ph23', 'ph24': 'ph24', 'ph25': 'ph25',
+  'ph01': 'ph01',
+  'ph02': 'ph02',
+  'ph03': 'ph03',
+  'ph04': 'ph04',
+  'ph05': 'ph05',
+  'ph06': 'ph06',
+  'ph07': 'ph07',
+  'ph08': 'ph08',
+  'ph09': 'ph09',
+  'ph10': 'ph10',
+  'ph11': 'ph11',
+  'ph12': 'ph12',
+  'ph13': 'ph13',
+  'ph14': 'ph14',
+  'ph15': 'ph15',
+  'ph16': 'ph16',
+  'ph17': 'ph17',
+  'ph18': 'ph18',
+  'ph19': 'ph19',
+  'ph20': 'ph20',
+  'ph21': 'ph21',
+  'ph22': 'ph22',
+  'ph23': 'ph23',
+  'ph24': 'ph24',
+  'ph25': 'ph25',
   'act01': 'act01', 'act02': 'act02', 'act03': 'act03', 'act04': 'act04',
   'act05': 'act05', 'act06': 'act06', 'act07': 'act07', 'act08': 'act08',
   'act09': 'act09', 'act10': 'act10', 'act11': 'act11', 'act12': 'act12',
@@ -293,23 +359,68 @@ const _audioMap = {
   'act21': 'act21', 'act22': 'act22', 'act23': 'act23', 'act24': 'act24',
   'act25': 'act25',
   // UA — Opposites (opp01a..opp15b)
-  'opp01a': 'opp01a', 'opp01b': 'opp01b', 'opp02a': 'opp02a', 'opp02b': 'opp02b',
-  'opp03a': 'opp03a', 'opp03b': 'opp03b', 'opp04a': 'opp04a', 'opp04b': 'opp04b',
-  'opp05a': 'opp05a', 'opp05b': 'opp05b', 'opp06a': 'opp06a', 'opp06b': 'opp06b',
-  'opp07a': 'opp07a', 'opp07b': 'opp07b', 'opp08a': 'opp08a', 'opp08b': 'opp08b',
-  'opp09a': 'opp09a', 'opp09b': 'opp09b', 'opp10a': 'opp10a', 'opp10b': 'opp10b',
-  'opp11a': 'opp11a', 'opp11b': 'opp11b', 'opp12a': 'opp12a', 'opp12b': 'opp12b',
-  'opp13a': 'opp13a', 'opp13b': 'opp13b', 'opp14a': 'opp14a', 'opp14b': 'opp14b',
+  'opp01a': 'opp01a',
+  'opp01b': 'opp01b',
+  'opp02a': 'opp02a',
+  'opp02b': 'opp02b',
+  'opp03a': 'opp03a',
+  'opp03b': 'opp03b',
+  'opp04a': 'opp04a',
+  'opp04b': 'opp04b',
+  'opp05a': 'opp05a',
+  'opp05b': 'opp05b',
+  'opp06a': 'opp06a',
+  'opp06b': 'opp06b',
+  'opp07a': 'opp07a',
+  'opp07b': 'opp07b',
+  'opp08a': 'opp08a',
+  'opp08b': 'opp08b',
+  'opp09a': 'opp09a',
+  'opp09b': 'opp09b',
+  'opp10a': 'opp10a',
+  'opp10b': 'opp10b',
+  'opp11a': 'opp11a',
+  'opp11b': 'opp11b',
+  'opp12a': 'opp12a',
+  'opp12b': 'opp12b',
+  'opp13a': 'opp13a',
+  'opp13b': 'opp13b',
+  'opp14a': 'opp14a',
+  'opp14b': 'opp14b',
   'opp15a': 'opp15a', 'opp15b': 'opp15b',
   // UA — Sound R (sr01..sr18)
-  'sr01': 'sr01', 'sr02': 'sr02', 'sr03': 'sr03', 'sr04': 'sr04', 'sr05': 'sr05',
-  'sr06': 'sr06', 'sr07': 'sr07', 'sr08': 'sr08', 'sr09': 'sr09', 'sr10': 'sr10',
-  'sr11': 'sr11', 'sr12': 'sr12', 'sr13': 'sr13', 'sr14': 'sr14', 'sr15': 'sr15',
+  'sr01': 'sr01',
+  'sr02': 'sr02',
+  'sr03': 'sr03',
+  'sr04': 'sr04',
+  'sr05': 'sr05',
+  'sr06': 'sr06',
+  'sr07': 'sr07',
+  'sr08': 'sr08',
+  'sr09': 'sr09',
+  'sr10': 'sr10',
+  'sr11': 'sr11',
+  'sr12': 'sr12',
+  'sr13': 'sr13',
+  'sr14': 'sr14',
+  'sr15': 'sr15',
   'sr16': 'sr16', 'sr17': 'sr17', 'sr18': 'sr18',
   // UA — Sound L (sl01..sl18)
-  'sl01': 'sl01', 'sl02': 'sl02', 'sl03': 'sl03', 'sl04': 'sl04', 'sl05': 'sl05',
-  'sl06': 'sl06', 'sl07': 'sl07', 'sl08': 'sl08', 'sl09': 'sl09', 'sl10': 'sl10',
-  'sl11': 'sl11', 'sl12': 'sl12', 'sl13': 'sl13', 'sl14': 'sl14', 'sl15': 'sl15',
+  'sl01': 'sl01',
+  'sl02': 'sl02',
+  'sl03': 'sl03',
+  'sl04': 'sl04',
+  'sl05': 'sl05',
+  'sl06': 'sl06',
+  'sl07': 'sl07',
+  'sl08': 'sl08',
+  'sl09': 'sl09',
+  'sl10': 'sl10',
+  'sl11': 'sl11',
+  'sl12': 'sl12',
+  'sl13': 'sl13',
+  'sl14': 'sl14',
+  'sl15': 'sl15',
   'sl16': 'sl16', 'sl17': 'sl17', 'sl18': 'sl18',
   // UA — Sound Sh: per-card files renamed to content-based slugs so the
   // JSON `audio` field matches the recorded word and shifts can't recur.
@@ -319,14 +430,38 @@ const _audioMap = {
   'podushka': 'podushka', 'vushko': 'vushko', 'mishok': 'mishok',
   'shyshka': 'shyshka', 'horoshyna': 'horoshyna', 'chereshnia': 'chereshnia',
   // UA — Sound S (sc01..sc16)
-  'sc01': 'sc01', 'sc02': 'sc02', 'sc03': 'sc03', 'sc04': 'sc04', 'sc05': 'sc05',
-  'sc06': 'sc06', 'sc07': 'sc07', 'sc08': 'sc08', 'sc09': 'sc09', 'sc10': 'sc10',
-  'sc11': 'sc11', 'sc12': 'sc12', 'sc13': 'sc13', 'sc14': 'sc14', 'sc15': 'sc15',
+  'sc01': 'sc01',
+  'sc02': 'sc02',
+  'sc03': 'sc03',
+  'sc04': 'sc04',
+  'sc05': 'sc05',
+  'sc06': 'sc06',
+  'sc07': 'sc07',
+  'sc08': 'sc08',
+  'sc09': 'sc09',
+  'sc10': 'sc10',
+  'sc11': 'sc11',
+  'sc12': 'sc12',
+  'sc13': 'sc13',
+  'sc14': 'sc14',
+  'sc15': 'sc15',
   'sc16': 'sc16',
   // UA — Sound Z (sz01..sz16)
-  'sz01': 'sz01', 'sz02': 'sz02', 'sz03': 'sz03', 'sz04': 'sz04', 'sz05': 'sz05',
-  'sz06': 'sz06', 'sz07': 'sz07', 'sz08': 'sz08', 'sz09': 'sz09', 'sz10': 'sz10',
-  'sz11': 'sz11', 'sz12': 'sz12', 'sz13': 'sz13', 'sz14': 'sz14', 'sz15': 'sz15',
+  'sz01': 'sz01',
+  'sz02': 'sz02',
+  'sz03': 'sz03',
+  'sz04': 'sz04',
+  'sz05': 'sz05',
+  'sz06': 'sz06',
+  'sz07': 'sz07',
+  'sz08': 'sz08',
+  'sz09': 'sz09',
+  'sz10': 'sz10',
+  'sz11': 'sz11',
+  'sz12': 'sz12',
+  'sz13': 'sz13',
+  'sz14': 'sz14',
+  'sz15': 'sz15',
   'sz16': 'sz16',
   // UA — Sound Zh (szh01..szh13)
   'szh01': 'szh01', 'szh02': 'szh02', 'szh03': 'szh03', 'szh04': 'szh04',
@@ -477,6 +612,44 @@ const _audioMap = {
   'abc_rhyme_soft': 'abc_rhyme_soft',
   'abc_rhyme_yu': 'abc_rhyme_yu',
   'abc_rhyme_ya': 'abc_rhyme_ya',
+  // Animal Sounds pack: the narrator's word, then the real recording.
+  'snd_cat': 'snd_cat', 'snd_dog': 'snd_dog', 'snd_cow': 'snd_cow',
+  'snd_horse': 'snd_horse', 'snd_pig': 'snd_pig', 'snd_sheep': 'snd_sheep',
+  'snd_goat': 'snd_goat', 'snd_donkey': 'snd_donkey', 'snd_hen': 'snd_hen',
+  'snd_rooster': 'snd_rooster', 'snd_duck': 'snd_duck', 'snd_frog': 'snd_frog',
+  'snd_bird': 'snd_bird', 'snd_crow': 'snd_crow', 'snd_owl': 'snd_owl',
+  'snd_wolf': 'snd_wolf', 'snd_bee': 'snd_bee', 'snd_lion': 'snd_lion',
+  'snd_bear': 'snd_bear',
+  'snd_elephant': 'snd_elephant',
+  'snd_monkey': 'snd_monkey',
+  'snd_deer': 'snd_deer',
+  'snd_bunny': 'snd_bunny',
+  'snd_dolphin': 'snd_dolphin',
+  'snd_crocodile': 'snd_crocodile',
+  'en_snd_cat': 'en_snd_cat',
+  'en_snd_dog': 'en_snd_dog',
+  'en_snd_cow': 'en_snd_cow',
+  'en_snd_horse': 'en_snd_horse',
+  'en_snd_pig': 'en_snd_pig',
+  'en_snd_sheep': 'en_snd_sheep',
+  'en_snd_hen': 'en_snd_hen',
+  'en_snd_rooster': 'en_snd_rooster',
+  'en_snd_duck': 'en_snd_duck',
+  'en_snd_frog': 'en_snd_frog',
+  'en_snd_bird': 'en_snd_bird',
+  'en_snd_owl': 'en_snd_owl',
+  'en_snd_wolf': 'en_snd_wolf',
+  'en_snd_bee': 'en_snd_bee',
+  'en_snd_lion': 'en_snd_lion',
+  'en_snd_tiger': 'en_snd_tiger',
+  'en_snd_bear': 'en_snd_bear',
+  'en_snd_elephant': 'en_snd_elephant',
+  'en_snd_monkey': 'en_snd_monkey',
+  'en_snd_deer': 'en_snd_deer',
+  'en_snd_bunny': 'en_snd_bunny',
+  'en_snd_dolphin': 'en_snd_dolphin',
+  'en_snd_whale': 'en_snd_whale',
+  'en_snd_crocodile': 'en_snd_crocodile', 'en_snd_snake': 'en_snd_snake',
 };
 
 class AudioService {
@@ -507,6 +680,7 @@ class AudioService {
   /// stopped talking.
   @visibleForTesting
   static bool debugKnownKey(String audioKey) => _knownKeys.contains(audioKey);
+
   /// Pre-computed millisecond offset for the end of the WORD portion of each
   /// recording (everything after this is the example sentence). Loaded at
   /// init from `assets/data/audio_word_lengths.json`. Files not in this map
@@ -538,7 +712,8 @@ class AudioService {
   /// earpiece receiver playAndRecord defaults to.
   static const _listeningSession = AudioSessionConfiguration(
     avAudioSessionCategory: AVAudioSessionCategory.playAndRecord,
-    avAudioSessionCategoryOptions: AVAudioSessionCategoryOptions.defaultToSpeaker,
+    avAudioSessionCategoryOptions:
+        AVAudioSessionCategoryOptions.defaultToSpeaker,
     avAudioSessionMode: AVAudioSessionMode.defaultMode,
     androidAudioAttributes: AndroidAudioAttributes(
       contentType: AndroidAudioContentType.sonification,
@@ -578,11 +753,14 @@ class AudioService {
     // 2b. Load pre-computed word-end offsets so playWordOnly cuts at the
     // real silence between WORD and PHRASE instead of a guessed timeout.
     try {
-      final raw = await rootBundle.loadString('assets/data/audio_word_lengths.json');
+      final raw = await rootBundle.loadString(
+        'assets/data/audio_word_lengths.json',
+      );
       final m = json.decode(raw) as Map<String, dynamic>;
       m.forEach((k, v) => _wordEndMs[k] = (v as num).toInt());
     } catch (e) {
-      if (kDebugMode) debugPrint('AudioService: word-length manifest missing: $e');
+      if (kDebugMode)
+        debugPrint('AudioService: word-length manifest missing: $e');
     }
 
     // 3. Sounds are loaded lazily on first play (see _getSource) in
@@ -679,7 +857,11 @@ class AudioService {
     AnalyticsService.instance.logAssetUnavailable('audio', reason);
   }
 
-  Future<void> speakCard(String? audioKey, String sound, String fullText) async {
+  Future<void> speakCard(
+    String? audioKey,
+    String sound,
+    String fullText,
+  ) async {
     if (audioKey == null) return;
 
     // Silence first, load second. `_getSource` reads from disk — and on
@@ -741,7 +923,8 @@ class AudioService {
       stop();
       _currentHandle = await _soloud.play(source);
     } catch (e) {
-      if (kDebugMode) debugPrint('AudioService: error in playSound "$audioKey": $e');
+      if (kDebugMode)
+        debugPrint('AudioService: error in playSound "$audioKey": $e');
     }
   }
 
@@ -813,12 +996,18 @@ class AudioService {
       if (_speakGeneration == gen) isSpeaking.value = false;
     } catch (e) {
       if (_speakGeneration == gen) isSpeaking.value = false;
-      if (kDebugMode) debugPrint('AudioService: playWordOnly error "$audioKey": $e');
+      if (kDebugMode)
+        debugPrint('AudioService: playWordOnly error "$audioKey": $e');
     }
   }
 
   /// Whether audio exists for the given key (loaded lazily on first play).
   bool hasSound(String? key) => key != null && _knownKeys.contains(key);
+
+  /// Availability for a lesson's explicit fallback UI; resolution stays here.
+  bool isWordAvailable(String? key) =>
+      key != null &&
+      AssetPackService.instance.cardVoice(_audioMap[key] ?? key) is VoiceReady;
 
   /// The word is the loudest thing in the room and must also be the last
   /// thing the mixer drops: with SoLoud's default of 16 active voices, a
@@ -993,12 +1182,11 @@ class AudioService {
     String name, {
     double volume = 1.0,
     double spread = 0.2,
-  }) =>
-      playSfx(
-        name,
-        volume: volume,
-        pitch: 1.0 + (_rng.nextDouble() * 2 - 1) * spread,
-      );
+  }) => playSfx(
+    name,
+    volume: volume,
+    pitch: 1.0 + (_rng.nextDouble() * 2 - 1) * spread,
+  );
 
   /// Random recorded praise clip ("Молодець!" / "Great job!"). Rate-limited
   /// to every other call so it stays special; pass [always] for game-final
@@ -1011,7 +1199,8 @@ class AudioService {
     _praiseCounter++;
     if (!always && _praiseCounter.isOdd) return false;
     final src = await _getFx(
-        'assets/audio_mp3/praise_${isEn ? 'en' : 'uk'}_${_rng.nextInt(5) + 1}.mp3');
+      'assets/audio_mp3/praise_${isEn ? 'en' : 'uk'}_${_rng.nextInt(5) + 1}.mp3',
+    );
     if (src == null) {
       _praiseKnownMissing = true;
       return false;
@@ -1057,7 +1246,8 @@ class AudioService {
   /// Expects assets/audio_mp3/instr_{uk|en}_{gameId}.mp3.
   Future<void> playInstruction(String gameId, {required bool isEn}) async {
     final src = await _getFx(
-        'assets/audio_mp3/instr_${isEn ? 'en' : 'uk'}_$gameId.mp3');
+      'assets/audio_mp3/instr_${isEn ? 'en' : 'uk'}_$gameId.mp3',
+    );
     if (src == null) return;
     try {
       stop();

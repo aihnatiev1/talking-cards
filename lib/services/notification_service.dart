@@ -28,7 +28,11 @@ class NotificationService {
 
   /// Extra daily ids used when the parent asked for three days a week.
   static const _weeklyIds = [1, 2, 3];
-  static const _weeklyDays = [DateTime.monday, DateTime.wednesday, DateTime.friday];
+  static const _weeklyDays = [
+    DateTime.monday,
+    DateTime.wednesday,
+    DateTime.friday,
+  ];
   static const _paywallReminderId = 999;
   static const _paywallScheduledKey = 'paywall_reminder_scheduled';
   static const _winBackId = 100;
@@ -146,7 +150,10 @@ class NotificationService {
       final who = childName ?? 'your little one';
       return [
         ('🐰', 'Bloom picked a new card. Will $who listen with you?'),
-        ('🐰', 'Bloom is awake and waiting for three cards. Will $who show him?'),
+        (
+          '🐰',
+          'Bloom is awake and waiting for three cards. Will $who show him?',
+        ),
         ('🐰', 'Bloom is pointing at the Animals pack — new words are there.'),
         ('🐰', 'Welcome back! Bloom kept every word $who already knows.'),
         ('🐰', 'One card and Bloom will hop. Ready to try together?'),
@@ -882,7 +889,9 @@ class NotificationService {
         inviteCopy(lang: lang),
       ];
       for (final (title, body) in invites) {
-        out..add(title)..add(body);
+        out
+          ..add(title)
+          ..add(body);
       }
       for (final learned in [0, 1, 12]) {
         final (title, body) = trialReportCopy(
@@ -891,7 +900,9 @@ class NotificationService {
           learnedWords: learned,
           bestPack: 'Тваринки',
         );
-        out..add(title)..add(body);
+        out
+          ..add(title)
+          ..add(body);
       }
     }
     out.add(paywallReminderBody);

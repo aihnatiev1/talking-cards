@@ -49,8 +49,11 @@ void main() {
           // lower edge — but a button never runs off the screen and never
           // ends flush with it.
           expect(rect.bottom, lessThanOrEqualTo(600 - 8));
-          expect(rect.bottom, greaterThan(566),
-              reason: 'the bar should use the space the inset used to take');
+          expect(
+            rect.bottom,
+            greaterThan(566),
+            reason: 'the bar should use the space the inset used to take',
+          );
           expect(rect.height, greaterThanOrEqualTo(72));
           await tester.tap(target);
           await tester.pumpAndSettle();
@@ -61,7 +64,7 @@ void main() {
     }
   }
   testWidgets('preview all selected states', (tester) async {
-    tester.view.physicalSize = const Size(390, 340);
+    tester.view.physicalSize = const Size(390, 440);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     final font = FontLoader('Nunito')

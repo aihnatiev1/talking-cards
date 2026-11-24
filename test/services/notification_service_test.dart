@@ -21,7 +21,9 @@ void main() {
     test('is gone once that evening has passed', () {
       expect(
         NotificationService.trialReportFireTime(
-            start, DateTime(2026, 9, 7 + reportDay, 19, 1)),
+          start,
+          DateTime(2026, 9, 7 + reportDay, 19, 1),
+        ),
         isNull,
       );
     });
@@ -38,20 +40,31 @@ void main() {
       expect(title, contains('з Картками'));
       // "Знає" claimed knowledge the app cannot see; the chest is a count
       // of collected words and says only that (audit §28).
-      expect(body, 'У скарбничці Софійка: 23 слова. Найкраще іде: Звук Р. '
-          'Ще 2 дні безкоштовно.');
+      expect(
+        body,
+        'У скарбничці Софійка: 23 слова. Найкраще іде: Звук Р. '
+        'Ще 2 дні безкоштовно.',
+      );
     });
 
     test('Ukrainian plural follows the count', () {
       final (_, body) = NotificationService.trialReportCopy(
-        lang: 'uk', childName: null, learnedWords: 1, bestPack: null);
+        lang: 'uk',
+        childName: null,
+        learnedWords: 1,
+        bestPack: null,
+      );
       expect(body, contains('1 слово.'));
       expect(body, contains('Малюк'));
     });
 
     test('nothing learned yet does not invent numbers', () {
       final (_, body) = NotificationService.trialReportCopy(
-        lang: 'en', childName: 'Mia', learnedWords: 0, bestPack: 'Animals');
+        lang: 'en',
+        childName: 'Mia',
+        learnedWords: 0,
+        bestPack: 'Animals',
+      );
       expect(body, isNot(contains('0')));
       expect(body, contains('Mia'));
       expect(body, contains('2 free days left'));
@@ -59,10 +72,17 @@ void main() {
 
     test('English', () {
       final (title, body) = NotificationService.trialReportCopy(
-        lang: 'en', childName: 'Mia', learnedWords: 12, bestPack: 'Animals');
+        lang: 'en',
+        childName: 'Mia',
+        learnedWords: 12,
+        bestPack: 'Animals',
+      );
       expect(title, contains('FirstWords'));
-      expect(body, "Mia's word chest: 12 words. Best so far: Animals. "
-          '2 free days left.');
+      expect(
+        body,
+        "Mia's word chest: 12 words. Best so far: Animals. "
+        '2 free days left.',
+      );
     });
   });
 }

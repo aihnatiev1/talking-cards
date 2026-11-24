@@ -8,6 +8,7 @@ class StreakState {
   final int currentStreak;
   final String lastActiveDate;
   final Set<String> unlockedRewards;
+
   /// Milestone emojis the user has already seen the celebration overlay for.
   /// Used to fire `pendingCelebration` exactly once per new milestone.
   final Set<String> celebratedRewards;
@@ -24,13 +25,12 @@ class StreakState {
     String? lastActiveDate,
     Set<String>? unlockedRewards,
     Set<String>? celebratedRewards,
-  }) =>
-      StreakState(
-        currentStreak: currentStreak ?? this.currentStreak,
-        lastActiveDate: lastActiveDate ?? this.lastActiveDate,
-        unlockedRewards: unlockedRewards ?? this.unlockedRewards,
-        celebratedRewards: celebratedRewards ?? this.celebratedRewards,
-      );
+  }) => StreakState(
+    currentStreak: currentStreak ?? this.currentStreak,
+    lastActiveDate: lastActiveDate ?? this.lastActiveDate,
+    unlockedRewards: unlockedRewards ?? this.unlockedRewards,
+    celebratedRewards: celebratedRewards ?? this.celebratedRewards,
+  );
 }
 
 /// One streak milestone: the day count that earns it, the sticker the
@@ -48,13 +48,7 @@ class Milestone {
   final String label;
   final String labelEn;
 
-  const Milestone(
-    this.days,
-    this.id,
-    this.sticker,
-    this.label,
-    this.labelEn,
-  );
+  const Milestone(this.days, this.id, this.sticker, this.label, this.labelEn);
 
   /// The sticker's name in [isEn]'s language — the one word of text the
   /// album shows under a sticker.
@@ -68,8 +62,7 @@ const milestones = [
   Milestone(30, '🦋', AppIcon.stickerButterfly, 'Метелик', 'Butterfly'),
 ];
 
-final streakProvider =
-    StateNotifierProvider<StreakNotifier, StreakState>(
+final streakProvider = StateNotifierProvider<StreakNotifier, StreakState>(
   (ref) => StreakNotifier(),
 );
 
@@ -95,8 +88,8 @@ class StreakNotifier extends StateNotifier<StreakState> {
     final streak = prefs.getInt('${_p}streak_current') ?? 0;
     final lastDate = prefs.getString('${_p}streak_last_date') ?? '';
     final rewards = (prefs.getStringList('${_p}streak_rewards') ?? []).toSet();
-    final celebrated =
-        (prefs.getStringList('${_p}streak_celebrated') ?? []).toSet();
+    final celebrated = (prefs.getStringList('${_p}streak_celebrated') ?? [])
+        .toSet();
     state = StreakState(
       currentStreak: streak,
       lastActiveDate: lastDate,

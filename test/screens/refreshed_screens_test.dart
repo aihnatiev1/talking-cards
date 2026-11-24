@@ -12,6 +12,7 @@ import 'package:talking_cards/providers/packs_provider.dart';
 import 'package:talking_cards/screens/parent_dashboard_screen.dart';
 import 'package:talking_cards/services/asset_pack_service.dart';
 import 'package:talking_cards/tabs/games_tab.dart';
+import 'package:talking_cards/tabs/packs_tab.dart';
 
 void main() {
   setUp(() {
@@ -21,7 +22,7 @@ void main() {
       bundled: true,
     );
   });
-  for (final screen in ['games', 'parent']) {
+  for (final screen in ['games', 'parent', 'home']) {
     for (final width in [320.0, 390.0, 834.0]) {
       for (final scale in [1.0, 2.0]) {
         testWidgets('$screen $width text $scale', (tester) async {
@@ -35,8 +36,14 @@ void main() {
             ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
           await tester.runAsync(icons.load);
           final catalogue = await tester.runAsync(() async {
-            final json = jsonDecode(await rootBundle.loadString('assets/data/uk_cards.json')) as List;
-            return json.map((item) => PackModel.fromJson(item as Map<String, dynamic>)).toList();
+            final json =
+                jsonDecode(
+                      await rootBundle.loadString('assets/data/uk_cards.json'),
+                    )
+                    as List;
+            return json
+                .map((item) => PackModel.fromJson(item as Map<String, dynamic>))
+                .toList();
           });
           await tester.pumpWidget(
             ProviderScope(
@@ -54,7 +61,9 @@ void main() {
                     key: const ValueKey('preview'),
                     child: screen == 'games'
                         ? const GamesTab()
-                        : const ParentDashboardScreen(),
+                        : screen == 'parent'
+                        ? const ParentDashboardScreen()
+                        : const PacksTab(),
                   ),
                 ),
               ),
@@ -66,6 +75,10 @@ void main() {
           if (const bool.fromEnvironment('SCREEN_PREVIEW') &&
               width == 390 &&
               scale == 1) {
+            await tester.runAsync(
+              () => Future<void>.delayed(const Duration(milliseconds: 300)),
+            );
+            await tester.pump(const Duration(milliseconds: 500));
             final boundary = tester.renderObject<RenderRepaintBoundary>(
               find.byKey(const ValueKey('preview')),
             );
@@ -80,7 +93,12 @@ void main() {
               image.dispose();
             });
           }
-          await tester.drag(find.byType(ListView).first, const Offset(0, -600));
+          await tester.drag(
+            screen == 'home'
+                ? find.byType(CustomScrollView).first
+                : find.byType(ListView).first,
+            const Offset(0, -600),
+          );
           await tester.pump(const Duration(seconds: 1));
           expect(tester.takeException(), isNull);
         });

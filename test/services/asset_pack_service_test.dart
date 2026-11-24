@@ -61,8 +61,10 @@ void main() {
       expect(art.provider, isA<ResizeImage>());
       final resized = art.provider as ResizeImage;
       expect(resized.width, 400);
-      expect(resized.imageProvider,
-          const AssetImage('assets/images/webp/free.webp'));
+      expect(
+        resized.imageProvider,
+        const AssetImage('assets/images/webp/free.webp'),
+      );
     });
   });
 
@@ -86,23 +88,25 @@ void main() {
       );
     });
 
-    test('pack on disk: paid is ready as a file, free stays a bundle asset',
-        () {
-      service.debugConfigure(
-        padAssets: pad,
-        bundled: false,
-        packPath: '/data/pack',
-        allAssets: all,
-      );
-      expect(
-        service.cardArt('paid'),
-        ArtReady(FileImage(File('/data/pack/images/webp/paid.webp'))),
-      );
-      expect(
-        service.cardArt('free'),
-        const ArtReady(AssetImage('assets/images/webp/free.webp')),
-      );
-    });
+    test(
+      'pack on disk: paid is ready as a file, free stays a bundle asset',
+      () {
+        service.debugConfigure(
+          padAssets: pad,
+          bundled: false,
+          packPath: '/data/pack',
+          allAssets: all,
+        );
+        expect(
+          service.cardArt('paid'),
+          ArtReady(FileImage(File('/data/pack/images/webp/paid.webp'))),
+        );
+        expect(
+          service.cardArt('free'),
+          const ArtReady(AssetImage('assets/images/webp/free.webp')),
+        );
+      },
+    );
 
     test('pack not on disk: paid is pending, free is unaffected', () {
       service.debugConfigure(padAssets: pad, bundled: false, allAssets: all);
@@ -125,13 +129,15 @@ void main() {
       expect(service.cardArt(null), ArtMissing.noName);
     });
 
-    test('an unreadable manifest stays permissive rather than blanking all',
-        () {
-      // allAssets: null is "cannot prove absence" — the resolver must not
-      // decide the whole catalogue is missing because a manifest read failed.
-      service.debugConfigure(padAssets: pad, bundled: true);
-      expect(service.cardArt('anything'), isA<ArtReady>());
-    });
+    test(
+      'an unreadable manifest stays permissive rather than blanking all',
+      () {
+        // allAssets: null is "cannot prove absence" — the resolver must not
+        // decide the whole catalogue is missing because a manifest read failed.
+        service.debugConfigure(padAssets: pad, bundled: true);
+        expect(service.cardArt('anything'), isA<ArtReady>());
+      },
+    );
 
     test('cacheWidth still wraps in the ResizeImage key precache shares', () {
       service.debugConfigure(padAssets: pad, bundled: true, allAssets: all);
@@ -203,8 +209,10 @@ void main() {
     test('paid content is read from the pack, free from the bundle', () {
       final paid = service.cardArt('paid') as ArtReady;
       expect(paid.provider, isA<FileImage>());
-      expect((paid.provider as FileImage).file.path,
-          '/data/pack/images/webp/paid.webp');
+      expect(
+        (paid.provider as FileImage).file.path,
+        '/data/pack/images/webp/paid.webp',
+      );
       expect(
         service.cardArt('free'),
         const ArtReady(AssetImage('assets/images/webp/free.webp')),

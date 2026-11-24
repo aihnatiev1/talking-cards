@@ -47,8 +47,9 @@ class ListenService {
   /// until calibration ends). Nothing in the child's UI reads this — it
   /// exists so the thresholds can be checked in a real room instead of
   /// guessed.
-  final ValueNotifier<({double db, double? floorDb})?> sample =
-      ValueNotifier(null);
+  final ValueNotifier<({double db, double? floorDb})?> sample = ValueNotifier(
+    null,
+  );
 
   /// What the last finished turn looked like, kept after it ends: a
   /// verdict with no numbers behind it cannot be acted on, and the HUD
@@ -113,7 +114,8 @@ class ListenService {
       return VoiceOutcome.quiet;
     }
 
-    final gate = _room?.restart() ??
+    final gate =
+        _room?.restart() ??
         VoiceGate(sampleIntervalMs: sampleInterval.inMilliseconds);
     // The gate always counts in real milliseconds; only the polling clock
     // is sped up, so a test exercises the same thresholds.

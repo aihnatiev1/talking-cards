@@ -25,8 +25,10 @@ void main() {
     // with the overlay still up must not block the next one.
     debugResetKidOverlayQueue();
     SharedPreferences.setMockInitialValues({});
-    AssetPackService.instance
-        .debugConfigure(padAssets: const {}, bundled: true);
+    AssetPackService.instance.debugConfigure(
+      padAssets: const {},
+      bundled: true,
+    );
     FeedbackService.debugMute = true;
     FeedbackService.debugLog.clear();
   });
@@ -105,10 +107,16 @@ void main() {
     expect(r.done(), 1);
     expect(r.again(), 0);
     await tester.pumpAndSettle();
-    expect(find.byType(Celebration), findsNothing,
-        reason: 'the overlay popped itself before calling onDone');
-    expect(find.text('open'), findsOneWidget,
-        reason: 'only the overlay popped — the host screen is still there');
+    expect(
+      find.byType(Celebration),
+      findsNothing,
+      reason: 'the overlay popped itself before calling onDone',
+    );
+    expect(
+      find.text('open'),
+      findsOneWidget,
+      reason: 'only the overlay popped — the host screen is still there',
+    );
   });
 
   testWidgets('the celebration is one-shot: it settles', (tester) async {
@@ -132,8 +140,11 @@ void main() {
 
     // Only the gate's worth of clock, no 2.5 s choreography.
     await tester.pump(const Duration(milliseconds: 400));
-    expect(tester.binding.hasScheduledFrame, isFalse,
-        reason: 'reduced motion must not keep the master controller ticking');
+    expect(
+      tester.binding.hasScheduledFrame,
+      isFalse,
+      reason: 'reduced motion must not keep the master controller ticking',
+    );
 
     await tester.tap(find.text('Готово'));
     await tester.pump();
@@ -141,8 +152,9 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('round asks FeedbackService for roundDone exactly once',
-      (tester) async {
+  testWidgets('round asks FeedbackService for roundDone exactly once', (
+    tester,
+  ) async {
     await open(tester);
     await tester.pumpAndSettle();
     expect(
@@ -152,8 +164,9 @@ void main() {
     expect(FeedbackService.debugLog, isNot(contains(FeedbackEvent.packDone)));
   });
 
-  testWidgets('pack asks for packDone exactly once and shows the pack',
-      (tester) async {
+  testWidgets('pack asks for packDone exactly once and shows the pack', (
+    tester,
+  ) async {
     await open(tester, tier: CelebrationTier.pack);
     await tester.pumpAndSettle();
     expect(
@@ -165,8 +178,9 @@ void main() {
     expect(find.text('Грати знову'), findsOneWidget);
   });
 
-  testWidgets('milestone rings the bell once, no cheer, one pill',
-      (tester) async {
+  testWidgets('milestone rings the bell once, no cheer, one pill', (
+    tester,
+  ) async {
     await open(tester, tier: CelebrationTier.milestone);
     await tester.pumpAndSettle();
     expect(

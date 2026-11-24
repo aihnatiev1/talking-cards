@@ -6,13 +6,13 @@ import '../services/profile_service.dart';
 /// Daily quest tasks the child can complete.
 enum QuestTask {
   listenCardOfDay, // Listen to the card of the day
-  viewCards3,      // View 3 cards in any pack
-  playQuiz,        // Play the guess game (quiz or memory match)
-  viewCards5,      // View 5 total cards (cumulative with viewCards3)
-  reviewOldCard,   // Open the review pack or revisit any pack
-  drawPicture,     // Colour, stamp or draw in «Малюємо» (bonus)
-  reviewSRSCards,  // Review 5+ SRS-due cards (bonus — does not block reward)
-  speakWords,      // Say 3 words correctly via mic (bonus — does not block reward)
+  viewCards3, // View 3 cards in any pack
+  playQuiz, // Play the guess game (quiz or memory match)
+  viewCards5, // View 5 total cards (cumulative with viewCards3)
+  reviewOldCard, // Open the review pack or revisit any pack
+  drawPicture, // Colour, stamp or draw in «Малюємо» (bonus)
+  reviewSRSCards, // Review 5+ SRS-due cards (bonus — does not block reward)
+  speakWords, // Say 3 words correctly via mic (bonus — does not block reward)
 }
 
 /// The 5 core tasks required to unlock the daily reward.
@@ -72,8 +72,8 @@ class DailyQuestState {
 
 final dailyQuestProvider =
     StateNotifierProvider<DailyQuestNotifier, DailyQuestState>(
-  (ref) => DailyQuestNotifier(),
-);
+      (ref) => DailyQuestNotifier(),
+    );
 
 class DailyQuestNotifier extends StateNotifier<DailyQuestState> {
   DailyQuestNotifier() : super(DailyQuestState(date: _today())) {

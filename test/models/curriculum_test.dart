@@ -16,11 +16,11 @@ void main() {
         as Map<String, dynamic>,
   );
 
-  final packs = (json.decode(
-    File('assets/data/uk_cards.json').readAsStringSync(),
-  ) as List<dynamic>)
-      .map((p) => PackModel.fromJson(p as Map<String, dynamic>))
-      .toList();
+  final packs =
+      (json.decode(File('assets/data/uk_cards.json').readAsStringSync())
+              as List<dynamic>)
+          .map((p) => PackModel.fromJson(p as Map<String, dynamic>))
+          .toList();
 
   final byId = {
     for (final pack in packs)
@@ -49,7 +49,10 @@ void main() {
 
   test('the library is not the plan', () {
     // 471 cards stay browsable; the plan is the small, ordered subset.
-    final all = {for (final p in packs) for (final c in p.cards) c.id};
+    final all = {
+      for (final p in packs)
+        for (final c in p.cards) c.id,
+    };
     expect(all.length, greaterThan(400));
     expect(plan.cardIds.length, lessThan(all.length ~/ 4));
   });
@@ -60,11 +63,11 @@ void main() {
           as Map<String, dynamic>,
     );
 
-    final enPacks = (json.decode(
-      File('assets/data/en_cards.json').readAsStringSync(),
-    ) as List<dynamic>)
-        .map((p) => PackModel.fromJson(p as Map<String, dynamic>))
-        .toList();
+    final enPacks =
+        (json.decode(File('assets/data/en_cards.json').readAsStringSync())
+                as List<dynamic>)
+            .map((p) => PackModel.fromJson(p as Map<String, dynamic>))
+            .toList();
 
     final enById = {
       for (final pack in enPacks)

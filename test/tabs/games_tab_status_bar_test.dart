@@ -14,7 +14,10 @@ import 'package:talking_cards/tabs/games_tab.dart';
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
-    AssetPackService.instance.debugConfigure(padAssets: const {}, bundled: true);
+    AssetPackService.instance.debugConfigure(
+      padAssets: const {},
+      bundled: true,
+    );
   });
 
   testWidgets('the Games tab asks for dark status-bar icons', (tester) async {

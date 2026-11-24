@@ -21,8 +21,7 @@ class ColoringAlbumEntry {
   final String image;
   final DateTime revealedAt;
 
-  String encode() =>
-      '$cardId|$image|${revealedAt.toIso8601String()}';
+  String encode() => '$cardId|$image|${revealedAt.toIso8601String()}';
 
   static ColoringAlbumEntry? decode(String raw) {
     final parts = raw.split('|');
@@ -69,20 +68,20 @@ class ColoringAlbumState {
     String? unfinishedCardId,
     bool clearUnfinished = false,
     bool? loaded,
-  }) =>
-      ColoringAlbumState(
-        entries: entries ?? this.entries,
-        handHintSeen: handHintSeen ?? this.handHintSeen,
-        unfinishedCardId:
-            clearUnfinished ? null : (unfinishedCardId ?? this.unfinishedCardId),
-        loaded: loaded ?? this.loaded,
-      );
+  }) => ColoringAlbumState(
+    entries: entries ?? this.entries,
+    handHintSeen: handHintSeen ?? this.handHintSeen,
+    unfinishedCardId: clearUnfinished
+        ? null
+        : (unfinishedCardId ?? this.unfinishedCardId),
+    loaded: loaded ?? this.loaded,
+  );
 }
 
 final coloringAlbumProvider =
     StateNotifierProvider<ColoringAlbumNotifier, ColoringAlbumState>(
-  (ref) => ColoringAlbumNotifier(),
-);
+      (ref) => ColoringAlbumNotifier(),
+    );
 
 /// Persists the album under the active profile's prefix, like every other
 /// per-child store in the app ([ProfileService.prefix]).
@@ -141,10 +140,9 @@ class ColoringAlbumNotifier extends StateNotifier<ColoringAlbumState> {
 
     state = state.copyWith(entries: entries, clearUnfinished: true);
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
-      _key(_keyAlbum),
-      [for (final e in entries) e.encode()],
-    );
+    await prefs.setStringList(_key(_keyAlbum), [
+      for (final e in entries) e.encode(),
+    ]);
     await prefs.remove(_key(_keyUnfinished));
   }
 

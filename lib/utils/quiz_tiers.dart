@@ -100,7 +100,10 @@ class QuizDifficulty {
 
   /// Records a finished question and returns what it did to the board.
   TierChange applyQuestion({required int misses, required bool hintShown}) {
-    final verdict = QuizTiers.confidenceOf(misses: misses, hintShown: hintShown);
+    final verdict = QuizTiers.confidenceOf(
+      misses: misses,
+      hintShown: hintShown,
+    );
     switch (verdict) {
       case RoundConfidence.struggle:
         _hardRun++;

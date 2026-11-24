@@ -32,7 +32,10 @@ bool get parentalGateIsOpen {
 @visibleForTesting
 void debugResetParentalGate() => _lastPassed = null;
 
-Future<bool> showParentalGate(BuildContext context, {required bool isEn}) async {
+Future<bool> showParentalGate(
+  BuildContext context, {
+  required bool isEn,
+}) async {
   if (parentalGateIsOpen) return true;
   final ok = await showDialog<bool>(
     context: context,
@@ -46,11 +49,28 @@ Future<bool> showParentalGate(BuildContext context, {required bool isEn}) async 
 }
 
 const _ukWords = [
-  '', 'один', 'два', 'три', 'чотири', 'п’ять', 'шість', 'сім',
-  'вісім', 'дев’ять'
+  '',
+  'один',
+  'два',
+  'три',
+  'чотири',
+  'п’ять',
+  'шість',
+  'сім',
+  'вісім',
+  'дев’ять',
 ];
 const _enWords = [
-  '', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'
+  '',
+  'one',
+  'two',
+  'three',
+  'four',
+  'five',
+  'six',
+  'seven',
+  'eight',
+  'nine',
 ];
 
 class _ParentalGateDialog extends StatefulWidget {
@@ -122,8 +142,7 @@ class _ParentalGateDialogState extends State<_ParentalGateDialog> {
             Text(
               _question,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                  fontSize: 22, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             Text(
@@ -143,9 +162,7 @@ class _ParentalGateDialogState extends State<_ParentalGateDialog> {
             ])
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  for (final d in row) _key(d),
-                ],
+                children: [for (final d in row) _key(d)],
               ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -178,7 +195,8 @@ class _ParentalGateDialogState extends State<_ParentalGateDialog> {
           style: TextButton.styleFrom(
             backgroundColor: DT.brand.withValues(alpha: 0.08),
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14)),
+              borderRadius: BorderRadius.circular(14),
+            ),
           ),
           onPressed: () => _tapDigit(d),
           child: Text(

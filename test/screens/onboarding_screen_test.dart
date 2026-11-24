@@ -69,7 +69,7 @@ void main() {
 
     expect(find.text('Знайомство'), findsOneWidget);
     expect(find.byType(TextField), findsOneWidget);
-    expect(find.text('Далі →'), findsOneWidget);
+    expect(find.text('Далі'), findsOneWidget);
   });
   for (final size in [
     const Size(320, 568),
@@ -105,7 +105,7 @@ void main() {
           final avatar = find.widgetWithText(KidTap, '👧');
           expect(tester.getSize(avatar).width, greaterThanOrEqualTo(72));
           expect(tester.getSize(avatar).height, greaterThanOrEqualTo(72));
-          await tester.tap(find.text('Далі →'), warnIfMissed: false);
+          await tester.tap(find.text('Далі'), warnIfMissed: false);
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull);
           await tester.ensureVisible(find.text('4–5'));

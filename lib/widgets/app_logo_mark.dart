@@ -20,11 +20,7 @@ class AppLogoMark extends StatelessWidget {
   /// Localised name of the app for assistive tech.
   final String semanticsLabel;
 
-  const AppLogoMark({
-    super.key,
-    this.size = 64,
-    required this.semanticsLabel,
-  });
+  const AppLogoMark({super.key, this.size = 64, required this.semanticsLabel});
 
   @override
   Widget build(BuildContext context) {

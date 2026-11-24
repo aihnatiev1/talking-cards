@@ -48,13 +48,11 @@ void main() {
   /// (`daily_hero_card` already reads `DT.motion.ambientBreath`).
   /// Everything else is plain migration debt.
   const durationLiteralDebt = {
-    'lib/screens/card_reveal_screen.dart',
     'lib/screens/cards_screen.dart',
     'lib/screens/home_screen.dart',
     'lib/screens/onboarding_screen.dart',
     'lib/screens/splash_screen.dart',
     'lib/tabs/games_tab.dart',
-    'lib/tabs/packs_tab.dart',
     'lib/widgets/activity_chart.dart',
     'lib/widgets/bubble_pop.dart',
     'lib/widgets/flash_card.dart',
@@ -72,27 +70,28 @@ void main() {
   bool rawDuration(String s) => literal.hasMatch(s);
 
   List<String> offenders() => [
-        for (final f in dart)
-          if (!durationLiteralDebt.contains(f.path) &&
-              rawDuration(f.readAsStringSync()))
-            f.path,
-      ];
+    for (final f in dart)
+      if (!durationLiteralDebt.contains(f.path) &&
+          rawDuration(f.readAsStringSync()))
+        f.path,
+  ];
 
   /// Entries that no longer violate — the list must shrink to match, so
   /// that a cleaned file cannot quietly regress behind a stale allowance.
   List<String> stale() => [
-        for (final path in durationLiteralDebt)
-          if (!File(path).existsSync() ||
-              !rawDuration(File(path).readAsStringSync()))
-            path,
-      ];
+    for (final path in durationLiteralDebt)
+      if (!File(path).existsSync() ||
+          !rawDuration(File(path).readAsStringSync()))
+        path,
+  ];
 
   group('Duration(milliseconds: literals in the UI layers', () {
     test('appear only in the shrink-only debt list', () {
       expect(
         offenders(),
         isEmpty,
-        reason: 'Read a step from DT.motion (quick / base / enter / slow / '
+        reason:
+            'Read a step from DT.motion (quick / base / enter / slow / '
             'celebrate, or the route/sheet/overlay pairs), or DT.pressDownMs '
             '/ DT.pressUpMs for a press. Do not add this file to '
             'durationLiteralDebt — that list only shrinks.',
@@ -103,7 +102,8 @@ void main() {
       expect(
         stale(),
         isEmpty,
-        reason: 'These files are clean now — remove them from '
+        reason:
+            'These files are clean now — remove them from '
             'durationLiteralDebt so they stay clean.',
       );
     });
@@ -120,17 +120,20 @@ void main() {
     });
   });
 
-  test('the motion scale lives in design_tokens.dart, and KidTap reads it',
-      () {
+  test('the motion scale lives in design_tokens.dart, and KidTap reads it', () {
     // The two foundations F7 leans on must themselves be on the scale:
     // DTMotion is the owner, and the press widget — the most-instantiated
     // animation in the app — takes its beats from DT.
     final tokens = File('lib/utils/design_tokens.dart').readAsStringSync();
     expect(tokens, contains('class DTMotion'));
     final kidTap = File('lib/widgets/kid_tap.dart').readAsStringSync();
-    expect(kidTap, isNot(matches(literal)),
-        reason: 'KidTap sets the press language for every tile; its '
-            'durations come from DT.pressDownMs / DT.pressUpMs.');
+    expect(
+      kidTap,
+      isNot(matches(literal)),
+      reason:
+          'KidTap sets the press language for every tile; its '
+          'durations come from DT.pressDownMs / DT.pressUpMs.',
+    );
     expect(kidTap, contains('DT.pressDownMs'));
   });
 }

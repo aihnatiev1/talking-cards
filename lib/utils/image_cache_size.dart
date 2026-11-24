@@ -13,13 +13,14 @@ const int kCardSourceWidth = 640;
 /// Full-screen card image (FlashCard swiper, card reveal).
 int cardCacheWidth(BuildContext context) {
   final mq = MediaQuery.of(context);
-  return min(
-      kCardSourceWidth, (mq.size.width * mq.devicePixelRatio).round());
+  return min(kCardSourceWidth, (mq.size.width * mq.devicePixelRatio).round());
 }
 
 /// Grid tile / quiz option thumbnails (roughly half the screen wide).
 int tileCacheWidth(BuildContext context) {
   final mq = MediaQuery.of(context);
   return min(
-      kCardSourceWidth, (mq.size.width * mq.devicePixelRatio / 2).round());
+    kCardSourceWidth,
+    (mq.size.width * mq.devicePixelRatio / 2).round(),
+  );
 }

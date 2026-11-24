@@ -24,19 +24,24 @@ class GameStat {
 
 /// Ordered list of all games in the app.
 const gameDefinitions = [
-  (id: 'quiz',          emoji: '🎧', uk: 'Вгадай звук',     en: 'Guess the word'),
-  (id: 'memory',        emoji: '🧠', uk: 'Знайди пару',      en: 'Find the pair'),
-  (id: 'sort',          emoji: '🗂️', uk: 'По купках',       en: 'Sort it!'),
-  (id: 'odd_one_out',   emoji: '🔍', uk: 'Знайди зайве',    en: 'Odd one out'),
-  (id: 'opposite_game', emoji: '↔️', uk: 'Протилежності',   en: 'Opposites'),
-  (id: 'syllable_game', emoji: '🥁', uk: 'Рахуй склади',    en: 'Count syllables'),
-  (id: 'repeat_game',   emoji: '🎤', uk: 'Повтори за мною', en: 'Repeat after me'),
+  (id: 'quiz', emoji: '🎧', uk: 'Вгадай звук', en: 'Guess the word'),
+  (id: 'memory', emoji: '🧠', uk: 'Знайди пару', en: 'Find the pair'),
+  (id: 'sort', emoji: '🗂️', uk: 'По купках', en: 'Sort it!'),
+  (id: 'odd_one_out', emoji: '🔍', uk: 'Знайди зайве', en: 'Odd one out'),
+  (id: 'opposite_game', emoji: '↔️', uk: 'Протилежності', en: 'Opposites'),
+  (id: 'syllable_game', emoji: '🥁', uk: 'Рахуй склади', en: 'Count syllables'),
+  (
+    id: 'repeat_game',
+    emoji: '🎤',
+    uk: 'Повтори за мною',
+    en: 'Repeat after me',
+  ),
 ];
 
 final gameStatsProvider =
     AsyncNotifierProvider<GameStatsNotifier, List<GameStat>>(
-  GameStatsNotifier.new,
-);
+      GameStatsNotifier.new,
+    );
 
 class GameStatsNotifier extends AsyncNotifier<List<GameStat>> {
   String get _p => ProfileService.prefix;

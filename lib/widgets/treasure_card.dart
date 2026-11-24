@@ -27,8 +27,7 @@ class TreasureCard extends StatelessWidget {
   Widget build(BuildContext context) {
     const accent = DT.peach;
     final allDone = done >= total;
-    final progress =
-        total > 0 ? (done / total).clamp(0.0, 1.0) : 0.0;
+    final progress = total > 0 ? (done / total).clamp(0.0, 1.0) : 0.0;
 
     return KidTap(
       onTap: onTap,
@@ -39,10 +38,7 @@ class TreasureCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: DT.surfaceWhite,
           borderRadius: BorderRadius.circular(DT.rLg),
-          border: Border.all(
-            color: accent.withValues(alpha: 0.25),
-            width: 2,
-          ),
+          border: Border.all(color: accent.withValues(alpha: 0.25), width: 2),
           boxShadow: DT.shadowSoft(accent),
         ),
         child: ClipRRect(
@@ -67,10 +63,10 @@ class TreasureCard extends StatelessWidget {
                             child: CircularProgressIndicator(
                               value: progress,
                               strokeWidth: 5,
-                              backgroundColor:
-                                  accent.withValues(alpha: 0.22),
-                              valueColor:
-                                  const AlwaysStoppedAnimation<Color>(accent),
+                              backgroundColor: accent.withValues(alpha: 0.22),
+                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                accent,
+                              ),
                             ),
                           ),
                           // Bob 0 → -3 px over 1400 ms. Under reduced
@@ -106,7 +102,9 @@ class TreasureCard extends StatelessWidget {
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: accent.withValues(alpha: 0.14),
                           borderRadius: BorderRadius.circular(10),

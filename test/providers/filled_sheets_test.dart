@@ -59,15 +59,17 @@ void main() {
     expect(notifier.of('fish'), {1: 'blue'});
   });
 
-  test('an unreadable store starts empty instead of failing a launch',
-      () async {
-    SharedPreferences.setMockInitialValues({'filled_sheets': 'not json'});
-    final c = ProviderContainer();
-    addTearDown(c.dispose);
-    final notifier = c.read(filledSheetsProvider.notifier);
-    await Future<void>.delayed(const Duration(milliseconds: 20));
-    expect(notifier.state, isEmpty);
-  });
+  test(
+    'an unreadable store starts empty instead of failing a launch',
+    () async {
+      SharedPreferences.setMockInitialValues({'filled_sheets': 'not json'});
+      final c = ProviderContainer();
+      addTearDown(c.dispose);
+      final notifier = c.read(filledSheetsProvider.notifier);
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      expect(notifier.state, isEmpty);
+    },
+  );
 
   test('finishing hands the picture over and frees the canvas', () async {
     final c = ProviderContainer();

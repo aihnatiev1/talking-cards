@@ -198,8 +198,7 @@ class PurchaseService {
       final response = await () async {
         if (!await _iap.isAvailable()) return null;
         return _iap.queryProductDetails(_productIds);
-      }()
-          .timeout(storeBudget);
+      }().timeout(storeBudget);
       if (response == null) {
         lastLoadFailure = 'store_unavailable';
         return false;
@@ -375,8 +374,11 @@ class PurchaseService {
       // Products never loaded (store unreachable at launch) — the paywall
       // still renders its fallback prices, so this is invisible without an
       // event of its own.
-      AnalyticsService.instance
-          .logPurchaseError(productId, 'product_unavailable', checkoutSource);
+      AnalyticsService.instance.logPurchaseError(
+        productId,
+        'product_unavailable',
+        checkoutSource,
+      );
       return false;
     }
     return _buy(product);
@@ -390,10 +392,10 @@ class PurchaseService {
   static String buyThrewReason(Object e) => 'buy_threw: ${_errorName(e)}';
 
   static String _errorName(Object e) => switch (e) {
-        PlatformException(:final code, :final message) =>
-          '${message ?? 'PlatformException'}.$code',
-        _ => '${e.runtimeType}: $e',
-      };
+    PlatformException(:final code, :final message) =>
+      '${message ?? 'PlatformException'}.$code',
+    _ => '${e.runtimeType}: $e',
+  };
 
   /// GA4 keeps 100 characters of a parameter value.
   static String _short(String text) =>
@@ -417,14 +419,24 @@ class PurchaseService {
     } catch (e) {
       final text = _short(buyThrewReason(e));
       _resolvePurchase(
+        product.id,
+        () => AnalyticsService.instance.logPurchaseError(
           product.id,
-          () => AnalyticsService.instance
-              .logPurchaseError(product.id, text, checkoutSource));
+          text,
+          checkoutSource,
+        ),
+      );
       rethrow;
     }
     if (!started) {
-      _resolvePurchase(product.id, () => AnalyticsService.instance
-          .logPurchaseError(product.id, 'buy_refused', checkoutSource));
+      _resolvePurchase(
+        product.id,
+        () => AnalyticsService.instance.logPurchaseError(
+          product.id,
+          'buy_refused',
+          checkoutSource,
+        ),
+      );
     }
     return started;
   }
@@ -467,8 +479,11 @@ class PurchaseService {
       _pendingPurchaseId = null;
       // Give the button back with the event: the checkout is not coming.
       purchaseInFlight.value = false;
-      AnalyticsService.instance
-          .logPurchaseError(productId, 'no_outcome_in_3min', checkoutSource);
+      AnalyticsService.instance.logPurchaseError(
+        productId,
+        'no_outcome_in_3min',
+        checkoutSource,
+      );
     });
     return true;
   }
@@ -498,6 +513,7 @@ class PurchaseService {
           completer.complete();
         }
       }
+
       isPro.addListener(listener);
       await completer.future.timeout(
         const Duration(seconds: 10),
@@ -530,8 +546,11 @@ class PurchaseService {
     final id = _pendingPurchaseId;
     if (id == null) return;
     final text = 'stream_error: ${error.runtimeType}';
-    _resolvePurchase(id,
-        () => AnalyticsService.instance.logPurchaseError(id, text, checkoutSource));
+    _resolvePurchase(
+      id,
+      () =>
+          AnalyticsService.instance.logPurchaseError(id, text, checkoutSource),
+    );
   }
 
   @visibleForTesting
@@ -564,8 +583,11 @@ class PurchaseService {
         return;
       } catch (e) {
         if (attempt == 2) {
-          AnalyticsService.instance.logPurchaseError(purchase.productID,
-              _short('complete_failed: ${_errorName(e)}'), checkoutSource);
+          AnalyticsService.instance.logPurchaseError(
+            purchase.productID,
+            _short('complete_failed: ${_errorName(e)}'),
+            checkoutSource,
+          );
           return;
         }
         await Future<void>.delayed(completeRetryDelay);
@@ -623,18 +645,24 @@ class PurchaseService {
         final trial = trialStateFor(id);
         if (trial == 'offered') unawaited(_recordTrialStart());
         _resolvePurchase(
-            id, () => analytics.logPurchaseSuccess(id, trial, checkoutSource));
+          id,
+          () => analytics.logPurchaseSuccess(id, trial, checkoutSource),
+        );
       case PurchaseStatus.canceled:
         _resolvePurchase(
+          id,
+          () => analytics.logPurchaseCancel(
             id,
-            () => analytics.logPurchaseCancel(
-                id, trialStateFor(id), checkoutSource));
+            trialStateFor(id),
+            checkoutSource,
+          ),
+        );
       case PurchaseStatus.error:
         final err = purchase.error;
         _resolvePurchase(
-            id,
-            () => analytics.logPurchaseError(
-                id, _reason(err), checkoutSource));
+          id,
+          () => analytics.logPurchaseError(id, _reason(err), checkoutSource),
+        );
     }
   }
 
@@ -659,7 +687,9 @@ class PurchaseService {
       await _persist();
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt(
-          _validatedAtKey, DateTime.now().millisecondsSinceEpoch);
+        _validatedAtKey,
+        DateTime.now().millisecondsSinceEpoch,
+      );
       // No reason to nag a paying user with the day-3 trial reminder. Best
       // effort: a notification plugin hiccup must never surface from the
       // path that just delivered what the family paid for.

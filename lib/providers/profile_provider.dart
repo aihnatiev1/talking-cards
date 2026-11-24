@@ -42,10 +42,12 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
   final Ref _ref;
 
   ProfileNotifier(this._ref, List<ProfileModel> initialProfiles)
-      : super(ProfileState(
+    : super(
+        ProfileState(
           profiles: initialProfiles,
           activeId: ProfileService.activeId,
-        ));
+        ),
+      );
 
   /// Switch active profile and reload all data providers.
   Future<void> switchProfile(String id) async {
@@ -61,16 +63,23 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
   }
 
   /// Add a new profile (max 3).
-  Future<void> addProfile(String name, String avatarEmoji,
-      {String language = 'uk', int level = 2}) async {
-    final updated =
-        await ProfileService.addProfile(name, avatarEmoji, language: language, level: level);
+  Future<void> addProfile(
+    String name,
+    String avatarEmoji, {
+    String language = 'uk',
+    int level = 2,
+  }) async {
+    final updated = await ProfileService.addProfile(
+      name,
+      avatarEmoji,
+      language: language,
+      level: level,
+    );
     state = state.copyWith(profiles: updated);
   }
 
   /// Rename / change avatar of a profile.
-  Future<void> updateProfile(
-      String id, String name, String avatarEmoji) async {
+  Future<void> updateProfile(String id, String name, String avatarEmoji) async {
     final updated = await ProfileService.updateProfile(id, name, avatarEmoji);
     state = state.copyWith(profiles: updated);
   }
@@ -124,8 +133,9 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
 
 /// Initialized in main() via ProviderScope override after ProfileService.init().
 /// Use [profileProvider] everywhere in the widget tree.
-final profileProvider =
-    StateNotifierProvider<ProfileNotifier, ProfileState>((ref) {
+final profileProvider = StateNotifierProvider<ProfileNotifier, ProfileState>((
+  ref,
+) {
   // Fallback: if not overridden, use whatever ProfileService loaded at init.
   return ProfileNotifier(ref, [
     ProfileModel(
@@ -133,6 +143,6 @@ final profileProvider =
       name: 'Малюк',
       avatarEmoji: '👶',
       createdAt: DateTime.now(),
-    )
+    ),
   ]);
 });

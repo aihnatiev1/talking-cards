@@ -20,10 +20,11 @@ void main() {
   test('no dispose() reaches for ref', () {
     final offenders = <String>[];
 
-    for (final file in Directory('lib')
-        .listSync(recursive: true)
-        .whereType<File>()
-        .where((f) => f.path.endsWith('.dart'))) {
+    for (final file
+        in Directory('lib')
+            .listSync(recursive: true)
+            .whereType<File>()
+            .where((f) => f.path.endsWith('.dart'))) {
       final lines = file.readAsLinesSync();
       var depth = 0;
       var inside = false;
@@ -47,8 +48,12 @@ void main() {
       }
     }
 
-    expect(offenders, isEmpty,
-        reason: 'dispose() must not touch ref — resolve the provider once '
-            'in a `late final` field instead:\n${offenders.join('\n')}');
+    expect(
+      offenders,
+      isEmpty,
+      reason:
+          'dispose() must not touch ref — resolve the provider once '
+          'in a `late final` field instead:\n${offenders.join('\n')}',
+    );
   });
 }

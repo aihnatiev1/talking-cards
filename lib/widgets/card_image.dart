@@ -91,9 +91,9 @@ class CardImage extends StatelessWidget {
     this.alignment = Alignment.center,
     this.background,
     this.padding = const EdgeInsets.all(12),
-  })  : name = card.image,
-        fallbackEmoji = card.emoji,
-        fallback = null;
+  }) : name = card.image,
+       fallbackEmoji = card.emoji,
+       fallback = null;
 
   /// Warm the image cache for [card] at the size it will be drawn.
   ///
@@ -162,27 +162,27 @@ class CardImage extends StatelessWidget {
 
     return switch (art) {
       ArtReady(:final provider) => Padding(
-          padding: padding,
-          child: Image(
-            image: provider,
-            fit: fit,
-            alignment: alignment,
-            width: double.infinity,
-            height: double.infinity,
+        padding: padding,
+        child: Image(
+          image: provider,
+          fit: fit,
+          alignment: alignment,
+          width: double.infinity,
+          height: double.infinity,
           // Last line of defence. Play can evict a pack between the
           // resolve above and the decode, and a bundled file can still be
           // corrupt. Neither is worth a crash report.
-            errorBuilder: (context, error, stack) {
-              _report(name, 'decode_failed');
-              return _Placeholder(
-                emoji: fallbackEmoji,
-                fallback: fallback,
-                background: background,
-                padding: padding,
-              );
-            },
-          ),
+          errorBuilder: (context, error, stack) {
+            _report(name, 'decode_failed');
+            return _Placeholder(
+              emoji: fallbackEmoji,
+              fallback: fallback,
+              background: background,
+              padding: padding,
+            );
+          },
         ),
+      ),
       // Real content, still on its way. The pulse says "coming", where a
       // spinner would say "broken" to a two-year-old.
       ArtPending() => _pending(),
@@ -247,8 +247,7 @@ class _Placeholder extends StatelessWidget {
         padding: padding,
         child: FittedBox(
           fit: BoxFit.contain,
-          child: fallback ??
-              Text(emoji, style: const TextStyle(fontSize: 120)),
+          child: fallback ?? Text(emoji, style: const TextStyle(fontSize: 120)),
         ),
       ),
     );

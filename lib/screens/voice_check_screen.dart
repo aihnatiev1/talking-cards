@@ -90,9 +90,7 @@ class _VoiceCheckScreenState extends State<VoiceCheckScreen> {
   Widget build(BuildContext context) {
     final s = AppS(widget.isEn);
     return Scaffold(
-      appBar: AppBar(
-        title: Text(s('Перевірка мікрофона', 'Microphone check')),
-      ),
+      appBar: AppBar(title: Text(s('Перевірка мікрофона', 'Microphone check'))),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
         children: [
@@ -177,10 +175,7 @@ class _VoiceCheckScreenState extends State<VoiceCheckScreen> {
                           s('Найгучніше', 'Loudest'),
                           '${turn.peakDb.toStringAsFixed(1)} dB',
                         ),
-                        _row(
-                          s('Тривалість', 'Length'),
-                          '${turn.ms} ms',
-                        ),
+                        _row(s('Тривалість', 'Length'), '${turn.ms} ms'),
                       ],
                     ),
             ),

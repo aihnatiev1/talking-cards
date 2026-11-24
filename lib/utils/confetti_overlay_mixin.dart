@@ -17,7 +17,8 @@ import 'overlay_entry_x.dart';
 ///   void _onCorrect() => showConfetti();
 /// }
 /// ```
-mixin ConfettiOverlayMixin<T extends ConsumerStatefulWidget> on ConsumerState<T> {
+mixin ConfettiOverlayMixin<T extends ConsumerStatefulWidget>
+    on ConsumerState<T> {
   OverlayEntry? _confettiEntry;
 
   /// Shows a confetti burst at [origin] (default: center-upper area of the

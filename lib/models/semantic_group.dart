@@ -29,30 +29,82 @@ enum SemanticGroup {
 
   /// Images that belong to this group.
   Set<String> get images => switch (this) {
-        SemanticGroup.animals => _animals,
-        SemanticGroup.food => _food,
-        SemanticGroup.transport => _transport,
-        SemanticGroup.toys => _toys,
-        SemanticGroup.people => _people,
-        SemanticGroup.body => _body,
-        SemanticGroup.shapes => _shapes,
-        SemanticGroup.colors => _colors,
-      };
+    SemanticGroup.animals => _animals,
+    SemanticGroup.food => _food,
+    SemanticGroup.transport => _transport,
+    SemanticGroup.toys => _toys,
+    SemanticGroup.people => _people,
+    SemanticGroup.body => _body,
+    SemanticGroup.shapes => _shapes,
+    SemanticGroup.colors => _colors,
+  };
 }
 
 const _animals = {
-  'cat', 'dog', 'cow', 'horse', 'pig', 'chicken', 'rooster', 'duck', 'frog',
-  'fish', 'bird', 'butterfly', 'bee', 'snail', 'bunny', 'bear', 'lisichka',
-  'wolf', 'deer', 'hedgehog', 'owl', 'pingvin', 'slon', 'lev', 'mavpochka',
-  'krokodil', 'cherepaha', 'delfin', 'bilochka',
+  'cat',
+  'dog',
+  'cow',
+  'horse',
+  'pig',
+  'chicken',
+  'rooster',
+  'duck',
+  'frog',
+  'fish',
+  'bird',
+  'butterfly',
+  'bee',
+  'snail',
+  'bunny',
+  'bear',
+  'lisichka',
+  'wolf',
+  'deer',
+  'hedgehog',
+  'owl',
+  'pingvin',
+  'slon',
+  'lev',
+  'mavpochka',
+  'krokodil',
+  'cherepaha',
+  'delfin',
+  'bilochka',
 };
 
 const _food = {
-  'apple', 'banana', 'grapes', 'apelsin', 'polunicia', 'kavun', 'grusha',
-  'vishnia', 'persik', 'limon', 'hlib', 'moloko', 'sir', 'kasha', 'porridge',
-  'sup', 'pirijok', 'pechivo', 'tort', 'morozivo', 'varenik', 'morkva',
-  'ogirok', 'pomidor', 'kartoplia', 'kukurudza', 'garbuz', 'med', 'yaice',
-  'cukerka', 'en_pancake', 'en_juice',
+  'apple',
+  'banana',
+  'grapes',
+  'apelsin',
+  'polunicia',
+  'kavun',
+  'grusha',
+  'vishnia',
+  'persik',
+  'limon',
+  'hlib',
+  'moloko',
+  'sir',
+  'kasha',
+  'porridge',
+  'sup',
+  'pirijok',
+  'pechivo',
+  'tort',
+  'morozivo',
+  'varenik',
+  'morkva',
+  'ogirok',
+  'pomidor',
+  'kartoplia',
+  'kukurudza',
+  'garbuz',
+  'med',
+  'yaice',
+  'cukerka',
+  'en_pancake',
+  'en_juice',
 };
 
 /// Things that drive, fly and sail. `toy_car` is deliberately absent — it is
@@ -61,11 +113,33 @@ const _food = {
 /// `kanatna_doroga` (a tunnel mouth and a cable line read as scenery), and
 /// `konik` — a horse in harness is an animal to a child.
 const _transport = {
-  'avtomobil', 'avtobus', 'poizd', 'litak', 'korabel', 'velosiped', 'motocikl',
-  'gelicopter', 'tramvai', 'taxi', 'pojejna', 'shvidka', 'policia',
-  'vantajivka', 'tractor', 'samokat', 'raketa', 'chovnik', 'yahta', 'sanki',
-  'skateboard', 'ekskavator', 'pidvodnii_choven', 'aeroplan', 'electrichka',
-  'kareta', 'povitriana_kulia',
+  'avtomobil',
+  'avtobus',
+  'poizd',
+  'litak',
+  'korabel',
+  'velosiped',
+  'motocikl',
+  'gelicopter',
+  'tramvai',
+  'taxi',
+  'pojejna',
+  'shvidka',
+  'policia',
+  'vantajivka',
+  'tractor',
+  'samokat',
+  'raketa',
+  'chovnik',
+  'yahta',
+  'sanki',
+  'skateboard',
+  'ekskavator',
+  'pidvodnii_choven',
+  'aeroplan',
+  'electrichka',
+  'kareta',
+  'povitriana_kulia',
 };
 
 const _toys = {'ball', 'doll', 'toy_car', 'blocks'};
@@ -75,18 +149,55 @@ const _people = {'mommy', 'dad', 'grandma', 'grandpa', 'baby', 'family'};
 /// Parts a child can point to on themselves. Organs (`lungs`, `hart_t`) and
 /// abstractions (`skin`, `body`, `smile`) stay out: they do not sort.
 const _body = {
-  'head', 'eyes', 'ears', 'nose', 'mouse', 'teeth', 'tonge', 'hair', 'neck',
-  'sholdes', 'hands', 'fingers', 'stomack', 'back', 'legs', 'knees', 'foots',
-  'elbow', 'palms', 'eyebrows', 'cheeks', 'forehead', 'chin',
+  'head',
+  'eyes',
+  'ears',
+  'nose',
+  'mouse',
+  'teeth',
+  'tonge',
+  'hair',
+  'neck',
+  'sholdes',
+  'hands',
+  'fingers',
+  'stomack',
+  'back',
+  'legs',
+  'knees',
+  'foots',
+  'elbow',
+  'palms',
+  'eyebrows',
+  'cheeks',
+  'forehead',
+  'chin',
 };
 
 const _shapes = {
-  'circle', 'square', 'triangle', 'star', 'oval', 'diamond', 'hart_k',
+  'circle',
+  'square',
+  'triangle',
+  'star',
+  'oval',
+  'diamond',
+  'hart_k',
 };
 
 const _colors = {
-  'red', 'blue', 'yellow', 'green', 'white', 'black', 'orange', 'pink',
-  'purple', 'brown', 'gray', 'sky-blue', 'gold',
+  'red',
+  'blue',
+  'yellow',
+  'green',
+  'white',
+  'black',
+  'orange',
+  'pink',
+  'purple',
+  'brown',
+  'gray',
+  'sky-blue',
+  'gold',
 };
 
 /// Pairs that must never meet in one round, even though they are different
@@ -140,7 +251,8 @@ final class SemanticGroups {
 
   /// Whether two groups may face each other in one round.
   static bool contrast(SemanticGroup a, SemanticGroup b) =>
-      a != b && !_confusable.any((pair) => pair.contains(a) && pair.contains(b));
+      a != b &&
+      !_confusable.any((pair) => pair.contains(a) && pair.contains(b));
 
   /// [cards] bucketed by group, one card per picture (the same illustration
   /// appears in several packs — «яблуко» is in both «Їжа» and «Вдома» — and
@@ -171,7 +283,8 @@ final class SemanticGroups {
     for (final majority in majorityGroups) {
       final oddGroups = [
         for (final entry in byGroup.entries)
-          if (entry.value.isNotEmpty && contrast(majority, entry.key)) entry.key,
+          if (entry.value.isNotEmpty && contrast(majority, entry.key))
+            entry.key,
       ]..shuffle(rng);
       if (oddGroups.isEmpty) continue;
 

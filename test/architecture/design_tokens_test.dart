@@ -36,10 +36,8 @@ void main() {
   /// to a `DT` palette (`DT.confetti`, `DT.bloom…`) so the golden tests in
   /// F7 have one source. Everything else is plain migration debt.
   const colorLiteralDebt = {
-    'lib/screens/quest_map_screen.dart',
     'lib/services/whatsnew_service.dart',
     'lib/widgets/bubble_pop.dart',
-    'lib/widgets/playful_navigation_bar.dart',
     'lib/widgets/quest_journey_map.dart',
   };
 
@@ -52,38 +50,36 @@ void main() {
   List<String> offenders(
     bool Function(String source) hasProblem, {
     required Set<String> debt,
-  }) =>
-      [
-        for (final f in dart)
-          if (f.path != tokens &&
-              !debt.contains(f.path) &&
-              hasProblem(f.readAsStringSync()))
-            f.path,
-      ];
+  }) => [
+    for (final f in dart)
+      if (f.path != tokens &&
+          !debt.contains(f.path) &&
+          hasProblem(f.readAsStringSync()))
+        f.path,
+  ];
 
   /// Entries that no longer violate — the list must shrink to match, so
   /// that a cleaned file cannot quietly regress behind a stale allowance.
   List<String> stale(
     bool Function(String source) hasProblem, {
     required Set<String> debt,
-  }) =>
-      [
-        for (final path in debt)
-          if (!File(path).existsSync() ||
-              !hasProblem(File(path).readAsStringSync()))
-            path,
-      ];
+  }) => [
+    for (final path in debt)
+      if (!File(path).existsSync() ||
+          !hasProblem(File(path).readAsStringSync()))
+        path,
+  ];
 
   bool rawColor(String s) => s.contains('Color(0x');
   bool rawKidFont(String s) => s.contains("'Nunito'");
 
   group('Color(0x literals', () {
-    test('appear only in design_tokens.dart and the shrink-only debt list',
-        () {
+    test('appear only in design_tokens.dart and the shrink-only debt list', () {
       expect(
         offenders(rawColor, debt: colorLiteralDebt),
         isEmpty,
-        reason: 'Read a DT token (DT.brand, DT.coral, PackPalette.of(...)) '
+        reason:
+            'Read a DT token (DT.brand, DT.coral, PackPalette.of(...)) '
             'or add a named one to lib/utils/design_tokens.dart. Do not add '
             'this file to colorLiteralDebt — that list only shrinks.',
       );
@@ -93,19 +89,20 @@ void main() {
       expect(
         stale(rawColor, debt: colorLiteralDebt),
         isEmpty,
-        reason: 'These files are clean now — remove them from '
+        reason:
+            'These files are clean now — remove them from '
             'colorLiteralDebt so they stay clean.',
       );
     });
   });
 
   group("'Nunito' literal", () {
-    test('appears only in design_tokens.dart and the shrink-only debt list',
-        () {
+    test('appears only in design_tokens.dart and the shrink-only debt list', () {
       expect(
         offenders(rawKidFont, debt: fontLiteralDebt),
         isEmpty,
-        reason: 'Use DT.kidFont, or one of DT.display / h1 / h2 / tileTitle. '
+        reason:
+            'Use DT.kidFont, or one of DT.display / h1 / h2 / tileTitle. '
             'Do not add this file to fontLiteralDebt — that list only shrinks.',
       );
     });
@@ -114,7 +111,8 @@ void main() {
       expect(
         stale(rawKidFont, debt: fontLiteralDebt),
         isEmpty,
-        reason: 'These files are clean now — remove them from '
+        reason:
+            'These files are clean now — remove them from '
             'fontLiteralDebt so they stay clean.',
       );
     });
@@ -129,11 +127,16 @@ void main() {
       for (final f in Directory('lib').listSync(recursive: true))
         if (f is File &&
             f.path.endsWith('.dart') &&
-            RegExp(r'\b(kAccent|kSoundRed|kTeal|kStreakOrange)\b')
-                .hasMatch(f.readAsStringSync()))
+            RegExp(
+              r'\b(kAccent|kSoundRed|kTeal|kStreakOrange)\b',
+            ).hasMatch(f.readAsStringSync()))
           f.path,
     ];
-    expect(offenders, isEmpty, reason: 'Use DT.brand / DT.soundRed / DT.teal / DT.streakOrange.');
+    expect(
+      offenders,
+      isEmpty,
+      reason: 'Use DT.brand / DT.soundRed / DT.teal / DT.streakOrange.',
+    );
   });
 
   test('main.dart takes its theme from app_theme.dart', () {
@@ -141,7 +144,10 @@ void main() {
     // inline ThemeData in main.dart. One builder, one background.
     final source = File('lib/main.dart').readAsStringSync();
     expect(source, contains('buildAppTheme()'));
-    expect(source, isNot(contains('ThemeData(')),
-        reason: 'Edit lib/utils/app_theme.dart instead.');
+    expect(
+      source,
+      isNot(contains('ThemeData(')),
+      reason: 'Edit lib/utils/app_theme.dart instead.',
+    );
   });
 }

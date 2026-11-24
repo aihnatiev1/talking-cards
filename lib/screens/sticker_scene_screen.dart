@@ -14,6 +14,7 @@ import '../services/audio_service.dart';
 import '../services/feedback_service.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
+import '../widgets/ambient_loop.dart';
 import '../widgets/card_image.dart';
 import '../widgets/kid_screen.dart';
 import '../widgets/kid_tap.dart';
@@ -58,7 +59,9 @@ class _StickerSceneScreenState extends ConsumerState<StickerSceneScreen> {
     FeedbackService.instance.event(FeedbackEvent.tap, haptic: false);
     AudioService.instance.playWordOnly(card.audioKey, card.sound);
     ref.read(dailyQuestProvider.notifier).recordDrawing();
-    ref.read(stickerSceneProvider.notifier).place(
+    ref
+        .read(stickerSceneProvider.notifier)
+        .place(
           PlacedSticker(
             cardId: card.id,
             // Fractions, not pixels: the scene has to come back right on
@@ -109,8 +112,10 @@ class _StickerSceneScreenState extends ConsumerState<StickerSceneScreen> {
       body: pool.isEmpty
           ? Center(
               child: Text(
-                s('Відкрий хоча б один пак з картками',
-                    'Open at least one pack with images first'),
+                s(
+                  'Відкрий хоча б один пак з картками',
+                  'Open at least one pack with images first',
+                ),
               ),
             )
           : Column(
@@ -125,6 +130,15 @@ class _StickerSceneScreenState extends ConsumerState<StickerSceneScreen> {
                         child: Stack(
                           children: [
                             const Positioned.fill(child: MeadowScene()),
+                            // An empty meadow is an invitation, not a
+                            // blank: the sticker in hand hovers where the
+                            // next tap will put it. Gone with the first one.
+                            if (placed.isEmpty && _held != null)
+                              Positioned.fill(
+                                child: IgnorePointer(
+                                  child: _PlaceInvite(card: _held!),
+                                ),
+                              ),
                             for (var i = 0; i < placed.length; i++)
                               if (byId[placed[i].cardId] case final card?)
                                 _PlacedStickerView(
@@ -139,11 +153,7 @@ class _StickerSceneScreenState extends ConsumerState<StickerSceneScreen> {
                     },
                   ),
                 ),
-                _StickerTray(
-                  cards: pool,
-                  heldId: _held?.id,
-                  onPick: _pick,
-                ),
+                _StickerTray(cards: pool, heldId: _held?.id, onPick: _pick),
                 const SizedBox(height: 8),
               ],
             ),
@@ -228,7 +238,7 @@ class _StickerTray extends StatelessWidget {
     // The tray grows with the screen: on a tablet a row of 104 dp thumbs
     // is a strip of postage stamps under a meadow the size of a table.
     final wide = MediaQuery.sizeOf(context).shortestSide >= kLargeScreen;
-    final thumb = wide ? 150.0 : 104.0;
+    final thumb = wide ? 150.0 : 120.0;
     return SizedBox(
       height: thumb + 16,
       child: ListView.separated(
@@ -249,9 +259,9 @@ class _StickerTray extends StatelessWidget {
               width: thumb,
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: held ? DT.surfaceWhite : DT.surfaceWhite.withValues(
-                  alpha: 0.7,
-                ),
+                color: held
+                    ? DT.surfaceWhite
+                    : DT.surfaceWhite.withValues(alpha: 0.7),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: held ? DT.brand : Colors.white,
@@ -262,6 +272,35 @@ class _StickerTray extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+/// A ghost of the held sticker, breathing in the middle of an empty meadow.
+/// No words: the picture is the instruction. It breathes through
+/// [AmbientLoop], so reduced motion gets it standing still.
+class _PlaceInvite extends StatelessWidget {
+  const _PlaceInvite({required this.card});
+  final CardModel card;
+
+  @override
+  Widget build(BuildContext context) {
+    final side = (MediaQuery.sizeOf(context).shortestSide * 0.55).clamp(
+      160.0,
+      340.0,
+    );
+    return Center(
+      child: AmbientLoop(
+        period: DT.motion.drawingBreath,
+        settleAfter: DT.motion.lessonHint * 3,
+        builder: (_, t, child) =>
+            Transform.scale(scale: .94 + .06 * t, child: child),
+        child: SizedBox(
+          width: side,
+          height: side,
+          child: Opacity(opacity: .55, child: CardImage.forCard(card)),
+        ),
       ),
     );
   }

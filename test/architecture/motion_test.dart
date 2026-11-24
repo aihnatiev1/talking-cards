@@ -24,12 +24,7 @@ void main() {
 
   /// Loops not yet migrated. Shrink-only: entries may be removed, never
   /// added — a new idle animation goes through AmbientLoop.
-  const pending = {
-    // Owned by another engineer during Sprint 1 (F2a); mascot bounce and
-    // hero breath.
-    // `repeat(count: 3)` — finite glow; becomes a TweenSequence in F3.
-    'lib/screens/card_reveal_screen.dart',
-  };
+  const pending = <String>{};
 
   bool loops(String source) => source.contains('.repeat(');
 
@@ -44,7 +39,8 @@ void main() {
     expect(
       offenders,
       isEmpty,
-      reason: 'Wrap the loop in AmbientLoop (lib/widgets/ambient_loop.dart) '
+      reason:
+          'Wrap the loop in AmbientLoop (lib/widgets/ambient_loop.dart) '
           'instead of calling repeat() — it gates on MotionPolicy, honours '
           'TickerMode, can settle after an intro accent and disposes itself.',
     );
@@ -59,7 +55,8 @@ void main() {
     expect(
       stale,
       isEmpty,
-      reason: 'These files no longer loop on their own — remove them from '
+      reason:
+          'These files no longer loop on their own — remove them from '
           '`pending` so nobody can hide a new repeat() behind the entry.',
     );
   });

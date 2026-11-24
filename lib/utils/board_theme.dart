@@ -115,7 +115,7 @@ class BoardTheme {
       seal: seal,
       ink: ink,
       paper: paper,
-      wash: Color.lerp(seal, paper, 0.80)!,
+      wash: Color.lerp(seal, paper, 0.62)!,
       mat: Color.lerp(seal, background, dark ? matBlendDark : matBlend)!,
       stitch: (dark ? paper : ink).withValues(alpha: 0.25),
       bg: background,

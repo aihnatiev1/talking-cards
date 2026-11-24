@@ -38,23 +38,25 @@ void main() {
   List<String> offenders(
     bool Function(String source) hasProblem, {
     Set<String> alsoAllowed = const {},
-  }) =>
-      [
-        for (final f in dart)
-          if (!resolvers.contains(f.path) &&
-              !alsoAllowed.contains(f.path) &&
-              hasProblem(f.readAsStringSync()))
-            f.path,
-      ];
+  }) => [
+    for (final f in dart)
+      if (!resolvers.contains(f.path) &&
+          !alsoAllowed.contains(f.path) &&
+          hasProblem(f.readAsStringSync()))
+        f.path,
+  ];
 
   test('only the declared owners resolve card content', () {
     expect(
-      offenders((s) =>
-          s.contains('cardArt(') ||
-          s.contains('cardBytes(') ||
-          s.contains('cardVoice(')),
+      offenders(
+        (s) =>
+            s.contains('cardArt(') ||
+            s.contains('cardBytes(') ||
+            s.contains('cardVoice('),
+      ),
       isEmpty,
-      reason: 'Render card art with CardImage instead. If a new file really '
+      reason:
+          'Render card art with CardImage instead. If a new file really '
           'needs raw resolution, add it to `resolvers` above with a reason.',
     );
   });
@@ -63,10 +65,12 @@ void main() {
     // cardImage/cardImageBytes/audioSource handed back paths and providers
     // for content that may not exist. Nothing may reintroduce them.
     expect(
-      offenders((s) =>
-          s.contains('.cardImage(') ||
-          s.contains('.cardImageBytes(') ||
-          s.contains('.audioSource(')),
+      offenders(
+        (s) =>
+            s.contains('.cardImage(') ||
+            s.contains('.cardImageBytes(') ||
+            s.contains('.audioSource('),
+      ),
       isEmpty,
       reason: 'Use cardArt / cardBytes / cardVoice.',
     );
@@ -76,14 +80,16 @@ void main() {
     // A literal path skips the pad_content indirection entirely, so the
     // same picture works in debug and is missing in the Play build.
     expect(
-      offenders((s) =>
-          s.contains("'assets/images/webp/") ||
-          s.contains("'assets/audio_mp3/") ||
-          s.contains("'assets/pad_content/"),
-          // The splash image is painted before AssetPackService.init()
-          // has run, so it cannot go through the service and is bundled
-          // unconditionally — that is what makes it a safe literal.
-          alsoAllowed: const {'lib/screens/splash_screen.dart'}),
+      offenders(
+        (s) =>
+            s.contains("'assets/images/webp/") ||
+            s.contains("'assets/audio_mp3/") ||
+            s.contains("'assets/pad_content/"),
+        // The splash image is painted before AssetPackService.init()
+        // has run, so it cannot go through the service and is bundled
+        // unconditionally — that is what makes it a safe literal.
+        alsoAllowed: const {'lib/screens/splash_screen.dart'},
+      ),
       isEmpty,
       reason: 'Ask AssetPackService — it knows which root holds the file.',
     );

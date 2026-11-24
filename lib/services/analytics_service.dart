@@ -24,10 +24,14 @@ class AnalyticsService {
   Future<void> _safeLog(String name, [Map<String, Object>? params]) async {
     // Firebase rejects bool parameters. Use the same "true"/"false"
     // strings already emitted by the older events in this service.
-    final normalized = params == null ? null : <String, Object>{
-      for (final entry in params.entries)
-        entry.key: entry.value is bool ? entry.value.toString() : entry.value,
-    };
+    final normalized = params == null
+        ? null
+        : <String, Object>{
+            for (final entry in params.entries)
+              entry.key: entry.value is bool
+                  ? entry.value.toString()
+                  : entry.value,
+          };
     debugSink?.call(name, normalized ?? const {});
     final a = _analytics;
     if (a == null) return;
@@ -125,7 +129,9 @@ class AnalyticsService {
   // --- Favorites ---
 
   Future<void> logFavoriteToggle(String cardId, bool added) => _safeLog(
-      'favorite_toggle', {'card_id': cardId, 'added': added.toString()});
+    'favorite_toggle',
+    {'card_id': cardId, 'added': added.toString()},
+  );
 
   // --- Paywall ---
 
@@ -135,10 +141,15 @@ class AnalyticsService {
   // parent who backed out of a price from one who backed out of a promise
   // the native sheet refused, which is the whole question behind 1.3.8's
   // 21 cancels against 4 sales.
-  Future<void> logPaywallView(String source,
-          {String variant = 'generic', required String trial}) =>
-      _safeLog('paywall_view',
-          {'source': source, 'variant': variant, 'trial': trial});
+  Future<void> logPaywallView(
+    String source, {
+    String variant = 'generic',
+    required String trial,
+  }) => _safeLog('paywall_view', {
+    'source': source,
+    'variant': variant,
+    'trial': trial,
+  });
 
   Future<void> logPaywallDismiss(String source) =>
       _safeLog('paywall_dismiss', {'source': source});
@@ -153,25 +164,45 @@ class AnalyticsService {
   // preview and 157 through a tile, and nothing at all about which of them
   // ever paid. [PurchaseService.checkoutSource] carries it to the outcome
   // events, which arrive off the store stream long after the screen is gone.
-  Future<void> logPurchaseStart(String productId, String trial,
-          [String source = 'unknown']) =>
-      _safeLog('purchase_start',
-          {'product_id': productId, 'trial': trial, 'source': source});
+  Future<void> logPurchaseStart(
+    String productId,
+    String trial, [
+    String source = 'unknown',
+  ]) => _safeLog('purchase_start', {
+    'product_id': productId,
+    'trial': trial,
+    'source': source,
+  });
 
-  Future<void> logPurchaseSuccess(String productId, String trial,
-          [String source = 'unknown']) =>
-      _safeLog('purchase_success',
-          {'product_id': productId, 'trial': trial, 'source': source});
+  Future<void> logPurchaseSuccess(
+    String productId,
+    String trial, [
+    String source = 'unknown',
+  ]) => _safeLog('purchase_success', {
+    'product_id': productId,
+    'trial': trial,
+    'source': source,
+  });
 
-  Future<void> logPurchaseCancel(String productId, String trial,
-          [String source = 'unknown']) =>
-      _safeLog('purchase_cancel',
-          {'product_id': productId, 'trial': trial, 'source': source});
+  Future<void> logPurchaseCancel(
+    String productId,
+    String trial, [
+    String source = 'unknown',
+  ]) => _safeLog('purchase_cancel', {
+    'product_id': productId,
+    'trial': trial,
+    'source': source,
+  });
 
-  Future<void> logPurchaseError(String productId, String reason,
-          [String source = 'unknown']) =>
-      _safeLog('purchase_error',
-          {'product_id': productId, 'reason': reason, 'source': source});
+  Future<void> logPurchaseError(
+    String productId,
+    String reason, [
+    String source = 'unknown',
+  ]) => _safeLog('purchase_error', {
+    'product_id': productId,
+    'reason': reason,
+    'source': source,
+  });
 
   /// Ask to Buy / SCA: the sheet closed with neither a sale nor a cancel.
   /// Its own event, so a family waiting on a parent's approval no longer
@@ -186,9 +217,10 @@ class AnalyticsService {
   /// Without it
   /// the event says only that a paywall sold nothing, which is where the
   /// Android funnel has been stuck.
-  Future<void> logStoreUnavailable(String where, [String? reason]) =>
-      _safeLog('store_unavailable',
-          {'source': where, 'reason': reason ?? 'unknown'});
+  Future<void> logStoreUnavailable(String where, [String? reason]) => _safeLog(
+    'store_unavailable',
+    {'source': where, 'reason': reason ?? 'unknown'},
+  );
 
   /// A locally-Pro device lost the entitlement on revalidation. Silent
   /// until now, and a family locked out of what they paid for is the most
@@ -267,12 +299,11 @@ class AnalyticsService {
     required int stoneId,
     required bool wasDone,
     required bool wasActive,
-  }) =>
-      _safeLog('today_plan_stone_tap', {
-        'stone_id': stoneId,
-        'was_done': wasDone.toString(),
-        'was_active': wasActive.toString(),
-      });
+  }) => _safeLog('today_plan_stone_tap', {
+    'stone_id': stoneId,
+    'was_done': wasDone.toString(),
+    'was_active': wasActive.toString(),
+  });
 
   Future<void> logTodayPlanComplete() => _safeLog('today_plan_complete');
 
@@ -348,12 +379,13 @@ class AnalyticsService {
 
   /// `accepted` — the parent said yes in the pre-prompt; `granted` — what the
   /// OS dialog answered afterwards (false when they never got there).
-  Future<void> logNotifOptInResult(
-          {required bool accepted, required bool granted}) =>
-      _safeLog('notif_optin_result', {
-        'accepted': accepted.toString(),
-        'granted': granted.toString(),
-      });
+  Future<void> logNotifOptInResult({
+    required bool accepted,
+    required bool granted,
+  }) => _safeLog('notif_optin_result', {
+    'accepted': accepted.toString(),
+    'granted': granted.toString(),
+  });
 
   // --- User properties (for cohort slicing) ---
 
@@ -417,16 +449,15 @@ class AnalyticsService {
     int? timeToFirstPopMs,
     int? level,
     String? deviceClass,
-  }) =>
-      _safeLog('game_complete', {
-        'game_id': gameId,
-        'score': score,
-        if (hitRate != null)
-          'hit_rate': double.parse(hitRate.clamp(0.0, 1.0).toStringAsFixed(2)),
-        if (timeToFirstPopMs != null) 'time_to_first_pop_ms': timeToFirstPopMs,
-        if (level != null) 'level': level,
-        if (deviceClass != null) 'device_class': deviceClass,
-      });
+  }) => _safeLog('game_complete', {
+    'game_id': gameId,
+    'score': score,
+    if (hitRate != null)
+      'hit_rate': double.parse(hitRate.clamp(0.0, 1.0).toStringAsFixed(2)),
+    if (timeToFirstPopMs != null) 'time_to_first_pop_ms': timeToFirstPopMs,
+    if (level != null) 'level': level,
+    if (deviceClass != null) 'device_class': deviceClass,
+  });
 
   /// One turn of «Повтори за мною»: who decided it and how it went.
   ///
@@ -447,7 +478,6 @@ class AnalyticsService {
   });
 
   /// Generic event logger for ad-hoc events (e.g. speech_attempt).
-  Future<void> logEvent(String name,
-          {Map<String, Object>? parameters}) =>
+  Future<void> logEvent(String name, {Map<String, Object>? parameters}) =>
       _safeLog(name, parameters);
 }

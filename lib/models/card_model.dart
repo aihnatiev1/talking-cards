@@ -13,6 +13,7 @@ class CardModel {
   final String? audioKey;
   final String? soundEn;
   final String? transcription;
+
   /// When set, the card is rendered as a stylized letter (sound-practice
   /// packs) instead of a webp illustration — the letter itself IS the visual.
   final String? letter;

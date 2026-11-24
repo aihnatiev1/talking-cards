@@ -7,8 +7,8 @@ import '../services/profile_service.dart';
 /// These cards extend the free preview beyond PackModel.freePreviewCount.
 final bonusCardsProvider =
     StateNotifierProvider<BonusCardsNotifier, Map<String, int>>(
-  (ref) => BonusCardsNotifier(),
-);
+      (ref) => BonusCardsNotifier(),
+    );
 
 class BonusCardsNotifier extends StateNotifier<Map<String, int>> {
   BonusCardsNotifier() : super({}) {

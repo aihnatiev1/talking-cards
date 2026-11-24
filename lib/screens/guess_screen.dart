@@ -20,6 +20,7 @@ import '../providers/bloom_reactions_provider.dart';
 import '../widgets/bloom_mascot.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
+import '../utils/motion.dart';
 import '../widgets/ambient_loop.dart';
 import '../widgets/answer_feedback.dart';
 import '../widgets/entrance_stagger.dart';
@@ -31,6 +32,7 @@ import '../widgets/quiz_options_board.dart';
 
 class GuessScreen extends ConsumerStatefulWidget {
   final List<CardModel> cards;
+  final bool returnToAdventure;
 
   /// Card id → the set it belongs to (its pack). The distractors of a
   /// three- or four-picture question are drawn from the answer's own set,
@@ -42,6 +44,7 @@ class GuessScreen extends ConsumerStatefulWidget {
   const GuessScreen({
     super.key,
     required this.cards,
+    this.returnToAdventure = false,
     this.cardGroups = const {},
   });
 
@@ -55,6 +58,8 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
   bool _waitingNext = false;
   bool _resultsLogged = false;
   bool _celebrationShown = false;
+  Timer? _wordTimer;
+  Timer? _nextTimer;
 
   // A miss is a nudge on the tapped tile, never a colour; after the second
   // miss in one question the right tile starts to glow (G10).
@@ -91,6 +96,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
 
     AnalyticsService.instance.logQuizStart();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       // Quiz requires at least 4 image-bearing cards to build its MCQ
       // options. If the caller (e.g. SRS banner with <4 due) didn't pad
       // enough, close the screen instead of hanging on the loader.
@@ -114,13 +120,24 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
         'guess',
         isEn: ref.read(languageProvider) == 'en',
       );
-      Future.delayed(DT.motion.gameInstructionGap, () {
-        if (mounted) _playCurrentSound();
-      });
+      _scheduleSound(DT.motion.gameInstructionGap);
     });
   }
 
+  void _scheduleSound(Duration delay) {
+    _wordTimer?.cancel();
+    _wordTimer = Timer(delay, () {
+      if (mounted && !_waitingNext) _playCurrentSound();
+    });
+  }
+
+  void _replaySound() {
+    _wordTimer?.cancel();
+    _playCurrentSound();
+  }
+
   void _playCurrentSound() {
+    if (_waitingNext) return;
     final state = ref.read(_provider);
     if (state == null || state.finished) return;
     final card = state.correctCard;
@@ -158,6 +175,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
     }
 
     if (isCorrect) {
+      _wordTimer?.cancel();
       // The tile itself pops, frames in success and bursts (AnswerFrame).
       FeedbackService.instance.event(FeedbackEvent.correct);
       AudioService.instance.playPraise(
@@ -165,7 +183,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
       );
       setState(() => _showCorrect = true);
       _waitingNext = true;
-      Timer(DT.motion.quizAnswerHold, () {
+      _nextTimer = Timer(DT.motion.quizAnswerHold, () {
         if (!mounted) return;
         setState(() {
           _showCorrect = false;
@@ -174,9 +192,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
           _nudges.clear();
         });
         ref.read(_provider.notifier).next();
-        Future.delayed(DT.motion.quizQuestionGap, () {
-          if (mounted) _playCurrentSound();
-        });
+        _scheduleSound(DT.motion.quizQuestionGap);
       });
     } else {
       // Gentle redirection — a soft low pop (no buzzer, no haptic), one
@@ -198,13 +214,13 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
           _bloom.nudged(quizOptionDirection(target, state.options.length));
         }
       }
-      Timer(DT.motion.quizRetell, () {
-        if (mounted) _playCurrentSound();
-      });
+      _scheduleSound(DT.motion.quizRetell);
     }
   }
 
   void _restart() {
+    _wordTimer?.cancel();
+    _nextTimer?.cancel();
     ref.read(_provider.notifier).restart();
     setState(() {
       _showCorrect = false;
@@ -214,9 +230,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
       _misses.reset();
       _nudges.clear();
     });
-    Future.delayed(DT.motion.quizQuestionGap, () {
-      if (mounted) _playCurrentSound();
-    });
+    _scheduleSound(DT.motion.quizQuestionGap);
   }
 
   /// Fires completion side effects once and shows the shared celebration
@@ -237,6 +251,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
       }
       showGameCelebration(
         context,
+        returnToAdventure: widget.returnToAdventure,
         isEn: ref.read(languageProvider) == 'en',
         childName: ref.read(profileProvider).active?.name ?? '',
         onAgain: _restart,
@@ -247,6 +262,8 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
 
   @override
   void dispose() {
+    _wordTimer?.cancel();
+    _nextTimer?.cancel();
     _bloom.sceneLeft(this);
     AudioService.instance.stop();
     super.dispose();
@@ -301,7 +318,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
     child: KidTap(
       // Replays the target word — no pop under the voice.
       sound: null,
-      onTap: _playCurrentSound,
+      onTap: _replaySound,
       child: ValueListenableBuilder<bool>(
         valueListenable: AudioService.instance.isSpeaking,
         builder: (_, speaking, speaker) => AmbientLoop(
@@ -343,7 +360,7 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
   Widget _buildQuiz(QuizState state) {
     // The bottom inset keeps the board above Bloom's corner: he sits under
     // the learning object, never on it (bloom_character §4.2).
-    return Padding(
+    final board = Padding(
       padding: EdgeInsets.fromLTRB(
         18,
         10,
@@ -388,6 +405,67 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
           ),
         ],
       ),
+    );
+    final s = AppS(ref.watch(languageProvider) == 'en');
+    final cue = _showCorrect
+        ? s(
+            'Так! Це ${state.correctCard.sound.toLowerCase()}',
+            'Yes! ${state.correctCard.sound}',
+          )
+        : _misses.misses > 0
+        ? s('Послухай ще раз. Я допоможу', 'Listen once more. I’ll help you')
+        : s('Послухай й обери картинку', 'Listen and choose a picture');
+    return LayoutBuilder(
+      builder: (context, bounds) {
+        // The cue uses the strip already reserved for Bloom. In short
+        // landscape windows the picture board keeps all available height.
+        final companion = DT.size.mascotCompanionOf(context);
+        final cueWidth = math.max(1.0, bounds.maxWidth - companion - 56);
+        final painter = TextPainter(
+          text: TextSpan(
+            text: cue,
+            style: DT.caption.copyWith(fontSize: 16, height: 1.3),
+          ),
+          textDirection: Directionality.of(context),
+          textScaler: MediaQuery.textScalerOf(context),
+        )..layout(maxWidth: cueWidth);
+        final fits =
+            painter.height + 24 <=
+            math.max(companion, DT.size.tapMin) +
+                BloomMascot.hopClearance +
+                DT.sp16;
+        painter.dispose();
+        return Stack(
+          children: [
+            Positioned.fill(child: board),
+            if (fits && bounds.maxHeight > 280)
+              Positioned(
+                left: 24,
+                right: companion + 32,
+                bottom: 24,
+                child: IgnorePointer(
+                  child: Semantics(
+                    liveRegion: true,
+                    child: AnimatedSwitcher(
+                      duration: MotionPolicy.of(
+                        context,
+                      ).dur(DT.motion.selectionChange),
+                      child: Text(
+                        cue,
+                        key: ValueKey(cue),
+                        style: DT.caption.copyWith(
+                          fontSize: 16,
+                          height: 1.3,
+                          color: DT.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }

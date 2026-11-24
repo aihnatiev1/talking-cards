@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../utils/design_tokens.dart';
+import 'kid_tap.dart';
 
-/// Shared gradient card shell used by Card of the Day and Treasure hero widgets.
+/// Shared outlined card with a firm lower edge for daily and treasure heroes.
 class AppCardShell extends StatelessWidget {
   final Color color;
   final Widget child;
@@ -17,32 +19,16 @@ class AppCardShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return KidTap(
       onTap: onTap,
       child: Container(
         constraints: constraints,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              color.withValues(alpha: 0.12),
-              color.withValues(alpha: 0.04),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: color.withValues(alpha: 0.25),
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.08),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ],
+          color: DT.surfaceWhite,
+          borderRadius: BorderRadius.circular(DT.rLg),
+          border: Border.all(color: color.withValues(alpha: 0.25), width: 2),
+          boxShadow: DT.shadowSoft(color),
         ),
         child: child,
       ),

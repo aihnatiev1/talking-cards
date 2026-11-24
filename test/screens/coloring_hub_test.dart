@@ -5,20 +5,22 @@ import 'package:talking_cards/providers/coloring_sheets_provider.dart';
 import 'package:talking_cards/services/analytics_service.dart';
 import 'package:talking_cards/screens/coloring_hub_screen.dart';
 import 'package:talking_cards/screens/mirror_draw_screen.dart';
+import 'package:talking_cards/widgets/kid_screen.dart';
 
 /// «Малюємо» is a shelf of ways to draw now, the way the cards tab is a
 /// shelf of packs — so it must behave like a tab, and it must only offer
 /// what it can actually open.
 void main() {
-  Future<void> open(WidgetTester tester, {List<String> sheets = const []}) async {
+  Future<void> open(
+    WidgetTester tester, {
+    List<String> sheets = const [],
+  }) async {
     await tester.pumpWidget(
       ProviderScope(
         // The real index is read from the bundle, which a widget test's
         // fake-async zone will not let finish; what matters here is what
         // the shelf does with the answer.
-        overrides: [
-          coloringSheetsProvider.overrideWith((ref) async => sheets),
-        ],
+        overrides: [coloringSheetsProvider.overrideWith((ref) async => sheets)],
         child: const MaterialApp(home: ColoringHubScreen()),
       ),
     );
@@ -35,6 +37,35 @@ void main() {
       findsNothing,
       reason: 'closing a tab pops the home shell and blacks the screen',
     );
+  });
+
+  testWidgets('pushed over the home screen it has a way back', (tester) async {
+    // Home, the drawing shortcut and My world push it as a route: with no
+    // back control an iPhone had no way out (`_KidRoute` has no swipe-back
+    // and the home nav bar is covered).
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [coloringSheetsProvider.overrideWith((ref) async => [])],
+        child: MaterialApp(
+          home: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const ColoringHubScreen(),
+                ),
+              ),
+              child: const Text('go'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('go'));
+    await tester.pumpAndSettle();
+    expect(find.byType(KidBackButton), findsOneWidget);
+    await tester.tap(find.byType(KidBackButton));
+    await tester.pumpAndSettle();
+    expect(find.text('go'), findsOneWidget);
   });
 
   testWidgets('with drawings, every way of drawing is on the shelf', (

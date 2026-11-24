@@ -7,8 +7,8 @@ import '../services/profile_service.dart';
 /// "Continue" tile (Lingokids-style). Entries older than 48h are ignored.
 final lastOpenedPackProvider =
     StateNotifierProvider<LastOpenedPackNotifier, String?>(
-  (ref) => LastOpenedPackNotifier(),
-);
+      (ref) => LastOpenedPackNotifier(),
+    );
 
 class LastOpenedPackNotifier extends StateNotifier<String?> {
   LastOpenedPackNotifier() : super(null) {

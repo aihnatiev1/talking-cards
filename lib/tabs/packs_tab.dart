@@ -28,8 +28,6 @@ import '../screens/quest_map_screen.dart';
 import '../screens/stats_screen.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
-import '../services/feedback_service.dart';
-import '../services/paywall_flow.dart';
 import '../services/profile_service.dart';
 import '../services/widget_service.dart';
 import '../utils/app_icons.dart';
@@ -38,6 +36,7 @@ import '../utils/kid_routes.dart';
 import '../utils/l10n.dart';
 import '../utils/pack_categories.dart';
 import '../widgets/app_logo_mark.dart';
+import '../widgets/activity_categories.dart';
 import '../widgets/bloom_mascot.dart';
 import '../widgets/bubble_pop.dart';
 import '../widgets/card_image.dart';
@@ -51,10 +50,12 @@ import '../widgets/settings_action_row.dart';
 import '../widgets/streak_chip.dart';
 import '../widgets/streak_milestone_overlay.dart';
 import '../widgets/kid_tap.dart';
-import '../services/remote_config_service.dart';
+import '../services/open_content_pack.dart';
 
 class PacksTab extends ConsumerStatefulWidget {
-  const PacksTab({super.key});
+  const PacksTab({super.key, this.catalogueOnly = false});
+
+  final bool catalogueOnly;
 
   @override
   ConsumerState<PacksTab> createState() => _PacksTabState();
@@ -66,35 +67,10 @@ class _PacksTabState extends ConsumerState<PacksTab> {
   String _selectedCategory = '';
   bool _milestoneShowing = false;
 
-  /// One-time hint shown beneath Today's Plan on the first session, before
-  /// the user has tapped any stone. Cleared after first dismissal so it never
-  /// reappears even if the kid lets streaks lapse.
-  static const _todayPlanIntroKey = 'today_plan_intro_seen_v1';
-  bool _todayPlanIntroVisible = false;
-
   @override
   void initState() {
     super.initState();
     _selectedCategory = _lastCategory;
-    _maybeShowTodayPlanIntro();
-  }
-
-  Future<void> _maybeShowTodayPlanIntro() async {
-    // The reward is a bonus card from a locked pack — nothing to a Pro
-    // family, so the promise would be noise for them (audit #16).
-    if (ref.read(isProProvider)) return;
-    final prefs = await SharedPreferences.getInstance();
-    final seen = prefs.getBool(_todayPlanIntroKey) ?? false;
-    if (!seen && mounted) {
-      setState(() => _todayPlanIntroVisible = true);
-    }
-  }
-
-  Future<void> _dismissTodayPlanIntro() async {
-    if (!_todayPlanIntroVisible) return;
-    setState(() => _todayPlanIntroVisible = false);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_todayPlanIntroKey, true);
   }
 
   Future<void> _maybeLogTodayPlanComplete(bool allDone) async {
@@ -146,8 +122,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
               children: [
                 AppLogoMark(
                   size: 64,
-                  semanticsLabel:
-                      s('Картки-розмовлялки', 'FirstWords Cards'),
+                  semanticsLabel: s('Картки-розмовлялки', 'FirstWords Cards'),
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -277,64 +252,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
     PackModel pack, {
     String source = 'other',
     int? position,
-  }) async {
-    if (pack.id == '_review' || !pack.id.startsWith('_')) {
-      ref
-          .read(dailyQuestProvider.notifier)
-          .completeTask(QuestTask.reviewOldCard);
-    }
-    // Locked packs. Default: open the free preview — the cards themselves
-    // are the demo, and the end-of-preview dialog asks for the purchase
-    // once the child has wanted more (audit #15). Remote Config
-    // `locked_pack_tap = paywall` restores the offer-first flow for an A/B.
-    if (pack.isLocked &&
-        RemoteConfigService.instance.lockedPackTapOpensPreview) {
-      ref.read(lastOpenedPackProvider.notifier).record(pack.id);
-      Navigator.of(context).push(
-        KidRoutes.content(
-          CardsScreen(pack: pack, source: source, position: position),
-        ),
-      );
-      return;
-    }
-    if (pack.isLocked) {
-      // The tile itself is silent (its sound is `pack_open` on entering the
-      // cards); a tap that goes to the paywall instead still gets a tock.
-      FeedbackService.instance.event(FeedbackEvent.tap, haptic: false);
-      final purchased = await runPaywallFlow(
-        context,
-        ref,
-        source: 'locked_tile',
-      );
-      if (!context.mounted) return;
-      if (purchased) {
-        // After purchase, packsProvider rebuilds with isLocked=false.
-        // Pull the unlocked version before navigating.
-        final unlocked =
-            ref
-                .read(packsProvider)
-                .valueOrNull
-                ?.firstWhere((p) => p.id == pack.id, orElse: () => pack) ??
-            pack;
-        ref.read(lastOpenedPackProvider.notifier).record(unlocked.id);
-        Navigator.of(
-          context,
-        ).push(
-          KidRoutes.content(
-            CardsScreen(pack: unlocked, source: source, position: position),
-          ),
-        );
-        return;
-      }
-    }
-    ref.read(lastOpenedPackProvider.notifier).record(pack.id);
-    AnalyticsService.instance.logFirstAction('library_pack');
-    Navigator.of(context).push(
-      KidRoutes.content(
-        CardsScreen(pack: pack, source: source, position: position),
-      ),
-    );
-  }
+  }) => openContentPack(context, ref, pack, source: source, position: position);
 
   void _showCardOfDayPopup(CardModel card) {
     AnalyticsService.instance.logCardOfDayTap(card.id);
@@ -540,17 +458,21 @@ class _PacksTabState extends ConsumerState<PacksTab> {
     final sHero = AppS(isEn);
     // Nothing done today, nothing finished ever, nothing in progress: a
     // profile that has not started, not one that is at 0 % of today.
-    final firstVisit = questState.completed.isEmpty &&
+    final firstVisit =
+        questState.completed.isEmpty &&
         completedPacks.isEmpty &&
         continueProgress == 0;
     // One step ≈ a minute of a child's attention; rounded up so the card
     // never promises less than it asks for.
-    final remaining = stepsTotal - stepsDone;
-    final minutesLeft = allDone ? null : (remaining < 1 ? 1 : remaining);
     final bloomLine = firstVisit
         ? sHero('Ходімо, я покажу', 'Come on, I will show you')
         : allDone
-        ? sHero('Завтра: нові слова', 'Tomorrow: new words')
+        ? (questState.rewardClaimed
+              ? sHero('Завтра: нові слова', 'Tomorrow: new words')
+              : sHero(
+                  'Усі кроки пройдено. Відкриємо скарб?',
+                  'All steps complete. Let’s open the treasure!',
+                ))
         : !listenDone
         ? sHero('Далі: послухай картку', 'Next: listen to the card')
         : !viewDone
@@ -603,6 +525,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
     final cardTask = DailyTask(
       icon: AppIcon.stepListen,
       label: isEn ? "Today's Card" : 'Картка дня',
+      onLongPress: cotd == null ? null : () => _showCardOfDayPopup(cotd),
       isDone: listenDone,
       isActive: firstPending == 1,
       onTap: () {
@@ -629,39 +552,6 @@ class _PacksTabState extends ConsumerState<PacksTab> {
         if (rp != null) _onPackTap(context, rp, source: 'today_plan');
       },
     );
-    final adventureTask = DailyTask(
-      icon: AppIcon.stepQuest,
-      label: isEn ? 'Adventure' : 'Пригода дня',
-      isDone: playDone,
-      isActive: firstPending == 3,
-      onTap: () {
-        AnalyticsService.instance.logTodayPlanStoneTap(
-          stoneId: 3,
-          wasDone: playDone,
-          wasActive: firstPending == 3,
-        );
-        openQuestMap();
-      },
-    );
-
-    final drawDone = questState.completed.contains(QuestTask.drawPicture);
-    final drawTask = DailyTask(
-      icon: AppIcon.navColoring,
-      label: isEn ? 'Draw' : 'Малюємо',
-      isDone: drawDone,
-      isActive: firstPending == 4,
-      onTap: () {
-        AnalyticsService.instance.logTodayPlanStoneTap(
-          stoneId: 4,
-          wasDone: drawDone,
-          wasActive: firstPending == 4,
-        );
-        // The shelf, not one mode: which way to draw is the child's
-        // choice, and it is the only choice on that screen.
-        ref.read(homeTabRequestProvider.notifier).state = kDrawTabIndex;
-      },
-    );
-
     // The day's plan is finished. The row says «Обрати гру», so it opens
     // the games tab and nothing else: it used to send Pro users to the
     // quest map and free users to a card reveal, which is not what the
@@ -671,91 +561,27 @@ class _PacksTabState extends ConsumerState<PacksTab> {
       ref.read(homeTabRequestProvider.notifier).state = kGamesTabIndex;
     }
 
-    String? packThumb(PackModel p) {
-      if (p.cover != null) return p.cover;
-      for (final c in p.cards) {
-        if (c.image != null) return c.image;
-      }
-      return null;
-    }
-
-    // Which of the three steps the hero itself represents:
-    //  • an unfinished pack → "Continue" (our most-tapped element) stands in
-    //    for "Today's Pack", because resuming it views cards all the same;
-    //  • otherwise → the Card of the Day.
-    if (continuePack != null) {
-      final cp = continuePack;
-      final total = cp.cards.length;
-      return DailyHeroCard(
-        title: cp.title,
-        accent: cp.color,
-        image: packThumb(cp),
-        fallbackEmoji: cp.icon,
-        progress: continueProgress > 0 && total > 0
-            ? continueProgress / total
-            : null,
-        heroDone: viewDone,
-        mascot: mascot,
-        onHeroTap: () {
-          AnalyticsService.instance.logContinueHeroTap(cp.id);
-          AnalyticsService.instance.logFirstAction('hero_cta');
-          _onPackTap(context, cp, source: 'hero_continue');
-        },
-        tasks: [cardTask, adventureTask, drawTask],
-        allDone: allDone,
-        onAllDoneTap: allDone ? onAllDone : null,
-        stepsDone: firstVisit ? null : stepsDone,
-        stepsTotal: stepsTotal,
-        minutesLeft: minutesLeft,
-        firstVisit: firstVisit,
-        bloomLine: bloomLine,
-        isEn: isEn,
-      );
-    }
-
-    if (cotd != null) {
-      return DailyHeroCard(
-        title: cotd.sound,
-        accent: cotd.colorAccent,
-        image: cotd.image,
-        fallbackEmoji: cotd.emoji,
-        heroDone: listenDone,
-        mascot: mascot,
-        onHeroTap: openCardOfDay,
-        onHeroLongPress: () => _showCardOfDayPopup(cotd),
-        tasks: [packTask, adventureTask, drawTask],
-        allDone: allDone,
-        onAllDoneTap: allDone ? onAllDone : null,
-        stepsDone: firstVisit ? null : stepsDone,
-        stepsTotal: stepsTotal,
-        minutesLeft: minutesLeft,
-        firstVisit: firstVisit,
-        bloomLine: bloomLine,
-        isEn: isEn,
-      );
-    }
-
-    // No card of the day and nothing in progress (first launch of an empty
-    // catalogue) — point at the recommended pack rather than showing nothing.
-    final rp = recommendedPack;
-    if (rp == null) return const SizedBox.shrink();
+    final pack = continuePack ?? recommendedPack;
     return DailyHeroCard(
-      title: rp.title,
-      accent: rp.color,
-      image: packThumb(rp),
-      fallbackEmoji: rp.icon,
-      heroDone: viewDone,
+      title: isEn ? 'A little adventure' : 'Маленька пригода',
+      accent: DT.brand,
+      image: cotd?.image ?? pack?.cover ?? pack?.cards.firstOrNull?.image,
+      fallbackEmoji: cotd?.emoji ?? pack?.icon ?? '🃏',
+      progress: firstVisit ? null : stepsDone / stepsTotal,
+      heroDone: allDone,
       mascot: mascot,
-      onHeroTap: () {
-        AnalyticsService.instance.logFirstAction('hero_cta');
-        _onPackTap(context, rp, source: 'hero_recommended');
-      },
-      tasks: [adventureTask, drawTask],
-      allDone: allDone,
-      onAllDoneTap: allDone ? onAllDone : null,
+      onHeroTap: allDone && questState.rewardClaimed ? onAllDone : openQuestMap,
+      actionLabel: allDone
+          ? (questState.rewardClaimed
+                ? (isEn ? 'Choose a game' : 'Обрати гру')
+                : (isEn ? 'Open the treasure' : 'Відкрити скарб'))
+          : (stepsDone > 0
+                ? (isEn ? 'Continue adventure' : 'Продовжити пригоду')
+                : (isEn ? 'Start adventure' : 'Почати пригоду')),
+      tasks: [if (cotd != null) cardTask, if (pack != null) packTask],
+      collapseTasks: true,
       stepsDone: firstVisit ? null : stepsDone,
       stepsTotal: stepsTotal,
-      minutesLeft: minutesLeft,
       firstVisit: firstVisit,
       bloomLine: bloomLine,
       isEn: isEn,
@@ -777,7 +603,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
 
     // Streak milestone celebration: trigger once when a new milestone unlocks.
     final pending = ref.read(streakProvider.notifier).pendingCelebration;
-    if (pending != null && !_milestoneShowing) {
+    if (!widget.catalogueOnly && pending != null && !_milestoneShowing) {
       _milestoneShowing = true;
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) return;
@@ -789,9 +615,8 @@ class _PacksTabState extends ConsumerState<PacksTab> {
           milestone: pending,
           childName: childName,
           isEn: isEnNow,
-          onCelebrated: () => ref
-              .read(streakProvider.notifier)
-              .markCelebrated(pending.id),
+          onCelebrated: () =>
+              ref.read(streakProvider.notifier).markCelebrated(pending.id),
         );
         if (!mounted) return;
         _milestoneShowing = false;
@@ -818,7 +643,7 @@ class _PacksTabState extends ConsumerState<PacksTab> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('🐢', style: TextStyle(fontSize: 64)),
+                  const AppIconView(AppIcon.replay, size: 64),
                   const SizedBox(height: 16),
                   Text(
                     sErr(
@@ -1015,10 +840,12 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                             // something nearer 12 — the app's own name,
                             // set smaller than its captions.
                             child: Text(
-                              s(
-                                'Картки-\nрозмовлялки',
-                                'FirstWords\nCards',
-                              ),
+                              widget.catalogueOnly
+                                  ? s('Картки', 'Cards')
+                                  : s(
+                                      'Картки-\nрозмовлялки',
+                                      'FirstWords\nCards',
+                                    ),
                               maxLines: 2,
                               style: TextStyle(
                                 fontSize: 19 * scale,
@@ -1093,151 +920,137 @@ class _PacksTabState extends ConsumerState<PacksTab> {
                   child: StaggerScope(
                     child: CustomScrollView(
                       slivers: [
-                        SliverToBoxAdapter(
-                          child: Column(
-                            children: [
-                            // One hero block: Continue / Card of the Day + the day's two
-                            // remaining steps, all inside a single frame.
-                            // Capped at heroMaxWidth and centred so a tablet gets a
-                            // card, not a 150 dp strip across 1194 px.
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                              child: Center(
-                                child: ConstrainedBox(
-                                  constraints: BoxConstraints(
-                                    maxWidth: DT.size.heroMaxWidth,
+                        if (!widget.catalogueOnly)
+                          SliverToBoxAdapter(
+                            child: Column(
+                              children: [
+                                // One hero block: Continue / Card of the Day + the day's two
+                                // remaining steps, all inside a single frame.
+                                // Capped at heroMaxWidth and centred so a tablet gets a
+                                // card, not a 150 dp strip across 1194 px.
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    16,
+                                    0,
+                                    16,
+                                    0,
                                   ),
-                                  child: _HeroWithBloom(
-                                    semanticsLabel: isEnMode ? 'Bloom' : 'Блум',
-                                    heroDone: _heroTaskDone(
-                                      quest,
-                                      heroIsCardOfDay: continuePack == null && cotd != null,
-                                    ),
-                                    builder: (context, mascot) => _buildDailyHero(
-                                      context,
-                                      packs: packs,
-                                      cotd: cotd,
-                                      cotdLocked: cotdLocked,
-                                      questState: quest,
-                                      completedPacks: completedPacks,
-                                      continuePack: continuePack,
-                                      continueProgress: continueProgress,
-                                      isEn: isEnMode,
-                                      mascot: mascot,
+                                  child: Center(
+                                    child: ConstrainedBox(
+                                      constraints: BoxConstraints(
+                                        maxWidth: DT.size.heroMaxWidth,
+                                      ),
+                                      child: _HeroWithBloom(
+                                        semanticsLabel: isEnMode
+                                            ? 'Bloom'
+                                            : 'Блум',
+                                        heroDone: _heroTaskDone(
+                                          quest,
+                                          heroIsCardOfDay:
+                                              continuePack == null &&
+                                              cotd != null,
+                                        ),
+                                        builder: (context, mascot) =>
+                                            _buildDailyHero(
+                                              context,
+                                              packs: packs,
+                                              cotd: cotd,
+                                              cotdLocked: cotdLocked,
+                                              questState: quest,
+                                              completedPacks: completedPacks,
+                                              continuePack: continuePack,
+                                              continueProgress:
+                                                  continueProgress,
+                                              isEn: isEnMode,
+                                              mascot: mascot,
+                                            ),
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
+
+                                // Treasure box — kid-facing entry to learned-words collection.
+                                // Hidden until at least one word is "learned" (SRS reps >= 2).
+                                _TreasureBoxBanner(isEn: isEnMode),
+
+                                // SRS review entry lives in the grid as the "Повторення"
+                                // virtual pack — the extra banner here just stacked a third
+                                // call-to-action above the fold.
+                                const SizedBox(height: 6),
+                              ],
                             ),
-
-                            // First-launch coachmark for the strip — fades in on initial
-                            // session and self-dismisses as soon as the kid taps any stone.
-                            if (_todayPlanIntroVisible)
-                              _TodayPlanIntroHint(
-                                isEn: isEnMode,
-                                isVisible: quest.completed.isEmpty,
-                                onDismiss: _dismissTodayPlanIntro,
-                              ),
-
-                            // Treasure box — kid-facing entry to learned-words collection.
-                            // Hidden until at least one word is "learned" (SRS reps >= 2).
-                            _TreasureBoxBanner(isEn: isEnMode),
-
-                            // SRS review entry lives in the grid as the "Повторення"
-                            // virtual pack — the extra banner here just stacked a third
-                            // call-to-action above the fold.
-                            const SizedBox(height: 6),
-
-                            ],
                           ),
-                        ),
                         SliverPersistentHeader(
                           pinned: true,
                           delegate: _PinnedCategories(
-                            background:
-                                Theme.of(context).scaffoldBackgroundColor,
-                            child: Column(
-                              children: [
-                              // Category filter. The "Library" heading above it is gone
-                              // and so is the grey track behind the chips: a word no
-                              // child reads and a box that only added height between the
-                              // hero and the packs (playtest). The selected chip alone
-                              // carries colour, which is all the grouping this needs.
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(16, 2, 16, 2),
-                                child: Row(
-                                  children: [
-                                    for (int i = 0; i < allCategories.length; i++) ...[
-                                      Expanded(
-                                        child: _CategoryChip(
-                                          label: allCategories[i],
-                                          selected: allCategories[i] == _selectedCategory,
-                                          onSelected: () {
-                                            final newCat = allCategories[i];
-                                            if (newCat != _selectedCategory) {
-                                              AnalyticsService.instance.logCategorySwitch(
-                                                newCat,
-                                              );
-                                            }
-                                            setState(() {
-                                              _selectedCategory = newCat;
-                                              _lastCategory = newCat;
-                                            });
-                                          },
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-
-                                const SizedBox(height: 8),
-                              ],
+                            background: Theme.of(
+                              context,
+                            ).scaffoldBackgroundColor,
+                            extent: ActivityCategories.heightFor(
+                              context,
+                              allCategories,
+                            ),
+                            child: ActivityCategories(
+                              labels: allCategories,
+                              selected: _selectedCategory,
+                              onSelected: (newCat) {
+                                if (newCat == _selectedCategory) return;
+                                AnalyticsService.instance.logCategorySwitch(
+                                  newCat,
+                                );
+                                setState(() {
+                                  _selectedCategory = newCat;
+                                  _lastCategory = newCat;
+                                });
+                              },
                             ),
                           ),
                         ),
                         SliverPadding(
                           padding: EdgeInsets.fromLTRB(
-                              16 * scale, 4, 16 * scale, 8),
-                          sliver: SliverGrid(
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                              // Two columns on a phone: three of them put a
-                              // pack cover under ~110 dp, below what a
-                              // 1-year-old can aim at or recognise (ux-gap
-                              // G12 / А1-12). Tablets keep three.
-                              crossAxisCount:
-                                  MediaQuery.sizeOf(context).width <
-                                          kMediumScreen
-                                      ? 2
-                                      : 3,
-                              mainAxisSpacing: 10 * scale,
-                              crossAxisSpacing: 10 * scale,
-                              childAspectRatio: 0.95,
-                            ),
-                            delegate: SliverChildBuilderDelegate(
-                              (context, index) {
-                                  final item = gridItems[index];
-                                  final pack = item.pack;
-                                  return StaggeredEntrance(
-                                    key: ValueKey(pack.id),
-                                    index: index,
-                                    child: PackGridCard(
-                                      pack: pack,
-                                      isCompleted: completedPacks.contains(pack.id),
-                                      progress: packProgress[pack.id] ?? 0,
-                                      isSeasonal: item.isSeasonal,
-                                      onTap: () => _onPackTap(
-                                        context,
-                                        pack,
-                                        source: 'library_grid',
-                                        position: index,
-                                      ),
+                            16 * scale,
+                            4,
+                            16 * scale,
+                            8,
+                          ),
+                          sliver: SliverLayoutBuilder(
+                            builder: (context, constraints) => SliverGrid(
+                              gridDelegate: PackGridCard.gridDelegate(
+                                context,
+                                constraints.crossAxisExtent,
+                                gridItems.map((item) => item.pack.title),
+                              ),
+                              delegate: SliverChildBuilderDelegate((
+                                context,
+                                index,
+                              ) {
+                                final item = gridItems[index];
+                                final pack = item.pack;
+                                return StaggeredEntrance(
+                                  key: ValueKey(pack.id),
+                                  index: index,
+                                  child: PackGridCard(
+                                    pack: pack,
+                                    isCompleted: completedPacks.contains(
+                                      pack.id,
                                     ),
-                                  );
-                              },
-                              childCount: gridItems.length,
+                                    progress: packProgress[pack.id] ?? 0,
+                                    isSeasonal: item.isSeasonal,
+                                    onTap: () => _onPackTap(
+                                      context,
+                                      pack,
+                                      source: 'library_grid',
+                                      position: index,
+                                    ),
+                                  ),
+                                );
+                              }, childCount: gridItems.length),
                             ),
+                          ),
+                        ),
+                        SliverToBoxAdapter(
+                          child: SizedBox(
+                            height: MediaQuery.paddingOf(context).bottom,
                           ),
                         ),
                       ],
@@ -1253,22 +1066,25 @@ class _PacksTabState extends ConsumerState<PacksTab> {
   }
 }
 
-/// The category row, pinned under the top bar while the hero scrolls
-/// away. Fixed height: the chips are a fixed 64 dp (they scale their
-/// contents down, never their box), plus 2 + 2 padding and an 8 dp gap.
+/// Keep the category shelf visible while browsing; its extent follows
+/// the actual system text size.
 class _PinnedCategories extends SliverPersistentHeaderDelegate {
   final Widget child;
   final Color background;
 
-  const _PinnedCategories({required this.child, required this.background});
+  final double extent;
 
-  static const double _height = 2 + 64 + 2 + 8;
+  const _PinnedCategories({
+    required this.child,
+    required this.background,
+    required this.extent,
+  });
 
   @override
-  double get minExtent => _height;
+  double get minExtent => extent;
 
   @override
-  double get maxExtent => _height;
+  double get maxExtent => extent;
 
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlaps) =>
@@ -1276,7 +1092,9 @@ class _PinnedCategories extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(_PinnedCategories old) =>
-      old.child != child || old.background != background;
+      old.child != child ||
+      old.background != background ||
+      old.extent != extent;
 }
 
 /// The daily hero with Bloom S peeking out from behind the illustration
@@ -1324,9 +1142,9 @@ class _HeroWithBloomState extends ConsumerState<_HeroWithBloom> {
   late final BloomReactions _bloom = ref.read(bloomReactionsProvider.notifier);
 
   BloomScene get _scene => BloomScene.home.copyWith(
-        ambient: widget.heroDone ? BloomAmbient.breathe : BloomAmbient.blinkOnly,
-        hintsEnabled: !widget.heroDone,
-      );
+    ambient: widget.heroDone ? BloomAmbient.breathe : BloomAmbient.blinkOnly,
+    hintsEnabled: !widget.heroDone,
+  );
 
   void _enter() {
     _bloom.sceneEntered(_sceneKey, _scene);
@@ -1495,134 +1313,4 @@ class _GridItem {
   final PackModel pack;
   final bool isSeasonal;
   _GridItem.pack(this.pack, {this.isSeasonal = false});
-}
-
-/// Category sticker by chip label (spec §5.1: Мовлення = violet speech
-/// bubble, Звуки = peach note, Світ = mint globe).
-AppIcon? _categoryIcon(String label) => switch (label) {
-      'Мовлення' || 'Speaking' => AppIcon.catSpeech,
-      'Звуки' || 'Sounds' => AppIcon.catSounds,
-      'Світ' || 'World' => AppIcon.catWorld,
-      _ => null,
-    };
-
-class _CategoryChip extends StatelessWidget {
-  const _CategoryChip({
-    required this.label,
-    required this.selected,
-    required this.onSelected,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final icon = _categoryIcon(label);
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    // A 40dp FilterChip was half the child's minimum target and chose by
-    // word; a child chooses by the icon (audit #11). 64dp, icon first,
-    // haptic + pop on tap.
-    return KidTap(
-      onTap: onSelected,
-      child: AnimatedContainer(
-        duration: DT.pressMs,
-        height: 64,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        decoration: BoxDecoration(
-          color: selected
-              ? DT.brand
-              : dark
-              ? Colors.white.withValues(alpha: 0.10)
-              : Colors.grey.withValues(alpha: 0.18),
-          borderRadius: BorderRadius.circular(28),
-        ),
-        // Each segment gets a third of the screen; on a 393dp phone the
-        // 22sp icon + bold «Мовлення» overflowed that by 14px (audit
-        // 2026-09-13). scaleDown keeps the pair on one line at any width.
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (icon != null) ...[
-                // Sticker edge on the selected (indigo) chip; plain on the
-                // grey rest state.
-                AppIconView(icon, size: 26, sticker: selected),
-                const SizedBox(width: 6),
-              ],
-              Text(
-                label,
-                maxLines: 1,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-                  // Explicit unselected color: the M3 default lands on a dim
-                  // grey-on-dark that fails contrast in dark mode.
-                  color: selected
-                      ? Colors.white
-                      : (dark
-                            ? Colors.white.withValues(alpha: 0.85)
-                            : DT.textPrimary),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Soft, dismissable hint shown beneath the Today's Plan strip on the very
-/// first session. Animates out the moment the kid taps any stone (driven by
-/// the [isVisible] flag from the parent), and persists "seen" state once the
-/// fade-out completes so it never reappears.
-class _TodayPlanIntroHint extends StatelessWidget {
-  final bool isEn;
-  final bool isVisible;
-  final VoidCallback onDismiss;
-
-  const _TodayPlanIntroHint({
-    required this.isEn,
-    required this.isVisible,
-    required this.onDismiss,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedOpacity(
-      opacity: isVisible ? 1.0 : 0.0,
-      duration: const Duration(milliseconds: 250),
-      onEnd: () {
-        if (!isVisible) onDismiss();
-      },
-      child: IgnorePointer(
-        ignoring: !isVisible,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-          child: Row(
-            children: [
-              const Text('💡', style: TextStyle(fontSize: 16)),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  isEn
-                      ? 'Finish 3 daily steps to unlock a new card 🎁'
-                      : 'Виконай 3 щоденні кроки і отримай нову картку 🎁',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey[700],
-                    height: 1.3,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }

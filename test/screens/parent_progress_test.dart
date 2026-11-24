@@ -45,23 +45,29 @@ PackModel _pack(List<CardModel> cards) => PackModel(
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
-    AssetPackService.instance.debugConfigure(padAssets: const {}, bundled: true);
+    AssetPackService.instance.debugConfigure(
+      padAssets: const {},
+      bundled: true,
+    );
   });
 
   group('word evidence keeps the three signals apart', () {
-    test('a game answer and a grown-up mark land in different buckets', () async {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-      final notifier = container.read(wordEvidenceProvider.notifier);
+    test(
+      'a game answer and a grown-up mark land in different buckets',
+      () async {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+        final notifier = container.read(wordEvidenceProvider.notifier);
 
-      await notifier.recordRecognized('cat');
-      await notifier.recordParentMark('water');
+        await notifier.recordRecognized('cat');
+        await notifier.recordParentMark('water');
 
-      final state = container.read(wordEvidenceProvider);
-      expect(state.recognizedIds, {'cat'});
-      expect(state.parentMarkedIds, {'water'});
-      expect(state.evidencedIds, {'cat', 'water'});
-    });
+        final state = container.read(wordEvidenceProvider);
+        expect(state.recognizedIds, {'cat'});
+        expect(state.parentMarkedIds, {'water'});
+        expect(state.evidencedIds, {'cat', 'water'});
+      },
+    );
 
     test('seeing a card is not evidence at all', () async {
       // pack_progress is how views are stored; the evidence map must stay
@@ -69,29 +75,31 @@ void main() {
       SharedPreferences.setMockInitialValues({'pack_progress_animals': 40});
       final container = ProviderContainer();
       addTearDown(container.dispose);
-      await container.read(packProgressProvider.notifier).updateProgress(
-        'animals',
-        39,
-      );
+      await container
+          .read(packProgressProvider.notifier)
+          .updateProgress('animals', 39);
 
       expect(container.read(packProgressProvider)['animals'], 40);
       expect(container.read(wordEvidenceProvider).evidencedIds, isEmpty);
     });
 
-    test('the same word can carry both signals without double counting', () async {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-      final notifier = container.read(wordEvidenceProvider.notifier);
+    test(
+      'the same word can carry both signals without double counting',
+      () async {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+        final notifier = container.read(wordEvidenceProvider.notifier);
 
-      await notifier.recordRecognized('cat');
-      await notifier.recordRecognized('cat');
-      await notifier.recordParentMark('cat');
+        await notifier.recordRecognized('cat');
+        await notifier.recordRecognized('cat');
+        await notifier.recordParentMark('cat');
 
-      final state = container.read(wordEvidenceProvider);
-      expect(state['cat']!.recognized, 2);
-      expect(state['cat']!.parentMarked, 1);
-      expect(state.evidencedIds.length, 1);
-    });
+        final state = container.read(wordEvidenceProvider);
+        expect(state['cat']!.recognized, 2);
+        expect(state['cat']!.parentMarked, 1);
+        expect(state.evidencedIds.length, 1);
+      },
+    );
 
     test('the week window counts only the last seven days', () {
       final now = DateTime(2026, 9, 13);
@@ -104,10 +112,7 @@ void main() {
           recognized: 1,
           recognizedDay: dayIndex(now.subtract(const Duration(days: 8))),
         ),
-        'marked': WordEvidence(
-          parentMarked: 1,
-          parentMarkedDay: dayIndex(now),
-        ),
+        'marked': WordEvidence(parentMarked: 1, parentMarkedDay: dayIndex(now)),
       };
 
       expect(state.recognizedSince(7, now: now), 1);
@@ -151,7 +156,11 @@ void main() {
 
     test('stays empty rather than inventing a task', () {
       expect(
-        practiceSuggestion(mistakes: const {}, dueIds: const [], allCards: cards),
+        practiceSuggestion(
+          mistakes: const {},
+          dueIds: const [],
+          allCards: cards,
+        ),
         isEmpty,
       );
     });

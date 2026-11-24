@@ -7,14 +7,32 @@ import 'package:talking_cards/widgets/crayon_palette.dart';
 void main() {
   // Keys present in assets/data/uk_cards.json, pack `colors`.
   const recorded = {
-    'red', 'blue', 'yellow', 'green', 'white', 'black',
-    'orange', 'pink', 'purple', 'brown', 'gray',
+    'red',
+    'blue',
+    'yellow',
+    'green',
+    'white',
+    'black',
+    'orange',
+    'pink',
+    'purple',
+    'brown',
+    'gray',
   };
 
   // And in assets/data/en_cards.json, pack `en_colors`.
   const recordedEn = {
-    'en_red', 'en_blue', 'en_yellow', 'en_green', 'en_white', 'en_black',
-    'en_orange_c', 'en_pink', 'en_purple', 'en_brown', 'en_gray',
+    'en_red',
+    'en_blue',
+    'en_yellow',
+    'en_green',
+    'en_white',
+    'en_black',
+    'en_orange_c',
+    'en_pink',
+    'en_purple',
+    'en_brown',
+    'en_gray',
   };
 
   test('every crayon has a colour word that is actually recorded', () {
@@ -22,7 +40,8 @@ void main() {
       expect(
         recorded.contains(crayon.audio),
         isTrue,
-        reason: 'no recording for «${crayon.name}» (key "${crayon.audio}") '
+        reason:
+            'no recording for «${crayon.name}» (key "${crayon.audio}") '
             '— the '
             'listening mode would ask for a colour it cannot say',
       );
@@ -37,7 +56,8 @@ void main() {
       expect(
         recordedEn.contains(crayon.audioEn),
         isTrue,
-        reason: 'no English recording for ${crayon.nameEn} '
+        reason:
+            'no English recording for ${crayon.nameEn} '
             '(key "${crayon.audioEn}")',
       );
     }

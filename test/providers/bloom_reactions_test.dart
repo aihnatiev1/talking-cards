@@ -17,10 +17,8 @@ void main() {
     BloomReactions bloom,
     ValueNotifier<bool> speaking,
     List<BloomSound> sounds,
-  }) make(
-    FakeAsync async, {
-    int level = 2,
-  }) {
+  })
+  make(FakeAsync async, {int level = 2}) {
     final speaking = ValueNotifier<bool>(false);
     final sounds = <BloomSound>[];
     final bloom = BloomReactions(
@@ -42,22 +40,24 @@ void main() {
   });
 
   group('looking (colouring book, §3.5)', () {
-    test('watching: a curious beat at the finger, then idle still looking there',
-        () {
-      fakeAsync((async) {
-        final t = make(async);
-        t.bloom.sceneEntered('coloring', BloomScene.coloring);
-        t.bloom.watching(const Alignment(0.5, -0.5));
-        expect(t.bloom.state.emotion, BloomEmotion.curious);
-        expect(t.bloom.state.lookAt, const Alignment(0.5, -0.5));
-        async.elapse(DT.motion.bloomCurious);
-        expect(t.bloom.state.emotion, BloomEmotion.idle);
-        expect(t.bloom.state.lookAt, const Alignment(0.5, -0.5));
-        // No sound: the picture is the actor, not Bloom.
-        expect(t.sounds, isEmpty);
-        t.bloom.dispose();
-      });
-    });
+    test(
+      'watching: a curious beat at the finger, then idle still looking there',
+      () {
+        fakeAsync((async) {
+          final t = make(async);
+          t.bloom.sceneEntered('coloring', BloomScene.coloring);
+          t.bloom.watching(const Alignment(0.5, -0.5));
+          expect(t.bloom.state.emotion, BloomEmotion.curious);
+          expect(t.bloom.state.lookAt, const Alignment(0.5, -0.5));
+          async.elapse(DT.motion.bloomCurious);
+          expect(t.bloom.state.emotion, BloomEmotion.idle);
+          expect(t.bloom.state.lookAt, const Alignment(0.5, -0.5));
+          // No sound: the picture is the actor, not Bloom.
+          expect(t.sounds, isEmpty);
+          t.bloom.dispose();
+        });
+      },
+    );
 
     test('lookToward moves the pupils without a pose and sticks', () {
       fakeAsync((async) {
@@ -74,8 +74,7 @@ void main() {
       });
     });
 
-    test('a finished picture is one hop, and the box scene never greets',
-        () {
+    test('a finished picture is one hop, and the box scene never greets', () {
       fakeAsync((async) {
         final t = make(async);
         t.bloom.sceneEntered('coloring', BloomScene.coloring);
@@ -163,8 +162,11 @@ void main() {
         t.bloom.success(BloomSuccessTier.micro);
         expect(t.bloom.state.emotion, BloomEmotion.happy);
         async.elapse(DT.motion.celebrate);
-        expect(t.bloom.state.emotion, BloomEmotion.listen,
-            reason: 'the word is still playing');
+        expect(
+          t.bloom.state.emotion,
+          BloomEmotion.listen,
+          reason: 'the word is still playing',
+        );
 
         // Release only after the hysteresis gap.
         t.speaking.value = false;
@@ -200,12 +202,18 @@ void main() {
         expect(t.sounds, [BloomSound.hmm]);
         async.elapse(const Duration(seconds: 8));
         expect(t.bloom.state.emotion, BloomEmotion.point);
-        expect(t.bloom.state.swipeGesture, isTrue,
-            reason: 'the second hint on the cards shows the swipe');
+        expect(
+          t.bloom.state.swipeGesture,
+          isTrue,
+          reason: 'the second hint on the cards shows the swipe',
+        );
         expect(t.sounds, [BloomSound.hmm], reason: 'second hint is silent');
         async.elapse(const Duration(seconds: 8));
-        expect(t.bloom.state.emotion, BloomEmotion.idle,
-            reason: 'at most two hints per target');
+        expect(
+          t.bloom.state.emotion,
+          BloomEmotion.idle,
+          reason: 'at most two hints per target',
+        );
 
         async.elapse(const Duration(seconds: 4));
         expect(t.bloom.state.emotion, BloomEmotion.sleep);
@@ -224,8 +232,11 @@ void main() {
         );
         t.bloom.packCompleted();
         async.elapse(const Duration(seconds: 1));
-        expect(t.bloom.state.emotion, BloomEmotion.cheer,
-            reason: 'sleep waits for a quiet moment');
+        expect(
+          t.bloom.state.emotion,
+          BloomEmotion.cheer,
+          reason: 'sleep waits for a quiet moment',
+        );
         async.elapse(const Duration(seconds: 3));
         expect(t.bloom.state.emotion, BloomEmotion.sleep);
 
@@ -406,8 +417,7 @@ void main() {
   });
 
   group('feedback pipeline', () {
-    test('reacts to FeedbackService events without its own subscriptions',
-        () {
+    test('reacts to FeedbackService events without its own subscriptions', () {
       fakeAsync((async) {
         final t = make(async);
         FeedbackService.instance.event(FeedbackEvent.correct);
@@ -518,8 +528,11 @@ void main() {
       fakeAsync((async) {
         final t = make(async);
         t.bloom.sceneEntered('memory', BloomScene.memory);
-        expect(BloomScene.memory.hintsEnabled, isFalse,
-            reason: 'the board runs its own two-step nudge');
+        expect(
+          BloomScene.memory.hintsEnabled,
+          isFalse,
+          reason: 'the board runs its own two-step nudge',
+        );
 
         // Bloom's own hint clock never fires here...
         async.elapse(const Duration(minutes: 1));

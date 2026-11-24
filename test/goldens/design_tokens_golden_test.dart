@@ -83,8 +83,9 @@ void main() {
   };
 
   group('DT swatch sheet', () {
-    testWidgets('accents, tints, surfaces, semantic and PackPalette samples',
-        (tester) async {
+    testWidgets('accents, tints, surfaces, semantic and PackPalette samples', (
+      tester,
+    ) async {
       await pumpGolden(
         tester,
         const _SwatchSheet(
@@ -104,13 +105,10 @@ void main() {
   }, skip: !Platform.isMacOS);
 
   group('DT type sheet', () {
-    testWidgets('display / h1 / h2 / tileTitle / body / caption in Ukrainian',
-        (tester) async {
-      await pumpGolden(
-        tester,
-        const _TypeSheet(),
-        size: const Size(390, 520),
-      );
+    testWidgets('display / h1 / h2 / tileTitle / body / caption in Ukrainian', (
+      tester,
+    ) async {
+      await pumpGolden(tester, const _TypeSheet(), size: const Size(390, 520));
       await expectLater(
         find.byKey(goldenKey),
         matchesGoldenFile('images/dt_type.png'),
@@ -152,7 +150,10 @@ class _SwatchSheet extends StatelessWidget {
           const Text('PackPalette.of(accent)', style: DT.caption),
           const SizedBox(height: DT.sp8),
           for (final entry in paletteSeeds.entries) ...[
-            _PaletteSample(name: entry.key, palette: PackPalette.of(entry.value)),
+            _PaletteSample(
+              name: entry.key,
+              palette: PackPalette.of(entry.value),
+            ),
             const SizedBox(height: DT.sp8),
           ],
           const SizedBox(height: DT.sp8),
@@ -248,10 +249,7 @@ class _PaletteSample extends StatelessWidget {
             ),
           ),
           const SizedBox(width: DT.sp12),
-          Text(
-            name,
-            style: DT.tileTitle.copyWith(color: palette.onTint),
-          ),
+          Text(name, style: DT.tileTitle.copyWith(color: palette.onTint)),
         ],
       ),
     );

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/bloom_reactions_provider.dart';
 import '../services/feedback_service.dart';
 import '../utils/design_tokens.dart';
+import '../utils/app_icons.dart';
 import '../utils/kid_routes.dart';
 import '../utils/l10n.dart';
 import '../utils/motion.dart';
@@ -42,6 +43,8 @@ Future<void> celebrate(
   required bool isEn,
   String? title,
   String? subtitle,
+  String? doneLabel,
+  bool preferDone = false,
   String childName = '',
   Color? accent,
   String? packTitle,
@@ -59,6 +62,8 @@ Future<void> celebrate(
       isEn: isEn,
       title: title,
       subtitle: subtitle,
+      doneLabel: doneLabel,
+      preferDone: preferDone,
       childName: childName,
       accent: accent,
       packTitle: packTitle,
@@ -100,6 +105,8 @@ class Celebration extends StatefulWidget {
   final bool isEn;
   final String? title;
   final String? subtitle;
+  final String? doneLabel;
+  final bool preferDone;
   final String childName;
   final Color? accent;
   final String? packTitle;
@@ -118,6 +125,8 @@ class Celebration extends StatefulWidget {
     required this.isEn,
     this.title,
     this.subtitle,
+    this.doneLabel,
+    this.preferDone = false,
     this.childName = '',
     this.accent,
     this.packTitle,
@@ -225,9 +234,10 @@ class _CelebrationState extends State<Celebration>
     if (_closing) return;
     setState(() => _leaving = true);
     try {
-      ProviderScope.containerOf(context, listen: false)
-          .read(bloomReactionsProvider.notifier)
-          .sessionEnding(withSound: true);
+      ProviderScope.containerOf(
+        context,
+        listen: false,
+      ).read(bloomReactionsProvider.notifier).sessionEnding(withSound: true);
     } on StateError {
       // No scope: a frozen Bloom still waves.
     }
@@ -250,7 +260,7 @@ class _CelebrationState extends State<Celebration>
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(vertical: DT.sp16),
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 340),
+                  constraints: const BoxConstraints(maxWidth: 400),
                   child: FadeTransition(
                     opacity: _cardFade,
                     child: ScaleTransition(
@@ -311,10 +321,56 @@ class _CelebrationState extends State<Celebration>
       ),
     );
     return switch (widget.tier) {
-      CelebrationTier.round => bloom,
-      CelebrationTier.pack => Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
+      CelebrationTier.round => SizedBox(
+        width: 180,
+        height: 160,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: 144,
+              height: 144,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    _accent.withValues(alpha: .18),
+                    _accent.withValues(alpha: .03),
+                  ],
+                ),
+              ),
+            ),
+            bloom,
+            Positioned(
+              right: 12,
+              bottom: 8,
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: _accent.withValues(alpha: .12),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: const AppIconView(
+                  AppIcon.check,
+                  size: 24,
+                  color: DT.success,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      CelebrationTier.pack => Wrap(
+        alignment: WrapAlignment.center,
+        crossAxisAlignment: WrapCrossAlignment.end,
+        runSpacing: DT.sp12,
         children: [
           bloom,
           const SizedBox(width: DT.sp12),
@@ -377,18 +433,34 @@ class _CelebrationState extends State<Celebration>
 
   Widget _buttons(AppS s, Color accent) {
     final pills = switch (widget.tier) {
-      CelebrationTier.round => [
-        _Pill(
-          label: s('Ще раз', 'Play again'),
-          accent: accent,
-          onTap: () => _close(widget.onAgain),
-        ),
-        _Pill.outlined(
-          label: s('Готово', 'Done'),
-          accent: accent,
-          onTap: () => _leave(widget.onDone),
-        ),
-      ],
+      CelebrationTier.round =>
+        widget.preferDone
+            ? [
+                _Pill(
+                  label: widget.doneLabel ?? s('Готово', 'Done'),
+                  accent: accent,
+                  onTap: () => _leave(widget.onDone),
+                ),
+                if (widget.onAgain != null)
+                  _Pill.outlined(
+                    label: s('Ще раз', 'Play again'),
+                    accent: accent,
+                    onTap: () => _close(widget.onAgain),
+                  ),
+              ]
+            : [
+                if (widget.onAgain != null)
+                  _Pill(
+                    label: s('Ще раз', 'Play again'),
+                    accent: accent,
+                    onTap: () => _close(widget.onAgain),
+                  ),
+                _Pill.outlined(
+                  label: widget.doneLabel ?? s('Готово', 'Done'),
+                  accent: accent,
+                  onTap: () => _leave(widget.onDone),
+                ),
+              ],
       CelebrationTier.pack => [
         if (widget.onAgain != null)
           _Pill(
@@ -565,7 +637,7 @@ class _Card extends StatelessWidget {
           Text(
             title,
             textAlign: TextAlign.center,
-            style: DT.h1.copyWith(color: accent),
+            style: DT.h1.copyWith(color: DT.onTint(accent)),
           ),
           if (sub != null) ...[
             const SizedBox(height: DT.sp8),

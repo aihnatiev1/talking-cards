@@ -11,9 +11,7 @@ import 'package:talking_cards/screens/my_meadow_screen.dart';
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  testWidgets('empty, it promises rather than showing nothing', (
-    tester,
-  ) async {
+  testWidgets('empty, it promises rather than showing nothing', (tester) async {
     await tester.pumpWidget(
       const ProviderScope(child: MaterialApp(home: MyMeadowScreen())),
     );

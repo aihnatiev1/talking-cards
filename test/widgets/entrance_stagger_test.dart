@@ -34,9 +34,9 @@ void main() {
   }
 
   Finder itemFades() => find.descendant(
-        of: find.byType(StaggeredEntrance),
-        matching: find.byType(FadeTransition),
-      );
+    of: find.byType(StaggeredEntrance),
+    matching: find.byType(FadeTransition),
+  );
 
   group('full motion', () {
     testWidgets('items start hidden and arrive 40 ms apart', (tester) async {
@@ -54,8 +54,9 @@ void main() {
       expect(opacityOf(tester, 1), greaterThan(opacityOf(tester, 3)));
     });
 
-    testWidgets('every item is fully visible after step * n + enter',
-        (tester) async {
+    testWidgets('every item is fully visible after step * n + enter', (
+      tester,
+    ) async {
       await tester.pumpWidget(list(4));
       await tester.pump(step * 3 + enter);
       for (var i = 0; i < 4; i++) {
@@ -63,8 +64,9 @@ void main() {
       }
     });
 
-    testWidgets('the wave is capped, so a long grid does not crawl',
-        (tester) async {
+    testWidgets('the wave is capped, so a long grid does not crawl', (
+      tester,
+    ) async {
       await tester.pumpWidget(list(21));
       // 21 × 40 ms would be 840 ms; the cap ends the wave at 320 + 260.
       await tester.pump(DT.motion.staggerCap + enter);
@@ -77,8 +79,9 @@ void main() {
       expect(opacityOf(tester, 7), 1);
     });
 
-    testWidgets('an item built after the wave has passed appears at once',
-        (tester) async {
+    testWidgets('an item built after the wave has passed appears at once', (
+      tester,
+    ) async {
       // What a GridView.builder does when the child scrolls: the tile is
       // created seconds later and must not replay an entrance.
       const scope = StaggerScope(child: _LateItem(key: ValueKey('late')));
@@ -95,8 +98,9 @@ void main() {
     setUp(() => MotionPolicy.debugOverride = MotionMode.test);
     tearDown(() => MotionPolicy.debugOverride = null);
 
-    testWidgets('no animation at all: the first frame is the final frame',
-        (tester) async {
+    testWidgets('no animation at all: the first frame is the final frame', (
+      tester,
+    ) async {
       await tester.pumpWidget(list(4));
       expect(itemFades(), findsNothing);
       for (var i = 0; i < 4; i++) {
@@ -106,8 +110,9 @@ void main() {
     });
   });
 
-  testWidgets('works without a scope, using its own default step',
-      (tester) async {
+  testWidgets('works without a scope, using its own default step', (
+    tester,
+  ) async {
     await tester.pumpWidget(list(3, scope: false));
     expect(opacityOf(tester, 2), 0);
     await tester.pump(step * 2 + enter);
@@ -134,8 +139,7 @@ class _LateItemState extends State<_LateItem> {
           onPressed: () => setState(() => _added = true),
           child: const Text('add'),
         ),
-        if (_added)
-          const StaggeredEntrance(index: 4, child: Text('item 4')),
+        if (_added) const StaggeredEntrance(index: 4, child: Text('item 4')),
       ],
     );
   }

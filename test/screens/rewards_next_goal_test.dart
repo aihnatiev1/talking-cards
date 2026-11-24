@@ -68,8 +68,10 @@ void main() {
 
     // A child-sized target that explains itself to an adult without
     // printing a paragraph on a toddler's page (rule 4).
-    expect(tester.getSize(find.byKey(const ValueKey('next-goal'))).height,
-        greaterThanOrEqualTo(72));
+    expect(
+      tester.getSize(find.byKey(const ValueKey('next-goal'))).height,
+      greaterThanOrEqualTo(72),
+    );
     await tester.tap(find.byKey(const ValueKey('next-goal')));
     await tester.pumpAndSettle();
     expect(find.text('Ще 7 днів гри — і Веселка чекає'), findsOneWidget);

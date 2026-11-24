@@ -17,11 +17,11 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   Widget host(Widget child, {required bool reduce}) => MediaQuery(
-        data: MediaQueryData(disableAnimations: reduce),
-        child: MaterialApp(
-          home: Scaffold(body: Center(child: child)),
-        ),
-      );
+    data: MediaQueryData(disableAnimations: reduce),
+    child: MaterialApp(
+      home: Scaffold(body: Center(child: child)),
+    ),
+  );
 
   test('reduceMotionOf mirrors MediaQuery.disableAnimations', () {
     // Pure function of the inherited data; checked through a widget below.
@@ -29,21 +29,20 @@ void main() {
   });
 
   group('TreasureCard', () {
-    testWidgets('reduced motion: settles and still shows progress',
-        (tester) async {
-      await tester.pumpWidget(host(
-        TreasureCard(done: 2, total: 5, onTap: () {}),
-        reduce: true,
-      ));
+    testWidgets('reduced motion: settles and still shows progress', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(TreasureCard(done: 2, total: 5, onTap: () {}), reduce: true),
+      );
       await tester.pumpAndSettle();
       expect(find.byType(TreasureCard), findsOneWidget);
     });
 
     testWidgets('full motion: the bob loop is running', (tester) async {
-      await tester.pumpWidget(host(
-        TreasureCard(done: 2, total: 5, onTap: () {}),
-        reduce: false,
-      ));
+      await tester.pumpWidget(
+        host(TreasureCard(done: 2, total: 5, onTap: () {}), reduce: false),
+      );
       await tester.pump(const Duration(milliseconds: 500));
       expect(tester.hasRunningAnimations, isTrue);
       expect(find.byType(TreasureCard), findsOneWidget);
@@ -52,10 +51,9 @@ void main() {
 
   group('StreakChip', () {
     testWidgets('reduced motion: settles', (tester) async {
-      await tester.pumpWidget(host(
-        StreakChip(streak: 6, onTap: () {}),
-        reduce: true,
-      ));
+      await tester.pumpWidget(
+        host(StreakChip(streak: 6, onTap: () {}), reduce: true),
+      );
       await tester.pumpAndSettle();
       expect(find.text('6'), findsOneWidget);
     });

@@ -23,40 +23,41 @@ void main() {
   useTestMotion();
 
   setUp(() {
-    AssetPackService.instance
-        .debugConfigure(padAssets: const {}, bundled: true);
+    AssetPackService.instance.debugConfigure(
+      padAssets: const {},
+      bundled: true,
+    );
   });
 
   CardModel card(String id) => CardModel(
-        id: id,
-        sound: id,
-        text: id,
-        emoji: '🐶',
-        colorBg: DT.surfaceWhite,
-        colorAccent: DT.textPrimary,
-        image: null,
-        audioKey: id,
-      );
+    id: id,
+    sound: id,
+    text: id,
+    emoji: '🐶',
+    colorBg: DT.surfaceWhite,
+    colorAccent: DT.textPrimary,
+    image: null,
+    audioKey: id,
+  );
 
-  PackModel pack({required bool locked, String title = 'Тварини'}) =>
-      PackModel(
-        id: 'animals',
-        title: title,
-        icon: '🐶',
-        color: DT.mint,
-        isLocked: locked,
-        isFree: !locked,
-        cards: [for (var i = 0; i < 8; i++) card('c$i')],
-      );
+  PackModel pack({required bool locked, String title = 'Тварини'}) => PackModel(
+    id: 'animals',
+    title: title,
+    icon: '🐶',
+    color: DT.mint,
+    isLocked: locked,
+    isFree: !locked,
+    cards: [for (var i = 0; i < 8; i++) card('c$i')],
+  );
 
   const size = Size(200, 240);
 
   Future<void> pumpTile(WidgetTester tester, Widget tile) => pumpGolden(
-        tester,
-        Center(child: SizedBox(width: 160, height: 190, child: tile)),
-        size: size,
-        wrap: (host) => ProviderScope(child: host),
-      );
+    tester,
+    Center(child: SizedBox(width: 160, height: 190, child: tile)),
+    size: size,
+    wrap: (host) => ProviderScope(child: host),
+  );
 
   group('PackGridCard', () {
     testWidgets('free', (tester) async {

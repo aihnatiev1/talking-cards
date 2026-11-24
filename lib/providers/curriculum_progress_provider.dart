@@ -74,13 +74,13 @@ final speakSetProvider = Provider<List<CardModel>>((ref) {
       for (final card in unit.cards) card,
   ];
   // A stable sort keeps plan order inside each count bucket.
-  final indexed = [
-    for (var i = 0; i < ordered.length; i++) (card: ordered[i], order: i),
-  ]..sort((a, b) {
-      final byCount = (offers[a.card.id] ?? 0).compareTo(
-        offers[b.card.id] ?? 0,
-      );
-      return byCount != 0 ? byCount : a.order.compareTo(b.order);
-    });
+  final indexed =
+      [for (var i = 0; i < ordered.length; i++) (card: ordered[i], order: i)]
+        ..sort((a, b) {
+          final byCount = (offers[a.card.id] ?? 0).compareTo(
+            offers[b.card.id] ?? 0,
+          );
+          return byCount != 0 ? byCount : a.order.compareTo(b.order);
+        });
   return [for (final e in indexed) e.card];
 });

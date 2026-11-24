@@ -102,8 +102,7 @@ class _MouthPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final scale =
-        (size.width < size.height ? size.width : size.height) / grid;
+    final scale = (size.width < size.height ? size.width : size.height) / grid;
     canvas.save();
     canvas.translate(
       (size.width - grid * scale) / 2,

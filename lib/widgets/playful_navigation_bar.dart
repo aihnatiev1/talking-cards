@@ -21,73 +21,80 @@ class PlayfulNavigationBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final labels = isEn
-        ? ['Cards', 'Games', 'Coloring']
-        : ['Картки', 'Ігри', 'Малюємо'];
+        ? ['Play', 'Cards', 'My world']
+        : ['Грати', 'Картки', 'Мій світ'];
     // A floating bar, inset to the same 16 dp the content grids use, and
     // pushed as far down as it goes. It used to sit above the whole
     // home-indicator inset — 34 dp on a modern iPhone, a third of a bar's
     // worth of screen given to nothing. [_bottomGap] instead: the
     // indicator floats over the bar's lower edge, well under the labels,
     // and the games get the rest back.
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, _bottomGap),
-      child: DecoratedBox(
-        decoration: const BoxDecoration(
-          color: Color(0xFFFFFCF6),
-          borderRadius: BorderRadius.all(Radius.circular(28)),
-          boxShadow: [
-            BoxShadow(
-              color: Color(0x14625478),
-              blurRadius: 22,
-              offset: Offset(0, -4),
-            ),
-          ],
-          border: Border.fromBorderSide(
-            BorderSide(color: Colors.white, width: 2),
-          ),
+    return DecoratedBox(
+      // Content scrolls under the bar; this fade is where it disappears.
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [DT.bgWarm.withValues(alpha: 0), DT.bgWarm],
+          stops: const [0, .55],
         ),
-        child: Center(
-          heightFactor: 1,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 620),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final width = (constraints.maxWidth - 12) / 3;
-                  double labelHeight = 0;
-                  for (final label in labels) {
-                    final painter = TextPainter(
-                      text: TextSpan(
-                        text: label,
-                        style: DefaultTextStyle.of(
-                          context,
-                        ).style.merge(_labelStyle),
-                      ),
-                      textDirection: Directionality.of(context),
-                      textScaler: MediaQuery.textScalerOf(context),
-                    )..layout(maxWidth: math.max(1, width - 16));
-                    labelHeight = math.max(labelHeight, painter.height);
-                    painter.dispose();
-                  }
-                  return Row(
-                    children: [
-                      for (int i = 0; i < 3; i++) ...[
-                        if (i > 0) const SizedBox(width: 6),
-                        Expanded(
-                          child: _TabButton(
-                            key: ValueKey('main-tab-$i'),
-                            index: i,
-                            label: labels[i],
-                            selected: selectedIndex == i,
-                            height: math.max(76, 56 + labelHeight),
-                            onTap: () => onSelected(i),
-                          ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 28, 16, _bottomGap),
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            color: DT.surfaceWhite,
+            borderRadius: BorderRadius.all(Radius.circular(28)),
+            boxShadow: [
+              BoxShadow(color: DT.outline, blurRadius: 0, offset: Offset(0, 4)),
+            ],
+            border: Border.fromBorderSide(
+              BorderSide(color: DT.outline, width: 2),
+            ),
+          ),
+          child: Center(
+            heightFactor: 1,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 620),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final width = (constraints.maxWidth - 12) / 3;
+                    double labelHeight = 0;
+                    for (final label in labels) {
+                      final painter = TextPainter(
+                        text: TextSpan(
+                          text: label,
+                          style: DefaultTextStyle.of(
+                            context,
+                          ).style.merge(_labelStyle),
                         ),
+                        textDirection: Directionality.of(context),
+                        textScaler: MediaQuery.textScalerOf(context),
+                      )..layout(maxWidth: math.max(1, width - 16));
+                      labelHeight = math.max(labelHeight, painter.height);
+                      painter.dispose();
+                    }
+                    return Row(
+                      children: [
+                        for (int i = 0; i < 3; i++) ...[
+                          if (i > 0) const SizedBox(width: 6),
+                          Expanded(
+                            child: _TabButton(
+                              key: ValueKey('main-tab-$i'),
+                              index: i,
+                              label: labels[i],
+                              selected: selectedIndex == i,
+                              height: math.max(76, 56 + labelHeight),
+                              onTap: () => onSelected(i),
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
-                  );
-                },
+                    );
+                  },
+                ),
               ),
             ),
           ),
@@ -103,10 +110,10 @@ const double _bottomGap = 8;
 
 // Tile-title face at shelf size; the family and weight come from DT.
 final _labelStyle = DT.tileTitle.copyWith(fontSize: 13, height: 1.15);
-const _accents = [Color(0xFF7960D8), Color(0xFFE68A3D), Color(0xFF319F92)];
-const _tints = [Color(0xFFF0E9FF), Color(0xFFFFEEDB), Color(0xFFE2F4EC)];
-const _inks = [Color(0xFF594391), Color(0xFF91501F), Color(0xFF24695E)];
-const _icons = [AppIcon.navCards, AppIcon.navGames, AppIcon.navColoring];
+const _accents = [DT.brand, DT.sky, DT.peach];
+const _tints = [DT.mintTint, DT.skyTint, DT.peachTint];
+final _inks = _accents.map(DT.solid).toList();
+const _icons = [AppIcon.navGames, AppIcon.navCards, AppIcon.catWorld];
 
 class _TabButton extends StatelessWidget {
   final int index;
@@ -140,7 +147,7 @@ class _TabButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(22),
           color: selected ? _tints[index] : Colors.transparent,
           border: Border.all(
-            color: selected ? Colors.white : Colors.transparent,
+            color: selected ? _accents[index] : Colors.transparent,
             width: 2,
           ),
           boxShadow: selected
@@ -188,7 +195,7 @@ class _TabButton extends StatelessWidget {
                   label,
                   textAlign: TextAlign.center,
                   style: _labelStyle.copyWith(
-                    color: selected ? _inks[index] : const Color(0xFF665E70),
+                    color: selected ? _inks[index] : DT.textSecondary,
                   ),
                 ),
               ],

@@ -14,35 +14,39 @@ void main() {
     VoidCallback? onTap,
     VoidCallback? onLongPress,
     bool reduceMotion = false,
-  }) =>
-      MaterialApp(
-        home: MediaQuery(
-          data: MediaQueryData(disableAnimations: reduceMotion),
-          child: Scaffold(
-            body: Center(
-              child: KidTap(
-                onTap: onTap,
-                onLongPress: onLongPress,
-                child: const SizedBox(key: target, width: 80, height: 80),
-              ),
-            ),
+  }) => MaterialApp(
+    home: MediaQuery(
+      data: MediaQueryData(disableAnimations: reduceMotion),
+      child: Scaffold(
+        body: Center(
+          child: KidTap(
+            onTap: onTap,
+            onLongPress: onLongPress,
+            child: const SizedBox(key: target, width: 80, height: 80),
           ),
         ),
-      );
+      ),
+    ),
+  );
 
   double scaleOf(WidgetTester tester) => tester
-      .widget<ScaleTransition>(find.descendant(
-        of: find.byType(KidTap),
-        matching: find.byType(ScaleTransition),
-      ))
+      .widget<ScaleTransition>(
+        find.descendant(
+          of: find.byType(KidTap),
+          matching: find.byType(ScaleTransition),
+        ),
+      )
       .scale
       .value;
 
-  testWidgets('the squeeze starts on tapDown, before the tap is delivered',
-      (tester) async {
+  testWidgets('the squeeze starts on tapDown, before the tap is delivered', (
+    tester,
+  ) async {
     var taps = 0;
     await tester.pumpWidget(host(onTap: () => taps++));
-    final gesture = await tester.startGesture(tester.getCenter(find.byKey(target)));
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byKey(target)),
+    );
     // The ticker's first frame stamps its start; the squeeze shows from the
     // next one — already moving, nothing delivered yet.
     await tester.pump();
@@ -58,10 +62,13 @@ void main() {
     expect(taps, 1);
   });
 
-  testWidgets('release springs back past 1.0 and settles at exactly 1.0',
-      (tester) async {
+  testWidgets('release springs back past 1.0 and settles at exactly 1.0', (
+    tester,
+  ) async {
     await tester.pumpWidget(host(onTap: () {}));
-    final gesture = await tester.startGesture(tester.getCenter(find.byKey(target)));
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byKey(target)),
+    );
     await tester.pump();
     await tester.pump(DT.pressDownMs);
     await gesture.up();
@@ -87,11 +94,12 @@ void main() {
     expect(taps, 1);
   });
 
-  testWidgets('a cancelled press springs back without tapping',
-      (tester) async {
+  testWidgets('a cancelled press springs back without tapping', (tester) async {
     var taps = 0;
     await tester.pumpWidget(host(onTap: () => taps++));
-    final gesture = await tester.startGesture(tester.getCenter(find.byKey(target)));
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byKey(target)),
+    );
     await tester.pump();
     await tester.pump(DT.pressDownMs);
     expect(scaleOf(tester), closeTo(DT.pressScale, 0.001));
@@ -101,8 +109,9 @@ void main() {
     expect(taps, 0);
   });
 
-  testWidgets('long-press is forwarded and the scale is released first',
-      (tester) async {
+  testWidgets('long-press is forwarded and the scale is released first', (
+    tester,
+  ) async {
     var longPresses = 0;
     var taps = 0;
     await tester.pumpWidget(
@@ -115,11 +124,14 @@ void main() {
     expect(scaleOf(tester), 1.0);
   });
 
-  testWidgets('reduced motion: no scale, but the tap still lands',
-      (tester) async {
+  testWidgets('reduced motion: no scale, but the tap still lands', (
+    tester,
+  ) async {
     var taps = 0;
     await tester.pumpWidget(host(onTap: () => taps++, reduceMotion: true));
-    final gesture = await tester.startGesture(tester.getCenter(find.byKey(target)));
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byKey(target)),
+    );
     await tester.pump();
     await tester.pump(DT.pressDownMs);
     expect(scaleOf(tester), 1.0);
@@ -129,10 +141,13 @@ void main() {
     expect(taps, 1);
   });
 
-  testWidgets('without a callback it neither scales nor throws',
-      (tester) async {
+  testWidgets('without a callback it neither scales nor throws', (
+    tester,
+  ) async {
     await tester.pumpWidget(host());
-    final gesture = await tester.startGesture(tester.getCenter(find.byKey(target)));
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byKey(target)),
+    );
     await tester.pump();
     await tester.pump(DT.pressDownMs);
     expect(scaleOf(tester), 1.0);

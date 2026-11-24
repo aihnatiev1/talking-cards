@@ -146,8 +146,9 @@ class ColoringHubScreen extends ConsumerWidget {
     return KidScreen(
       accent: DT.brand,
       background: DT.violetTint,
-      // A tab, not a pushed route: the way out is the bar underneath.
-      showLeading: false,
+      // Pushed over the home screen (shortcut, My world, quest), where
+      // nothing else leads out and `_KidRoute` has no iOS swipe-back.
+      showLeading: Navigator.canPop(context),
       title: Text(
         s('Малюємо', 'Let\'s draw'),
         style: DT.h2.copyWith(fontSize: 19, color: DT.textPrimary),
@@ -163,8 +164,7 @@ class ColoringHubScreen extends ConsumerWidget {
               shrinkWrap: true,
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount:
-                    MediaQuery.sizeOf(context).width < 600 ? 2 : 3,
+                crossAxisCount: MediaQuery.sizeOf(context).width < 600 ? 2 : 3,
                 mainAxisSpacing: 14,
                 crossAxisSpacing: 14,
                 childAspectRatio: 0.92,

@@ -16,3 +16,9 @@ const int kGamesTabIndex = 1;
 
 /// «Малюємо» — where the day's drawing step sends the child.
 const int kDrawTabIndex = 2;
+
+/// Semantic destinations for the redesigned home. Legacy integer requests
+/// remain available to old quest flows and are translated by HomeScreen.
+enum HomeDestination { play, cards, world }
+
+final homeDestinationProvider = StateProvider<HomeDestination?>((ref) => null);

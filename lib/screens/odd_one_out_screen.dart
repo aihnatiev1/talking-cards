@@ -72,10 +72,7 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
   /// packs open — does it fall back to the old "three from one pack, one
   /// from another", which is right by catalogue and not always by picture.
   void _buildRound() {
-    final task = SemanticGroups.task(
-      widget.packs.expand((p) => p.cards),
-      _rng,
-    );
+    final task = SemanticGroups.task(widget.packs.expand((p) => p.cards), _rng);
     final _Round round = task != null ? _semantic(task) : _byPack();
 
     setState(() {
@@ -87,12 +84,12 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
   }
 
   _Round _semantic(OddOneOutTask task) => _Round(
-        slots: [
-          ...task.majority.map((c) => _Slot(card: c, isOdd: false)),
-          _Slot(card: task.odd, isOdd: true),
-        ]..shuffle(_rng),
-        key: task.majorityGroup.name,
-      );
+    slots: [
+      ...task.majority.map((c) => _Slot(card: c, isOdd: false)),
+      _Slot(card: task.odd, isOdd: true),
+    ]..shuffle(_rng),
+    key: task.majorityGroup.name,
+  );
 
   _Round _byPack() {
     final pool = [
@@ -126,8 +123,9 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
 
     if (slot.isOdd) {
       FeedbackService.instance.event(FeedbackEvent.correct);
-      AudioService.instance
-          .playPraise(isEn: ref.read(languageProvider) == 'en');
+      AudioService.instance.playPraise(
+        isEn: ref.read(languageProvider) == 'en',
+      );
       // The card itself pops, frames in success and bursts (AnswerFrame) —
       // and `_answered` also starts the wordless demonstration: the three
       // that belong together close ranks, the odd one drifts off the board.
@@ -201,69 +199,68 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
         semanticsLabel: s('Блум', 'Bloom'),
       ),
       body: Padding(
-          padding: EdgeInsets.fromLTRB(
-            24,
-            0,
-            24,
-            max(DT.size.mascotCompanionOf(context), DT.size.tapMin) +
-            BloomMascot.hopClearance +
-            DT.sp16,
-          ),
-          child: Column(
-            children: [
-              const SizedBox(height: 8),
+        padding: EdgeInsets.fromLTRB(
+          24,
+          0,
+          24,
+          max(DT.size.mascotCompanionOf(context), DT.size.tapMin) +
+              BloomMascot.hopClearance +
+              DT.sp16,
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 8),
 
-              // Hint — small thumbnails of the actual majority cards + "?"
-              AnimatedSwitcher(
-                duration: motion.dur(DT.motion.enter),
-                child: Column(
-                  key: ValueKey(_round.key),
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        for (final c in majorityCards) ...[
-                          _HintThumb(card: c),
-                          const SizedBox(width: 6),
-                        ],
+            // Hint — small thumbnails of the actual majority cards + "?"
+            AnimatedSwitcher(
+              duration: motion.dur(DT.motion.enter),
+              child: Column(
+                key: ValueKey(_round.key),
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      for (final c in majorityCards) ...[
+                        _HintThumb(card: c),
                         const SizedBox(width: 6),
-                        const Text('❓',
-                            style: TextStyle(fontSize: 36)),
                       ],
+                      const SizedBox(width: 6),
+                      const Text('❓', style: TextStyle(fontSize: 36)),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    s('Яка картка зайва?', 'Which is odd?'),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: DT.onTint(hintColor),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      s('Яка картка зайва?', 'Which is odd?'),
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: hintColor,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
+            ),
 
-              const SizedBox(height: 32),
+            const SizedBox(height: 32),
 
-              // 2×2 card grid
-              Expanded(
-                child: GridView.count(
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: _columns,
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                  childAspectRatio: 0.88,
-                  children: [
-                    for (var i = 0; i < _round.slots.length; i++)
-                      _buildCard(_round.slots[i], i),
-                  ],
-                ),
+            // 2×2 card grid
+            Expanded(
+              child: GridView.count(
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: _columns,
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
+                childAspectRatio: 0.88,
+                children: [
+                  for (var i = 0; i < _round.slots.length; i++)
+                    _buildCard(_round.slots[i], i),
+                ],
               ),
+            ),
 
-              const SizedBox(height: 16),
-            ],
-          ),
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
     );
   }
@@ -275,10 +272,10 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
     final mark = !sl.isOdd
         ? AnswerMark.none
         : _answered
-            ? AnswerMark.correct
-            : _misses.showHint
-                ? AnswerMark.hint
-                : AnswerMark.none;
+        ? AnswerMark.correct
+        : _misses.showHint
+        ? AnswerMark.hint
+        : AnswerMark.none;
 
     return _SortDemo(
       key: ValueKey(card.id),
@@ -299,7 +296,6 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
       ),
     );
   }
-
 }
 
 // ─────────────────────────────────────────────
@@ -322,9 +318,9 @@ class _Round {
   const _Round({required this.slots, required this.key});
 
   List<CardModel> get majority => [
-        for (final s in slots)
-          if (!s.isOdd) s.card,
-      ];
+    for (final s in slots)
+      if (!s.isOdd) s.card,
+  ];
 }
 
 // ─────────────────────────────────────────────
@@ -386,8 +382,8 @@ class _SortDemo extends StatelessWidget {
           scale: !playing || motion.reduce
               ? 1
               : isOdd
-                  ? 0.86
-                  : 1.03,
+              ? 0.86
+              : 1.03,
           duration: motion.dur(DT.motion.sortDemo),
           curve: DT.motion.standard,
           child: child,
@@ -410,8 +406,8 @@ class _HintThumb extends StatelessWidget {
     return Container(
       // 56, not 44: the hint row is the child's second chance at the round
       // and has to read at arm's length (ux-gap G12).
-      width: 56,
-      height: 56,
+      width: 72,
+      height: 72,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -444,43 +440,51 @@ class _CardChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Real webp only — plain placeholder if an unsanitized card
-          // ever slips through (never emoji in gameplay).
-          if (card.image != null)
-            SizedBox(
-              height: 70,
-              child: CardImage.forCard(card, padding: EdgeInsets.zero),
-            )
-          else
-            Container(
-              width: 70,
-              height: 70,
-              decoration: BoxDecoration(
-                color: card.colorAccent.withValues(alpha: 0.25),
-                borderRadius: BorderRadius.circular(14),
+    // The picture takes what the tile has left under a 22 pt word, not a
+    // fixed 70: on a tall phone the tiles are ~230 dp and 70 left them
+    // mostly empty.
+    return LayoutBuilder(
+      builder: (context, box) {
+        final art = (box.maxHeight - 56).clamp(70.0, 220.0);
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Real webp only — plain placeholder if an unsanitized card
+              // ever slips through (never emoji in gameplay).
+              if (card.image != null)
+                SizedBox(
+                  height: art,
+                  child: CardImage.forCard(card, padding: EdgeInsets.zero),
+                )
+              else
+                Container(
+                  width: art,
+                  height: art,
+                  decoration: BoxDecoration(
+                    color: card.colorAccent.withValues(alpha: 0.25),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text(
+                  card.sound,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: DT.onTint(card.colorAccent),
+                  ),
+                ),
               ),
-            ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Text(
-              card.sound,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: card.colorAccent,
-              ),
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

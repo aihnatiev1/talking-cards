@@ -52,17 +52,23 @@ void main() {
     onTap: () {},
   );
 
-  const size = Size(390, 420);
+  const size = Size(390, 680);
 
-  Future<void> pumpHero(WidgetTester tester, Widget hero) => pumpGolden(
-    tester,
-    Padding(
-      padding: const EdgeInsets.all(DT.sp16),
-      child: Align(alignment: Alignment.topCenter, child: hero),
-    ),
-    size: size,
-    wrap: (host) => ProviderScope(child: host),
-  );
+  Future<void> pumpHero(WidgetTester tester, Widget hero) async {
+    await pumpGolden(
+      tester,
+      Padding(
+        padding: const EdgeInsets.all(DT.sp16),
+        child: Align(alignment: Alignment.topCenter, child: hero),
+      ),
+      size: size,
+      wrap: (host) => ProviderScope(child: host),
+    );
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 150)),
+    );
+    await tester.pumpAndSettle();
+  }
 
   testWidgets('tablet invitation with artwork', (tester) async {
     await pumpGolden(
@@ -72,7 +78,9 @@ void main() {
         child: Align(
           alignment: Alignment.topCenter,
           child: DailyHeroCard(
-            title: 'Протилежності',
+            title: 'Маленька пригода',
+            actionLabel: 'Продовжити пригоду',
+            collapseTasks: true,
             accent: Colors.purple,
             image: 'big',
             progress: .18,
@@ -86,7 +94,7 @@ void main() {
           ),
         ),
       ),
-      size: const Size(700, 400),
+      size: const Size(700, 530),
       wrap: (host) => ProviderScope(child: host),
     );
     await tester.runAsync(() async {
@@ -110,8 +118,11 @@ void main() {
       await pumpHero(
         tester,
         DailyHeroCard(
-          title: 'Перша пригода',
-          accent: DT.coral,
+          title: 'Маленька пригода',
+          actionLabel: 'Почати пригоду',
+          collapseTasks: true,
+          image: 'big',
+          accent: DT.brand,
           fallbackEmoji: '🐱',
           firstVisit: true,
           bloomLine: 'Ходімо, я покажу',
@@ -125,7 +136,6 @@ void main() {
         ),
       );
       expect(find.text('Починаємо'), findsOneWidget);
-      expect(find.text('3 хв · 4 слова'), findsOneWidget);
       expect(find.byType(LinearProgressIndicator), findsNothing);
       await expectLater(
         find.byKey(goldenKey),
@@ -156,7 +166,6 @@ void main() {
       );
       expect(find.text('Сьогодні'), findsOneWidget);
       expect(find.text('2 з 5 виконано'), findsOneWidget);
-      expect(find.text('~3 хв залишилось'), findsOneWidget);
       expect(find.text('Далі: скажи «жаба»'), findsOneWidget);
       await expectLater(
         find.byKey(goldenKey),

@@ -77,9 +77,7 @@ void main() {
       final key =
           '${threeDaysAgo.year}-${threeDaysAgo.month.toString().padLeft(2, '0')}-${threeDaysAgo.day.toString().padLeft(2, '0')}';
 
-      SharedPreferences.setMockInitialValues({
-        'card_last_seen_edge_card': key,
-      });
+      SharedPreferences.setMockInitialValues({'card_last_seen_edge_card': key});
 
       final notifier = CardLastSeenNotifier();
       await Future.delayed(Duration.zero);

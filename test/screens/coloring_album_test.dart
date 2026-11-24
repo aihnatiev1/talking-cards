@@ -23,20 +23,22 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   CardModel card(String id, String image) => CardModel(
-        id: id,
-        sound: id,
-        text: id,
-        emoji: '🐶',
-        colorBg: const Color(0xFFFFFFFF),
-        colorAccent: const Color(0xFF000000),
-        image: image,
-        audioKey: id,
-      );
+    id: id,
+    sound: id,
+    text: id,
+    emoji: '🐶',
+    colorBg: const Color(0xFFFFFFFF),
+    colorAccent: const Color(0xFF000000),
+    image: image,
+    audioKey: id,
+  );
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
-    AssetPackService.instance
-        .debugConfigure(padAssets: const {}, bundled: true);
+    AssetPackService.instance.debugConfigure(
+      padAssets: const {},
+      bundled: true,
+    );
     FeedbackService.debugMute = true;
   });
 
@@ -69,43 +71,46 @@ void main() {
       addTearDown(second.dispose);
       await second.read(coloringAlbumProvider.notifier).ready;
 
-      expect(
-        second.read(coloringAlbumProvider).entries.map((e) => e.image),
-        ['cat'],
-      );
+      expect(second.read(coloringAlbumProvider).entries.map((e) => e.image), [
+        'cat',
+      ]);
       expect(second.read(coloringAlbumProvider).loaded, isTrue);
     });
 
-    test('the same picture twice is one keepsake, moved to the front',
-        () async {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-      final album = container.read(coloringAlbumProvider.notifier);
-      await album.ready;
+    test(
+      'the same picture twice is one keepsake, moved to the front',
+      () async {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+        final album = container.read(coloringAlbumProvider.notifier);
+        await album.ready;
 
-      await album.record(card('cat', 'cat'));
-      await album.record(card('dog', 'dog'));
-      await album.record(card('cat', 'cat'));
+        await album.record(card('cat', 'cat'));
+        await album.record(card('dog', 'dog'));
+        await album.record(card('cat', 'cat'));
 
-      expect(
-        container.read(coloringAlbumProvider).entries.map((e) => e.image),
-        ['cat', 'dog'],
-      );
-    });
+        expect(
+          container.read(coloringAlbumProvider).entries.map((e) => e.image),
+          ['cat', 'dog'],
+        );
+      },
+    );
 
-    test('an unfinished picture is remembered, and finishing it clears that',
-        () async {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-      final album = container.read(coloringAlbumProvider.notifier);
-      await album.ready;
+    test(
+      'an unfinished picture is remembered, and finishing it clears that',
+      () async {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+        final album = container.read(coloringAlbumProvider.notifier);
+        await album.ready;
 
-      await album.setUnfinished('cat');
-      expect(container.read(coloringAlbumProvider).unfinishedCardId, 'cat');
+        await album.setUnfinished('cat');
+        expect(container.read(coloringAlbumProvider).unfinishedCardId, 'cat');
 
-      await album.record(card('cat', 'cat'));
-      expect(container.read(coloringAlbumProvider).unfinishedCardId, isNull);
-    });
+        await album.record(card('cat', 'cat'));
+        expect(container.read(coloringAlbumProvider).unfinishedCardId, isNull);
+      },
+    );
 
     test('a corrupt line is skipped, not thrown over', () async {
       SharedPreferences.setMockInitialValues({
@@ -143,12 +148,14 @@ void main() {
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
-      final container = ProviderContainer(overrides: [
-        packsProvider.overrideWith((ref) async => packs),
-        // Keeps `PurchaseService` (and a billing channel that does not
-        // exist in a test) out of the free-allowance check.
-        isProProvider.overrideWith((ref) => false),
-      ]);
+      final container = ProviderContainer(
+        overrides: [
+          packsProvider.overrideWith((ref) async => packs),
+          // Keeps `PurchaseService` (and a billing channel that does not
+          // exist in a test) out of the free-allowance check.
+          isProProvider.overrideWith((ref) => false),
+        ],
+      );
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
@@ -165,8 +172,9 @@ void main() {
       return container;
     }
 
-    testWidgets('a spent allowance is the gate from the first frame',
-        (tester) async {
+    testWidgets('a spent allowance is the gate from the first frame', (
+      tester,
+    ) async {
       // The count used to load after the first picture was already dealt,
       // so every visit handed out one more free picture.
       SharedPreferences.setMockInitialValues({'coloring_completed_count': 3});
@@ -177,8 +185,9 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     });
 
-    testWidgets('a purchase takes the gate down and deals a picture',
-        (tester) async {
+    testWidgets('a purchase takes the gate down and deals a picture', (
+      tester,
+    ) async {
       // The owner's case, 2026-10-01: a parent paid from this gate and the
       // screen kept offering the subscription they had just bought.
       SharedPreferences.setMockInitialValues({'coloring_completed_count': 3});
@@ -218,8 +227,9 @@ void main() {
       expect(find.byKey(const ValueKey('ghost-finger')), findsNothing);
     });
 
-    testWidgets('has a close button — it is a pushed route again',
-        (tester) async {
+    testWidgets('has a close button — it is a pushed route again', (
+      tester,
+    ) async {
       // History: while colouring *was* the tab, the default X popped the
       // home shell and left a black screen, so it was removed. The tab is
       // now the drawing shelf and this screen is pushed from it, which
@@ -237,13 +247,17 @@ void main() {
       );
     });
 
-    testWidgets('Bloom waits by the button before anything is finished',
-        (tester) async {
+    testWidgets('Bloom waits by the button before anything is finished', (
+      tester,
+    ) async {
       final container = await open(tester);
       addTearDown(container.dispose);
 
-      expect(find.byType(BloomMascot), findsOneWidget,
-          reason: 'a companion who is already there, not a reward');
+      expect(
+        find.byType(BloomMascot),
+        findsOneWidget,
+        reason: 'a companion who is already there, not a reward',
+      );
       expect(find.text('Нова картинка'), findsOneWidget);
       // Nothing is praised yet.
       expect(find.text('Молодець!'), findsNothing);
@@ -308,15 +322,17 @@ void main() {
       // The praise is the whole "done" signal: no plate fences the bar off.
       expect(find.byType(BloomMascot), findsOneWidget);
       expect(
-        find.byWidgetPredicate((w) =>
-            w is Text &&
-            const [
-              'Молодець!',
-              'Круто!',
-              'Так тримати!',
-              'Гарно!',
-              'Ого!',
-            ].contains(w.data)),
+        find.byWidgetPredicate(
+          (w) =>
+              w is Text &&
+              const [
+                'Молодець!',
+                'Круто!',
+                'Так тримати!',
+                'Гарно!',
+                'Ого!',
+              ].contains(w.data),
+        ),
         findsOneWidget,
         reason: 'Bloom praises the finished picture',
       );

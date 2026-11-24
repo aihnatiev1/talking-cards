@@ -11,32 +11,29 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   final service = AssetPackService.instance;
-  const pad = {
-    'assets/pad_content/images/webp/paid.webp',
-  };
+  const pad = {'assets/pad_content/images/webp/paid.webp'};
   const all = {
     'assets/images/webp/free.webp',
     'assets/pad_content/images/webp/paid.webp',
   };
 
   CardModel card(String id, {String? image}) => CardModel(
-        id: id,
-        sound: id,
-        text: id,
-        emoji: '🐶',
-        colorBg: const Color(0xFFFFFFFF),
-        colorAccent: const Color(0xFF000000),
-        image: image,
-      );
+    id: id,
+    sound: id,
+    text: id,
+    emoji: '🐶',
+    colorBg: const Color(0xFFFFFFFF),
+    colorAccent: const Color(0xFF000000),
+    image: image,
+  );
 
   Future<void> pump(WidgetTester tester, Widget child) => tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(home: Scaffold(body: SizedBox.square(
-            dimension: 200,
-            child: child,
-          ))),
-        ),
-      );
+    ProviderScope(
+      child: MaterialApp(
+        home: Scaffold(body: SizedBox.square(dimension: 200, child: child)),
+      ),
+    ),
+  );
 
   setUp(() {
     CardImage.debugResetReported();
@@ -49,8 +46,9 @@ void main() {
     expect(find.text('🐶'), findsNothing);
   });
 
-  testWidgets('a pack still downloading shows the emoji, never a spinner',
-      (tester) async {
+  testWidgets('a pack still downloading shows the emoji, never a spinner', (
+    tester,
+  ) async {
     // A two-year-old reads a spinner as "broken". The emoji is the same
     // thing the card shows when it has no illustration at all, so the
     // screen stays legible instead of turning into a loading state.
@@ -68,14 +66,16 @@ void main() {
     expect(find.text('🐶'), findsOneWidget);
   });
 
-  testWidgets('an asset missing from the build shows the emoji',
-      (tester) async {
+  testWidgets('an asset missing from the build shows the emoji', (
+    tester,
+  ) async {
     await pump(tester, CardImage.forCard(card('c', image: 'kartoplya')));
     expect(find.text('🐶'), findsOneWidget);
   });
 
-  testWidgets('undelivered content reports nothing to FlutterError',
-      (tester) async {
+  testWidgets('undelivered content reports nothing to FlutterError', (
+    tester,
+  ) async {
     // The regression that matters. main.dart routes FlutterError.onError
     // into recordFlutterFatalError, so anything that reaches it is filed
     // as a crash — which is how two intact, merely-undownloaded webp files
@@ -93,8 +93,9 @@ void main() {
     expect(errors, isEmpty);
   });
 
-  testWidgets('the placeholder becomes the picture when the pack lands',
-      (tester) async {
+  testWidgets('the placeholder becomes the picture when the pack lands', (
+    tester,
+  ) async {
     // Without watching the pack state a tile that missed once stays blank
     // until some unrelated rebuild happens by.
     service.debugConfigure(padAssets: pad, bundled: false, allAssets: all);

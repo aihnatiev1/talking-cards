@@ -32,9 +32,9 @@ void main() {
 
     test('Ukrainian-specific vowels Є, Ї, Ю, Я', () {
       expect(countSyllables('ЇЖАК'), 2); // Ї + А
-      expect(countSyllables('ЮЛА'), 2);   // Ю + А
+      expect(countSyllables('ЮЛА'), 2); // Ю + А
       expect(countSyllables('ЯЛИНА'), 3); // Я + И + А
-      expect(countSyllables('ЄВРО'), 2);  // Є + О
+      expect(countSyllables('ЄВРО'), 2); // Є + О
     });
 
     test('non-vowel chars ignored', () {

@@ -70,9 +70,10 @@ class StatsScreen extends ConsumerWidget {
                 context: context,
                 completedPacks: completed.length,
                 totalPacks: packs.length,
-                seenCards: progress.entries.where((e) => !e.key.startsWith('_')).fold<int>(0, (s, e) => s + e.value),
-                totalCards:
-                    packs.fold<int>(0, (s, p) => s + p.cards.length),
+                seenCards: progress.entries
+                    .where((e) => !e.key.startsWith('_'))
+                    .fold<int>(0, (s, e) => s + e.value),
+                totalCards: packs.fold<int>(0, (s, p) => s + p.cards.length),
                 streak: streak.currentStreak,
                 badges: streak.unlockedRewards,
                 isEn: ref.read(languageProvider) == 'en',
@@ -87,8 +88,10 @@ class StatsScreen extends ConsumerWidget {
         data: (packs) {
           final totalPacks = packs.length;
           final completedCount = completed.length;
-          final totalCards =
-              packs.fold<int>(0, (sum, p) => sum + p.cards.length);
+          final totalCards = packs.fold<int>(
+            0,
+            (sum, p) => sum + p.cards.length,
+          );
           final seenCards = progress.entries
               .where((e) => !e.key.startsWith('_'))
               .fold<int>(0, (sum, e) => sum + e.value);
@@ -103,11 +106,11 @@ class StatsScreen extends ConsumerWidget {
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(
-                      vertical: 20, horizontal: 20),
+                    vertical: 20,
+                    horizontal: 20,
+                  ),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [DT.brand, DT.teal],
-                    ),
+                    gradient: const LinearGradient(colors: [DT.brand, DT.teal]),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -134,8 +137,10 @@ class StatsScreen extends ConsumerWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              s('$seenCards з $totalCards карток переглянуто',
-                                '$seenCards of $totalCards cards viewed'),
+                              s(
+                                '$seenCards з $totalCards карток переглянуто',
+                                '$seenCards of $totalCards cards viewed',
+                              ),
                               style: const TextStyle(
                                 fontSize: 13,
                                 color: Colors.white70,
@@ -151,7 +156,9 @@ class StatsScreen extends ConsumerWidget {
                       if (streak.currentStreak >= 2)
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 12),
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(16),
@@ -167,9 +174,7 @@ class StatsScreen extends ConsumerWidget {
                                 ),
                               ),
                               Text(
-                                s.isEn
-                                    ? 'days'
-                                    : dayWord(streak.currentStreak),
+                                s.isEn ? 'days' : dayWord(streak.currentStreak),
                                 style: const TextStyle(
                                   fontSize: 12,
                                   color: Colors.white70,
@@ -187,21 +192,21 @@ class StatsScreen extends ConsumerWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     decoration: BoxDecoration(
-                      color:
-                          DT.brand.withValues(alpha: 0.1),
+                      color: DT.brand.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color:
-                            DT.brand.withValues(alpha: 0.2),
+                        color: DT.brand.withValues(alpha: 0.2),
                       ),
                     ),
                     child: Column(
                       children: [
-                        const Text('⏱️',
-                            style: TextStyle(fontSize: 28)),
+                        const Text('⏱️', style: TextStyle(fontSize: 28)),
                         const SizedBox(height: 6),
                         Text(
-                          s('~$approxMinutes хв навчання', '~$approxMinutes min learning'),
+                          s(
+                            '~$approxMinutes хв навчання',
+                            '~$approxMinutes min learning',
+                          ),
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -209,9 +214,14 @@ class StatsScreen extends ConsumerWidget {
                           ),
                         ),
                         Text(
-                          s('$totalViews переглядів карток', '$totalViews card views'),
+                          s(
+                            '$totalViews переглядів карток',
+                            '$totalViews card views',
+                          ),
                           style: TextStyle(
-                              fontSize: 13, color: Colors.grey[600]),
+                            fontSize: 13,
+                            color: Colors.grey[600],
+                          ),
                         ),
                       ],
                     ),
@@ -235,8 +245,7 @@ class StatsScreen extends ConsumerWidget {
                   final packProgress = progress[pack.id] ?? 0;
                   final packTotal = pack.cards.length;
                   final isDone = completed.contains(pack.id);
-                  final ratio =
-                      packTotal > 0 ? packProgress / packTotal : 0.0;
+                  final ratio = packTotal > 0 ? packProgress / packTotal : 0.0;
 
                   return GestureDetector(
                     onTap: () => Navigator.of(context).push(
@@ -245,84 +254,84 @@ class StatsScreen extends ConsumerWidget {
                       ),
                     ),
                     child: Container(
-                    margin: const EdgeInsets.only(bottom: 10),
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .surfaceContainerHighest
-                          .withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.04),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Text(pack.icon,
-                            style: const TextStyle(fontSize: 32)),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment:
-                                CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    pack.title,
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                      color: pack.color,
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHighest
+                            .withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Text(pack.icon, style: const TextStyle(fontSize: 32)),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      pack.title,
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                        color: pack.color,
+                                      ),
+                                    ),
+                                    if (isDone) ...[
+                                      const SizedBox(width: 6),
+                                      const Text(
+                                        '⭐',
+                                        style: TextStyle(fontSize: 14),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(3),
+                                  child: LinearProgressIndicator(
+                                    value: ratio,
+                                    minHeight: 6,
+                                    backgroundColor: pack.color.withValues(
+                                      alpha: 0.12,
+                                    ),
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      pack.color,
                                     ),
                                   ),
-                                  if (isDone) ...[
-                                    const SizedBox(width: 6),
-                                    const Text('⭐',
-                                        style:
-                                            TextStyle(fontSize: 14)),
-                                  ],
-                                ],
-                              ),
-                              const SizedBox(height: 6),
-                              ClipRRect(
-                                borderRadius:
-                                    BorderRadius.circular(3),
-                                child: LinearProgressIndicator(
-                                  value: ratio,
-                                  minHeight: 6,
-                                  backgroundColor: pack.color
-                                      .withValues(alpha: 0.12),
-                                  valueColor:
-                                      AlwaysStoppedAnimation<Color>(
-                                          pack.color),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          '$packProgress/$packTotal',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: isDone
-                                ? pack.color
-                                : Colors.grey[500],
+                          const SizedBox(width: 12),
+                          Text(
+                            '$packProgress/$packTotal',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: isDone ? pack.color : Colors.grey[500],
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 4),
-                        Icon(Icons.chevron_right,
-                            size: 18, color: Colors.grey[400]),
-                      ],
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.chevron_right,
+                            size: 18,
+                            color: Colors.grey[400],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
                   );
                 }),
               ],

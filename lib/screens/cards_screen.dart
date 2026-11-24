@@ -37,6 +37,7 @@ import 'memory_match_screen.dart';
 import '../utils/image_cache_size.dart';
 import '../widgets/kid_screen.dart';
 import '../widgets/card_image.dart';
+import '../widgets/pack_preview_dialog.dart';
 import '../widgets/pack_cover_hero.dart';
 import '../utils/design_tokens.dart';
 import '../utils/kid_routes.dart';
@@ -163,6 +164,7 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   /// This screen's stage in Bloom's brain; left in [dispose] so the home
   /// Bloom takes over again (bloom_character.md §5.4).
   final Object _bloomScene = Object();
+
   /// Resolved once, not per call: `ref` is dead inside `dispose`, and a
   /// getter that reaches for it there throws — taking every line after it
   /// down with it. That is how a word kept playing over the home screen:
@@ -264,7 +266,6 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
       });
     });
   }
-
 
   @override
   void didChangeDependencies() {
@@ -699,7 +700,6 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
 
   void _showUnlockDialog() {
     AudioService.instance.stop();
-    final s = AppS(ref.read(languageProvider) == 'en');
     final allCards = widget.pack.cards;
     final bonus = ref.read(bonusCardsProvider)[widget.pack.id] ?? 0;
     final remaining =
@@ -714,117 +714,12 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
 
     showDialog(
       context: context,
-      builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        child: Padding(
-          padding: const EdgeInsets.all(28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 88,
-                height: 88,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(18),
-                  child: ColoredBox(
-                    color: widget.pack.color.withValues(alpha: 0.12),
-                    child: CardImage(
-                      name: PackCoverHero.coverOf(widget.pack),
-                      fallbackEmoji: widget.pack.icon,
-                      padding: const EdgeInsets.all(6),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                s(
-                  'Сподобалось? ${widget.pack.title}',
-                  'Enjoying ${widget.pack.title}?',
-                ),
-                textAlign: TextAlign.center,
-                // On the dialog's white card the pack colour was the
-                // headline: mint 2.0:1, sunBurst 1.3:1. The heading is
-                // charcoal (11.7:1) and the pack speaks through the icon
-                // above it and the button below.
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: DT.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                s(
-                  'Ще $remaining карток чекають!',
-                  '$remaining more cards waiting!',
-                ),
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Theme.of(context).textTheme.bodyMedium?.color,
-                ),
-              ),
-              const SizedBox(height: 14),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  for (final card in waiting)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: SizedBox(
-                        width: 52,
-                        height: 52,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: ColoredBox(
-                            color: card.colorBg,
-                            child: CardImage.forCard(
-                              card,
-                              padding: const EdgeInsets.all(3),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(ctx).pop();
-                    _handleUnlock();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: DT.solid(widget.pack.color),
-                    foregroundColor: DT.surfaceWhite,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: Text(
-                    s('Розблокувати все', 'Unlock all'),
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: Text(
-                  s('Може пізніше', 'Maybe later'),
-                  style: TextStyle(color: Colors.grey[500], fontSize: 15),
-                ),
-              ),
-            ],
-          ),
-        ),
+      builder: (ctx) => PackPreviewDialog(
+        pack: widget.pack,
+        waiting: waiting,
+        remaining: remaining,
+        isEn: ref.read(languageProvider) == 'en',
+        onUnlock: _handleUnlock,
       ),
     );
   }
@@ -934,225 +829,231 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
         behavior: HitTestBehavior.translucent,
         onPointerDown: (_) => _bloom.userTouch(),
         child: Column(
-        children: [
-          Expanded(
-            child: Stack(
-              children: [
-                // Swiping forward on the last card = "I'm done" — cut the
-                // audio wait and show the celebration/unlock modal now.
-                // Android clamps (OverscrollNotification); iOS bounces past
-                // maxScrollExtent instead — handle both.
-                NotificationListener<ScrollNotification>(
-                  onNotification: (n) {
-                    if (n is ScrollStartNotification) {
-                      _userSwiping = n.dragDetails != null;
-                      // A swipe means "next": cut the current word now,
-                      // not when the next one is ready to start. Waiting
-                      // let the old word run under the new card and, on a
-                      // cold load, into the start of the next word.
-                      if (_userSwiping) AudioService.instance.stop();
-                    }
-                    if (n is ScrollEndNotification) _userSwiping = false;
-                    final pastEnd = n is OverscrollNotification
-                        ? n.overscroll > 0
-                        : n is ScrollUpdateNotification &&
-                              n.metrics.pixels > n.metrics.maxScrollExtent + 24;
-                    if (pastEnd &&
-                        _currentIndex == cards.length - 1 &&
-                        !_celebrating &&
-                        !_skipEndWait) {
-                      _skipEndWait = true;
-                      AudioService.instance.stop();
-                    }
-                    return false;
-                  },
-                  child: PageView.builder(
-                    controller: _pageController,
-                    itemCount: cards.length,
-                    onPageChanged: (index) {
-                      FeedbackService.instance.event(FeedbackEvent.swipe);
-                      if (_userSwiping) _swipeHintKey.currentState?.dismiss();
-                      _cancelAutoPlayCountdown();
-                      _clearProgressStep();
-                      final prev = _currentIndex;
-                      setState(() {
-                        _currentIndex = index;
-                        _isFlipped = false;
-                      });
-                      _precacheAround(index);
-                      // Track only forward progress
-                      if (index > prev) {
-                        final step = _bloom.cardAdvanced(index);
-                        if (step != null) _armProgressStep(step);
-                        _viewedCardIds.add(cards[index].id);
-                        AnalyticsService.instance.logCardView(
-                          cards[index].id,
-                          widget.pack.id,
-                        );
-                        ref
-                            .read(packProgressProvider.notifier)
-                            .updateProgress(widget.pack.id, index);
-                        ref.read(dailyStatsProvider.notifier).recordView();
-                        ref.read(dailyQuestProvider.notifier).recordCardView();
-                        ref
-                            .read(reviewProvider.notifier)
-                            .markSeen(cards[index].id);
-                      }
-                      _onPageLanded(index);
-                      if (!AudioService.instance.autoSpeak.value &&
-                          _autoPlayTimer) {
-                        _startAutoPlayCountdown();
-                      }
-                      // Last card reached
-                      if (index == cards.length - 1) {
-                        // Bloom cheers on the shelf right away — the child
-                        // sees a friend react before the modal arrives. Not
-                        // for a locked preview: Bloom takes no part in the
-                        // unlock dialog (bloom_character.md §3.2).
-                        if (!widget.pack.isLocked) _bloom.packCompleted();
-                        _showCelebrationAfterSound();
-                      }
-                    },
-                    itemBuilder: (context, index) {
-                      return AnimatedBuilder(
-                        animation: _pageController,
-                        builder: (context, child) {
-                          double value = 0;
-                          if (_pageController.position.haveDimensions) {
-                            value =
-                                index -
-                                (_pageController.page ?? index.toDouble());
-                          }
-                          // 3D rotation + scale effect
-                          final angle = value * 0.04;
-                          final scale = lerpDouble(1, 0.9, value.abs())!;
-                          return Transform(
-                            alignment: Alignment.center,
-                            transform: Matrix4.identity()
-                              ..setEntry(3, 2, 0.001)
-                              ..rotateY(angle)
-                              ..scaleByDouble(scale, scale, scale, 1),
-                            // The boundary is *inside* the Transform on
-                            // purpose (motion_language.md §7.3.1): the card
-                            // — art, shadow, rounded clip — rasterises once
-                            // and the swipe becomes pure compositing. It
-                            // also turns the `Opacity` above it from a
-                            // per-frame `saveLayer` over a full-screen card
-                            // into an opacity layer the compositor applies
-                            // for free, which is what made the neighbour
-                            // fade expensive (§7.1, first row).
-                            child: Opacity(
-                              opacity: lerpDouble(
-                                1,
-                                0.5,
-                                value.abs(),
-                              )!.clamp(0.0, 1.0),
-                              child: RepaintBoundary(child: child),
-                            ),
-                          );
-                        },
-                        child: FlashCard(
-                          card: cards[index],
-                          isActive: index == _currentIndex,
-                          ttsLocale: _ttsLocaleForCard(cards[index]),
-                          onFlipChanged: (flipped) {
-                            setState(() => _isFlipped = flipped);
-                          },
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                if (!_isFlipped)
-                  Positioned(
-                    top: 36,
-                    right: 28,
-                    child: SpeakerButton(onActivated: _speakCurrentCard),
-                  ),
-                SwipeHint(key: _swipeHintKey, accent: widget.pack.color),
-                // Auto-play countdown — visible on the card so toddlers see
-                // "next card coming". Single tap pauses (toggles auto-play off).
-                if (_autoPlayTimer && _countdownSeconds > 0)
-                  Positioned(
-                    top: 20,
-                    left: 0,
-                    right: 0,
-                    child: Center(
-                      // Tap = pause, so the seconds live here rather than
-                      // in the header pill. White with an accent ring and
-                      // an accent-derived glyph: white-on-mint was 2.0:1,
-                      // on sunBurst 1.3:1.
-                      child: KidActionPill(
-                        label: '$_countdownSeconds',
-                        icon: Icons.pause_rounded,
-                        accent: widget.pack.color,
-                        onTap: _toggleAutoPlayTimer,
-                        semanticsLabel: s(
-                          'Пауза, $_countdownSeconds',
-                          'Pause, $_countdownSeconds',
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          _BloomShelf(
-            hidden: _celebrating,
-            semanticsLabel: s('Блум', 'Bloom'),
-          ),
-          if (widget.pack.isLocked)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-              color: PackPalette.of(widget.pack.color).tint,
-              child: Row(
+          children: [
+            Expanded(
+              child: Stack(
                 children: [
-                  Icon(
-                    Icons.lock_open_rounded,
-                    color: DT.solid(widget.pack.color),
-                    size: 22,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      s(
-                        'Превʼю ${cards.length} з ${allCards.length} карток',
-                        'Preview ${cards.length} of ${allCards.length} cards',
-                      ),
-                      // Pack-coloured text on a pack-coloured wash was
-                      // 1.9:1 on mint; charcoal on the tint is ≥ 8.9:1 on
-                      // every pack, and the colour stays in the icon and
-                      // the button.
-                      style: const TextStyle(
-                        color: DT.textPrimary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
+                  // Swiping forward on the last card = "I'm done" — cut the
+                  // audio wait and show the celebration/unlock modal now.
+                  // Android clamps (OverscrollNotification); iOS bounces past
+                  // maxScrollExtent instead — handle both.
+                  NotificationListener<ScrollNotification>(
+                    onNotification: (n) {
+                      if (n is ScrollStartNotification) {
+                        _userSwiping = n.dragDetails != null;
+                        // A swipe means "next": cut the current word now,
+                        // not when the next one is ready to start. Waiting
+                        // let the old word run under the new card and, on a
+                        // cold load, into the start of the next word.
+                        if (_userSwiping) AudioService.instance.stop();
+                      }
+                      if (n is ScrollEndNotification) _userSwiping = false;
+                      final pastEnd = n is OverscrollNotification
+                          ? n.overscroll > 0
+                          : n is ScrollUpdateNotification &&
+                                n.metrics.pixels >
+                                    n.metrics.maxScrollExtent + 24;
+                      if (pastEnd &&
+                          _currentIndex == cards.length - 1 &&
+                          !_celebrating &&
+                          !_skipEndWait) {
+                        _skipEndWait = true;
+                        AudioService.instance.stop();
+                      }
+                      return false;
+                    },
+                    child: PageView.builder(
+                      controller: _pageController,
+                      itemCount: cards.length,
+                      onPageChanged: (index) {
+                        FeedbackService.instance.event(FeedbackEvent.swipe);
+                        if (_userSwiping) _swipeHintKey.currentState?.dismiss();
+                        _cancelAutoPlayCountdown();
+                        _clearProgressStep();
+                        final prev = _currentIndex;
+                        setState(() {
+                          _currentIndex = index;
+                          _isFlipped = false;
+                        });
+                        _precacheAround(index);
+                        // Track only forward progress
+                        if (index > prev) {
+                          final step = _bloom.cardAdvanced(index);
+                          if (step != null) _armProgressStep(step);
+                          _viewedCardIds.add(cards[index].id);
+                          AnalyticsService.instance.logCardView(
+                            cards[index].id,
+                            widget.pack.id,
+                          );
+                          ref
+                              .read(packProgressProvider.notifier)
+                              .updateProgress(widget.pack.id, index);
+                          ref.read(dailyStatsProvider.notifier).recordView();
+                          ref
+                              .read(dailyQuestProvider.notifier)
+                              .recordCardView();
+                          ref
+                              .read(reviewProvider.notifier)
+                              .markSeen(cards[index].id);
+                        }
+                        _onPageLanded(index);
+                        if (!AudioService.instance.autoSpeak.value &&
+                            _autoPlayTimer) {
+                          _startAutoPlayCountdown();
+                        }
+                        // Last card reached
+                        if (index == cards.length - 1) {
+                          // Bloom cheers on the shelf right away — the child
+                          // sees a friend react before the modal arrives. Not
+                          // for a locked preview: Bloom takes no part in the
+                          // unlock dialog (bloom_character.md §3.2).
+                          if (!widget.pack.isLocked) _bloom.packCompleted();
+                          _showCelebrationAfterSound();
+                        }
+                      },
+                      itemBuilder: (context, index) {
+                        return AnimatedBuilder(
+                          animation: _pageController,
+                          builder: (context, child) {
+                            double value = 0;
+                            if (_pageController.position.haveDimensions) {
+                              value =
+                                  index -
+                                  (_pageController.page ?? index.toDouble());
+                            }
+                            // 3D rotation + scale effect
+                            final angle = value * 0.04;
+                            final scale = lerpDouble(1, 0.9, value.abs())!;
+                            return Transform(
+                              alignment: Alignment.center,
+                              transform: Matrix4.identity()
+                                ..setEntry(3, 2, 0.001)
+                                ..rotateY(angle)
+                                ..scaleByDouble(scale, scale, scale, 1),
+                              // The boundary is *inside* the Transform on
+                              // purpose (motion_language.md §7.3.1): the card
+                              // — art, shadow, rounded clip — rasterises once
+                              // and the swipe becomes pure compositing. It
+                              // also turns the `Opacity` above it from a
+                              // per-frame `saveLayer` over a full-screen card
+                              // into an opacity layer the compositor applies
+                              // for free, which is what made the neighbour
+                              // fade expensive (§7.1, first row).
+                              child: Opacity(
+                                opacity: lerpDouble(
+                                  1,
+                                  0.5,
+                                  value.abs(),
+                                )!.clamp(0.0, 1.0),
+                                child: RepaintBoundary(child: child),
+                              ),
+                            );
+                          },
+                          child: FlashCard(
+                            card: cards[index],
+                            isActive: index == _currentIndex,
+                            ttsLocale: _ttsLocaleForCard(cards[index]),
+                            onFlipChanged: (flipped) {
+                              setState(() => _isFlipped = flipped);
+                            },
+                          ),
+                        );
+                      },
                     ),
                   ),
-                  ElevatedButton(
-                    onPressed: _handleUnlock,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: DT.solid(widget.pack.color),
-                      foregroundColor: DT.surfaceWhite,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 8,
+                  if (!_isFlipped)
+                    Positioned(
+                      top: 36,
+                      right: 28,
+                      child: SpeakerButton(onActivated: _speakCurrentCard),
+                    ),
+                  SwipeHint(key: _swipeHintKey, accent: widget.pack.color),
+                  // Auto-play countdown — visible on the card so toddlers see
+                  // "next card coming". Single tap pauses (toggles auto-play off).
+                  if (_autoPlayTimer && _countdownSeconds > 0)
+                    Positioned(
+                      top: 20,
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        // Tap = pause, so the seconds live here rather than
+                        // in the header pill. White with an accent ring and
+                        // an accent-derived glyph: white-on-mint was 2.0:1,
+                        // on sunBurst 1.3:1.
+                        child: KidActionPill(
+                          label: '$_countdownSeconds',
+                          icon: Icons.pause_rounded,
+                          accent: widget.pack.color,
+                          onTap: _toggleAutoPlayTimer,
+                          semanticsLabel: s(
+                            'Пауза, $_countdownSeconds',
+                            'Pause, $_countdownSeconds',
+                          ),
+                        ),
                       ),
                     ),
-                    child: Text(
-                      s('Розблокувати', 'Unlock'),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
                 ],
               ),
             ),
-        ],
+            _BloomShelf(
+              hidden: _celebrating,
+              semanticsLabel: s('Блум', 'Bloom'),
+            ),
+            if (widget.pack.isLocked)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 14,
+                ),
+                color: PackPalette.of(widget.pack.color).tint,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.lock_open_rounded,
+                      color: DT.solid(widget.pack.color),
+                      size: 22,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        s(
+                          'Превʼю ${cards.length} з ${allCards.length} карток',
+                          'Preview ${cards.length} of ${allCards.length} cards',
+                        ),
+                        // Pack-coloured text on a pack-coloured wash was
+                        // 1.9:1 on mint; charcoal on the tint is ≥ 8.9:1 on
+                        // every pack, and the colour stays in the icon and
+                        // the button.
+                        style: const TextStyle(
+                          color: DT.textPrimary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: _handleUnlock,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: DT.solid(widget.pack.color),
+                        foregroundColor: DT.surfaceWhite,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 8,
+                        ),
+                      ),
+                      child: Text(
+                        s('Розблокувати', 'Unlock'),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
         ),
       ),
     );

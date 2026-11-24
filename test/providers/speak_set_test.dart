@@ -32,24 +32,27 @@ void main() {
   ];
 
   ProviderContainer containerWith() => ProviderContainer(
-    overrides: [
-      curriculumUnitsProvider.overrideWith((ref) async => units),
-    ],
+    overrides: [curriculumUnitsProvider.overrideWith((ref) async => units)],
   );
 
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  test('an untouched plan starts at the first word of the first unit',
-      () async {
-    final c = containerWith();
-    addTearDown(c.dispose);
-    await c.read(curriculumUnitsProvider.future);
+  test(
+    'an untouched plan starts at the first word of the first unit',
+    () async {
+      final c = containerWith();
+      addTearDown(c.dispose);
+      await c.read(curriculumUnitsProvider.future);
 
-    expect(
-      c.read(speakSetProvider).map((e) => e.id).toList(),
-      ['mama', 'tato', 'baba', 'kit', 'pes'],
-    );
-  });
+      expect(c.read(speakSetProvider).map((e) => e.id).toList(), [
+        'mama',
+        'tato',
+        'baba',
+        'kit',
+        'pes',
+      ]);
+    },
+  );
 
   test('practised words go to the back, plan order breaks ties', () async {
     final c = containerWith();

@@ -79,7 +79,9 @@ class BloomMascot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final frozen = state ?? switch (_legacyEmotion) {
+    final frozen =
+        state ??
+        switch (_legacyEmotion) {
           null => null,
           final e => BloomState.still(e),
         };
@@ -128,12 +130,15 @@ class _BloomBody extends StatefulWidget {
   State<_BloomBody> createState() => _BloomBodyState();
 }
 
-class _BloomBodyState extends State<_BloomBody>
-    with TickerProviderStateMixin {
-  late final AnimationController _pose =
-      AnimationController(vsync: this, duration: DT.motion.bloomPose);
-  late final AnimationController _motion =
-      AnimationController(vsync: this, duration: DT.motion.celebrate);
+class _BloomBodyState extends State<_BloomBody> with TickerProviderStateMixin {
+  late final AnimationController _pose = AnimationController(
+    vsync: this,
+    duration: DT.motion.bloomPose,
+  );
+  late final AnimationController _motion = AnimationController(
+    vsync: this,
+    duration: DT.motion.celebrate,
+  );
 
   BloomState _shown = const BloomState();
   BloomPose _from = BloomPose.idle;
@@ -152,8 +157,10 @@ class _BloomBodyState extends State<_BloomBody>
   /// the controller plays the 220 ms flick. Only while he simply idles —
   /// a pose in transition, a gesture or a listen has its own ears.
   Timer? _earTimer;
-  late final AnimationController _ear =
-      AnimationController(vsync: this, duration: DT.motion.bloomEarTwitch);
+  late final AnimationController _ear = AnimationController(
+    vsync: this,
+    duration: DT.motion.bloomEarTwitch,
+  );
 
   @override
   void initState() {
@@ -189,7 +196,8 @@ class _BloomBodyState extends State<_BloomBody>
     super.dispose();
   }
 
-  static BloomPose _poseOf(BloomState s) => BloomPose.of(s.emotion, prop: s.prop);
+  static BloomPose _poseOf(BloomState s) =>
+      BloomPose.of(s.emotion, prop: s.prop);
 
   /// Apply a new state: lerp the pose if it changed, restart the gesture
   /// if a new one-shot began, nod when a word ends.
@@ -229,30 +237,29 @@ class _BloomBodyState extends State<_BloomBody>
       _pose.isCompleted ? _to : BloomPose.lerp(_from, _to, _pose.value);
 
   static _Gesture _gestureFor(BloomEmotion e, int hops) => switch (e) {
-        BloomEmotion.wave => _Gesture.wave,
-        BloomEmotion.happy => hops > 0 ? _Gesture.hop : _Gesture.none,
-        BloomEmotion.cheer => _Gesture.cheer,
-        BloomEmotion.curious => _Gesture.lean,
-        BloomEmotion.point => _Gesture.point,
-        BloomEmotion.blow => _Gesture.blow,
-        BloomEmotion.idle ||
-        BloomEmotion.listen ||
-        BloomEmotion.sleep =>
-          _Gesture.none,
-      };
+    BloomEmotion.wave => _Gesture.wave,
+    BloomEmotion.happy => hops > 0 ? _Gesture.hop : _Gesture.none,
+    BloomEmotion.cheer => _Gesture.cheer,
+    BloomEmotion.curious => _Gesture.lean,
+    BloomEmotion.point => _Gesture.point,
+    BloomEmotion.blow => _Gesture.blow,
+    BloomEmotion.idle ||
+    BloomEmotion.listen ||
+    BloomEmotion.sleep => _Gesture.none,
+  };
 
   Duration _gestureLength(_Gesture g, int hops) => switch (g) {
-        _Gesture.none => Duration.zero,
-        _Gesture.wave => DT.motion.bloomWave,
-        _Gesture.hop => DT.motion.celebrate,
-        _Gesture.cheer =>
-          hops >= 3 ? DT.motion.bloomCheerBig : DT.motion.bloomCheer,
-        _Gesture.lean => DT.motion.bloomCurious,
-        _Gesture.point => DT.motion.bloomPoint,
-        _Gesture.blow => DT.motion.bloomBlow,
-        _Gesture.squash => DT.motion.bloomSquash,
-        _Gesture.nod => DT.motion.bloomNod,
-      };
+    _Gesture.none => Duration.zero,
+    _Gesture.wave => DT.motion.bloomWave,
+    _Gesture.hop => DT.motion.celebrate,
+    _Gesture.cheer =>
+      hops >= 3 ? DT.motion.bloomCheerBig : DT.motion.bloomCheer,
+    _Gesture.lean => DT.motion.bloomCurious,
+    _Gesture.point => DT.motion.bloomPoint,
+    _Gesture.blow => DT.motion.bloomBlow,
+    _Gesture.squash => DT.motion.bloomSquash,
+    _Gesture.nod => DT.motion.bloomNod,
+  };
 
   void _playGesture(_Gesture g, int hops) {
     if (g == _Gesture.none || _reduce || !_tickers) {
@@ -355,7 +362,11 @@ class _BloomBodyState extends State<_BloomBody>
         Widget child = RepaintBoundary(
           child: CustomPaint(
             size: Size.square(widget.size),
-            painter: BloomPainter(pose: pose, look: lookOffset, eyeOpen: _eyeOpen),
+            painter: BloomPainter(
+              pose: pose,
+              look: lookOffset,
+              eyeOpen: _eyeOpen,
+            ),
           ),
         );
         if (frame.isIdentity) return child;
@@ -374,7 +385,8 @@ class _BloomBodyState extends State<_BloomBody>
 
     // Breathing: only when the host says nothing else moves continuously,
     // never while a gesture plays. AmbientLoop owns the loop.
-    final breathe = _shown.ambient == BloomAmbient.breathe ||
+    final breathe =
+        _shown.ambient == BloomAmbient.breathe ||
         _shown.emotion == BloomEmotion.sleep;
     figure = AmbientLoop(
       period: _shown.emotion == BloomEmotion.sleep
@@ -431,8 +443,7 @@ class _MotionFrame {
 
   static const identity = _MotionFrame();
 
-  bool get isIdentity =>
-      dy == 0 && scaleX == 1 && scaleY == 1 && tilt == 0;
+  bool get isIdentity => dy == 0 && scaleX == 1 && scaleY == 1 && tilt == 0;
 
   BloomPose adjust(BloomPose p) {
     if (pawRightDelta == Offset.zero && pawRightSwing == 0) return p;
@@ -474,7 +485,11 @@ class _MotionFrame {
         final n = hops.clamp(1, 3);
         final phase = (t * n) % 1;
         final h = math.sin(math.pi * phase);
-        return _MotionFrame(dy: -14 * h, scaleY: 1 + 0.06 * h, scaleX: 1 - 0.06 * h);
+        return _MotionFrame(
+          dy: -14 * h,
+          scaleY: 1 + 0.06 * h,
+          scaleX: 1 - 0.06 * h,
+        );
       case _Gesture.wave:
         // Squash on the start, paw swings 0.25 ↔ 0.55 twice around 0.4.
         final start = t < 0.2 ? math.sin(math.pi * t / 0.2) : 0.0;
@@ -496,15 +511,16 @@ class _MotionFrame {
           );
         }
         final len = math.sqrt(dir.x * dir.x + dir.y * dir.y);
-        final unit = len == 0 ? const Offset(0.7, -0.7) : Offset(dir.x / len, dir.y / len);
+        final unit = len == 0
+            ? const Offset(0.7, -0.7)
+            : Offset(dir.x / len, dir.y / len);
         final reach = 12 * reachScale * arc;
         final nod = 2 * math.sin(2 * math.pi * 2 * t).abs();
-        return _MotionFrame(
-          dy: nod,
-          pawRightDelta: unit * reach,
-        );
+        return _MotionFrame(dy: nod, pawRightDelta: unit * reach);
       case _Gesture.blow:
-        final s = t < 0.4 ? 1 - 0.04 * (t / 0.4) : 0.96 + 0.07 * ((t - 0.4) / 0.6);
+        final s = t < 0.4
+            ? 1 - 0.04 * (t / 0.4)
+            : 0.96 + 0.07 * ((t - 0.4) / 0.6);
         return _MotionFrame(scaleY: s, scaleX: 2 - s);
     }
   }

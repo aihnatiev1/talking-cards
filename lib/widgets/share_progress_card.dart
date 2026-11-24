@@ -54,16 +54,16 @@ Future<void> shareProgress({
       // Fallback: text-only share
       await Share.share(
         isEn
-          ? 'My child is learning words with FirstWords Cards! 🗣️\n'
-            '⭐ Packs: $completedPacks/$totalPacks\n'
-            '🃏 Cards: $seenCards/$totalCards'
-            '${streak > 0 ? '\n🔥 Streak: $streak days' : ''}'
-            '\n\nDownload free:\n$_storeUrl'
-          : 'Мій малюк вивчає слова з Картками-розмовлялками! 🗣️\n'
-            '⭐ Розділів: $completedPacks/$totalPacks\n'
-            '🃏 Карток: $seenCards/$totalCards'
-            '${streak > 0 ? '\n🔥 Серія: $streak ${dayWord(streak)}' : ''}'
-            '\n\nСкачай безкоштовно:\n$_storeUrl',
+            ? 'My child is learning words with FirstWords Cards! 🗣️\n'
+                  '⭐ Packs: $completedPacks/$totalPacks\n'
+                  '🃏 Cards: $seenCards/$totalCards'
+                  '${streak > 0 ? '\n🔥 Streak: $streak days' : ''}'
+                  '\n\nDownload free:\n$_storeUrl'
+            : 'Мій малюк вивчає слова з Картками-розмовлялками! 🗣️\n'
+                  '⭐ Розділів: $completedPacks/$totalPacks\n'
+                  '🃏 Карток: $seenCards/$totalCards'
+                  '${streak > 0 ? '\n🔥 Серія: $streak ${dayWord(streak)}' : ''}'
+                  '\n\nСкачай безкоштовно:\n$_storeUrl',
         sharePositionOrigin: sharePositionOrigin,
       );
       return;
@@ -86,10 +86,10 @@ Future<void> shareProgress({
     try {
       await Share.share(
         isEn
-          ? 'My child is learning words with FirstWords Cards! 🗣️\n'
-            'Download free: $_storeUrl'
-          : 'Мій малюк вивчає слова з Картками-розмовлялками! 🗣️\n'
-            'Скачай безкоштовно: $_storeUrl',
+            ? 'My child is learning words with FirstWords Cards! 🗣️\n'
+                  'Download free: $_storeUrl'
+            : 'Мій малюк вивчає слова з Картками-розмовлялками! 🗣️\n'
+                  'Скачай безкоштовно: $_storeUrl',
         sharePositionOrigin: sharePositionOrigin,
       );
     } catch (_) {}
@@ -129,10 +129,7 @@ Future<List<int>?> renderWidgetToImage(
       container: repaintBoundary,
       child: MediaQuery(
         data: MediaQuery.of(context),
-        child: Directionality(
-          textDirection: TextDirection.ltr,
-          child: widget,
-        ),
+        child: Directionality(textDirection: TextDirection.ltr, child: widget),
       ),
     ).attachToRenderTree(buildOwner);
 
@@ -210,10 +207,7 @@ class ShareProgressContent extends StatelessWidget {
           ),
           if (badges.isNotEmpty) ...[
             const SizedBox(height: 16),
-            Text(
-              badges.join(' '),
-              style: const TextStyle(fontSize: 32),
-            ),
+            Text(badges.join(' '), style: const TextStyle(fontSize: 32)),
           ],
           const SizedBox(height: 16),
           ClipRRect(

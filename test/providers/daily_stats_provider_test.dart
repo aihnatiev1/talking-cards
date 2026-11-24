@@ -35,9 +35,7 @@ void main() {
       final yesterday =
           '${now.subtract(const Duration(days: 1)).year}-${now.subtract(const Duration(days: 1)).month.toString().padLeft(2, '0')}-${now.subtract(const Duration(days: 1)).day.toString().padLeft(2, '0')}';
 
-      SharedPreferences.setMockInitialValues({
-        'daily_views_$yesterday': 10,
-      });
+      SharedPreferences.setMockInitialValues({'daily_views_$yesterday': 10});
 
       final notifier = DailyStatsNotifier();
       await Future.delayed(Duration.zero);
@@ -89,9 +87,7 @@ void main() {
     });
 
     test('loads existing data from SharedPreferences', () async {
-      SharedPreferences.setMockInitialValues({
-        'daily_views_${todayKey()}': 5,
-      });
+      SharedPreferences.setMockInitialValues({'daily_views_${todayKey()}': 5});
 
       final notifier = DailyStatsNotifier();
       await Future.delayed(Duration.zero);

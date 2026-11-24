@@ -62,10 +62,12 @@ class RemoteConfigService {
   Future<void> init() async {
     final config = _config;
     if (config == null) return;
-    await config.setConfigSettings(RemoteConfigSettings(
-      fetchTimeout: const Duration(seconds: 10),
-      minimumFetchInterval: const Duration(hours: 1),
-    ));
+    await config.setConfigSettings(
+      RemoteConfigSettings(
+        fetchTimeout: const Duration(seconds: 10),
+        minimumFetchInterval: const Duration(hours: 1),
+      ),
+    );
 
     await config.setDefaults(_defaults);
 
@@ -112,8 +114,7 @@ class RemoteConfigService {
   bool get lockedPackTapOpensPreview =>
       _getString('locked_pack_tap').trim().toLowerCase() != 'paywall';
 
-  bool get showOnboardingPaywallEn =>
-      _getBool('show_onboarding_paywall_en');
+  bool get showOnboardingPaywallEn => _getBool('show_onboarding_paywall_en');
 
   /// Whether to sell right after onboarding, decided per language.
   bool showOnboardingPaywallFor(String lang) =>

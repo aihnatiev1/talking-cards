@@ -47,7 +47,8 @@ const int kRungUpAtMarks = 3;
 /// The rung a card sits on for a child with [marks] grown-up marks.
 LadderStep ladderStepFor(CardModel card, int marks) {
   final sentence = card.text.trim();
-  final canClimb = marks >= kRungUpAtMarks &&
+  final canClimb =
+      marks >= kRungUpAtMarks &&
       sentence.isNotEmpty &&
       sentence.toLowerCase() != card.sound.trim().toLowerCase();
   return canClimb

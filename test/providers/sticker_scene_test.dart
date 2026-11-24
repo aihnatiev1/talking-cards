@@ -52,13 +52,15 @@ void main() {
     expect(scene.first.cardId, 'card5', reason: 'the first five fell off');
   });
 
-  test('an unreadable scene starts empty instead of failing a launch',
-      () async {
-    SharedPreferences.setMockInitialValues({'sticker_scene': 'not json'});
-    final c = ProviderContainer();
-    addTearDown(c.dispose);
-    c.read(stickerSceneProvider);
-    await Future<void>.delayed(const Duration(milliseconds: 20));
-    expect(c.read(stickerSceneProvider), isEmpty);
-  });
+  test(
+    'an unreadable scene starts empty instead of failing a launch',
+    () async {
+      SharedPreferences.setMockInitialValues({'sticker_scene': 'not json'});
+      final c = ProviderContainer();
+      addTearDown(c.dispose);
+      c.read(stickerSceneProvider);
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      expect(c.read(stickerSceneProvider), isEmpty);
+    },
+  );
 }

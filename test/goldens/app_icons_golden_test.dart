@@ -20,11 +20,7 @@ void main() {
 
   group('AppIcon sheet', () {
     testWidgets('every icon at 48 dp, plain and sticker', (tester) async {
-      await pumpGolden(
-        tester,
-        const _IconSheet(),
-        size: const Size(390, 1180),
-      );
+      await pumpGolden(tester, const _IconSheet(), size: const Size(390, 1180));
       await expectLater(
         find.byKey(goldenKey),
         matchesGoldenFile('images/app_icons.png'),
@@ -50,7 +46,11 @@ class _IconSheet extends StatelessWidget {
             runSpacing: DT.sp8,
             children: [
               for (final icon in AppIcon.values)
-                AppIconView(icon, key: ValueKey('plain-${icon.name}'), size: 48),
+                AppIconView(
+                  icon,
+                  key: ValueKey('plain-${icon.name}'),
+                  size: 48,
+                ),
             ],
           ),
           const SizedBox(height: DT.sp12),
@@ -96,18 +96,30 @@ class _IconSheet extends StatelessWidget {
             children: [
               _Disc(
                 color: DT.teal,
-                child: AppIconView(AppIcon.sound, size: 28, color: Colors.white),
+                child: AppIconView(
+                  AppIcon.sound,
+                  size: 28,
+                  color: Colors.white,
+                ),
               ),
               SizedBox(width: DT.sp8),
               _Disc(
                 color: DT.soundRed,
-                child: AppIconView(AppIcon.soundOff, size: 28, color: Colors.white),
+                child: AppIconView(
+                  AppIcon.soundOff,
+                  size: 28,
+                  color: Colors.white,
+                ),
               ),
               SizedBox(width: DT.sp8),
               _Disc(
                 color: DT.success,
                 size: 24,
-                child: AppIconView(AppIcon.check, size: 14, color: Colors.white),
+                child: AppIconView(
+                  AppIcon.check,
+                  size: 14,
+                  color: Colors.white,
+                ),
               ),
             ],
           ),

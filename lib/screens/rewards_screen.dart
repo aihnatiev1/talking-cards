@@ -33,10 +33,8 @@ class RewardsScreen extends StatelessWidget {
   const RewardsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) => const KidScreen(
-        accent: DT.peach,
-        body: RewardsAlbum(),
-      );
+  Widget build(BuildContext context) =>
+      const KidScreen(accent: DT.peach, body: RewardsAlbum());
 }
 
 /// The album page: Bloom holding it in the header, then the sticker sheet.
@@ -53,8 +51,9 @@ class RewardsAlbum extends ConsumerWidget {
     final isEn = ref.watch(languageProvider) == 'en';
     final earned = streak.unlockedRewards;
     // The first page still empty: the one goal worth naming today.
-    final nextGoal =
-        milestones.where((m) => !earned.contains(m.id)).firstOrNull;
+    final nextGoal = milestones
+        .where((m) => !earned.contains(m.id))
+        .firstOrNull;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(DT.sp16, DT.sp8, DT.sp16, DT.sp24),
@@ -212,7 +211,7 @@ class _NextGoalCard extends StatelessWidget {
     final name = milestone.name(isEn);
     return isEn
         ? 'Play on $_left more ${_left == 1 ? 'day' : 'days'} — '
-            'and $name is waiting'
+              'and $name is waiting'
         : 'Ще $_left ${dayWord(_left)} гри — і $name чекає';
   }
 
@@ -238,7 +237,12 @@ class _NextGoalCard extends StatelessWidget {
         onTap: () => _explain(context),
         onLongPress: () => _explain(context),
         child: Container(
-          padding: const EdgeInsets.fromLTRB(DT.sp16, DT.sp12, DT.sp12, DT.sp12),
+          padding: const EdgeInsets.fromLTRB(
+            DT.sp16,
+            DT.sp12,
+            DT.sp12,
+            DT.sp12,
+          ),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(DT.rXl),
@@ -298,9 +302,9 @@ class _NextGoalCard extends StatelessWidget {
 /// the drawing (the unicorn's coat) and would leave the page and its name
 /// without contrast.
 Color _pageAccent(AppIcon sticker) => switch (sticker) {
-      AppIcon.stickerUnicorn => DT.pink,
-      _ => defaultColorOf(sticker),
-    };
+  AppIcon.stickerUnicorn => DT.pink,
+  _ => defaultColorOf(sticker),
+};
 
 /// One page of the album: the sticker (or its silhouette) and its name.
 ///
@@ -398,10 +402,14 @@ class _StickerPageState extends State<_StickerPage>
           color: widget.earned ? palette.tint : Colors.white,
           borderRadius: BorderRadius.circular(DT.rLg),
           border: Border.all(
-            color: widget.earned ? palette.border : DT.textMuted.withValues(alpha: 0.25),
+            color: widget.earned
+                ? palette.border
+                : DT.textMuted.withValues(alpha: 0.25),
             width: 1.5,
           ),
-          boxShadow: widget.earned ? DT.shadowSoft(palette.accent) : DT.shadowRest,
+          boxShadow: widget.earned
+              ? DT.shadowSoft(palette.accent)
+              : DT.shadowRest,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -419,9 +427,17 @@ class _StickerPageState extends State<_StickerPage>
                 final wave = math.sin(t * math.pi * 2);
                 final (tilt, slide, lift) = switch (m.sticker) {
                   AppIcon.stickerUnicorn => (0.10 * wave, 0.0, -10.0 * pop),
-                  AppIcon.stickerDragon => (0.22 * math.sin(t * math.pi * 4), 0.0, 0.0),
+                  AppIcon.stickerDragon => (
+                    0.22 * math.sin(t * math.pi * 4),
+                    0.0,
+                    0.0,
+                  ),
                   AppIcon.stickerRainbow => (0.06 * wave, 10.0 * wave, 0.0),
-                  _ => (0.14 * wave, 12.0 * math.sin(t * math.pi * 3), -6.0 * pop),
+                  _ => (
+                    0.14 * wave,
+                    12.0 * math.sin(t * math.pi * 3),
+                    -6.0 * pop,
+                  ),
                 };
                 return Transform.translate(
                   offset: Offset(slide * pop, lift),

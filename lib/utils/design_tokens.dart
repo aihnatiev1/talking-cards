@@ -4,10 +4,9 @@ import 'package:flutter/material.dart';
 
 /// Shared design tokens for the kid-facing UI.
 ///
-/// Distilled from competitor research (Khan Kids, Lingokids, Sago Mini, Toca
-/// Boca) plus toddler UX heuristics: warm off-white backgrounds, saturated
-/// pastel accents, soft shadows, rounded 20+ dp cards, and text large enough
-/// for a non-reader's parent to scan at arm's length.
+/// A playful, tactile UI: fresh surfaces, saturated accents, rounded type,
+/// crisp outlines and solid lower edges inspired by language-learning games.
+/// Illustrated content keeps its own paper and scenery palette.
 ///
 /// This file is the *only* place a raw `Color(0x…)` or the `'Nunito'` family
 /// name may appear (guarded by `test/architecture/design_tokens_test.dart`).
@@ -21,8 +20,8 @@ class DT {
   /// `launch_background` / `windowSplashScreenBackground`, iOS
   /// `LaunchScreen.storyboard`) carry the same hex so the hand-off into the
   /// Flutter splash is seamless — change all four together.
-  static const bgWarm = Color(0xFFFFFBF0); // primary screen background
-  static const bgCard = Color(0xFFFFF4E0); // peach cream for cards
+  static const bgWarm = Color(0xFFFAFCF7); // primary screen background
+  static const bgCard = Color(0xFFF1F7E9); // light green card surface
 
   /// The paper a printed card is made of (memory_match_redesign §1): less
   /// peach than [bgCard], so a watercolour illustration sits on the same
@@ -36,19 +35,55 @@ class DT {
   /// by design (road-to-9 §6).
   static const bgDark = Color(0xFF1E1B2A);
 
+  // Storybook scenery and reward paper. Kept together so new scene
+  // layers use the same material and lighting palette.
+  static const rewardPaper = Color(0xFFFFFAF0);
+  static const rewardSpark = Color(0xFFF0B94D);
+  static const journeyWaterLight = Color(0xFFFFF8D9);
+  static const journeyButterflyGold = Color(0xFFF6AD58);
+  static const journeyButterflyLilac = Color(0xFFB69BE7);
+  static const journeyButterflyInk = Color(0xFF65513C);
+  static const journeyStem = Color(0xFF4A8060);
+  static const journeyFlowerShadow = Color(0xFF765C49);
+  static const journeyFlowerCentre = Color(0xFFFFF5C9);
+  static const journeyFlowers = [
+    Color(0xFFF9CB64),
+    Color(0xFFF49FA1),
+    Color(0xFFB7A2E4),
+    Color(0xFFF8DEA0),
+    Color(0xFFEDADCB),
+  ];
+
+  // Flat animal companions share Bloom's ink and rounded silhouette.
+  static const friendCream = Color(0xFFFFF8E8);
+  static const friendInk = Color(0xFF55594B);
+  static const friendBrown = Color(0xFFC4874E);
+  static const friendBrownDark = Color(0xFF875C3B);
+  static const friendGold = Color(0xFFFFCD52);
+  static const friendOrange = Color(0xFFED9B3D);
+  static const friendPink = Color(0xFFF5B6B7);
+  static const friendGreen = Color(0xFF8ABF68);
+  static const friendBlue = Color(0xFF72C4CF);
+
   // ── Text ────────────────────────────────────
-  static const textPrimary = Color(0xFF3F3635); // warm charcoal, not black
-  static const textSecondary = Color(0xFF6B605B);
+  static const textPrimary = Color(0xFF3C4540); // crisp charcoal
+  static const textSecondary = Color(0xFF657064);
+  static const outline = Color(0xFFDEE5D8);
+  static const disabled = Color(0xFFE9EDE5);
   static const textMuted = Color(0xFF9E948E);
 
   // ── Brand ───────────────────────────────────
-  /// Indigo seed of the Material colour scheme and the parent-zone accent.
+  /// Leaf-green seed of the Material colour scheme and parent-zone accent.
   /// Formerly `DT.brand` in constants.dart; those names are now aliases.
-  static const brand = Color(0xFF6C63FF);
+  static const brand = Color(0xFF58A700);
+
+  /// [brand] as text. The raw green is 2.9:1 on the page and 2.7:1 on its
+  /// own tint — below AA; this one is 5.6:1 on white and 4.9:1 on the tint.
+  static const brandInk = Color(0xFF3F7500);
 
   /// The lit end of a [brand] gradient — the top-left of a round button
   /// that should look like it has a light on it.
-  static const brandLit = Color(0xFF9784FF);
+  static const brandLit = Color(0xFF89D52B);
   static const teal = Color(0xFF4ECDC4); // formerly DT.teal
   static const soundRed = Color(0xFFD63031); // formerly DT.soundRed
   static const streakOrange = Color(0xFFE17055); // formerly DT.streakOrange
@@ -111,8 +146,9 @@ class DT {
   /// shade deeper than the old `#FFF1E0` so the figure separates from
   /// [bgWarm] at 56 dp; the ink outline sits at [bloomInkAlpha].
   static const bloomBody = Color(0xFFFFEBD2);
-  static const bloomShade = Color(0xFFF5E2C7);
-  static const bloomEarInside = Color(0xFFFFB7C5);
+  static const bloomShade = Color(0xFFE8C49C);
+  static const bloomMuzzle = Color(0xFFFFF5E5);
+  static const bloomEarInside = Color(0xFFF59B8C);
   static const bloomCheek = Color(0xFFFFC4D0);
   static const bloomNose = Color(0xFFE38DA8);
   static const bloomInk = Color(0xFF3A2E2A);
@@ -217,33 +253,32 @@ class DT {
         0.0722 * channel(c.b);
   }
 
-  /// Three elevation levels: rest (flat), soft (tiles at rest), lift
-  /// (pressed / hero), float (overlays and sheets above the scene).
+  /// Solid lower edges: tiles, heroes, and floating reward panels.
   static const List<BoxShadow> shadowRest = [];
 
   static List<BoxShadow> shadowSoft(Color color) => [
-        BoxShadow(
-          color: color.withValues(alpha: 0.18),
-          blurRadius: 14,
-          offset: const Offset(0, 5),
-        ),
-      ];
+    BoxShadow(
+      color: color.withValues(alpha: 0.30),
+      blurRadius: 0,
+      offset: const Offset(0, 5),
+    ),
+  ];
 
   static List<BoxShadow> shadowLift(Color color) => [
-        BoxShadow(
-          color: color.withValues(alpha: 0.28),
-          blurRadius: 20,
-          offset: const Offset(0, 8),
-        ),
-      ];
+    BoxShadow(
+      color: color.withValues(alpha: 0.40),
+      blurRadius: 0,
+      offset: const Offset(0, 8),
+    ),
+  ];
 
   static List<BoxShadow> shadowFloat(Color color) => [
-        BoxShadow(
-          color: color.withValues(alpha: 0.22),
-          blurRadius: 28,
-          offset: const Offset(0, 10),
-        ),
-      ];
+    BoxShadow(
+      color: color.withValues(alpha: 0.22),
+      blurRadius: 0,
+      offset: const Offset(0, 10),
+    ),
+  ];
 
   // ── Motion ──────────────────────────────────
   /// Duration and curve scale — see [DTMotion]. `MotionPolicy` (F2) decides
@@ -269,8 +304,9 @@ class DT {
   /// as a variation axis — [kidWeight] — or the engine renders the default
   /// instance whatever fontWeight says.
   static const kidFont = 'Nunito';
-  static List<FontVariation> kidWeight(double wght) =>
-      [FontVariation('wght', wght)];
+  static List<FontVariation> kidWeight(double wght) => [
+    FontVariation('wght', wght),
+  ];
   static const _kid600 = [FontVariation('wght', 600)];
   static const _kid700 = [FontVariation('wght', 700)];
   static const _kid800 = [FontVariation('wght', 800)];
@@ -374,7 +410,18 @@ const _kEnter = Duration(milliseconds: 260);
 /// of overshoot, `playful` for reward moments only (elastic reads as
 /// "broken" on ordinary layout), `exit` for leaving — fast out, no bounce.
 class DTMotion {
+  /// One gentle cue after the lesson voice finishes.
+  final Duration lessonHint = const Duration(seconds: 8);
+  // The invitation → choice → growing scene → keepsake sequence.
+  final Duration selectionChange = const Duration(milliseconds: 180);
+  final Duration rewardReveal = const Duration(milliseconds: 1400);
+  final Duration gardenGrow = const Duration(milliseconds: 1100);
+  final Duration sceneLoop = const Duration(seconds: 9);
+  final Duration journeyFocus = const Duration(milliseconds: 650);
+  final Duration journeyAction = const Duration(milliseconds: 300);
 
+  Duration rewardChoiceEnter(int index) =>
+      routeEnter + stagger * index.clamp(0, 4);
 
   /// From the page crossing to the landing sound. `onPageChanged` fires as
   /// the card passes the halfway mark; this is roughly when it arrives.
@@ -398,7 +445,8 @@ class DTMotion {
 
   /// Gap between the tap transient and the word it triggers. `card_touch`
   /// is 30 ms; without this the click sat on the word's first consonant.
-  final Duration wordAfterTap = const Duration(milliseconds: 60);  const DTMotion._();
+  final Duration wordAfterTap = const Duration(milliseconds: 60);
+  const DTMotion._();
 
   // Content
   final Duration instant = const Duration(milliseconds: 80);
@@ -584,10 +632,8 @@ class DTMotion {
   /// `min(40 ms, 440 / tiles)` — the whole deal stays an accent, never a
   /// wait, however big the board is.
   Duration memoryDealStagger(int tiles) => Duration(
-        microseconds: tiles <= 0
-            ? 0
-            : (440000 ~/ tiles).clamp(0, 40000),
-      );
+    microseconds: tiles <= 0 ? 0 : (440000 ~/ tiles).clamp(0, 40000),
+  );
 
   /// A nudge: one card stirs — the invitation (scale 1.03 + a 1.5° tilt)
   /// and the shake of the actual twin are the same beat.
@@ -600,29 +646,29 @@ class DTMotion {
   /// Nothing touched for this long: one closed card stirs, silently —
   /// "there is something to do here" (§6). Wave 1's board was still.
   Duration memoryNudgeInvite(int level) => switch (level) {
-        <= 1 => const Duration(seconds: 4),
-        2 => const Duration(seconds: 5),
-        3 => const Duration(seconds: 8),
-        _ => const Duration(seconds: 10),
-      };
+    <= 1 => const Duration(seconds: 4),
+    2 => const Duration(seconds: 5),
+    3 => const Duration(seconds: 8),
+    _ => const Duration(seconds: 10),
+  };
 
   /// Still nothing: the card that *is* the pair stirs, with a sound. Only
   /// this step counts as a hint towards the confidence of the round.
   Duration memoryNudgeHint(int level) => switch (level) {
-        <= 1 => const Duration(seconds: 7),
-        2 => const Duration(seconds: 9),
-        3 => const Duration(seconds: 12),
-        _ => const Duration(seconds: 15),
-      };
+    <= 1 => const Duration(seconds: 7),
+    2 => const Duration(seconds: 9),
+    3 => const Duration(seconds: 12),
+    _ => const Duration(seconds: 15),
+  };
 
   /// How long a mismatched pair stays visible, by profile level — the
   /// younger the child, the longer they get to look (§6).
   Duration memoryHold(int level) => switch (level) {
-        <= 1 => const Duration(milliseconds: 1400),
-        2 => const Duration(milliseconds: 1200),
-        3 => const Duration(milliseconds: 900),
-        _ => const Duration(milliseconds: 800),
-      };
+    <= 1 => const Duration(milliseconds: 1400),
+    2 => const Duration(milliseconds: 1200),
+    3 => const Duration(milliseconds: 900),
+    _ => const Duration(milliseconds: 800),
+  };
 
   // «Вгадай звук» and «Повтори за мною» (experience audit 2026-09-13
   // §19, §21). Both games are a loop of word → answer → word, so their
@@ -881,11 +927,11 @@ class PackPalette {
   });
 
   factory PackPalette.of(Color accent) => PackPalette._(
-        accent: accent,
-        tint: Color.lerp(accent, Colors.white, 0.82) ?? accent,
-        border: accent.withValues(alpha: 0.35),
-        onTint: DT.onTint(accent),
-      );
+    accent: accent,
+    tint: Color.lerp(accent, Colors.white, 0.82) ?? accent,
+    border: accent.withValues(alpha: 0.35),
+    onTint: DT.onTint(accent),
+  );
 
   /// The pack's own colour — icons, progress, the pressed state.
   final Color accent;

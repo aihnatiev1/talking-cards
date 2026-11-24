@@ -39,8 +39,9 @@ Future<void> _pump(WidgetTester tester) async {
 
 void main() {
   group('ConfettiOverlayMixin', () {
-    testWidgets('showConfetti inserts a ConfettiBurst into the overlay',
-        (tester) async {
+    testWidgets('showConfetti inserts a ConfettiBurst into the overlay', (
+      tester,
+    ) async {
       await _pump(tester);
       expect(find.byType(ConfettiBurst), findsNothing);
 
@@ -58,8 +59,9 @@ void main() {
       await tester.pumpAndSettle(const Duration(seconds: 3));
     });
 
-    testWidgets('overlay is removed after default linger (1500ms)',
-        (tester) async {
+    testWidgets('overlay is removed after default linger (1500ms)', (
+      tester,
+    ) async {
       await _pump(tester);
       await tester.tap(find.text('Burst'));
       await tester.pump();
@@ -71,8 +73,9 @@ void main() {
       expect(find.byType(ConfettiBurst), findsNothing);
     });
 
-    testWidgets('a second showConfetti replaces the first entry',
-        (tester) async {
+    testWidgets('a second showConfetti replaces the first entry', (
+      tester,
+    ) async {
       await _pump(tester);
       await tester.tap(find.text('Burst'));
       await tester.pump();
@@ -83,8 +86,9 @@ void main() {
       await tester.pumpAndSettle(const Duration(seconds: 3));
     });
 
-    testWidgets('disposeConfetti called on widget removal cleans overlay',
-        (tester) async {
+    testWidgets('disposeConfetti called on widget removal cleans overlay', (
+      tester,
+    ) async {
       await _pump(tester);
       await tester.tap(find.text('Burst'));
       await tester.pump();
@@ -93,7 +97,8 @@ void main() {
       // Replace the host — triggers dispose()
       await tester.pumpWidget(
         const ProviderScope(
-            child: MaterialApp(home: Scaffold(body: SizedBox()))),
+          child: MaterialApp(home: Scaffold(body: SizedBox())),
+        ),
       );
       await tester.pumpAndSettle(const Duration(seconds: 3));
       expect(find.byType(ConfettiBurst), findsNothing);

@@ -5,14 +5,14 @@ import 'package:talking_cards/models/card_model.dart';
 import 'package:talking_cards/providers/quiz_provider.dart';
 
 CardModel _card(String id, {String? image}) => CardModel(
-      id: id,
-      sound: 'sound_$id',
-      text: 'text_$id',
-      emoji: '🔵',
-      colorBg: const Color(0xFFFFFFFF),
-      colorAccent: const Color(0xFF000000),
-      image: image ?? 'img_$id',
-    );
+  id: id,
+  sound: 'sound_$id',
+  text: 'text_$id',
+  emoji: '🔵',
+  colorBg: const Color(0xFFFFFFFF),
+  colorAccent: const Color(0xFF000000),
+  image: image ?? 'img_$id',
+);
 
 void main() {
   group('QuizNotifier', () {
@@ -52,14 +52,38 @@ void main() {
 
     test('does not start with fewer than 4 cards with images', () {
       final noImageCards = [
-        const CardModel(id: 'a', sound: 's', text: 't', emoji: '🔵',
-            colorBg: Color(0xFFFFFFFF), colorAccent: Color(0xFF000000)),
-        const CardModel(id: 'b', sound: 's', text: 't', emoji: '🔵',
-            colorBg: Color(0xFFFFFFFF), colorAccent: Color(0xFF000000)),
-        const CardModel(id: 'c', sound: 's', text: 't', emoji: '🔵',
-            colorBg: Color(0xFFFFFFFF), colorAccent: Color(0xFF000000)),
-        const CardModel(id: 'd', sound: 's', text: 't', emoji: '🔵',
-            colorBg: Color(0xFFFFFFFF), colorAccent: Color(0xFF000000)),
+        const CardModel(
+          id: 'a',
+          sound: 's',
+          text: 't',
+          emoji: '🔵',
+          colorBg: Color(0xFFFFFFFF),
+          colorAccent: Color(0xFF000000),
+        ),
+        const CardModel(
+          id: 'b',
+          sound: 's',
+          text: 't',
+          emoji: '🔵',
+          colorBg: Color(0xFFFFFFFF),
+          colorAccent: Color(0xFF000000),
+        ),
+        const CardModel(
+          id: 'c',
+          sound: 's',
+          text: 't',
+          emoji: '🔵',
+          colorBg: Color(0xFFFFFFFF),
+          colorAccent: Color(0xFF000000),
+        ),
+        const CardModel(
+          id: 'd',
+          sound: 's',
+          text: 't',
+          emoji: '🔵',
+          colorBg: Color(0xFFFFFFFF),
+          colorAccent: Color(0xFF000000),
+        ),
       ];
       // All cards have image: null (no image field set), so not playable
       final n = QuizNotifier(noImageCards);
@@ -79,8 +103,9 @@ void main() {
 
     test('wrong answer does not increment score', () {
       notifier.start();
-      final wrongOption = notifier.debugState!.options
-          .firstWhere((c) => c.id != notifier.debugState!.correctCard.id);
+      final wrongOption = notifier.debugState!.options.firstWhere(
+        (c) => c.id != notifier.debugState!.correctCard.id,
+      );
 
       notifier.answer(wrongOption.id);
 
@@ -162,8 +187,9 @@ void main() {
       notifier.start();
       // Get first question wrong
       final firstCorrect = notifier.debugState!.correctCard.id;
-      final wrongOption = notifier.debugState!.options
-          .firstWhere((c) => c.id != firstCorrect);
+      final wrongOption = notifier.debugState!.options.firstWhere(
+        (c) => c.id != firstCorrect,
+      );
       notifier.answer(wrongOption.id);
 
       notifier.restart();
@@ -195,9 +221,12 @@ void main() {
 
       for (int i = 0; i < 5; i++) {
         expect(
-          notifier.debugState!.options.contains(notifier.debugState!.correctCard),
+          notifier.debugState!.options.contains(
+            notifier.debugState!.correctCard,
+          ),
           true,
-          reason: 'Round ${notifier.debugState!.round}: correct card must be in options',
+          reason:
+              'Round ${notifier.debugState!.round}: correct card must be in options',
         );
         notifier.answer(notifier.debugState!.correctCard.id);
         notifier.next();
@@ -211,8 +240,11 @@ void main() {
 
       for (int i = 0; i < notifier.debugState!.totalRounds; i++) {
         final correctId = notifier.debugState!.correctCard.id;
-        expect(usedIds.contains(correctId), false,
-            reason: 'Card $correctId should not repeat within a round');
+        expect(
+          usedIds.contains(correctId),
+          false,
+          reason: 'Card $correctId should not repeat within a round',
+        );
         usedIds.add(correctId);
         notifier.answer(correctId);
         notifier.next();

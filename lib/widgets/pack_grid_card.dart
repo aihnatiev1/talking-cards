@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,6 +9,7 @@ import '../models/pack_model.dart';
 import '../providers/content_pack_provider.dart';
 import '../utils/app_icons.dart';
 import '../utils/design_tokens.dart';
+import '../utils/motion.dart';
 import 'ambient_loop.dart';
 import 'app_icon_painters.dart';
 import 'card_image.dart';
@@ -29,6 +31,43 @@ class PackGridCard extends ConsumerStatefulWidget {
     this.progress = 0,
     this.isSeasonal = false,
   });
+
+  static TextStyle get titleStyle =>
+      DT.tileTitle.copyWith(fontSize: 16, height: 1.25);
+
+  /// Measure real translated labels at the system text size. The grid keeps
+  /// the illustration legible instead of squeezing a long title to fit.
+  static SliverGridDelegateWithFixedCrossAxisCount gridDelegate(
+    BuildContext context,
+    double width,
+    Iterable<String> titles, {
+    bool compact = false,
+  }) {
+    final scaler = MediaQuery.textScalerOf(context);
+    final columns = width < 300 || scaler.scale(16) > 24
+        ? 1
+        : width >= 650
+        ? 3
+        : 2;
+    final tileWidth = (width - 16 * (columns - 1)) / columns;
+    var titleHeight = scaler.scale(20.0);
+    for (final title in titles) {
+      final painter = TextPainter(
+        text: TextSpan(text: title, style: titleStyle),
+        textDirection: Directionality.of(context),
+        textScaler: scaler,
+      )..layout(maxWidth: math.max(1, tileWidth - 24));
+      titleHeight = math.max(titleHeight, painter.height);
+      painter.dispose();
+    }
+    return SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: columns,
+      crossAxisSpacing: 16,
+      mainAxisSpacing: 18,
+      mainAxisExtent:
+          math.min(tileWidth * (compact ? .75 : 1), 250) + titleHeight + 35,
+    );
+  }
 
   @override
   ConsumerState<PackGridCard> createState() => _PackGridCardState();
@@ -63,6 +102,9 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
 
   void _triggerWobble() {
     HapticFeedback.mediumImpact();
+    _wobble.duration = MotionPolicy.of(
+      context,
+    ).dur(const Duration(milliseconds: 600));
     _wobble
       ..reset()
       ..forward();
@@ -90,7 +132,8 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
     final thumb = _thumb();
     final accent = pack.color;
     // An owned paid pack whose illustrations are still arriving from Play.
-    final downloading = !pack.isLocked &&
+    final downloading =
+        !pack.isLocked &&
         !pack.isFree &&
         !ref.watch(contentPackProvider).isReady;
 
@@ -108,17 +151,8 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
         decoration: BoxDecoration(
           color: DT.surfaceWhite,
           borderRadius: BorderRadius.circular(DT.rLg),
-          border: Border.all(
-            color: Colors.black.withValues(alpha: 0.06),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          border: Border.all(color: DT.outline, width: 2),
+          boxShadow: const [BoxShadow(color: DT.outline, offset: Offset(0, 4))],
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(DT.rLg - 2),
@@ -161,7 +195,7 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
                                     ),
                                   )
                                 : null,
-                            padding: EdgeInsets.zero,
+                            padding: const EdgeInsets.all(8),
                           ),
                         ),
                       ),
@@ -188,39 +222,29 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
               // Title strip — compact, anchored at bottom so the image
               // dominates the tile.
               Padding(
-                padding: const EdgeInsets.fromLTRB(6, 3, 6, 5),
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Shrink-to-fit on one line: «Протилежності» used to
-                    // wrap to two lines and look heavier than «Дії».
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
+                    Text(
                       pack.title,
                       textAlign: TextAlign.center,
-                      maxLines: 1,
-                      // Parents pick a pack by its name, so the title stays;
-                      // set in the tile face on the pack's own ink (G7/G9).
-                      style: DT.tileTitle.copyWith(
-                        fontSize: 12.5,
-                        color: PackPalette.of(accent).onTint,
-                        height: 1.1,
+                      style: PackGridCard.titleStyle.copyWith(
+                        color: DT.textPrimary,
                       ),
-                    ),
                     ),
                     if (hasProgress) ...[
                       const SizedBox(height: 4),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(2),
                         child: LinearProgressIndicator(
-                          value:
-                              total > 0 ? widget.progress / total : 0,
-                          minHeight: 3,
+                          value: total > 0
+                              ? (widget.progress / total).clamp(0.0, 1.0)
+                              : 0,
+                          minHeight: 5,
                           backgroundColor: accent.withValues(alpha: 0.15),
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(accent),
+                          valueColor: AlwaysStoppedAnimation<Color>(accent),
                         ),
                       ),
                     ],
@@ -273,6 +297,7 @@ class _StatusBadge extends StatelessWidget {
   final bool completed;
   final bool locked;
   final bool seasonal;
+
   /// Unlocked paid pack whose content is still arriving from Play.
   final bool downloading;
   final Color accent;
@@ -311,9 +336,7 @@ class _StatusBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: completed ? DT.success : DT.surfaceWhite,
         shape: BoxShape.circle,
-        border: completed
-            ? Border.all(color: Colors.white, width: 1.5)
-            : null,
+        border: completed ? Border.all(color: Colors.white, width: 1.5) : null,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.15),

@@ -96,8 +96,7 @@ class ArtPending extends CardArt {
   const ArtPending(this.state);
 
   @override
-  bool operator ==(Object other) =>
-      other is ArtPending && other.state == state;
+  bool operator ==(Object other) => other is ArtPending && other.state == state;
   @override
   int get hashCode => state.hashCode;
   @override
@@ -442,8 +441,9 @@ class AssetPackService {
     final (:file, :pending, :missing) = _locate(asset);
     if (missing != null) return ArtMissing(missing);
     if (pending != null) return ArtPending(pending);
-    final ImageProvider base =
-        file != null ? FileImage(File(file)) : AssetImage(asset);
+    final ImageProvider base = file != null
+        ? FileImage(File(file))
+        : AssetImage(asset);
     return ArtReady(ResizeImage.resizeIfNeeded(cacheWidth, cacheHeight, base));
   }
 
@@ -457,9 +457,7 @@ class AssetPackService {
     if (pending != null) return BytesUnavailable(ArtPending(pending));
     try {
       if (file != null) {
-        return BytesReady(
-          ByteData.sublistView(await File(file).readAsBytes()),
-        );
+        return BytesReady(ByteData.sublistView(await File(file).readAsBytes()));
       }
       return BytesReady(await rootBundle.load(asset));
     } catch (_) {
@@ -491,6 +489,7 @@ class AssetPackService {
     required bool bundled,
     String? packPath,
     ContentPackState? state,
+
     /// Null keeps the resolver permissive — the same "cannot prove
     /// absence" stance as a manifest that failed to load.
     Set<String>? allAssets,

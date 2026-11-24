@@ -13,12 +13,17 @@ void main() {
   testWidgets('warm age picker with stable selection', (tester) async {
     tester.platformDispatcher.localeTestValue = const Locale('uk');
     addTearDown(tester.platformDispatcher.clearLocaleTestValue);
-    await pumpGolden(tester, const OnboardingScreen(),
-        wrap: (host) => ProviderScope(child: host));
-    await tester.tap(find.text('Далі →'), warnIfMissed: false);
+    await pumpGolden(
+      tester,
+      const OnboardingScreen(),
+      wrap: (host) => ProviderScope(child: host),
+    );
+    await tester.tap(find.text('Далі'), warnIfMissed: false);
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
-    await expectLater(find.byKey(goldenKey),
-        matchesGoldenFile('images/onboarding_age_uk.png'));
+    await expectLater(
+      find.byKey(goldenKey),
+      matchesGoldenFile('images/onboarding_age_uk.png'),
+    );
   });
 }

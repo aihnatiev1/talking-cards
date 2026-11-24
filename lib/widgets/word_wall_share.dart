@@ -139,9 +139,7 @@ class WordWallShareContent extends StatelessWidget {
               spacing: 8,
               runSpacing: 8,
               alignment: WrapAlignment.center,
-              children: previewCards
-                  .map((c) => _PreviewTile(card: c))
-                  .toList(),
+              children: previewCards.map((c) => _PreviewTile(card: c)).toList(),
             ),
           const SizedBox(height: 16),
           ClipRRect(

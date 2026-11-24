@@ -11,7 +11,8 @@ class ActivityChart extends StatelessWidget {
     final maxVal = data.map((e) => e.value).fold(1, (a, b) => a > b ? a : b);
     final colorScheme = Theme.of(context).colorScheme;
     final barColor = colorScheme.primary;
-    final labelColor = Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey;
+    final labelColor =
+        Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey;
 
     return SizedBox(
       height: 140,

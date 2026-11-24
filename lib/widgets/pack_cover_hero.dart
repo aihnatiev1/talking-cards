@@ -65,10 +65,7 @@ class PackCoverHero extends StatelessWidget {
     // instant, so a flight would be a one-frame flicker of a picture over
     // a screen that already changed. `HeroMode` switches the Hero off
     // rather than the widget disappearing, so both ends keep their layout.
-    return HeroMode(
-      enabled: !MotionPolicy.of(context).reduce,
-      child: _hero(),
-    );
+    return HeroMode(enabled: !MotionPolicy.of(context).reduce, child: _hero());
   }
 
   Widget _hero() {

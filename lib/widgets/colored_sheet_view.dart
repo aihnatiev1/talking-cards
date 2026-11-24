@@ -50,7 +50,8 @@ class _ColoredSheetViewState extends State<ColoredSheetView> {
       final crayon = kCrayons.where((c) => c.id == entry.value).firstOrNull;
       if (pixels == null || crayon == null) continue;
       final c = crayon.color;
-      final packed = (0xFF << 24) |
+      final packed =
+          (0xFF << 24) |
           ((c.b * 255).round() << 16) |
           ((c.g * 255).round() << 8) |
           (c.r * 255).round();

@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import '../helpers/motion.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -17,8 +19,10 @@ void main() {
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
-    AssetPackService.instance
-        .debugConfigure(padAssets: const {}, bundled: true);
+    AssetPackService.instance.debugConfigure(
+      padAssets: const {},
+      bundled: true,
+    );
   });
 
   const card = CardModel(
@@ -26,6 +30,7 @@ void main() {
     sound: 'КОТИК',
     text: 'Котик муркоче',
     emoji: '🐱',
+    image: 'cat',
     colorBg: Color(0xFFFFF4E0),
     colorAccent: Color(0xFFB07A3C),
   );
@@ -39,24 +44,31 @@ void main() {
     cards: [card],
   );
 
-  Widget app({bool reduceMotion = false}) => ProviderScope(
-        child: MaterialApp(
-          builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(context)
-                .copyWith(disableAnimations: reduceMotion),
-            child: child ?? const SizedBox(),
-          ),
-          home: const CardRevealScreen(
-            card: card,
-            pack: pack,
-            newTotal: 12,
-            skipAnimation: true,
-          ),
+  Widget app({
+    bool reduceMotion = false,
+    bool skipAnimation = true,
+    double textScale = 1,
+  }) => ProviderScope(
+    child: MaterialApp(
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+          disableAnimations: reduceMotion,
+          textScaler: TextScaler.linear(textScale),
         ),
-      );
+        child: child ?? const SizedBox(),
+      ),
+      home: CardRevealScreen(
+        card: card,
+        pack: pack,
+        newTotal: 12,
+        skipAnimation: skipAnimation,
+      ),
+    ),
+  );
 
-  testWidgets('settled reveal comes to rest within a few seconds',
-      (tester) async {
+  testWidgets('settled reveal comes to rest within a few seconds', (
+    tester,
+  ) async {
     await tester.pumpWidget(app());
     await tester.pump();
     // Glow: 3 × 1.6 s; confetti: one 5 s pass. Generous ceiling.
@@ -79,4 +91,66 @@ void main() {
     );
     expect(find.text('КОТИК'), findsOneWidget);
   });
+  for (final size in [
+    const Size(280, 568),
+    const Size(844, 390),
+    const Size(834, 1194),
+  ]) {
+    testWidgets('reward fits $size with large text and motion disabled', (
+      tester,
+    ) async {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        app(reduceMotion: true, skipAnimation: false, textScale: 2),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await tester.ensureVisible(find.text('На головну'));
+      await tester.pumpAndSettle();
+      expect(
+        tester.getRect(find.text('На головну')).bottom,
+        lessThanOrEqualTo(size.height),
+      );
+      expect(tester.binding.hasScheduledFrame, isFalse);
+    });
+  }
+  testWidgets('opening finishes without timers or looping effects', (
+    tester,
+  ) async {
+    await tester.pumpWidget(app(skipAnimation: false));
+    await tester.pump();
+    expect(find.byTooltip('Закрити'), findsOneWidget);
+    await tester.pumpAndSettle(
+      const Duration(milliseconds: 100),
+      EnginePhase.sendSemanticsUpdate,
+      const Duration(seconds: 3),
+    );
+    expect(tester.binding.hasScheduledFrame, isFalse);
+    expect(find.text('КОТИК'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('reward visual preview', (tester) async {
+    await pumpGolden(
+      tester,
+      CardRevealScreen(
+        card: card,
+        pack: pack,
+        newTotal: 1,
+        skipAnimation: true,
+        onGoToPack: () {},
+      ),
+      wrap: (host) => ProviderScope(child: host),
+    );
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 150)),
+    );
+    await tester.pumpAndSettle();
+    await expectLater(
+      find.byKey(goldenKey),
+      matchesGoldenFile('../goldens/images/card_reveal_reward.png'),
+    );
+  }, skip: !Platform.isMacOS);
 }

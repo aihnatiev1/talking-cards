@@ -9,6 +9,7 @@ import '../providers/curriculum_progress_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../screens/articulation_screen.dart';
+import '../widgets/parental_gate.dart';
 import '../screens/bubble_pop_screen.dart';
 import '../screens/guess_screen.dart';
 import '../screens/memory_match_screen.dart';
@@ -83,9 +84,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
     // No pair count from here: the board sizes itself from the profile's
     // level and from how calm the last rounds were
     // (memory_match_redesign §6).
-    _openGame(
-      KidRoutes.game(MemoryMatchScreen(pack: pack, cards: playable)),
-    );
+    _openGame(KidRoutes.game(MemoryMatchScreen(pack: pack, cards: playable)));
   }
 
   static const _oddOneOutExclude = {
@@ -141,16 +140,19 @@ class _GamesTabState extends ConsumerState<GamesTab> {
     // The plan when the language has one; the library is the fallback and
     // the screen decides, because only it knows whether the plan could
     // actually fill a set.
-    final hasPlan = ref.read(speakSetProvider).length >=
-        RepeatGameScreen.sessionLength;
+    final hasPlan =
+        ref.read(speakSetProvider).length >= RepeatGameScreen.sessionLength;
     _openGame(
-      KidRoutes.game(
-        RepeatGameScreen(cards: cards, useCurriculum: hasPlan),
-      ),
+      KidRoutes.game(RepeatGameScreen(cards: cards, useCurriculum: hasPlan)),
     );
   }
 
-  void _openArticulation() {
+  /// The one screen addressed to the grown-up: it sits in «Для батьків», and
+  /// a toddler's tap must not land in an exercise written for an adult.
+  Future<void> _openArticulation() async {
+    final isEn = ref.read(languageProvider) == 'en';
+    final ok = await showParentalGate(context, isEn: isEn);
+    if (!ok || !mounted) return;
     _openGame(KidRoutes.game(const ArticulationScreen()));
   }
 
@@ -159,7 +161,9 @@ class _GamesTabState extends ConsumerState<GamesTab> {
     final id = isEn ? 'en_opposites' : 'opposites';
     final oppPack = packs.where((p) => p.id == id).firstOrNull;
     if (oppPack == null || oppPack.cards.length < 4) return;
-    Navigator.of(context).push(KidRoutes.game(OppositeGameScreen(pack: oppPack)));
+    Navigator.of(
+      context,
+    ).push(KidRoutes.game(OppositeGameScreen(pack: oppPack)));
   }
 
   /// Pick the first card with a webp image from the given pool.
@@ -798,9 +802,7 @@ class _BigGameTile extends StatelessWidget {
                     children: [
                       Text(
                         g.title,
-                        style: DT.tileTitle.copyWith(
-                          color: DT.onTint(g.color),
-                        ),
+                        style: DT.tileTitle.copyWith(color: DT.onTint(g.color)),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),

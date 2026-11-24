@@ -104,14 +104,12 @@ class _BubbleStageState extends State<_BubbleStage>
             final endY = -_size; // off-screen top
             final eased = Curves.easeOutCubic.transform(t);
             final currentY = startY + (endY - startY) * eased - _size / 2;
-            final drift =
-                sin(t * 2 * pi + _driftPhase) * _driftAmplitude;
+            final drift = sin(t * 2 * pi + _driftPhase) * _driftAmplitude;
             // Pop: scale snaps in last 18%, opacity fades.
             final scale = t < 0.82
                 ? 1.0 + 0.08 * sin(t * pi)
                 : 1.5 * (1 - (t - 0.82) / 0.18);
-            final opacity =
-                t < 0.82 ? 1.0 : (1 - (t - 0.82) / 0.18);
+            final opacity = t < 0.82 ? 1.0 : (1 - (t - 0.82) / 0.18);
 
             return Positioned(
               left: widget.startGlobal.dx - _size / 2 + drift,
@@ -152,10 +150,7 @@ class _BubbleVisual extends StatelessWidget {
           stops: const [0.0, 1.0],
           center: const Alignment(-0.3, -0.3),
         ),
-        border: Border.all(
-          color: tint.withValues(alpha: 0.9),
-          width: 1.5,
-        ),
+        border: Border.all(color: tint.withValues(alpha: 0.9), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: tint.withValues(alpha: 0.4),

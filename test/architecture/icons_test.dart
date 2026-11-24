@@ -67,16 +67,14 @@ void main() {
     expect(
       offenders,
       isEmpty,
-      reason: 'Use AppIconView(AppIcon.x). A glyph that does not exist yet '
+      reason:
+          'Use AppIconView(AppIcon.x). A glyph that does not exist yet '
           'gets a routine in app_icon_painters.dart, not a Material fallback.',
     );
   });
 
   test('every migrated file exists (the list is not decorative)', () {
-    expect(
-      migrated.where((p) => !File(p).existsSync()),
-      isEmpty,
-    );
+    expect(migrated.where((p) => !File(p).existsSync()), isEmpty);
   });
 
   test('Icons. appears only in the shrink-only debt list', () {
@@ -90,7 +88,8 @@ void main() {
     expect(
       offenders,
       isEmpty,
-      reason: 'Kid-facing: use AppIconView. Do not add this file to '
+      reason:
+          'Kid-facing: use AppIconView. Do not add this file to '
           'materialDebt — that list only shrinks.',
     );
   });
@@ -105,7 +104,8 @@ void main() {
     expect(
       stale,
       isEmpty,
-      reason: 'These files are clean now — remove them from materialDebt '
+      reason:
+          'These files are clean now — remove them from materialDebt '
           'so they stay clean (and add them to `migrated` if kid-facing).',
     );
   });
@@ -127,21 +127,31 @@ void main() {
       final s = File('lib/tabs/packs_tab.dart').readAsStringSync();
       expect(s, isNot(contains('_categoryIcons')));
       for (final e in categoryEmoji) {
-        expect(s, isNot(contains("'$e'")),
-            reason: 'Category chips render AppIcon.catSpeech/catSounds/'
-                'catWorld, not $e.');
+        expect(
+          s,
+          isNot(contains("'$e'")),
+          reason:
+              'Category chips render AppIcon.catSpeech/catSounds/'
+              'catWorld, not $e.',
+        );
       }
       for (final e in stepEmoji) {
-        expect(s, isNot(contains("emoji: '$e'")),
-            reason: 'DailyTask takes an AppIcon, not $e.');
+        expect(
+          s,
+          isNot(contains("emoji: '$e'")),
+          reason: 'DailyTask takes an AppIcon, not $e.',
+        );
       }
     });
 
     test('games_tab has no game-badge emoji', () {
       final s = File('lib/tabs/games_tab.dart').readAsStringSync();
       for (final e in gameEmoji) {
-        expect(s, isNot(contains("badge: '$e'")),
-            reason: 'Game badges are AppIcon.game*, not $e.');
+        expect(
+          s,
+          isNot(contains("badge: '$e'")),
+          reason: 'Game badges are AppIcon.game*, not $e.',
+        );
       }
     });
 

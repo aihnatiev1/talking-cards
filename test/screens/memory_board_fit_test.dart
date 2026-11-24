@@ -19,20 +19,22 @@ void main() {
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
-    AssetPackService.instance
-        .debugConfigure(padAssets: const {}, bundled: true);
+    AssetPackService.instance.debugConfigure(
+      padAssets: const {},
+      bundled: true,
+    );
   });
 
   CardModel card(String id) => CardModel(
-        id: id,
-        sound: id,
-        text: id,
-        emoji: '🐶',
-        colorBg: const Color(0xFFFFFFFF),
-        colorAccent: const Color(0xFF000000),
-        image: null,
-        audioKey: id,
-      );
+    id: id,
+    sound: id,
+    text: id,
+    emoji: '🐶',
+    colorBg: const Color(0xFFFFFFFF),
+    colorAccent: const Color(0xFF000000),
+    image: null,
+    audioKey: id,
+  );
 
   final pack = PackModel(
     id: 'animals',
@@ -80,21 +82,30 @@ void main() {
         // unwinnable rather than merely ugly.
         final tiles = find.byType(GestureDetector);
         expect(tiles, findsWidgets);
-        final screen = Rect.fromLTWH(0, 0, entry.value.width,
-            entry.value.height);
+        final screen = Rect.fromLTWH(
+          0,
+          0,
+          entry.value.width,
+          entry.value.height,
+        );
         for (final element in tiles.evaluate()) {
           final box = element.renderObject as RenderBox?;
           if (box == null || !box.hasSize || box.size.isEmpty) continue;
           final topLeft = box.localToGlobal(Offset.zero);
           final rect = topLeft & box.size;
-          expect(screen.contains(rect.center), isTrue,
-              reason: 'a tappable tile centred outside the screen on '
-                  '${entry.key}: $rect');
+          expect(
+            screen.contains(rect.center),
+            isTrue,
+            reason:
+                'a tappable tile centred outside the screen on '
+                '${entry.key}: $rect',
+          );
         }
       });
 
-      testWidgets('$pairs pairs are laid out to spec on ${entry.key}',
-          (tester) async {
+      testWidgets('$pairs pairs are laid out to spec on ${entry.key}', (
+        tester,
+      ) async {
         tester.view.physicalSize = entry.value;
         tester.view.devicePixelRatio = 1.0;
         addTearDown(tester.view.reset);
@@ -123,24 +134,38 @@ void main() {
         // Columns: 2 up to 3 pairs, 4 from 8 pairs on (wave 3, 3.3),
         // 3 in between. Counted from where the slots actually land.
         final columns = slots.map((r) => r.center.dx.round()).toSet().length;
-        final expectedCols = switch (pairs) { <= 3 => 2, >= 8 => 4, _ => 3 };
-        expect(columns, expectedCols,
-            reason: '$pairs pairs should deal in $expectedCols columns on '
-                '${entry.key}');
+        final expectedCols = switch (pairs) {
+          <= 3 => 2,
+          >= 8 => 4,
+          _ => 3,
+        };
+        expect(
+          columns,
+          expectedCols,
+          reason:
+              '$pairs pairs should deal in $expectedCols columns on '
+              '${entry.key}',
+        );
 
         // The tablet ceiling (3.2): a card never blows up past 220 dp,
         // however much room an 11" iPad has to give.
         for (final r in slots) {
-          expect(r.width, lessThanOrEqualTo(221),
-              reason: 'a tile grew past the ceiling on ${entry.key}: $r');
+          expect(
+            r.width,
+            lessThanOrEqualTo(221),
+            reason: 'a tile grew past the ceiling on ${entry.key}: $r',
+          );
         }
 
         // And no two slots overlap — 4×4 that fits is still wrong if the
         // rows sit on top of each other.
         for (var i = 0; i < slots.length; i++) {
           for (var j = i + 1; j < slots.length; j++) {
-            expect(slots[i].deflate(1).overlaps(slots[j].deflate(1)), isFalse,
-                reason: 'slots $i and $j overlap on ${entry.key}');
+            expect(
+              slots[i].deflate(1).overlaps(slots[j].deflate(1)),
+              isFalse,
+              reason: 'slots $i and $j overlap on ${entry.key}',
+            );
           }
         }
       });

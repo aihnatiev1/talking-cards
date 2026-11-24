@@ -149,47 +149,50 @@ class KidScreen extends StatelessWidget {
         body: _behindTheGame(
           meadow: meadow,
           child: SafeArea(
-          child: Column(
-            children: [
-              // An empty band is not a header. `showLeading: false` keeps
-              // the control's space so a title does not jump between a
-              // screen that can go back and one that cannot — but with no
-              // title and no trailing there is nothing to hold in place,
-              // and 88 dp of nothing above the content is just a gap.
-              if (showLeading || title != null || trailing != null)
-                _Header(
-                  leading: showLeading
-                      ? control
-                      : const SizedBox.square(dimension: 72),
-                  title: title,
-                  trailing: trailing,
-                ),
-              if (progressValue != null)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    DT.sp24,
-                    0,
-                    DT.sp24,
-                    DT.sp8,
+            child: Column(
+              children: [
+                // An empty band is not a header. `showLeading: false` keeps
+                // the control's space so a title does not jump between a
+                // screen that can go back and one that cannot — but with no
+                // title and no trailing there is nothing to hold in place,
+                // and 88 dp of nothing above the content is just a gap.
+                if (showLeading || title != null || trailing != null)
+                  _Header(
+                    leading: showLeading
+                        ? control
+                        : const SizedBox.square(dimension: 72),
+                    title: title,
+                    trailing: trailing,
                   ),
-                  child: KidProgressPill(value: progressValue, accent: accent),
+                if (progressValue != null)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      DT.sp24,
+                      0,
+                      DT.sp24,
+                      DT.sp8,
+                    ),
+                    child: KidProgressPill(
+                      value: progressValue,
+                      accent: accent,
+                    ),
+                  ),
+                Expanded(
+                  child: Stack(
+                    children: [
+                      Positioned.fill(child: body),
+                      if (mascotCorner != null)
+                        Positioned(
+                          right: DT.sp16,
+                          bottom: DT.sp16,
+                          child: mascotCorner!, // guarded by the `if` above
+                        ),
+                    ],
+                  ),
                 ),
-              Expanded(
-                child: Stack(
-                  children: [
-                    Positioned.fill(child: body),
-                    if (mascotCorner != null)
-                      Positioned(
-                        right: DT.sp16,
-                        bottom: DT.sp16,
-                        child: mascotCorner!, // guarded by the `if` above
-                      ),
-                  ],
-                ),
-              ),
-              if (bottom != null) bottom!, // guarded by the `if` above
-            ],
-          ),
+                if (bottom != null) bottom!, // guarded by the `if` above
+              ],
+            ),
           ),
         ),
       ),
@@ -348,10 +351,7 @@ class KidCountPill extends StatelessWidget {
       child: Center(
         child: Container(
           key: pillKey,
-          padding: const EdgeInsets.symmetric(
-            horizontal: DT.sp12,
-            vertical: 6,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: DT.sp12, vertical: 6),
           decoration: BoxDecoration(
             color: background,
             borderRadius: BorderRadius.circular(20),
@@ -542,7 +542,8 @@ class _KidControl extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: palette.tint,
-            border: Border.all(color: palette.border, width: 1.5),
+            border: Border.all(color: palette.border, width: 2),
+            boxShadow: DT.shadowSoft(accent),
           ),
           alignment: Alignment.center,
           child: _ctrlIcon(icon, palette.onTint),

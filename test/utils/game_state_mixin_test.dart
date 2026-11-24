@@ -44,13 +44,17 @@ class _HostState extends ConsumerState<_Host> with GameStateMixin {
           Text('round:$roundsPlayed'),
           Text('finished:$finished'),
           ElevatedButton(
-              onPressed: () => setState(scorePoint),
-              child: const Text('point')),
+            onPressed: () => setState(scorePoint),
+            child: const Text('point'),
+          ),
           ElevatedButton(
-              onPressed: () => setState(() => nextRound()),
-              child: const Text('next')),
+            onPressed: () => setState(() => nextRound()),
+            child: const Text('next'),
+          ),
           ElevatedButton(
-              onPressed: () => completeGame(), child: const Text('complete')),
+            onPressed: () => completeGame(),
+            child: const Text('complete'),
+          ),
           ElevatedButton(onPressed: resetGame, child: const Text('reset')),
         ],
       ),
@@ -76,14 +80,14 @@ class _DefaultsHostState extends ConsumerState<_DefaultsHost>
   String get gameId => 'defaults_host';
 
   @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: SizedBox.shrink());
+  Widget build(BuildContext context) => const Scaffold(body: SizedBox.shrink());
 }
 
 void main() {
   group('GameStateMixin', () {
-    testWidgets('initial state: score=0, round=0, finished=false',
-        (tester) async {
+    testWidgets('initial state: score=0, round=0, finished=false', (
+      tester,
+    ) async {
       await _pump(tester);
       expect(find.text('score:0'), findsOneWidget);
       expect(find.text('round:0'), findsOneWidget);
@@ -107,8 +111,7 @@ void main() {
       expect(find.text('round:1'), findsOneWidget);
     });
 
-    testWidgets('nextRound triggers completion past maxRounds',
-        (tester) async {
+    testWidgets('nextRound triggers completion past maxRounds', (tester) async {
       await _pump(tester); // max=3
       for (var i = 0; i < 3; i++) {
         await tester.tap(find.text('next'));
@@ -121,8 +124,9 @@ void main() {
       expect(find.text('finished:true'), findsOneWidget);
     });
 
-    testWidgets('completeGame sets finished without bumping rounds',
-        (tester) async {
+    testWidgets('completeGame sets finished without bumping rounds', (
+      tester,
+    ) async {
       await _pump(tester);
       await tester.tap(find.text('complete'));
       await tester.pump();
@@ -143,22 +147,23 @@ void main() {
       expect(find.text('finished:false'), findsOneWidget);
     });
 
-    testWidgets('default questTask is playQuiz, default recordToStats=true',
-        (tester) async {
+    testWidgets('default questTask is playQuiz, default recordToStats=true', (
+      tester,
+    ) async {
       // Smoke test the defaults via a host with no overrides beyond gameId.
       await tester.pumpWidget(
         const ProviderScope(child: MaterialApp(home: _DefaultsHost())),
       );
-      final state =
-          tester.state<_DefaultsHostState>(find.byType(_DefaultsHost));
+      final state = tester.state<_DefaultsHostState>(
+        find.byType(_DefaultsHost),
+      );
       expect(state.questTask, QuestTask.playQuiz);
       expect(state.recordToStats, isTrue);
       expect(state.maxRounds, 10);
     });
 
     testWidgets('custom questTask = null is honored', (tester) async {
-      await _pump(tester,
-          home: const _Host(task: null, stats: false));
+      await _pump(tester, home: const _Host(task: null, stats: false));
       final state = tester.state<_HostState>(find.byType(_Host));
       expect(state.questTask, isNull);
     });

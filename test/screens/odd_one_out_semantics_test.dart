@@ -26,25 +26,25 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   CardModel card(String image) => CardModel(
-        id: image,
-        sound: image,
-        text: image,
-        emoji: '🐶',
-        colorBg: const Color(0xFFFFFFFF),
-        colorAccent: const Color(0xFF000000),
-        image: image,
-        audioKey: image,
-      );
+    id: image,
+    sound: image,
+    text: image,
+    emoji: '🐶',
+    colorBg: const Color(0xFFFFFFFF),
+    colorAccent: const Color(0xFF000000),
+    image: image,
+    audioKey: image,
+  );
 
   PackModel pack(String id, List<String> images) => PackModel(
-        id: id,
-        title: id,
-        icon: '📦',
-        color: const Color(0xFF6C63FF),
-        isLocked: false,
-        isFree: true,
-        cards: [for (final i in images) card(i)],
-      );
+    id: id,
+    title: id,
+    icon: '📦',
+    color: const Color(0xFF6C63FF),
+    isLocked: false,
+    isFree: true,
+    cards: [for (final i in images) card(i)],
+  );
 
   group('semantic groups', () {
     test('are pairwise disjoint — a picture belongs to one group only', () {
@@ -74,12 +74,14 @@ void main() {
       expect(SemanticGroups.of(card('cat').copyless()), SemanticGroup.animals);
     });
 
-    test('a toy car is not traffic, and a harnessed horse is not transport',
-        () {
-      // The two traps that made "right by pack id" indefensible.
-      expect(SemanticGroups.of(card('toy_car')), SemanticGroup.toys);
-      expect(SemanticGroups.of(card('konik')), isNull);
-    });
+    test(
+      'a toy car is not traffic, and a harnessed horse is not transport',
+      () {
+        // The two traps that made "right by pack id" indefensible.
+        expect(SemanticGroups.of(card('toy_car')), SemanticGroup.toys);
+        expect(SemanticGroups.of(card('konik')), isNull);
+      },
+    );
 
     test('groups that cannot be told apart by picture never meet', () {
       expect(
@@ -128,17 +130,19 @@ void main() {
       }
     });
 
-    test('the same picture twice in the catalogue is one card on the board',
-        () {
-      // «яблуко» is in both «Їжа» and «Вдома»; two of it is not a question.
-      final task = SemanticGroups.task([
-        ...pack('food', ['apple', 'banana', 'grapes']).cards,
-        ...pack('home', ['apple']).cards,
-        ...pack('transport', ['avtobus']).cards,
-      ], Random(3));
-      final images = {...task!.majority.map((c) => c.image), task.odd.image};
-      expect(images, hasLength(4));
-    });
+    test(
+      'the same picture twice in the catalogue is one card on the board',
+      () {
+        // «яблуко» is in both «Їжа» and «Вдома»; two of it is not a question.
+        final task = SemanticGroups.task([
+          ...pack('food', ['apple', 'banana', 'grapes']).cards,
+          ...pack('home', ['apple']).cards,
+          ...pack('transport', ['avtobus']).cards,
+        ], Random(3));
+        final images = {...task!.majority.map((c) => c.image), task.odd.image};
+        expect(images, hasLength(4));
+      },
+    );
 
     test('material that cannot make an honest question returns null', () {
       // Only sound packs open: nothing sorts, so the screen falls back
@@ -166,8 +170,10 @@ void main() {
 
     setUp(() {
       SharedPreferences.setMockInitialValues({});
-      AssetPackService.instance
-          .debugConfigure(padAssets: const {}, bundled: true);
+      AssetPackService.instance.debugConfigure(
+        padAssets: const {},
+        bundled: true,
+      );
       FeedbackService.debugMute = true;
     });
 
@@ -197,12 +203,17 @@ void main() {
     /// test bundle draws its fallback emoji through `CardImage`, so the
     /// glyphs are filtered out — only the labels are words.
     List<String> boardWords(WidgetTester tester) {
-      final known = {for (final p in packs) for (final c in p.cards) c.sound};
+      final known = {
+        for (final p in packs)
+          for (final c in p.cards) c.sound,
+      };
       return tester
-          .widgetList<Text>(find.descendant(
-            of: find.byType(GridView),
-            matching: find.byType(Text),
-          ))
+          .widgetList<Text>(
+            find.descendant(
+              of: find.byType(GridView),
+              matching: find.byType(Text),
+            ),
+          )
           .map((t) => t.data)
           .whereType<String>()
           .where(known.contains)
@@ -271,13 +282,13 @@ extension on CardModel {
   /// different id. Grouping is keyed on the picture, so this must sort the
   /// same way.
   CardModel copyless() => CardModel(
-        id: '${id}_2',
-        sound: sound,
-        text: text,
-        emoji: emoji,
-        colorBg: colorBg,
-        colorAccent: colorAccent,
-        image: image,
-        audioKey: audioKey,
-      );
+    id: '${id}_2',
+    sound: sound,
+    text: text,
+    emoji: emoji,
+    colorBg: colorBg,
+    colorAccent: colorAccent,
+    image: image,
+    audioKey: audioKey,
+  );
 }

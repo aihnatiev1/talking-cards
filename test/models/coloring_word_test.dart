@@ -10,9 +10,11 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   test('every drawing that has a word points at a real card', () async {
-    final index = json.decode(
-      await rootBundle.loadString('assets/images/coloring/sheets.json'),
-    ) as Map<String, dynamic>;
+    final index =
+        json.decode(
+              await rootBundle.loadString('assets/images/coloring/sheets.json'),
+            )
+            as Map<String, dynamic>;
     final sheets = (index['sheets'] as List<dynamic>).cast<String>();
     expect(sheets, isNotEmpty);
 
@@ -22,15 +24,19 @@ void main() {
     final packs = (cards is List ? cards : cards['packs']) as List<dynamic>;
     final ids = {
       for (final pack in packs.cast<Map<String, dynamic>>())
-        for (final card in (pack['cards'] as List<dynamic>)
-            .cast<Map<String, dynamic>>())
+        for (final card
+            in (pack['cards'] as List<dynamic>).cast<Map<String, dynamic>>())
           card['id'] as String,
     };
 
     for (final sheet in sheets) {
-      final meta = json.decode(
-        await rootBundle.loadString('assets/images/coloring/$sheet.json'),
-      ) as Map<String, dynamic>;
+      final meta =
+          json.decode(
+                await rootBundle.loadString(
+                  'assets/images/coloring/$sheet.json',
+                ),
+              )
+              as Map<String, dynamic>;
       final word = meta['word'] as String?;
       if (word == null) continue;
       expect(
@@ -42,13 +48,19 @@ void main() {
   });
 
   test('every drawing in the index has areas to fill', () async {
-    final index = json.decode(
-      await rootBundle.loadString('assets/images/coloring/sheets.json'),
-    ) as Map<String, dynamic>;
+    final index =
+        json.decode(
+              await rootBundle.loadString('assets/images/coloring/sheets.json'),
+            )
+            as Map<String, dynamic>;
     for (final sheet in (index['sheets'] as List<dynamic>).cast<String>()) {
-      final meta = json.decode(
-        await rootBundle.loadString('assets/images/coloring/$sheet.json'),
-      ) as Map<String, dynamic>;
+      final meta =
+          json.decode(
+                await rootBundle.loadString(
+                  'assets/images/coloring/$sheet.json',
+                ),
+              )
+              as Map<String, dynamic>;
       expect(
         (meta['areas'] as List<dynamic>),
         isNotEmpty,
@@ -62,14 +74,20 @@ void main() {
     // over the child's colours hides all of them — the screen showed an
     // empty outline no matter how much was painted. The generator writes
     // a knocked-out copy; without it the feature is invisible.
-    final index = json.decode(
-      await rootBundle.loadString('assets/images/coloring/sheets.json'),
-    ) as Map<String, dynamic>;
+    final index =
+        json.decode(
+              await rootBundle.loadString('assets/images/coloring/sheets.json'),
+            )
+            as Map<String, dynamic>;
     for (final sheet in (index['sheets'] as List<dynamic>).cast<String>()) {
       final ink = await rootBundle.load(
         'assets/images/coloring/$sheet.ink.png',
       );
-      expect(ink.lengthInBytes, greaterThan(0), reason: '$sheet has no ink layer');
+      expect(
+        ink.lengthInBytes,
+        greaterThan(0),
+        reason: '$sheet has no ink layer',
+      );
     }
   });
 }

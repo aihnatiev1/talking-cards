@@ -80,8 +80,10 @@ class SrsReviewBanner extends ConsumerWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      s('${dueCards.length} карток чекають',
-                          '${dueCards.length} cards waiting'),
+                      s(
+                        '${dueCards.length} карток чекають',
+                        '${dueCards.length} cards waiting',
+                      ),
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -93,7 +95,9 @@ class SrsReviewBanner extends ConsumerWidget {
               ),
               Container(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 6),
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: color,
                   borderRadius: BorderRadius.circular(18),
@@ -110,8 +114,11 @@ class SrsReviewBanner extends ConsumerWidget {
                       ),
                     ),
                     SizedBox(width: 4),
-                    Icon(Icons.arrow_forward_ios_rounded,
-                        size: 11, color: Colors.white),
+                    Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 11,
+                      color: Colors.white,
+                    ),
                   ],
                 ),
               ),

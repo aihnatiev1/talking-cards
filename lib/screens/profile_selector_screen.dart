@@ -17,6 +17,9 @@ Future<void> showProfileSelector(BuildContext context) {
   return showModalBottomSheet(
     context: context,
     backgroundColor: Colors.transparent,
+    // The sheet draws its own handle; the theme's would add a second one
+    // and a 48 dp band above it.
+    showDragHandle: false,
     isScrollControlled: true,
     builder: (_) => const _ProfileSelectorSheet(),
   );
@@ -59,23 +62,25 @@ class _ProfileSelectorSheet extends ConsumerWidget {
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w800,
-              color: DT.brand,
+              color: DT.brandInk,
             ),
           ),
           const SizedBox(height: 16),
           // Profile list
-          ...state.profiles.map((profile) => _ProfileTile(
-                profile: profile,
-                isActive: profile.id == state.activeId,
-                onTap: () {
-                  ref.read(profileProvider.notifier).switchProfile(profile.id);
-                  Navigator.of(context).pop();
-                },
-                onEdit: () => _showEditDialog(context, ref, profile, s.isEn),
-                onDelete: state.profiles.length > 1
-                    ? () => _confirmDelete(context, ref, profile, s.isEn)
-                    : null,
-              )),
+          ...state.profiles.map(
+            (profile) => _ProfileTile(
+              profile: profile,
+              isActive: profile.id == state.activeId,
+              onTap: () {
+                ref.read(profileProvider.notifier).switchProfile(profile.id);
+                Navigator.of(context).pop();
+              },
+              onEdit: () => _showEditDialog(context, ref, profile, s.isEn),
+              onDelete: state.profiles.length > 1
+                  ? () => _confirmDelete(context, ref, profile, s.isEn)
+                  : null,
+            ),
+          ),
           if (state.profiles.length < 3) ...[
             const SizedBox(height: 12),
             SizedBox(
@@ -85,11 +90,12 @@ class _ProfileSelectorSheet extends ConsumerWidget {
                 icon: const Icon(Icons.add_rounded),
                 label: Text(s('Додати профіль', 'Add profile')),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: DT.brand,
+                  foregroundColor: DT.brandInk,
                   side: BorderSide(color: DT.brand.withValues(alpha: 0.4)),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
               ),
             ),
@@ -99,21 +105,37 @@ class _ProfileSelectorSheet extends ConsumerWidget {
     );
   }
 
-  Future<void> _showCreateDialog(BuildContext context, WidgetRef ref, bool isEn) async {
+  Future<void> _showCreateDialog(
+    BuildContext context,
+    WidgetRef ref,
+    bool isEn,
+  ) async {
     final loc = AppS(isEn);
     final result = await showDialog<(String, String, String, int)?>(
       context: context,
-      builder: (_) => _ProfileEditDialog(title: loc('Новий профіль', 'New profile'), isEn: isEn),
+      builder: (_) => _ProfileEditDialog(
+        title: loc('Новий профіль', 'New profile'),
+        isEn: isEn,
+      ),
     );
     if (result != null) {
       await ref
           .read(profileProvider.notifier)
-          .addProfile(result.$1, result.$2, language: result.$3, level: result.$4);
+          .addProfile(
+            result.$1,
+            result.$2,
+            language: result.$3,
+            level: result.$4,
+          );
     }
   }
 
   Future<void> _showEditDialog(
-      BuildContext context, WidgetRef ref, ProfileModel profile, bool isEn) async {
+    BuildContext context,
+    WidgetRef ref,
+    ProfileModel profile,
+    bool isEn,
+  ) async {
     final loc = AppS(isEn);
     final result = await showDialog<(String, String, String, int)?>(
       context: context,
@@ -144,16 +166,22 @@ class _ProfileSelectorSheet extends ConsumerWidget {
   }
 
   Future<void> _confirmDelete(
-      BuildContext context, WidgetRef ref, ProfileModel profile, bool isEn) async {
+    BuildContext context,
+    WidgetRef ref,
+    ProfileModel profile,
+    bool isEn,
+  ) async {
     final s = AppS(isEn);
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(s('Видалити профіль?', 'Delete profile?')),
-        content: Text(s(
-          'Весь прогрес "${profile.name}" буде видалено. Це незворотно.',
-          'All progress for "${profile.name}" will be deleted. This cannot be undone.',
-        )),
+        content: Text(
+          s(
+            'Весь прогрес "${profile.name}" буде видалено. Це незворотно.',
+            'All progress for "${profile.name}" will be deleted. This cannot be undone.',
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -161,8 +189,10 @@ class _ProfileSelectorSheet extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(s('Видалити', 'Delete'),
-                style: const TextStyle(color: Colors.red)),
+            child: Text(
+              s('Видалити', 'Delete'),
+              style: const TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -211,8 +241,7 @@ class _ProfileTile extends StatelessWidget {
             : null,
       ),
       child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         leading: Container(
           width: 44,
           height: 44,
@@ -223,8 +252,10 @@ class _ProfileTile extends StatelessWidget {
             shape: BoxShape.circle,
           ),
           child: Center(
-            child: Text(profile.avatarEmoji,
-                style: const TextStyle(fontSize: 22)),
+            child: Text(
+              profile.avatarEmoji,
+              style: const TextStyle(fontSize: 22),
+            ),
           ),
         ),
         title: Text(
@@ -243,17 +274,22 @@ class _ProfileTile extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (isActive)
-              const Icon(Icons.check_circle_rounded,
-                  color: DT.brand, size: 20),
+              const Icon(Icons.check_circle_rounded, color: DT.brand, size: 20),
             IconButton(
-              icon: Icon(Icons.edit_outlined,
-                  size: 18, color: Colors.grey[500]),
+              icon: Icon(
+                Icons.edit_outlined,
+                size: 18,
+                color: Colors.grey[500],
+              ),
               onPressed: onEdit,
             ),
             if (onDelete != null)
               IconButton(
-                icon: const Icon(Icons.delete_outline,
-                    size: 18, color: Colors.red),
+                icon: const Icon(
+                  Icons.delete_outline,
+                  size: 18,
+                  color: Colors.red,
+                ),
                 onPressed: onDelete,
               ),
           ],
@@ -333,8 +369,10 @@ class _ProfileEditDialogState extends State<_ProfileEditDialog> {
             ),
             const SizedBox(height: 16),
             // Language selector
-            Text(s('Мова карток', 'Card language'),
-                style: const TextStyle(fontWeight: FontWeight.w600)),
+            Text(
+              s('Мова карток', 'Card language'),
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
             const SizedBox(height: 8),
             Row(
               children: [
@@ -345,8 +383,10 @@ class _ProfileEditDialogState extends State<_ProfileEditDialog> {
             ),
             const SizedBox(height: 16),
             // Level selector
-            Text(s('Вік дитини', 'Child\'s age'),
-                style: const TextStyle(fontWeight: FontWeight.w600)),
+            Text(
+              s('Вік дитини', 'Child\'s age'),
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
             const SizedBox(height: 8),
             Row(
               children: [
@@ -361,8 +401,10 @@ class _ProfileEditDialogState extends State<_ProfileEditDialog> {
             ),
             const SizedBox(height: 16),
             // Avatar grid
-            Text(s('Аватар', 'Avatar'),
-                style: const TextStyle(fontWeight: FontWeight.w600)),
+            Text(
+              s('Аватар', 'Avatar'),
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -387,8 +429,7 @@ class _ProfileEditDialogState extends State<_ProfileEditDialog> {
                           : null,
                     ),
                     child: Center(
-                      child: Text(emoji,
-                          style: const TextStyle(fontSize: 22)),
+                      child: Text(emoji, style: const TextStyle(fontSize: 22)),
                     ),
                   ),
                 );
@@ -405,8 +446,12 @@ class _ProfileEditDialogState extends State<_ProfileEditDialog> {
         ElevatedButton(
           onPressed: _nameCtrl.text.trim().isEmpty
               ? null
-              : () => Navigator.of(context).pop(
-                  (_nameCtrl.text.trim(), _selectedAvatar, _selectedLang, _selectedLevel)),
+              : () => Navigator.of(context).pop((
+                  _nameCtrl.text.trim(),
+                  _selectedAvatar,
+                  _selectedLang,
+                  _selectedLevel,
+                )),
           style: ElevatedButton.styleFrom(
             backgroundColor: DT.brand,
             foregroundColor: Colors.white,

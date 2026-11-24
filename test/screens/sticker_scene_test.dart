@@ -9,9 +9,7 @@ void main() {
   testWidgets('with no packs it asks for one instead of showing an empty '
       'meadow', (tester) async {
     await tester.pumpWidget(
-      const ProviderScope(
-        child: MaterialApp(home: StickerSceneScreen()),
-      ),
+      const ProviderScope(child: MaterialApp(home: StickerSceneScreen())),
     );
     await tester.pump();
     expect(find.textContaining('Відкрий хоча б один пак'), findsOneWidget);

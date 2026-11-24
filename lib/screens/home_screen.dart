@@ -1,26 +1,29 @@
+import '../widgets/notification_opt_in_dialog.dart';
+import '../utils/l10n.dart';
+import '../services/whatsnew_service.dart';
+import '../providers/profile_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../providers/bloom_reactions_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
-import '../providers/profile_provider.dart';
 import '../services/notification_service.dart';
 import '../services/paywall_flow.dart';
 import '../services/analytics_service.dart';
-import '../services/whatsnew_service.dart';
 import '../utils/app_startup.dart';
 import '../utils/design_tokens.dart';
 import '../utils/kid_routes.dart';
-import '../utils/l10n.dart';
 import '../utils/motion.dart';
-import '../widgets/notification_opt_in_dialog.dart';
 import '../widgets/parental_gate.dart';
 import 'parent_dashboard_screen.dart';
 import '../providers/home_tab_provider.dart';
 import '../tabs/packs_tab.dart';
 import '../tabs/games_tab.dart';
+import '../tabs/play_tab.dart';
+import '../tabs/world_tab.dart';
+import '../services/audio_service.dart';
 import 'coloring_hub_screen.dart';
 import '../widgets/playful_navigation_bar.dart';
 
@@ -35,6 +38,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     with SingleTickerProviderStateMixin {
   /// The tab the parent/child picked — what the navigation bar highlights.
   int _tab = 0;
+  final Set<int> _visited = {0};
 
   /// The tab the stack is actually showing. Lags [_tab] by half a
   /// fade-through: the old tab fades out first, then this flips and the
@@ -54,13 +58,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     _fadeCtrl = AnimationController(vsync: this, duration: _fadeThrough);
     _fade = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween(begin: 1.0, end: 0.0)
-            .chain(CurveTween(curve: Curves.easeIn)),
+        tween: Tween(
+          begin: 1.0,
+          end: 0.0,
+        ).chain(CurveTween(curve: Curves.easeIn)),
         weight: 1,
       ),
       TweenSequenceItem(
-        tween: Tween(begin: 0.0, end: 1.0)
-            .chain(CurveTween(curve: Curves.easeOut)),
+        tween: Tween(
+          begin: 0.0,
+          end: 1.0,
+        ).chain(CurveTween(curve: Curves.easeOut)),
         weight: 1,
       ),
     ]).animate(_fadeCtrl);
@@ -86,6 +94,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   void _selectTab(int i) {
     if (i == _tab) return;
+    AudioService.instance.stop();
+    _visited.add(i);
     if (MotionPolicy.of(context).reduce) {
       _fadeCtrl.stop();
       _fadeCtrl.value = 0;
@@ -281,12 +291,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       if (next == null) return;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        _selectTab(next);
+        if (next == kGamesTabIndex) {
+          Navigator.of(context).push(KidRoutes.content(const GamesTab()));
+        } else if (next == kDrawTabIndex) {
+          Navigator.of(
+            context,
+          ).push(KidRoutes.content(const ColoringHubScreen()));
+        } else {
+          _selectTab(HomeDestination.cards.index);
+        }
         ref.read(homeTabRequestProvider.notifier).state = null;
       });
     });
 
+    ref.listen<HomeDestination?>(homeDestinationProvider, (_, next) {
+      if (next == null) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _selectTab(next.index);
+        ref.read(homeDestinationProvider.notifier).state = null;
+      });
+    });
+
     return Scaffold(
+      // The tabs scroll *behind* the floating bar (and fade out under it)
+      // instead of being sliced flat at its top edge.
+      extendBody: true,
       body: AnimatedBuilder(
         animation: _fadeCtrl,
         builder: (_, child) => IgnorePointer(
@@ -300,12 +330,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           child: IndexedStack(
             index: _visibleTab,
             children: [
-              TickerMode(enabled: _visibleTab == 0, child: const PacksTab()),
-              TickerMode(enabled: _visibleTab == 1, child: const GamesTab()),
               TickerMode(
-                enabled: _visibleTab == 2,
-                child: const ColoringHubScreen(),
+                enabled: _visibleTab == 0,
+                child: PlayTab(active: _tab == 0 && _visibleTab == 0),
               ),
+              TickerMode(
+                enabled: _visibleTab == 1,
+                child: _visited.contains(1)
+                    ? const PacksTab(catalogueOnly: true)
+                    : const SizedBox.shrink(),
+              ),
+              TickerMode(enabled: _visibleTab == 2, child: const WorldTab()),
             ],
           ),
         ),

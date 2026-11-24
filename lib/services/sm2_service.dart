@@ -12,8 +12,10 @@ class Sm2Service {
   /// Returns a new [SrsCardState] after recording a response with [quality].
   /// Quality must be in range 0–5.
   static SrsCardState update(SrsCardState current, int quality) {
-    assert(quality >= 0 && quality <= 5,
-        'SM-2 quality must be 0–5, got $quality');
+    assert(
+      quality >= 0 && quality <= 5,
+      'SM-2 quality must be 0–5, got $quality',
+    );
 
     double ef = current.easeFactor;
     int interval = current.interval;
@@ -39,8 +41,11 @@ class Sm2Service {
     }
 
     final now = DateTime.now();
-    final nextDate = DateTime(now.year, now.month, now.day)
-        .add(Duration(days: interval));
+    final nextDate = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).add(Duration(days: interval));
 
     return SrsCardState(
       cardId: current.cardId,

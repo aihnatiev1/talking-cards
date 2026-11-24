@@ -44,8 +44,7 @@ class SeasonalPackModel extends PackModel {
     final md = now.month * 100 + now.day;
     final fromParts = activeFrom.split('-');
     final toParts = activeTo.split('-');
-    final fromMd =
-        int.parse(fromParts[0]) * 100 + int.parse(fromParts[1]);
+    final fromMd = int.parse(fromParts[0]) * 100 + int.parse(fromParts[1]);
     final toMd = int.parse(toParts[0]) * 100 + int.parse(toParts[1]);
 
     if (fromMd <= toMd) {
@@ -78,14 +77,15 @@ class SeasonalPackModel extends PackModel {
 //  Provider — all seasonal packs (loaded once)
 // ─────────────────────────────────────────────
 
-final _allSeasonalPacksProvider =
-    FutureProvider<List<SeasonalPackModel>>((ref) async {
-  final jsonString =
-      await rootBundle.loadString('assets/data/seasonal_packs.json');
+final _allSeasonalPacksProvider = FutureProvider<List<SeasonalPackModel>>((
+  ref,
+) async {
+  final jsonString = await rootBundle.loadString(
+    'assets/data/seasonal_packs.json',
+  );
   final list = json.decode(jsonString) as List<dynamic>;
   return list
-      .map((e) =>
-          SeasonalPackModel.fromJson(e as Map<String, dynamic>))
+      .map((e) => SeasonalPackModel.fromJson(e as Map<String, dynamic>))
       .toList();
 });
 
@@ -93,8 +93,9 @@ final _allSeasonalPacksProvider =
 //  Provider — only packs active today
 // ─────────────────────────────────────────────
 
-final activeSeasonalPacksProvider =
-    FutureProvider<List<SeasonalPackModel>>((ref) async {
+final activeSeasonalPacksProvider = FutureProvider<List<SeasonalPackModel>>((
+  ref,
+) async {
   // Seasonal packs are UA cultural content — hide in EN mode
   final lang = ref.watch(languageProvider);
   if (lang == 'en') return [];

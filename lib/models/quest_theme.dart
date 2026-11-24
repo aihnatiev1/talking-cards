@@ -44,15 +44,15 @@ final class QuestTheme {
   /// A parent- and screen-reader-facing name. The child is never asked to
   /// read it — she recognises the day by [image] (CLAUDE.md rule 4).
   String title(bool isEn) => switch (group) {
-        SemanticGroup.animals => isEn ? 'Animals' : 'Тварини',
-        SemanticGroup.food => isEn ? 'Tasty things' : 'Смаколики',
-        SemanticGroup.transport => isEn ? 'Things that go' : 'Транспорт',
-        SemanticGroup.toys => isEn ? 'Toys' : 'Іграшки',
-        SemanticGroup.people => isEn ? 'Family' : 'Рідні',
-        SemanticGroup.body => isEn ? 'Our body' : 'Наше тіло',
-        SemanticGroup.shapes => isEn ? 'Shapes' : 'Фігури',
-        SemanticGroup.colors => isEn ? 'Colours' : 'Кольори',
-      };
+    SemanticGroup.animals => isEn ? 'Animals' : 'Тварини',
+    SemanticGroup.food => isEn ? 'Tasty things' : 'Смаколики',
+    SemanticGroup.transport => isEn ? 'Things that go' : 'Транспорт',
+    SemanticGroup.toys => isEn ? 'Toys' : 'Іграшки',
+    SemanticGroup.people => isEn ? 'Family' : 'Рідні',
+    SemanticGroup.body => isEn ? 'Our body' : 'Наше тіло',
+    SemanticGroup.shapes => isEn ? 'Shapes' : 'Фігури',
+    SemanticGroup.colors => isEn ? 'Colours' : 'Кольори',
+  };
 
   /// «Тема дня: тварини, котик» — what assistive tech reads on the map.
   String semanticLabel(bool isEn) =>
@@ -64,14 +64,14 @@ final class QuestTheme {
   /// ids that start with it, so a themed walk never overwrites where the
   /// child is inside a real pack.
   PackModel asPack({required String title, required Color color}) => PackModel(
-        id: virtualPackId,
-        title: title,
-        icon: '🗺️',
-        color: color,
-        isLocked: false,
-        isFree: true,
-        cards: cards,
-      );
+    id: virtualPackId,
+    title: title,
+    icon: '🗺️',
+    color: color,
+    isLocked: false,
+    isFree: true,
+    cards: cards,
+  );
 
   static const virtualPackId = '_theme';
 }

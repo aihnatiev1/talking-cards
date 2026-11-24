@@ -20,6 +20,7 @@ import '../utils/app_icons.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../widgets/activity_chart.dart';
+import '../widgets/play_progress_summary.dart';
 import '../widgets/card_image.dart';
 import '../widgets/settings_action_row.dart';
 import '../widgets/word_wall_share.dart';
@@ -146,6 +147,7 @@ class _OverviewTab extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
+        const PlayProgressSummary(),
         _sectionTitle(s('Що показують дані', 'What the data shows')),
         const SizedBox(height: 8),
         _statRow([
@@ -198,10 +200,10 @@ class _OverviewTab extends ConsumerWidget {
         _sectionTitle(s('Цей тиждень', 'This week')),
         const SizedBox(height: 8),
         _WeeklySummaryCard(
-          views: ref.read(dailyStatsProvider.notifier).last7Days().fold(
-            0,
-            (sum, e) => sum + e.value,
-          ),
+          views: ref
+              .read(dailyStatsProvider.notifier)
+              .last7Days()
+              .fold(0, (sum, e) => sum + e.value),
           recognized: evidence.recognizedSince(7),
           marked: evidence.parentMarkedSince(7),
           streakDays: streak.currentStreak,
@@ -524,7 +526,10 @@ class _ReminderSettingsTileState extends ConsumerState<_ReminderSettingsTile> {
     final s = AppS(ref.watch(languageProvider) == 'en');
     if (!_loaded) return const SizedBox.shrink();
     final schedule = _frequency == ReminderFrequency.daily
-        ? s('щодня о ${_formatHour(_hour)}', 'every day at ${_formatHour(_hour)}')
+        ? s(
+            'щодня о ${_formatHour(_hour)}',
+            'every day at ${_formatHour(_hour)}',
+          )
         : s(
             'тричі на тиждень о ${_formatHour(_hour)}',
             'three times a week at ${_formatHour(_hour)}',
@@ -612,10 +617,7 @@ class _WeeklySummaryCard extends StatelessWidget {
             ),
           if (views == 0 && recognized == 0 && marked == 0)
             Text(
-              s(
-                'Цього тижня занять ще не було.',
-                'No sessions this week yet.',
-              ),
+              s('Цього тижня занять ще не було.', 'No sessions this week yet.'),
               style: TextStyle(
                 fontSize: responsiveFont(context, 13),
                 color: colors.onSurfaceVariant,

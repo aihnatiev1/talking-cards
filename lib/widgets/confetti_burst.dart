@@ -147,18 +147,17 @@ class _Piece {
   final Color color;
 
   _Piece(Random rng, ConfettiMode mode)
-      : angle = rng.nextDouble() * 2 * pi,
-        speed = mode == ConfettiMode.burst
-            ? 100 + rng.nextDouble() * 200
-            : 0.5 + rng.nextDouble(),
-        size = mode == ConfettiMode.burst
-            ? 4 + rng.nextDouble() * 6
-            : 4 + rng.nextDouble() * 8,
-        x = rng.nextDouble(),
-        drift = (rng.nextDouble() - 0.5) * 0.15,
-        spin = (rng.nextDouble() - 0.5) * 12,
-        color = ConfettiBurst
-            .palette[rng.nextInt(ConfettiBurst.palette.length)];
+    : angle = rng.nextDouble() * 2 * pi,
+      speed = mode == ConfettiMode.burst
+          ? 100 + rng.nextDouble() * 200
+          : 0.5 + rng.nextDouble(),
+      size = mode == ConfettiMode.burst
+          ? 4 + rng.nextDouble() * 6
+          : 4 + rng.nextDouble() * 8,
+      x = rng.nextDouble(),
+      drift = (rng.nextDouble() - 0.5) * 0.15,
+      spin = (rng.nextDouble() - 0.5) * 12,
+      color = ConfettiBurst.palette[rng.nextInt(ConfettiBurst.palette.length)];
 }
 
 class _ConfettiPainter extends CustomPainter {

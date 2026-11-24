@@ -5,8 +5,8 @@ import '../services/profile_service.dart';
 
 final reviewProvider =
     StateNotifierProvider<CardLastSeenNotifier, Map<String, String>>(
-  (ref) => CardLastSeenNotifier(),
-);
+      (ref) => CardLastSeenNotifier(),
+    );
 
 class CardLastSeenNotifier extends StateNotifier<Map<String, String>> {
   CardLastSeenNotifier() : super({}) {

@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,8 +23,9 @@ void main() {
         : DefaultAssetBundle(bundle: bundle, child: app);
   }
 
-  testWidgets('the sheet builds with no illustrations on the device',
-      (tester) async {
+  testWidgets('the sheet builds with no illustrations on the device', (
+    tester,
+  ) async {
     await tester.pumpWidget(host(const ArticulationScreen()));
     await tester.pump();
     await tester.pump();
@@ -40,8 +40,9 @@ void main() {
     );
   });
 
-  testWidgets('a drawing that exists is shown instead of the placeholder',
-      (tester) async {
+  testWidgets('a drawing that exists is shown instead of the placeholder', (
+    tester,
+  ) async {
     // Decoding a real PNG needs the platform's own async, not the fake
     // clock, so the whole load runs inside runAsync.
     await tester.runAsync(() async {
@@ -84,8 +85,9 @@ void main() {
     expect(find.byType(ArticulationArtPlaceholder), findsOneWidget);
   });
 
-  testWidgets('the detail screen walks the whole set and counts honestly',
-      (tester) async {
+  testWidgets('the detail screen walks the whole set and counts honestly', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       host(const ArticulationDetailScreen(initialIndex: 0, isEn: false)),
     );
@@ -124,8 +126,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('the target sounds are named, not tucked into 11 sp chips',
-      (tester) async {
+  testWidgets('the target sounds are named, not tucked into 11 sp chips', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       host(const ArticulationDetailScreen(initialIndex: 1, isEn: false)),
     );
@@ -164,9 +167,7 @@ class _StubBundle extends CachingAssetBundle {
     // `AssetImage` asks for the manifest before the file, to pick a dpr
     // variant. An empty manifest means "no variants" — the plain key wins.
     if (key == 'AssetManifest.bin') {
-      return const StandardMessageCodec().encodeMessage(
-            <Object?, Object?>{},
-          ) ??
+      return const StandardMessageCodec().encodeMessage(<Object?, Object?>{}) ??
           ByteData(0);
     }
     if (!present.contains(key)) {

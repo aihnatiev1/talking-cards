@@ -23,15 +23,18 @@ void main() {
   useTestMotion();
 
   group('paywall hero art', () {
-    testWidgets('is Bloom plus a fan of three cards, not an emoji',
-        (tester) async {
-      await tester.pumpWidget(const MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: PaywallHeroArt(semanticsLabel: 'Bloom and the cards'),
+    testWidgets('is Bloom plus a fan of three cards, not an emoji', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: PaywallHeroArt(semanticsLabel: 'Bloom and the cards'),
+            ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       expect(find.byType(BloomMascot), findsOneWidget);
@@ -42,24 +45,27 @@ void main() {
       expect(find.byKey(const ValueKey('fan-right')), findsOneWidget);
     });
 
-    testWidgets('fits the paywall banner width without overflowing',
-        (tester) async {
+    testWidgets('fits the paywall banner width without overflowing', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(320, 640);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
 
-      await tester.pumpWidget(const MaterialApp(
-        home: Scaffold(
-          // The narrowest banner the paywall can build: a 320 dp phone
-          // minus the screen's 28 dp padding and the banner's own 20 dp.
-          body: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 48),
-            child: Center(
-              child: PaywallHeroArt(semanticsLabel: 'Bloom and the cards'),
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            // The narrowest banner the paywall can build: a 320 dp phone
+            // minus the screen's 28 dp padding and the banner's own 20 dp.
+            body: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 48),
+              child: Center(
+                child: PaywallHeroArt(semanticsLabel: 'Bloom and the cards'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
@@ -68,11 +74,15 @@ void main() {
 
   group('about mark', () {
     testWidgets('introduces the app with Bloom', (tester) async {
-      await tester.pumpWidget(const MaterialApp(
-        home: Scaffold(
-          body: Center(child: AppLogoMark(semanticsLabel: 'FirstWords Cards')),
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: AppLogoMark(semanticsLabel: 'FirstWords Cards'),
+            ),
+          ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       expect(find.byType(BloomMascot), findsOneWidget);
@@ -83,18 +93,20 @@ void main() {
   group('notification opt-in', () {
     testWidgets('asks with Bloom and a drawn bell, not 🔔', (tester) async {
       SharedPreferences.setMockInitialValues({});
-      await tester.pumpWidget(ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Consumer(
-              builder: (context, ref, _) => TextButton(
-                onPressed: () => maybeAskNotificationOptIn(context, ref),
-                child: const Text('ask'),
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            home: Scaffold(
+              body: Consumer(
+                builder: (context, ref, _) => TextButton(
+                  onPressed: () => maybeAskNotificationOptIn(context, ref),
+                  child: const Text('ask'),
+                ),
               ),
             ),
           ),
         ),
-      ));
+      );
 
       await tester.tap(find.text('ask'));
       await tester.pumpAndSettle();
@@ -108,16 +120,18 @@ void main() {
 
   group('parental gate', () {
     Future<void> openGate(WidgetTester tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Builder(
-            builder: (context) => TextButton(
-              onPressed: () => showParentalGate(context, isEn: false),
-              child: const Text('open'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => TextButton(
+                onPressed: () => showParentalGate(context, isEn: false),
+                child: const Text('open'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
     }

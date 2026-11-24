@@ -54,8 +54,9 @@ void main() {
       expect(find.text('shaking:none'), findsOneWidget);
     });
 
-    testWidgets('shake(id:) sets shakingId then clears after animation',
-        (tester) async {
+    testWidgets('shake(id:) sets shakingId then clears after animation', (
+      tester,
+    ) async {
       await _pump(tester);
       await tester.tap(find.text('shakeA'));
       await tester.pump();
@@ -66,25 +67,25 @@ void main() {
       expect(find.text('shaking:none'), findsOneWidget);
     });
 
-    testWidgets('shake controller is a real AnimationController',
-        (tester) async {
+    testWidgets('shake controller is a real AnimationController', (
+      tester,
+    ) async {
       await _pump(tester);
-      final state =
-          tester.state<_ShakeHostState>(find.byType(_ShakeHost));
+      final state = tester.state<_ShakeHostState>(find.byType(_ShakeHost));
       expect(state.shakeController, isA<AnimationController>());
-      expect(state.shakeController.duration,
-          const Duration(milliseconds: 380));
+      expect(state.shakeController.duration, const Duration(milliseconds: 380));
     });
 
-    testWidgets('initShake accepts custom duration and amplitude',
-        (tester) async {
+    testWidgets('initShake accepts custom duration and amplitude', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const ProviderScope(child: MaterialApp(home: _CustomShakeHost())),
       );
       final state = tester.state<_CustomShakeHostState>(
-          find.byType(_CustomShakeHost));
-      expect(state.shakeController.duration,
-          const Duration(milliseconds: 600));
+        find.byType(_CustomShakeHost),
+      );
+      expect(state.shakeController.duration, const Duration(milliseconds: 600));
     });
 
     testWidgets('wrapShake renders child', (tester) async {
@@ -116,6 +117,5 @@ class _CustomShakeHostState extends ConsumerState<_CustomShakeHost>
   }
 
   @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: SizedBox.shrink());
+  Widget build(BuildContext context) => const Scaffold(body: SizedBox.shrink());
 }

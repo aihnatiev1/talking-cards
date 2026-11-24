@@ -17,15 +17,15 @@ void main() {
   const bg = Color(0xFFFFF8F0);
   const accent = Color(0xFF6FBEA7);
   CardModel card(String id, String image) => CardModel(
-        id: id,
-        sound: id,
-        text: id,
-        emoji: '🐾',
-        colorBg: bg,
-        colorAccent: accent,
-        image: image,
-        audioKey: id,
-      );
+    id: id,
+    sound: id,
+    text: id,
+    emoji: '🐾',
+    colorBg: bg,
+    colorAccent: accent,
+    image: image,
+    audioKey: id,
+  );
 
   /// Enough material for two honest themes: animals and things that go.
   final cards = <CardModel>[
@@ -54,13 +54,12 @@ void main() {
     String profile = 'p1_',
     CardModel? preferred,
     List<CardModel>? deck,
-  }) =>
-      QuestThemes.of(
-        deck ?? cards,
-        day: day,
-        profile: profile,
-        preferred: preferred,
-      );
+  }) => QuestThemes.of(
+    deck ?? cards,
+    day: day,
+    profile: profile,
+    preferred: preferred,
+  );
 
   test('the same day and profile give the same theme twice running', () {
     final first = build(monday)!;
@@ -78,8 +77,7 @@ void main() {
     // Over a fortnight the subject must actually move — a "theme of the
     // day" that is always animals is a pack, not a day.
     final byDay = {
-      for (var i = 0; i < 14; i++)
-        build(monday.add(Duration(days: i)))!.group,
+      for (var i = 0; i < 14; i++) build(monday.add(Duration(days: i)))!.group,
     };
     expect(byDay.length, greaterThan(1));
 
@@ -92,8 +90,7 @@ void main() {
 
   test('all five stops work with one theme', () {
     final theme = build(monday)!;
-    final deck =
-        theme.asPack(title: theme.title(false), color: accent).cards;
+    final deck = theme.asPack(title: theme.title(false), color: accent).cards;
 
     // Stop 1 listens to the hero; stops 2 and 4 open the deck; stop 5
     // opens it again; stop 3 plays a four-tile round out of the same list.
@@ -134,7 +131,9 @@ void main() {
     expect(
       build(
         monday,
-        deck: [for (final i in ['cat', 'dog', 'cow']) card('uk_$i', i)],
+        deck: [
+          for (final i in ['cat', 'dog', 'cow']) card('uk_$i', i),
+        ],
       ),
       isNull,
     );

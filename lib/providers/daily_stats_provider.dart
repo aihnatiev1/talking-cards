@@ -5,8 +5,8 @@ import '../services/profile_service.dart';
 
 final dailyStatsProvider =
     StateNotifierProvider<DailyStatsNotifier, Map<String, int>>(
-  (ref) => DailyStatsNotifier(),
-);
+      (ref) => DailyStatsNotifier(),
+    );
 
 class DailyStatsNotifier extends StateNotifier<Map<String, int>> {
   DailyStatsNotifier() : super({}) {

@@ -20,13 +20,21 @@ void main() {
       test('$s → ${s.file}.wav or its placeholder', () {
         final own = s.variants == 1
             ? File(s.assetPath).existsSync()
-            : List.generate(s.variants, (i) => s.variantPath(i + 1))
-                .every((p) => File(p).existsSync());
+            : List.generate(
+                s.variants,
+                (i) => s.variantPath(i + 1),
+              ).every((p) => File(p).existsSync());
         final standIn = File(s.fallbackPath).existsSync();
-        expect(KidSound.placeholders, contains(s.fallback),
-            reason: 'a fallback must be one of the three v1 files');
-        expect(standIn, isTrue,
-            reason: '${s.fallbackPath} is the safety net and must exist');
+        expect(
+          KidSound.placeholders,
+          contains(s.fallback),
+          reason: 'a fallback must be one of the three v1 files',
+        );
+        expect(
+          standIn,
+          isTrue,
+          reason: '${s.fallbackPath} is the safety net and must exist',
+        );
         expect(own || standIn, isTrue);
       });
     }
@@ -36,11 +44,15 @@ void main() {
       // missing take, silently falls back to the placeholder, and one pop
       // in three sounds like the old synthesised one.
       for (final s in KidSound.values.where((s) => s.variants > 1)) {
-        final present = List.generate(s.variants, (i) => s.variantPath(i + 1))
-            .where((p) => File(p).existsSync())
-            .length;
-        expect(present, anyOf(0, s.variants),
-            reason: '$s has $present of ${s.variants} takes on disk');
+        final present = List.generate(
+          s.variants,
+          (i) => s.variantPath(i + 1),
+        ).where((p) => File(p).existsSync()).length;
+        expect(
+          present,
+          anyOf(0, s.variants),
+          reason: '$s has $present of ${s.variants} takes on disk',
+        );
       }
     });
 
@@ -61,15 +73,18 @@ void main() {
 
   group('enum ↔ file name', () {
     String snake(String camel) => camel.replaceAllMapped(
-          RegExp('[A-Z]'),
-          (m) => '_${m[0]!.toLowerCase()}',
-        );
+      RegExp('[A-Z]'),
+      (m) => '_${m[0]!.toLowerCase()}',
+    );
 
     for (final s in KidSound.values) {
       test('${s.name} is spelled ${s.file}', () {
         expect(s.file, snake(s.name));
-        expect(s.file, matches(RegExp(r'^[a-z][a-z0-9_]*$')),
-            reason: 'snake_case, no screen, no version, no date (§4.5)');
+        expect(
+          s.file,
+          matches(RegExp(r'^[a-z][a-z0-9_]*$')),
+          reason: 'snake_case, no screen, no version, no date (§4.5)',
+        );
       });
     }
 
@@ -124,18 +139,24 @@ void main() {
       expect(played, isEmpty, reason: 'and not later either');
     });
 
-    test('a transient plays under the word — shorter than a syllable', () async {
-      audio.isSpeaking.value = true;
-      await audio.play(KidSound.cardTouch, dropIfSpeaking: true);
-      await audio.play(KidSound.tap);
-      expect(played.map((e) => e.$1), ['card_touch', 'tap']);
-    });
+    test(
+      'a transient plays under the word — shorter than a syllable',
+      () async {
+        audio.isSpeaking.value = true;
+        await audio.play(KidSound.cardTouch, dropIfSpeaking: true);
+        await audio.play(KidSound.tap);
+        expect(played.map((e) => e.$1), ['card_touch', 'tap']);
+      },
+    );
 
     test('a tonal role plays once the word is over, at its own mix', () async {
       await audio.play(KidSound.successMedium, dropIfSpeaking: true);
       expect(played, [
-        ('success_medium', KidSound.successMedium.pitch,
-            KidSound.successMedium.volume),
+        (
+          'success_medium',
+          KidSound.successMedium.pitch,
+          KidSound.successMedium.volume,
+        ),
       ]);
     });
 
@@ -162,16 +183,11 @@ void main() {
         .where((f) => f.path.endsWith('.dart'))
         .toList();
 
-    List<String> offenders(
-      Pattern p, {
-      required Set<String> allowed,
-    }) =>
-        [
-          for (final f in dart)
-            if (!allowed.contains(f.path) &&
-                f.readAsStringSync().contains(p))
-              f.path,
-        ];
+    List<String> offenders(Pattern p, {required Set<String> allowed}) => [
+      for (final f in dart)
+        if (!allowed.contains(f.path) && f.readAsStringSync().contains(p))
+          f.path,
+    ];
 
     test('no playSfx(\'literal\') outside audio_service.dart', () {
       expect(
@@ -180,7 +196,8 @@ void main() {
           allowed: const {'lib/services/audio_service.dart'},
         ),
         isEmpty,
-        reason: 'Name a KidSound role through FeedbackService instead of a '
+        reason:
+            'Name a KidSound role through FeedbackService instead of a '
             'file stem. The table is the only place a sound has a name.',
       );
     });
@@ -195,7 +212,8 @@ void main() {
           },
         ),
         isEmpty,
-        reason: 'Screens go through FeedbackService.event / .play so Bloom '
+        reason:
+            'Screens go through FeedbackService.event / .play so Bloom '
             'hears the same stream and the mix lives in one table.',
       );
     });

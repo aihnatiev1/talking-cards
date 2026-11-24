@@ -124,21 +124,21 @@ class FeedbackSpec {
     this.haptic = FeedbackHaptic.none,
     this.praise = false,
     this.praiseAfter = Duration.zero,
-  })  : _pitch = pitch,
-        _spread = spread,
-        _volume = volume;
+  }) : _pitch = pitch,
+       _spread = spread,
+       _volume = volume;
 
   /// A row that deliberately makes no sound. Named so the table can never
   /// go quiet by accident — a silent event is a choice, not a missing file.
   const FeedbackSpec.silent({this.haptic = FeedbackHaptic.none})
-      : sound = null,
-        _pitch = null,
-        _spread = null,
-        _volume = null,
-        ladder = 0.0,
-        waitsForVoice = false,
-        praise = false,
-        praiseAfter = Duration.zero;
+    : sound = null,
+      _pitch = null,
+      _spread = null,
+      _volume = null,
+      ladder = 0.0,
+      waitsForVoice = false,
+      praise = false,
+      praiseAfter = Duration.zero;
 
   bool get isSilent => sound == null;
 
@@ -309,11 +309,11 @@ class FeedbackService {
   /// pack tile or a flash card reports through the same stream Bloom
   /// listens to; roles without an event row play through [play].
   static FeedbackEvent? eventOf(KidSound sound) => switch (sound) {
-        KidSound.tap => FeedbackEvent.tap,
-        KidSound.cardTouch => FeedbackEvent.cardTouch,
-        KidSound.packOpen => FeedbackEvent.packOpen,
-        _ => null,
-      };
+    KidSound.tap => FeedbackEvent.tap,
+    KidSound.cardTouch => FeedbackEvent.cardTouch,
+    KidSound.packOpen => FeedbackEvent.packOpen,
+    _ => null,
+  };
 
   /// Play [e]. [isEn] picks the praise language when the row has praise.
   ///

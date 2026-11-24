@@ -135,7 +135,8 @@ void main() {
 
   group('the distractors', () {
     test('a two-picture question pairs the answer with another set', () {
-      final n = QuizNotifier(_catalogue(), level: 1, groups: _groups())..start();
+      final n = QuizNotifier(_catalogue(), level: 1, groups: _groups())
+        ..start();
       final groups = _groups();
 
       for (var i = 0; i < 6; i++) {
@@ -156,7 +157,8 @@ void main() {
     });
 
     test('three and four pictures come from the answer\'s own set', () {
-      final n = QuizNotifier(_catalogue(), level: 3, groups: _groups())..start();
+      final n = QuizNotifier(_catalogue(), level: 3, groups: _groups())
+        ..start();
       final groups = _groups();
 
       for (var i = 0; i < 5; i++) {
@@ -167,32 +169,38 @@ void main() {
         expect(
           state.options.map((c) => groups[c.id]).toSet(),
           {set},
-          reason: 'round ${state.round}: a question is about a word, not '
+          reason:
+              'round ${state.round}: a question is about a word, not '
               'about which picture looks out of place',
         );
         _answerCalmly(n);
       }
     });
 
-    test('a set too small to fill the board is topped up, never left short', () {
-      // "food" has one card only — the question still gets four pictures.
-      final cards = [
-        for (var i = 0; i < 5; i++) _card('animals_$i'),
-        _card('food_0'),
-      ];
-      final groups = {for (final c in cards) c.id: c.id.split('_').first};
-      final n = QuizNotifier(cards, level: 4, groups: groups)..start();
+    test(
+      'a set too small to fill the board is topped up, never left short',
+      () {
+        // "food" has one card only — the question still gets four pictures.
+        final cards = [
+          for (var i = 0; i < 5; i++) _card('animals_$i'),
+          _card('food_0'),
+        ];
+        final groups = {for (final c in cards) c.id: c.id.split('_').first};
+        final n = QuizNotifier(cards, level: 4, groups: groups)..start();
 
-      for (var i = 0; i < 4; i++) {
-        final state = _now(n);
-        if (state.finished) break;
-        expect(state.options.length, greaterThanOrEqualTo(3));
-        expect(state.options.map((c) => c.id).toSet().length,
-            state.options.length);
-        expect(state.options, contains(state.correctCard));
-        _answerCalmly(n);
-      }
-    });
+        for (var i = 0; i < 4; i++) {
+          final state = _now(n);
+          if (state.finished) break;
+          expect(state.options.length, greaterThanOrEqualTo(3));
+          expect(
+            state.options.map((c) => c.id).toSet().length,
+            state.options.length,
+          );
+          expect(state.options, contains(state.correctCard));
+          _answerCalmly(n);
+        }
+      },
+    );
 
     test('no group map at all still deals a full, distinct board', () {
       final n = QuizNotifier(_catalogue(), level: 4)..start();
@@ -213,10 +221,7 @@ void main() {
       _struggle(n);
       expect(_now(n).hintAfterMisses, 2, reason: 'one hard one is a fluke');
       _struggle(n);
-      expect(
-        _now(n).hintAfterMisses,
-        QuizTiers.hintAfterMissesWhenStruggling,
-      );
+      expect(_now(n).hintAfterMisses, QuizTiers.hintAfterMissesWhenStruggling);
     });
 
     test('one calm question puts the help back to arm\'s length', () {
@@ -252,10 +257,7 @@ void main() {
     test('an explicit option count pins the board for the session', () {
       final d = QuizDifficulty(level: 2, fixedOptions: 4);
       expect(d.isFixed, isTrue);
-      expect(
-        d.applyQuestion(misses: 0, hintShown: false),
-        TierChange.stay,
-      );
+      expect(d.applyQuestion(misses: 0, hintShown: false), TierChange.stay);
       expect(d.optionCount, 4);
     });
 

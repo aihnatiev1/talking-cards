@@ -49,11 +49,7 @@ class FillColoringScreen extends ConsumerStatefulWidget {
   /// because all ten colour words are already recorded as cards.
   final bool byEar;
 
-  const FillColoringScreen({
-    super.key,
-    this.sheetId,
-    this.byEar = false,
-  });
+  const FillColoringScreen({super.key, this.sheetId, this.byEar = false});
 
   @override
   ConsumerState<FillColoringScreen> createState() => _FillColoringScreenState();
@@ -264,11 +260,7 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
     // The day's drawing step: one filled area is enough. The step is
     // "you drew today", not "you finished a drawing".
     ref.read(dailyQuestProvider.notifier).recordDrawing();
-    ref.read(filledSheetsProvider.notifier).record(
-          sheet.id,
-          area,
-          _crayon.id,
-        );
+    ref.read(filledSheetsProvider.notifier).record(sheet.id, area, _crayon.id);
     FeedbackService.instance.event(FeedbackEvent.tap, haptic: false);
     await _repaint();
 
@@ -317,10 +309,9 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
       // given back empty. Without this every drawing after the first one
       // opened already coloured, and the only thing to do with it was
       // press a reset button a child cannot read.
-      ref.read(finishedSheetsProvider.notifier).putAll(
-            sheet.id,
-            {for (final e in _filled.entries) e.key: _crayonIdOf(e.value)},
-          );
+      ref.read(finishedSheetsProvider.notifier).putAll(sheet.id, {
+        for (final e in _filled.entries) e.key: _crayonIdOf(e.value),
+      });
       ref.read(filledSheetsProvider.notifier).clear(sheet.id);
     }
     setState(() => _done = true);
@@ -329,15 +320,11 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
     FeedbackService.instance.event(FeedbackEvent.correct);
     showConfetti();
     _sayTheWord();
-    AnalyticsService.instance.logGameComplete(
-      'fill_coloring',
-      _filled.length,
-    );
+    AnalyticsService.instance.logGameComplete('fill_coloring', _filled.length);
   }
 
-  static String _crayonIdOf(Color c) => kCrayons
-      .firstWhere((k) => k.color == c, orElse: () => kCrayons.first)
-      .id;
+  static String _crayonIdOf(Color c) =>
+      kCrayons.firstWhere((k) => k.color == c, orElse: () => kCrayons.first).id;
 
   /// Finished when this much of the drawing has colour on it.
   ///
@@ -696,10 +683,7 @@ class _AskBanner extends StatelessWidget {
               Flexible(
                 child: Text(
                   found
-                      ? s(
-                          'Тепер тисни на картинку',
-                          'Now tap the picture',
-                        )
+                      ? s('Тепер тисни на картинку', 'Now tap the picture')
                       : s('Знайди колір', 'Find the colour'),
                   textAlign: TextAlign.center,
                   style: DT.tileTitle.copyWith(

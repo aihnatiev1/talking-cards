@@ -53,7 +53,10 @@ class _EmotionSheet extends StatelessWidget {
                   size: DT.size.mascotCompanion,
                   child: BloomMascot(
                     size: DT.size.mascotCompanion,
-                    state: BloomState.still(e, lookAt: const Alignment(0.7, -0.8)),
+                    state: BloomState.still(
+                      e,
+                      lookAt: const Alignment(0.7, -0.8),
+                    ),
                   ),
                 ),
             ],

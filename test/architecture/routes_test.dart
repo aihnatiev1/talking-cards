@@ -24,15 +24,16 @@ void main() {
   const owner = 'lib/utils/kid_routes.dart';
 
   List<String> offenders(String token) => [
-        for (final f in dart)
-          if (f.path != owner && f.readAsStringSync().contains(token)) f.path,
-      ];
+    for (final f in dart)
+      if (f.path != owner && f.readAsStringSync().contains(token)) f.path,
+  ];
 
   test('only KidRoutes builds a MaterialPageRoute', () {
     expect(
       offenders('MaterialPageRoute('),
       isEmpty,
-      reason: 'Push with KidRoutes.content / game / sheet / overlay / '
+      reason:
+          'Push with KidRoutes.content / game / sheet / overlay / '
           'replace instead. A new kind of transition belongs in '
           'kid_routes.dart, not at the call site.',
     );
@@ -47,10 +48,6 @@ void main() {
   });
 
   test('the old game route helper is gone', () {
-    expect(
-      offenders('_gameRoute('),
-      isEmpty,
-      reason: 'Use KidRoutes.game.',
-    );
+    expect(offenders('_gameRoute('), isEmpty, reason: 'Use KidRoutes.game.');
   });
 }

@@ -140,16 +140,20 @@ void main() {
         expect(body, contains('Блум'));
         expect(body, isNot(contains('{name}')));
       }
-      expect(named.where((l) => l.$2.contains('Соломійка')).length,
-          greaterThanOrEqualTo(3));
+      expect(
+        named.where((l) => l.$2.contains('Соломійка')).length,
+        greaterThanOrEqualTo(3),
+      );
 
       final anon = NotificationService.bloomLines('en', null);
       for (final (_, body) in anon) {
         expect(body, contains('Bloom'));
         expect(body, isNot(contains('{name}')));
       }
-      expect(anon.where((l) => l.$2.contains('your little one')).length,
-          greaterThanOrEqualTo(2));
+      expect(
+        anon.where((l) => l.$2.contains('your little one')).length,
+        greaterThanOrEqualTo(2),
+      );
     });
   });
 }

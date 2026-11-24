@@ -69,15 +69,11 @@ int dayIndex(DateTime d) =>
     Duration.millisecondsPerDay;
 
 extension WordEvidenceStats on Map<String, WordEvidence> {
-  Set<String> get recognizedIds => entries
-      .where((e) => e.value.isRecognized)
-      .map((e) => e.key)
-      .toSet();
+  Set<String> get recognizedIds =>
+      entries.where((e) => e.value.isRecognized).map((e) => e.key).toSet();
 
-  Set<String> get parentMarkedIds => entries
-      .where((e) => e.value.isParentMarked)
-      .map((e) => e.key)
-      .toSet();
+  Set<String> get parentMarkedIds =>
+      entries.where((e) => e.value.isParentMarked).map((e) => e.key).toSet();
 
   /// Words with any human/game evidence — the honest "word chest" set.
   Set<String> get evidencedIds => {...recognizedIds, ...parentMarkedIds};

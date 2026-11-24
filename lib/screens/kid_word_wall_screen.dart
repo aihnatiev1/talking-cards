@@ -17,6 +17,8 @@ import '../widgets/bloom_mascot.dart';
 import '../widgets/card_image.dart';
 import '../widgets/kid_screen.dart';
 import '../widgets/kid_tap.dart';
+import '../widgets/play_components.dart';
+import '../providers/home_tab_provider.dart';
 
 /// Which half of the treasure box is open.
 enum TreasureTab { words, stickers }
@@ -44,8 +46,7 @@ class KidWordWallScreen extends ConsumerStatefulWidget {
   final TreasureTab initialTab;
 
   @override
-  ConsumerState<KidWordWallScreen> createState() =>
-      _KidWordWallScreenState();
+  ConsumerState<KidWordWallScreen> createState() => _KidWordWallScreenState();
 }
 
 class _KidWordWallScreenState extends ConsumerState<KidWordWallScreen> {
@@ -114,64 +115,60 @@ class _KidWordWallScreenState extends ConsumerState<KidWordWallScreen> {
     final childName = profile.active?.name ?? '';
 
     return packsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) =>
-            Center(child: Text(s('Помилка', 'Error'))),
-        data: (packs) {
-          // Flatten learned cards. Order: most recently reviewed first so new
-          // additions surface at the top — kid sees "look, fresh ones!".
-          final orderedIds = srs.cards.values
-              .where((c) => c.repetitions >= _learnedThreshold)
-              .toList()
-            ..sort(
-                (a, b) => b.nextReviewDate.compareTo(a.nextReviewDate));
-          final cardLookup = <String, CardModel>{};
-          for (final p in packs) {
-            for (final c in p.cards) {
-              cardLookup[c.id] = c;
-            }
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) => Center(child: Text(s('Помилка', 'Error'))),
+      data: (packs) {
+        // Flatten learned cards. Order: most recently reviewed first so new
+        // additions surface at the top — kid sees "look, fresh ones!".
+        final orderedIds =
+            srs.cards.values
+                .where((c) => c.repetitions >= _learnedThreshold)
+                .toList()
+              ..sort((a, b) => b.nextReviewDate.compareTo(a.nextReviewDate));
+        final cardLookup = <String, CardModel>{};
+        for (final p in packs) {
+          for (final c in p.cards) {
+            cardLookup[c.id] = c;
           }
-          final learned = orderedIds
-              .map((s) => cardLookup[s.cardId])
-              .whereType<CardModel>()
-              .toList();
+        }
+        final learned = orderedIds
+            .map((s) => cardLookup[s.cardId])
+            .whereType<CardModel>()
+            .toList();
 
-          if (learned.isEmpty) {
-            _hmmOnce();
-            return _emptyState(context, isEn, s);
-          }
+        if (learned.isEmpty) {
+          _hmmOnce();
+          return _emptyState(context, isEn, s);
+        }
 
-          return CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: _Header(
-                  childName: childName,
-                  count: learned.length,
-                  isEn: isEn,
+        return CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: _Header(
+                childName: childName,
+                count: learned.length,
+                isEn: isEn,
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+              sliver: SliverGrid(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount:
+                      MediaQuery.of(context).size.width >= kLargeScreen ? 5 : 3,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                  childAspectRatio: 0.85,
+                ),
+                delegate: SliverChildBuilderDelegate(
+                  (context, i) => _LearnedTile(card: learned[i]),
+                  childCount: learned.length,
                 ),
               ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-                sliver: SliverGrid(
-                  gridDelegate:
-                      SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: MediaQuery.of(context).size.width >=
-                            kLargeScreen
-                        ? 5
-                        : 3,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    childAspectRatio: 0.85,
-                  ),
-                  delegate: SliverChildBuilderDelegate(
-                    (context, i) => _LearnedTile(card: learned[i]),
-                    childCount: learned.length,
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -194,7 +191,7 @@ class _KidWordWallScreenState extends ConsumerState<KidWordWallScreen> {
             ),
             const SizedBox(height: 20),
             Text(
-              s('Скарбничка порожня', 'Treasure box is empty'),
+              s('Тут будуть твої скарби', 'Your treasures will live here'),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: responsiveFont(context, 18),
@@ -204,8 +201,8 @@ class _KidWordWallScreenState extends ConsumerState<KidWordWallScreen> {
             const SizedBox(height: 10),
             Text(
               s(
-                'Грай у вікторину — і слова збиратимуться сюди!',
-                'Play the quiz and your words will collect here!',
+                'Грай — і слова та наліпки збиратимуться сюди!',
+                'Play, and the words and stickers you earn collect here!',
               ),
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -213,6 +210,15 @@ class _KidWordWallScreenState extends ConsumerState<KidWordWallScreen> {
                 color: Colors.grey[600],
                 height: 1.4,
               ),
+            ),
+            const SizedBox(height: 20),
+            PlayAction(
+              label: s('Грати', 'Play'),
+              onPressed: () {
+                ref.read(homeDestinationProvider.notifier).state =
+                    HomeDestination.play;
+                Navigator.of(context).popUntil((r) => r.isFirst);
+              },
             ),
           ],
         ),
@@ -346,9 +352,7 @@ class _Header extends StatelessWidget {
     final title = childName.isNotEmpty
         ? (isEn ? "$childName's words" : 'Слова $childName')
         : (isEn ? 'My words' : 'Мої слова');
-    final word = isEn
-        ? (count == 1 ? 'word' : 'words')
-        : _ukWord(count);
+    final word = isEn ? (count == 1 ? 'word' : 'words') : _ukWord(count);
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
@@ -443,10 +447,7 @@ class _LearnedTileState extends State<_LearnedTile>
   @override
   void initState() {
     super.initState();
-    _pulse = AnimationController(
-      vsync: this,
-      duration: DT.motion.slow,
-    );
+    _pulse = AnimationController(vsync: this, duration: DT.motion.slow);
   }
 
   @override
@@ -456,10 +457,7 @@ class _LearnedTileState extends State<_LearnedTile>
   }
 
   void _onTap() {
-    AudioService.instance.playWordOnly(
-      widget.card.audioKey,
-      widget.card.sound,
-    );
+    AudioService.instance.playWordOnly(widget.card.audioKey, widget.card.sound);
     if (MotionPolicy.of(context).reduce) return;
     _pulse
       ..reset()
@@ -493,8 +491,9 @@ class _LearnedTileState extends State<_LearnedTile>
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: card.colorAccent
-                        .withValues(alpha: 0.15 + glow * 0.4),
+                    color: card.colorAccent.withValues(
+                      alpha: 0.15 + glow * 0.4,
+                    ),
                     blurRadius: 8 + glow * 12,
                     spreadRadius: glow,
                   ),
@@ -516,8 +515,7 @@ class _LearnedTileState extends State<_LearnedTile>
                       ),
                     ),
                     Padding(
-                      padding:
-                          const EdgeInsets.fromLTRB(4, 4, 4, 6),
+                      padding: const EdgeInsets.fromLTRB(4, 4, 4, 6),
                       child: Text(
                         card.sound,
                         textAlign: TextAlign.center,

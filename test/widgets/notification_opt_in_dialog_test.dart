@@ -10,17 +10,17 @@ import 'package:talking_cards/widgets/notification_opt_in_dialog.dart';
 /// who already answered in an older build.
 void main() {
   Widget host() => ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Consumer(
-              builder: (context, ref, _) => TextButton(
-                onPressed: () => maybeAskNotificationOptIn(context, ref),
-                child: const Text('ask'),
-              ),
-            ),
+    child: MaterialApp(
+      home: Scaffold(
+        body: Consumer(
+          builder: (context, ref, _) => TextButton(
+            onPressed: () => maybeAskNotificationOptIn(context, ref),
+            child: const Text('ask'),
           ),
         ),
-      );
+      ),
+    ),
+  );
 
   Future<void> tapAsk(WidgetTester tester) async {
     await tester.tap(find.text('ask'));
@@ -44,8 +44,9 @@ void main() {
     expect(find.text('Нагадувати про заняття?'), findsNothing);
   });
 
-  testWidgets('upgraders who already have the flag are not re-asked',
-      (tester) async {
+  testWidgets('upgraders who already have the flag are not re-asked', (
+    tester,
+  ) async {
     // No platform channel in tests, so the OS cannot contradict the flag.
     SharedPreferences.setMockInitialValues({'notifications_enabled': true});
     await tester.pumpWidget(host());

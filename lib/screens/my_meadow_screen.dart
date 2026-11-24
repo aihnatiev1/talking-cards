@@ -105,10 +105,8 @@ class _MyMeadowScreenState extends ConsumerState<MyMeadowScreen> {
                 crossAxisSpacing: 12,
               ),
               itemCount: residents.length,
-              itemBuilder: (context, i) => _Resident(
-                index: i,
-                child: residents[i],
-              ),
+              itemBuilder: (context, i) =>
+                  _Resident(index: i, child: residents[i]),
             ),
     );
   }

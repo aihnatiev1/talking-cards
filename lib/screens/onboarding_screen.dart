@@ -152,14 +152,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
     if (!mounted) return;
 
-    // Paywall right after onboarding — per-language lever via Remote Config.
-    // EN sees the offer here because English installs churn before they ever
-    // reach locked content; UA keeps the softer flow, where the first paywall
-    // touchpoint is the first locked-content tap.
+    // Preserve the existing per-language Remote Config offer policy.
     if (RemoteConfigService.instance.showOnboardingPaywallFor(_selectedLang)) {
       await runPaywallFlow(context, ref, isOnboarding: true);
     }
-
     if (!mounted) return;
     Navigator.of(
       context,
@@ -286,8 +282,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         ),
                         child: Text(
                           _selectedLang == 'en'
-                              ? (isLast ? "Let's start →" : 'Next →')
-                              : (isLast ? 'Почати →' : 'Далі →'),
+                              ? (isLast ? "Let's start" : 'Next')
+                              : (isLast ? 'Почати' : 'Далі'),
                           style: const TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w700,
@@ -868,9 +864,9 @@ class _MagicMomentPageState extends ConsumerState<_MagicMomentPage>
     final name = widget.childName;
     if (_celebrating) {
       if (_isEn) {
-        return name.isEmpty ? 'You did it! 🎉' : 'You did it, $name! 🎉';
+        return name.isEmpty ? 'You did it!' : 'You did it, $name!';
       }
-      return name.isEmpty ? 'Молодець! 🎉' : 'Молодець, $name! 🎉';
+      return name.isEmpty ? 'Молодець!' : 'Молодець, $name!';
     }
     if (_isEn) {
       final greeting = name.isEmpty ? 'Hi, friend!' : 'Hi, $name!';

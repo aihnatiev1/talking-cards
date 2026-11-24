@@ -30,6 +30,7 @@ class WhatsNewService {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      showDragHandle: false,
       builder: (_) => _WhatsNewSheet(isEn: isEn),
     );
   }
@@ -57,7 +58,8 @@ class _WhatsNewSheet extends StatelessWidget {
         children: [
           // Handle
           Container(
-            width: 40, height: 4,
+            width: 40,
+            height: 4,
             decoration: BoxDecoration(
               color: Colors.grey[300],
               borderRadius: BorderRadius.circular(2),
@@ -83,12 +85,14 @@ class _WhatsNewSheet extends StatelessWidget {
           const SizedBox(height: 24),
 
           // Feature list
-          ...features.map((f) => _FeatureRow(
-                emoji: f.$1,
-                title: f.$2,
-                subtitle: f.$3,
-                color: f.$4,
-              )),
+          ...features.map(
+            (f) => _FeatureRow(
+              emoji: f.$1,
+              title: f.$2,
+              subtitle: f.$3,
+              color: f.$4,
+            ),
+          ),
 
           const SizedBox(height: 24),
 
@@ -102,12 +106,15 @@ class _WhatsNewSheet extends StatelessWidget {
                 backgroundColor: DT.brand,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
               child: Text(
                 isEn ? 'Awesome, let\'s go!' : 'Чудово, грати!',
                 style: const TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.bold),
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
@@ -119,39 +126,69 @@ class _WhatsNewSheet extends StatelessWidget {
 
 // (emoji, title, subtitle, color)
 const _features = [
-  ('🫧', 'Нова гра «Бульбашки»',
-      'Лопай бульки з картинками — Pop-It-стиль із словами',
-      Color(0xFFE91E63)),
-  ('🐰', 'Блум вітається',
-      'Тапни його на головній чи в грі — він підстрибне у відповідь',
-      Color(0xFFF57F17)),
-  ('🃏', '«Сьогодні» на головній',
-      '3 кроки щодня: картка дня → пак → гра. Маленький ритуал — велика звичка',
-      Color(0xFF6C63FF)),
-  ('🌟', 'Скарбничка слів',
-      'Колекція всього, що вже знає малюк — нові слова з\'являються самі',
-      Color(0xFF00BFA5)),
-  ('🔥', 'Серії та нагороди',
-      'Святкуємо 3, 7, 14 і 30 днів поспіль з вибухом конфеті',
-      Color(0xFFFF6F4D)),
+  (
+    '🫧',
+    'Нова гра «Бульбашки»',
+    'Лопай бульки з картинками — Pop-It-стиль із словами',
+    Color(0xFFE91E63),
+  ),
+  (
+    '🐰',
+    'Блум вітається',
+    'Тапни його на головній чи в грі — він підстрибне у відповідь',
+    Color(0xFFF57F17),
+  ),
+  (
+    '🃏',
+    '«Сьогодні» на головній',
+    '3 кроки щодня: картка дня → пак → гра. Маленький ритуал — велика звичка',
+    Color(0xFF6C63FF),
+  ),
+  (
+    '🌟',
+    'Скарбничка слів',
+    'Колекція всього, що вже знає малюк — нові слова з\'являються самі',
+    Color(0xFF00BFA5),
+  ),
+  (
+    '🔥',
+    'Серії та нагороди',
+    'Святкуємо 3, 7, 14 і 30 днів поспіль з вибухом конфеті',
+    Color(0xFFFF6F4D),
+  ),
 ];
 
 const _featuresEn = [
-  ('🫧', 'New game: Pop the bubbles',
-      'Pop bubbles with cards inside — Pop-It style with real words',
-      Color(0xFFE91E63)),
-  ('🐰', 'Bloom the bunny says hi',
-      'Tap him on the home screen or in games — he bounces back at you',
-      Color(0xFFF57F17)),
-  ('🃏', "Today's plan on home",
-      '3 steps a day: today\'s card → today\'s pack → a game. Small ritual, big habit',
-      Color(0xFF6C63FF)),
-  ('🌟', 'Treasure box of words',
-      "Your child's growing word collection — new ones appear automatically",
-      Color(0xFF00BFA5)),
-  ('🔥', 'Streaks and rewards',
-      'Celebrate 3, 7, 14, and 30 days in a row with a burst of confetti',
-      Color(0xFFFF6F4D)),
+  (
+    '🫧',
+    'New game: Pop the bubbles',
+    'Pop bubbles with cards inside — Pop-It style with real words',
+    Color(0xFFE91E63),
+  ),
+  (
+    '🐰',
+    'Bloom the bunny says hi',
+    'Tap him on the home screen or in games — he bounces back at you',
+    Color(0xFFF57F17),
+  ),
+  (
+    '🃏',
+    "Today's plan on home",
+    '3 steps a day: today\'s card → today\'s pack → a game. Small ritual, big habit',
+    Color(0xFF6C63FF),
+  ),
+  (
+    '🌟',
+    'Treasure box of words',
+    "Your child's growing word collection — new ones appear automatically",
+    Color(0xFF00BFA5),
+  ),
+  (
+    '🔥',
+    'Streaks and rewards',
+    'Celebrate 3, 7, 14, and 30 days in a row with a burst of confetti',
+    Color(0xFFFF6F4D),
+  ),
 ];
 
 class _FeatureRow extends StatelessWidget {
@@ -175,7 +212,8 @@ class _FeatureRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 44, height: 44,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
@@ -192,7 +230,9 @@ class _FeatureRow extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.w700),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(

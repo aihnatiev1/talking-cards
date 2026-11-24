@@ -20,8 +20,7 @@ Future<void> showStreakMilestone(
   required VoidCallback onCelebrated,
 }) async {
   final m = milestone;
-  final daysLabel =
-      isEn ? (m.days == 1 ? 'day' : 'days') : _ukDaysWord(m.days);
+  final daysLabel = isEn ? (m.days == 1 ? 'day' : 'days') : _ukDaysWord(m.days);
   final title = isEn ? '${m.days}-day streak!' : 'Серія ${m.days} $daysLabel!';
   final subtitle = childName.isNotEmpty
       ? (isEn ? 'Awesome job, $childName!' : 'Молодець, $childName!')

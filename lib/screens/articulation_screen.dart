@@ -428,10 +428,8 @@ class ArticulationScreen extends ConsumerWidget {
                 isEn: isEn,
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
-                    builder: (_) => ArticulationDetailScreen(
-                      initialIndex: i,
-                      isEn: isEn,
-                    ),
+                    builder: (_) =>
+                        ArticulationDetailScreen(initialIndex: i, isEn: isEn),
                   ),
                 ),
               );
@@ -468,9 +466,7 @@ class _ExerciseTile extends StatelessWidget {
           padding: const EdgeInsets.all(DT.sp12),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(DT.rMd),
-            border: Border.all(
-              color: DT.textPrimary.withValues(alpha: 0.10),
-            ),
+            border: Border.all(color: DT.textPrimary.withValues(alpha: 0.10)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -544,16 +540,17 @@ class _ArticulationDetailScreenState extends State<ArticulationDetailScreen>
 
   /// Optional hold timer. Idle by default: the exercise does not need it,
   /// a parent who would otherwise count the eight seconds out loud does.
-  late final AnimationController _hold = AnimationController(
-    vsync: this,
-    duration: Duration(seconds: _exercise.seconds),
-  )..addStatusListener((status) {
-      // Not disposed here — disposing a controller from inside its own
-      // status callback tears down the listener list mid-notification.
-      if (status == AnimationStatus.completed && mounted) {
-        setState(() => _running = false);
-      }
-    });
+  late final AnimationController _hold =
+      AnimationController(
+        vsync: this,
+        duration: Duration(seconds: _exercise.seconds),
+      )..addStatusListener((status) {
+        // Not disposed here — disposing a controller from inside its own
+        // status callback tears down the listener list mid-notification.
+        if (status == AnimationStatus.completed && mounted) {
+          setState(() => _running = false);
+        }
+      });
 
   bool _running = false;
 

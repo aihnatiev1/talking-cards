@@ -18,7 +18,9 @@ import 'bloom_mascot.dart';
 /// budget on 1.3.6. Now the system dialog only appears after the parent has
 /// said yes here, and a "not now" is remembered so we never nag again.
 Future<void> maybeAskNotificationOptIn(
-    BuildContext context, WidgetRef ref) async {
+  BuildContext context,
+  WidgetRef ref,
+) async {
   if (await NotificationService.instance.permissionAsked) return;
   if (!context.mounted) return;
 
@@ -26,7 +28,8 @@ Future<void> maybeAskNotificationOptIn(
   final s = AppS(lang == 'en');
   AnalyticsService.instance.logNotifOptInShown();
 
-  final accepted = await showDialog<bool>(
+  final accepted =
+      await showDialog<bool>(
         context: context,
         builder: (ctx) => _NotificationOptInDialog(s: s),
       ) ??
@@ -34,15 +37,20 @@ Future<void> maybeAskNotificationOptIn(
 
   if (!accepted) {
     await NotificationService.instance.declinePermission();
-    AnalyticsService.instance
-        .logNotifOptInResult(accepted: false, granted: false);
+    AnalyticsService.instance.logNotifOptInResult(
+      accepted: false,
+      granted: false,
+    );
     return;
   }
 
-  final granted =
-      await NotificationService.instance.requestPermission(lang: lang);
-  AnalyticsService.instance
-      .logNotifOptInResult(accepted: true, granted: granted);
+  final granted = await NotificationService.instance.requestPermission(
+    lang: lang,
+  );
+  AnalyticsService.instance.logNotifOptInResult(
+    accepted: true,
+    granted: granted,
+  );
 
   // Splash schedules the day-3 paywall reminder, but it ran before there was
   // any permission to schedule under — catch it up now instead of waiting
@@ -106,18 +114,17 @@ class _NotificationOptInDialog extends StatelessWidget {
             Text(
               s('Нагадувати про заняття?', 'A daily reminder?'),
               textAlign: TextAlign.center,
-              style:
-                  const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             Text(
               s(
                 'Одне коротке нагадування на день — щоб пʼять хвилин карток '
-                'не губилися в буденності.\n\nВимкнути можна будь-коли '
-                'в налаштуваннях.',
+                    'не губилися в буденності.\n\nВимкнути можна будь-коли '
+                    'в налаштуваннях.',
                 'One short nudge a day, so five minutes of cards don\'t get '
-                'lost in the shuffle.\n\nYou can turn it off any time '
-                'in settings.',
+                    'lost in the shuffle.\n\nYou can turn it off any time '
+                    'in settings.',
               ),
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -142,7 +149,9 @@ class _NotificationOptInDialog extends StatelessWidget {
                 child: Text(
                   s('Так, нагадуйте', 'Yes, remind me'),
                   style: const TextStyle(
-                      fontSize: 17, fontWeight: FontWeight.bold),
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),

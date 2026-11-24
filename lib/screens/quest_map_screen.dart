@@ -15,17 +15,12 @@ import '../services/audio_service.dart';
 import '../services/feedback_service.dart';
 import '../services/profile_service.dart';
 
-import '../utils/app_icons.dart';
-import '../utils/motion.dart';
-import '../widgets/app_icon_painters.dart';
-import '../widgets/card_image.dart';
 import '../widgets/quest_journey_map.dart';
 import '../widgets/kid_screen.dart';
-import '../widgets/kid_tap.dart';
+import '../widgets/reward_pack_picker.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../utils/kid_routes.dart';
-import '../widgets/share_progress_card.dart';
 import 'card_reveal_screen.dart';
 import 'cards_screen.dart';
 import 'guess_screen.dart';
@@ -51,6 +46,10 @@ class QuestMapScreen extends ConsumerStatefulWidget {
 class _QuestMapScreenState extends ConsumerState<QuestMapScreen> {
   CardModel? _lastUnlockedCard;
   PackModel? _lastUnlockedPack;
+  bool _claimingReward = false;
+  bool _pickerOpen = false;
+  bool _travelling = false;
+  bool _animateReward = false;
 
   /// The stop that finished while the child was away, so the map can show
   /// her *what changed* when she walks back onto it (п. 25: «повернення до
@@ -106,12 +105,33 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen> {
   /// Opens [screen] and, on the way back, notices which quest stop the trip
   /// finished — the map then pops that stop instead of quietly turning it
   /// green somewhere off screen.
-  Future<void> _travel(Widget screen, {required bool game}) async {
+  Future<void> _travel(
+    Widget screen, {
+    required bool game,
+    QuestTask? completeOnReturn,
+  }) async {
+    if (_travelling) return;
+    _travelling = true;
+    final questOwner = ref.read(dailyQuestProvider.notifier);
     final before = ref.read(dailyQuestProvider).completed;
-    await Navigator.of(context).push(
-      game ? KidRoutes.game(screen) : KidRoutes.content(screen),
-    );
-    if (!mounted) return;
+    try {
+      await Navigator.of(
+        context,
+      ).push(game ? KidRoutes.game(screen) : KidRoutes.content(screen));
+      if (!mounted ||
+          !identical(questOwner, ref.read(dailyQuestProvider.notifier))) {
+        return;
+      }
+      if (completeOnReturn != null) {
+        await questOwner.completeTask(completeOnReturn);
+      }
+    } finally {
+      _travelling = false;
+    }
+    if (!mounted ||
+        !identical(questOwner, ref.read(dailyQuestProvider.notifier))) {
+      return;
+    }
     final after = ref.read(dailyQuestProvider).completed;
     final fresh = after.difference(before);
     if (fresh.isEmpty) return;
@@ -152,24 +172,7 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen> {
         card: rewardCard,
         pack: rewardPack,
         newTotal: newTotal,
-        skipAnimation: true,
-        onShare: (ctx) {
-          final completed = ref.read(completedPacksProvider);
-          final allPacks = ref.read(packsProvider).valueOrNull ?? [];
-          final progress = ref.read(packProgressProvider);
-          shareProgress(
-            context: ctx,
-            completedPacks: completed.length,
-            totalPacks: allPacks.length,
-            seenCards: progress.entries
-                .where((e) => !e.key.startsWith('_'))
-                .fold<int>(0, (s, e) => s + e.value),
-            totalCards: allPacks.fold<int>(0, (s, p) => s + p.cards.length),
-            streak: 0,
-            isEn: ref.read(languageProvider) == 'en',
-            badges: {},
-          );
-        },
+        skipAnimation: !_animateReward,
         onGoToPack: () {
           Navigator.of(context).push(
             KidRoutes.content(
@@ -250,10 +253,7 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen> {
         // has swiped through N cards — don't pre-complete here.
         final pack = themePack ?? anyOpenPack();
         if (pack != null) {
-          _travel(
-            CardsScreen(pack: pack, source: 'quest_map'),
-            game: false,
-          );
+          _travel(CardsScreen(pack: pack, source: 'quest_map'), game: false);
         }
       case QuestTask.reviewOldCard:
         // "Repeat after me" walks the same deck again — the whole point of
@@ -265,23 +265,18 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen> {
         _travel(
           CardsScreen(pack: pack, source: 'quest_map'),
           game: false,
-        ).then((_) {
-          if (!mounted) return;
-          ref
-              .read(dailyQuestProvider.notifier)
-              .completeTask(QuestTask.reviewOldCard);
-        });
+          completeOnReturn: QuestTask.reviewOldCard,
+        );
       case QuestTask.playQuiz:
         // GuessScreen calls completeTask(playQuiz) on its own Results screen.
         if (theme != null && theme.cards.length >= 4) {
           _travel(
             GuessScreen(
+              returnToAdventure: true,
               cards: theme.cards,
               // Every tile of the round is already one subject; naming it
               // keeps the distractor picker inside it.
-              cardGroups: {
-                for (final c in theme.cards) c.id: theme.group.name,
-              },
+              cardGroups: {for (final c in theme.cards) c.id: theme.group.name},
             ),
             game: true,
           );
@@ -303,7 +298,11 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen> {
                   .toList();
         if (playable.length >= 4) {
           _travel(
-            GuessScreen(cards: playable, cardGroups: cardGroupsOf(packs)),
+            GuessScreen(
+              cards: playable,
+              cardGroups: cardGroupsOf(packs),
+              returnToAdventure: true,
+            ),
             game: true,
           );
         }
@@ -319,293 +318,97 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen> {
     }
   }
 
-  void _showPackPicker(BuildContext context, List<PackModel> packs) {
-    final lockedPacks = packs.where((p) => p.isLocked).toList();
-    if (lockedPacks.isEmpty) {
-      // All packs already unlocked — claim the reward directly
-      ref.read(dailyQuestProvider.notifier).claimReward();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppS(ref.read(languageProvider) == 'en')(
-                '🎉 Усі паки вже відкрито — молодець!',
-                '🎉 All packs already unlocked — great job!',
-              ),
-            ),
-            backgroundColor: const Color(0xFFFFB347),
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
+  Future<void> _showPackPicker(
+    BuildContext context,
+    List<PackModel> packs,
+  ) async {
+    final quest = ref.read(dailyQuestProvider);
+    if (_pickerOpen ||
+        _claimingReward ||
+        !quest.allDone ||
+        quest.rewardClaimed) {
       return;
     }
     final bonusCards = ref.read(bonusCardsProvider);
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (ctx) => _PackPickerSheet(
-        lockedPacks: lockedPacks,
-        bonusCards: bonusCards,
-        onPick: (pack) async {
-          Navigator.of(ctx).pop();
-          await _unlockAndReveal(pack);
-        },
-      ),
-    );
+    final lockedPacks = packs
+        .where(
+          (p) =>
+              p.isLocked &&
+              p.cards.length >
+                  p.effectiveFreePreviewCount + (bonusCards[p.id] ?? 0),
+        )
+        .toList();
+    if (lockedPacks.isEmpty) {
+      await ref.read(dailyQuestProvider.notifier).claimReward();
+      if (!mounted || !context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppS(ref.read(languageProvider) == 'en')(
+              'Усі картки вже відкрито. Пригоду завершено!',
+              'All cards are already unlocked. Adventure complete!',
+            ),
+          ),
+        ),
+      );
+      return;
+    }
+    _pickerOpen = true;
+    try {
+      final selected = await showModalBottomSheet<PackModel>(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        showDragHandle: false,
+        useSafeArea: true,
+        builder: (ctx) => ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(ctx).height * .85,
+          ),
+          child: SingleChildScrollView(
+            child: RewardPackPicker(
+              packs: lockedPacks,
+              isEn: ref.read(languageProvider) == 'en',
+              bonusCards: bonusCards,
+              onPick: (pack) => Navigator.of(ctx).pop(pack),
+            ),
+          ),
+        ),
+      );
+      if (mounted && selected != null) await _unlockAndReveal(selected);
+    } finally {
+      _pickerOpen = false;
+    }
   }
 
   Future<void> _unlockAndReveal(PackModel pack) async {
+    final quest = ref.read(dailyQuestProvider);
+    if (_claimingReward || !quest.allDone || quest.rewardClaimed) return;
     final bonus = ref.read(bonusCardsProvider)[pack.id] ?? 0;
-    final newTotal = pack.effectiveFreePreviewCount + bonus + 1;
-    final cardIndex = (pack.effectiveFreePreviewCount + bonus).clamp(
-      0,
-      pack.cards.length - 1,
-    );
-    final card = pack.cards[cardIndex];
-
-    await ref.read(bonusCardsProvider.notifier).unlockOne(pack.id);
-    await ref
-        .read(dailyQuestProvider.notifier)
-        .claimReward(cardId: card.id, packId: pack.id);
-
-    setState(() {
-      _lastUnlockedCard = card;
-      _lastUnlockedPack = pack;
-    });
-
-    if (!mounted) return;
-
-    await Navigator.of(context).push(
-      KidRoutes.content(
-        CardRevealScreen(
-          card: card,
-          pack: pack,
-          newTotal: newTotal,
-          onShare: (ctx) {
-            final completed = ref.read(completedPacksProvider);
-            final allPacks = ref.read(packsProvider).valueOrNull ?? [];
-            final progress = ref.read(packProgressProvider);
-            shareProgress(
-              context: ctx,
-              completedPacks: completed.length,
-              totalPacks: allPacks.length,
-              seenCards: progress.entries
-                  .where((e) => !e.key.startsWith('_'))
-                  .fold<int>(0, (s, e) => s + e.value),
-              totalCards: allPacks.fold<int>(0, (s, p) => s + p.cards.length),
-              streak: 0,
-              badges: {},
-              isEn: ref.read(languageProvider) == 'en',
-            );
-          },
-          onGoToPack: () {
-            Navigator.of(context).push(
-              KidRoutes.content(
-                CardsScreen(pack: pack, source: 'quest_map'),
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
-class _PackPickerSheet extends ConsumerStatefulWidget {
-  final List<PackModel> lockedPacks;
-  final Map<String, int> bonusCards;
-  final void Function(PackModel pack) onPick;
-
-  const _PackPickerSheet({
-    required this.lockedPacks,
-    required this.bonusCards,
-    required this.onPick,
-  });
-
-  @override
-  ConsumerState<_PackPickerSheet> createState() => _PackPickerSheetState();
-}
-
-class _PackPickerSheetState extends ConsumerState<_PackPickerSheet>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _entryCtrl;
-  int? _selectedIndex;
-
-  @override
-  void initState() {
-    super.initState();
-    _entryCtrl = AnimationController(
-      vsync: this,
-      duration: DT.motion.sheetEnter,
-    )..forward();
-  }
-
-  @override
-  void dispose() {
-    _entryCtrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-      decoration: const BoxDecoration(
-        color: Color(0xFFFFF8F0),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 40,
-            height: 4,
-            margin: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          // The gift is drawn, not an emoji, and one line of words is
-          // enough: the covers below say what the choice is (rule 4).
-          const AppIconView(AppIcon.rewardGift, size: 56),
-          const SizedBox(height: 8),
-          Text(
-            AppS(ref.read(languageProvider) == 'en')(
-              'Де відкрити картку?',
-              'Where to open the card?',
-            ),
-            style: DT.h2,
-          ),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            alignment: WrapAlignment.center,
-            children: List.generate(widget.lockedPacks.length, (i) {
-              final pack = widget.lockedPacks[i];
-              final bonus = widget.bonusCards[pack.id] ?? 0;
-              final available =
-                  pack.cards.length - pack.effectiveFreePreviewCount - bonus;
-              final allUnlocked = available <= 0;
-              final isSelected = _selectedIndex == i;
-              // Cover, else the first card that has artwork — the same
-              // fallback ladder as the pack grid tile.
-              final thumb = pack.cards
-                  .where((c) => c.image != null)
-                  .firstOrNull;
-
-              return AnimatedBuilder(
-                animation: _entryCtrl,
-                builder: (_, child) {
-                  final delay = i * 0.1;
-                  final t = ((_entryCtrl.value - delay) / (1 - delay)).clamp(
-                    0.0,
-                    1.0,
-                  );
-                  final scale = Curves.elasticOut.transform(t);
-                  return Transform.scale(
-                    scale: scale.clamp(0.0, 1.1),
-                    child: child,
-                  );
-                },
-                child: KidTap(
-                  onTap: allUnlocked
-                      ? null
-                      : () {
-                          setState(() => _selectedIndex = i);
-                          Future.delayed(
-                            DT.motion.base,
-                            () => widget.onPick(pack),
-                          );
-                        },
-                  child: AnimatedContainer(
-                    duration: MotionPolicy.of(context).dur(DT.motion.quick),
-                    width: 120,
-                    padding: const EdgeInsets.all(DT.sp8),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? pack.color.withValues(alpha: 0.2)
-                          : pack.color.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(DT.rLg),
-                      border: Border.all(
-                        color: isSelected
-                            ? pack.color
-                            : pack.color.withValues(alpha: 0.2),
-                        width: isSelected ? 2.5 : 1.5,
-                      ),
-                    ),
-                    child: Opacity(
-                      opacity: allUnlocked ? 0.35 : 1.0,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // The pack's own picture, not an emoji: the child
-                          // chooses by what she will see inside.
-                          AnimatedScale(
-                            scale: isSelected ? 1.08 : 1.0,
-                            duration:
-                                MotionPolicy.of(context).dur(DT.motion.quick),
-                            child: SizedBox(
-                              width: 104,
-                              height: 76,
-                              child: ClipRRect(
-                                borderRadius:
-                                    BorderRadius.circular(DT.rMd),
-                                child: CardImage(
-                                  name: pack.cover ?? thumb?.image,
-                                  fallbackEmoji: pack.icon,
-                                  fallback: isLetterIcon(pack.icon)
-                                      ? Center(
-                                          child: LetterStickerIcon(
-                                            letter: pack.icon,
-                                            color: pack.color,
-                                            size: 52,
-                                          ),
-                                        )
-                                      : null,
-                                  background:
-                                      pack.color.withValues(alpha: 0.06),
-                                  padding: EdgeInsets.zero,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: DT.sp4),
-                          Text(
-                            pack.title,
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            // The title is charcoal, not the pack colour:
-                            // on the 8–20 % pack wash over `DT.bgWarm` a
-                            // mint title measured 2.0:1. The tile still
-                            // reads as the pack — the wash, the border and
-                            // the cover carry it.
-                            style: DT.tileTitle.copyWith(
-                              fontSize: 13,
-                              color: DT.textPrimary,
-                            ),
-                          ),
-                          if (allUnlocked)
-                            const Padding(
-                              padding: EdgeInsets.only(top: DT.sp4),
-                              child: AppIconView(AppIcon.check, size: 16),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }),
-          ),
-        ],
-      ),
-    );
+    final cardIndex = pack.effectiveFreePreviewCount + bonus;
+    if (cardIndex >= pack.cards.length) return;
+    _claimingReward = true;
+    // Keep the notifiers before the await: the map may be dismissed while
+    // preferences are being saved. The same grant still finishes once.
+    final bonuses = ref.read(bonusCardsProvider.notifier);
+    final quests = ref.read(dailyQuestProvider.notifier);
+    try {
+      await bonuses.unlockOne(pack.id);
+      if (mounted) {
+        setState(() {
+          _lastUnlockedCard = pack.cards[cardIndex];
+          _lastUnlockedPack = pack;
+          _animateReward = true;
+        });
+      }
+      // build swaps the map for the reveal on this SAME route. Popping the
+      // reveal therefore returns home, without a second reveal underneath.
+      await quests.claimReward(
+        cardId: pack.cards[cardIndex].id,
+        packId: pack.id,
+      );
+    } finally {
+      _claimingReward = false;
+    }
   }
 }

@@ -7,8 +7,8 @@ import '../services/profile_service.dart';
 /// Data is per-profile and persisted across sessions.
 final weakWordsProvider =
     StateNotifierProvider<WeakWordsNotifier, Map<String, int>>(
-  (ref) => WeakWordsNotifier(),
-);
+      (ref) => WeakWordsNotifier(),
+    );
 
 class WeakWordsNotifier extends StateNotifier<Map<String, int>> {
   WeakWordsNotifier() : super({}) {

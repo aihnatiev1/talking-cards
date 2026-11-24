@@ -12,14 +12,14 @@ import 'package:talking_cards/models/pack_model.dart';
 /// same parsed packs.
 void main() {
   Map<String, dynamic> card(String id) => {
-        'id': id,
-        'sound': id,
-        'text': id,
-        'emoji': '🐶',
-        'colorBg': '#FFFFFF',
-        'colorAccent': '#000000',
-        'audio': id,
-      };
+    'id': id,
+    'sound': id,
+    'text': id,
+    'emoji': '🐶',
+    'colorBg': '#FFFFFF',
+    'colorAccent': '#000000',
+    'audio': id,
+  };
 
   test('hidden cards never survive parsing', () {
     final pack = PackModel.fromJson({
@@ -42,7 +42,10 @@ void main() {
     final packs = (jsonDecode(raw) as List<dynamic>)
         .map((p) => PackModel.fromJson(p as Map<String, dynamic>))
         .toList();
-    return {for (final p in packs) for (final c in p.cards) c.id};
+    return {
+      for (final p in packs)
+        for (final c in p.cards) c.id,
+    };
   }
 
   test('six English cards are pulled — the recordings, not the pictures', () {
@@ -50,7 +53,12 @@ void main() {
     // pictures are fine and the Ukrainian cards that share them keep
     // playing, so this list is English-only by design.
     const pulled = [
-      'en_a21', 'en_sl16', 'en_ac14', 'en_fd16', 'en_fd28', 'en_t01',
+      'en_a21',
+      'en_sl16',
+      'en_ac14',
+      'en_fd16',
+      'en_fd28',
+      'en_t01',
       'en_ss13',
     ];
     final live = liveIds('en');

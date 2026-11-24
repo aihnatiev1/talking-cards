@@ -59,8 +59,16 @@ void main() {
             );
           }
         }
+        final progressBefore = tester.getRect(
+          find.byKey(const ValueKey('journey-progress')),
+        );
         await tester.ensureVisible(
           find.byKey(const ValueKey('journey-stop-5')),
+        );
+        expect(
+          tester.getRect(find.byKey(const ValueKey('journey-progress'))),
+          progressBefore,
+          reason: 'Progress must remain visible when the map scrolls',
         );
         await tester.pump();
         final treasure = tester.getRect(
@@ -126,6 +134,8 @@ void main() {
     }
 
     await show({});
+    await tester.tap(find.byKey(const ValueKey('journey-next-0')));
+    expect(tapped, QuestTask.listenCardOfDay);
     await tester.tap(find.byKey(const ValueKey('journey-stop-0')));
     expect(tapped, QuestTask.listenCardOfDay);
     await tester.ensureVisible(find.byKey(const ValueKey('journey-stop-5')));
@@ -136,6 +146,8 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('journey-stop-5')));
     expect(claims, 1);
     await show({QuestTask.listenCardOfDay});
+    await tester.tap(find.byKey(const ValueKey('journey-next-1')));
+    expect(tapped, QuestTask.viewCards3);
     await tester.drag(
       find.byKey(const ValueKey('journey-scroll')),
       const Offset(0, 1000),

@@ -71,53 +71,53 @@ class AppIconPainter extends CustomPainter {
 
 /// The semantic accent of each icon (spec §5.1 palette row).
 Color defaultColorOf(AppIcon icon) => switch (icon) {
-      AppIcon.back => DT.sky,
-      AppIcon.close => DT.coral,
-      AppIcon.sound => DT.mint,
-      AppIcon.soundOff => DT.mint,
-      AppIcon.play => DT.mint,
-      AppIcon.replay => DT.sky,
-      AppIcon.shuffle => DT.violet,
-      AppIcon.home => DT.peach,
-      AppIcon.check => DT.success,
-      AppIcon.lock => DT.sunBurst,
-      AppIcon.star => DT.sunBurst,
-      AppIcon.parent => DT.violet,
-      AppIcon.catSpeech => DT.violet,
-      AppIcon.catSounds => DT.peach,
-      AppIcon.catWorld => DT.mint,
-      AppIcon.gameGuess => DT.sky,
-      AppIcon.gameMatch => DT.mint,
-      AppIcon.gameBubbles => DT.coral,
-      AppIcon.gameRepeat => DT.peach,
-      AppIcon.gameOdd => DT.violet,
-      AppIcon.gameOpposites => DT.pink,
-      AppIcon.gameArticulation => DT.pink,
-      AppIcon.gameSort => DT.sky,
-      AppIcon.gameSyllables => DT.coral,
-      AppIcon.stepListen => DT.peach,
-      AppIcon.stepCards => DT.violet,
-      AppIcon.stepQuest => DT.mint,
-      AppIcon.stopCardTree => DT.mint,
-      AppIcon.stopBell => DT.sunBurst,
-      AppIcon.stopMicFlower => DT.peach,
-      AppIcon.pawStep => DT.peach,
-      AppIcon.rewardChestClosed => DT.peach,
-      AppIcon.rewardChestOpen => DT.peach,
-      AppIcon.rewardGift => DT.peach,
-      AppIcon.rewardTrophy => DT.sunBurst,
-      AppIcon.streakFlame => DT.peach,
-      AppIcon.hint => DT.sunBurst,
-      AppIcon.stickerUnicorn => DT.pinkTint,
-      AppIcon.stickerDragon => DT.mint,
-      AppIcon.stickerRainbow => DT.sky,
-      AppIcon.stickerButterfly => DT.violet,
-      AppIcon.stickerAlbum => DT.coral,
-      AppIcon.calendar => DT.sky,
-      AppIcon.navCards => DT.violet,
-      AppIcon.navGames => DT.peach,
-      AppIcon.navColoring => DT.mint,
-    };
+  AppIcon.back => DT.sky,
+  AppIcon.close => DT.coral,
+  AppIcon.sound => DT.mint,
+  AppIcon.soundOff => DT.mint,
+  AppIcon.play => DT.mint,
+  AppIcon.replay => DT.sky,
+  AppIcon.shuffle => DT.violet,
+  AppIcon.home => DT.peach,
+  AppIcon.check => DT.success,
+  AppIcon.lock => DT.sunBurst,
+  AppIcon.star => DT.sunBurst,
+  AppIcon.parent => DT.violet,
+  AppIcon.catSpeech => DT.violet,
+  AppIcon.catSounds => DT.peach,
+  AppIcon.catWorld => DT.mint,
+  AppIcon.gameGuess => DT.sky,
+  AppIcon.gameMatch => DT.mint,
+  AppIcon.gameBubbles => DT.coral,
+  AppIcon.gameRepeat => DT.peach,
+  AppIcon.gameOdd => DT.violet,
+  AppIcon.gameOpposites => DT.pink,
+  AppIcon.gameArticulation => DT.pink,
+  AppIcon.gameSort => DT.sky,
+  AppIcon.gameSyllables => DT.coral,
+  AppIcon.stepListen => DT.peach,
+  AppIcon.stepCards => DT.violet,
+  AppIcon.stepQuest => DT.mint,
+  AppIcon.stopCardTree => DT.mint,
+  AppIcon.stopBell => DT.sunBurst,
+  AppIcon.stopMicFlower => DT.peach,
+  AppIcon.pawStep => DT.peach,
+  AppIcon.rewardChestClosed => DT.peach,
+  AppIcon.rewardChestOpen => DT.peach,
+  AppIcon.rewardGift => DT.peach,
+  AppIcon.rewardTrophy => DT.sunBurst,
+  AppIcon.streakFlame => DT.peach,
+  AppIcon.hint => DT.sunBurst,
+  AppIcon.stickerUnicorn => DT.pinkTint,
+  AppIcon.stickerDragon => DT.mint,
+  AppIcon.stickerRainbow => DT.sky,
+  AppIcon.stickerButterfly => DT.violet,
+  AppIcon.stickerAlbum => DT.coral,
+  AppIcon.calendar => DT.sky,
+  AppIcon.navCards => DT.violet,
+  AppIcon.navGames => DT.peach,
+  AppIcon.navColoring => DT.mint,
+};
 
 /// True when a pack's JSON `icon` is a bare letter (or a two-letter sound
 /// such as `SH`) rather than an emoji — the case [LetterStickerIcon] draws.
@@ -183,7 +183,11 @@ class LetterStickerPainter extends CustomPainter {
 
     final sheet = _Sheet(color)
       ..shape(_rr(4, 4, 40, 40, 12))
-      ..line(_arc(24, 36.5, 3.5, 0.35, math.pi - 0.7), width: 1.8, color: _ink70)
+      ..line(
+        _arc(24, 36.5, 3.5, 0.35, math.pi - 0.7),
+        width: 1.8,
+        color: _ink70,
+      )
       ..dot(19.5, 34.5, 1.3, _ink70)
       ..dot(28.5, 34.5, 1.3, _ink70);
     sheet.render(canvas, sticker: true);
@@ -237,7 +241,12 @@ final class _Shape extends _Op {
   final Color base;
   final bool outline;
   final bool twoTone;
-  const _Shape(this.path, this.base, {this.outline = true, this.twoTone = true});
+  const _Shape(
+    this.path,
+    this.base, {
+    this.outline = true,
+    this.twoTone = true,
+  });
 }
 
 final class _Fat extends _Op {
@@ -267,8 +276,12 @@ class _Sheet {
   final List<_Op> ops = [];
   _Sheet(this.accent);
 
-  void shape(Path p, {Color? color, bool outline = true, bool twoTone = true}) =>
-      ops.add(_Shape(p, color ?? accent, outline: outline, twoTone: twoTone));
+  void shape(
+    Path p, {
+    Color? color,
+    bool outline = true,
+    bool twoTone = true,
+  }) => ops.add(_Shape(p, color ?? accent, outline: outline, twoTone: twoTone));
 
   void fat(Path p, double width, {Color? color}) =>
       ops.add(_Fat(p, color ?? accent, width));
@@ -377,10 +390,9 @@ class _Sheet {
 }
 
 Path _rr(double l, double t, double w, double h, double r) => Path()
-  ..addRRect(RRect.fromRectAndRadius(
-    Rect.fromLTWH(l, t, w, h),
-    Radius.circular(r),
-  ));
+  ..addRRect(
+    RRect.fromRectAndRadius(Rect.fromLTWH(l, t, w, h), Radius.circular(r)),
+  );
 
 Path _circle(double cx, double cy, double r) =>
     Path()..addOval(Rect.fromCircle(center: Offset(cx, cy), radius: r));
@@ -388,9 +400,8 @@ Path _circle(double cx, double cy, double r) =>
 Path _oval(double l, double t, double w, double h) =>
     Path()..addOval(Rect.fromLTWH(l, t, w, h));
 
-Path _arc(double cx, double cy, double r, double start, double sweep) =>
-    Path()
-      ..addArc(Rect.fromCircle(center: Offset(cx, cy), radius: r), start, sweep);
+Path _arc(double cx, double cy, double r, double start, double sweep) => Path()
+  ..addArc(Rect.fromCircle(center: Offset(cx, cy), radius: r), start, sweep);
 
 Path _poly(List<Offset> pts) {
   final p = Path()..moveTo(pts.first.dx, pts.first.dy);
@@ -461,10 +472,7 @@ void _compose(_Sheet s, AppIcon icon) {
   switch (icon) {
     // ── Controls ──
     case AppIcon.back:
-      s.fat(
-        _poly(const [Offset(29, 11), Offset(16, 24), Offset(29, 37)]),
-        6.5,
-      );
+      s.fat(_poly(const [Offset(29, 11), Offset(16, 24), Offset(29, 37)]), 6.5);
       s.fat(_poly(const [Offset(16, 24), Offset(38, 24)]), 6.5);
 
     case AppIcon.close:
@@ -478,17 +486,21 @@ void _compose(_Sheet s, AppIcon icon) {
 
     case AppIcon.soundOff:
       s.shape(_speaker());
-      s.fat(_poly(const [Offset(30, 19), Offset(40, 29)]), 3.5,
-          color: DT.coral);
-      s.fat(_poly(const [Offset(40, 19), Offset(30, 29)]), 3.5,
-          color: DT.coral);
+      s.fat(
+        _poly(const [Offset(30, 19), Offset(40, 29)]),
+        3.5,
+        color: DT.coral,
+      );
+      s.fat(
+        _poly(const [Offset(40, 19), Offset(30, 29)]),
+        3.5,
+        color: DT.coral,
+      );
 
     case AppIcon.play:
-      s.shape(_roundPoly(const [
-        Offset(15, 9),
-        Offset(40, 24),
-        Offset(15, 39),
-      ], 4.5));
+      s.shape(
+        _roundPoly(const [Offset(15, 9), Offset(40, 24), Offset(15, 39)], 4.5),
+      );
 
     case AppIcon.replay:
       const cx = 24.0, cy = 25.0, r = 12.0;
@@ -498,11 +510,7 @@ void _compose(_Sheet s, AppIcon icon) {
       const dir = Offset(0.866, -0.5);
       const perp = Offset(0.5, 0.866);
       s.shape(
-        _roundPoly([
-          end + dir * 9,
-          end + perp * 7,
-          end - perp * 7,
-        ], 2.5),
+        _roundPoly([end + dir * 9, end + perp * 7, end - perp * 7], 2.5),
         twoTone: false,
       );
 
@@ -537,18 +545,13 @@ void _compose(_Sheet s, AppIcon icon) {
 
     case AppIcon.home:
       s.shape(_rr(11, 20, 26, 20, 4));
-      s.shape(_roundPoly(const [
-        Offset(24, 6),
-        Offset(43, 23),
-        Offset(5, 23),
-      ], 3.5));
+      s.shape(
+        _roundPoly(const [Offset(24, 6), Offset(43, 23), Offset(5, 23)], 3.5),
+      );
       s.shape(_rr(20, 28, 8, 12, 3), color: DT.sunBurst);
 
     case AppIcon.check:
-      s.fat(
-        _poly(const [Offset(11, 25), Offset(20, 34), Offset(37, 14)]),
-        7,
-      );
+      s.fat(_poly(const [Offset(11, 25), Offset(20, 34), Offset(37, 14)]), 7);
 
     case AppIcon.lock:
       s.fat(_arc(24, 18, 8, math.pi, math.pi), 4.5, color: _lit(s.accent));
@@ -591,9 +594,20 @@ void _compose(_Sheet s, AppIcon icon) {
       s.shape(_placed(_oval(-9, -6, 18, 12), 24, 33, -0.3));
 
     case AppIcon.catWorld:
-      s.shape(_circle(24, 24, 18.5));
-      s.shape(_oval(11, 13, 12, 9), color: _lit(_lit(s.accent)), outline: false, twoTone: false);
-      s.shape(_oval(23, 24, 13, 11), color: _lit(_lit(s.accent)), outline: false, twoTone: false);
+      // A little house under a sun: «my world» reads as a place at 40 px,
+      // where the globe (two pale blobs on a ball) read as a plain ball.
+      s.dot(38, 9, 5, DT.sunBurst);
+      s.shape(
+        _roundPoly(const [Offset(5, 24), Offset(24, 7), Offset(43, 24)], 3),
+        color: DT.coral,
+      );
+      s.shape(_rr(10, 22, 28, 20, 4));
+      s.shape(
+        _rr(20, 29, 9, 13, 3),
+        color: _lit(_lit(s.accent)),
+        outline: false,
+        twoTone: false,
+      );
 
     // ── Games ──
     case AppIcon.gameGuess:
@@ -623,10 +637,11 @@ void _compose(_Sheet s, AppIcon icon) {
       s.shape(_rr(13, 3, 22, 12, 5.5), color: _lit(s.accent));
       s.line(_poly(const [Offset(18, 9), Offset(30, 9)]));
       s.shape(
-        _roundPoly(
-          const [Offset(20, 14), Offset(27, 14), Offset(20.5, 20.5)],
-          1.5,
-        ),
+        _roundPoly(const [
+          Offset(20, 14),
+          Offset(27, 14),
+          Offset(20.5, 20.5),
+        ], 1.5),
         color: _lit(s.accent),
       );
       s.shape(_rr(3, 38, 20, 10, 5));
@@ -648,18 +663,20 @@ void _compose(_Sheet s, AppIcon icon) {
       s.dot(16, 15.5, 2);
 
     case AppIcon.gameOpposites:
-      s.shape(_roundPoly(const [
-        Offset(4, 24),
-        Offset(16, 12),
-        Offset(16, 18.5),
-        Offset(32, 18.5),
-        Offset(32, 12),
-        Offset(44, 24),
-        Offset(32, 36),
-        Offset(32, 29.5),
-        Offset(16, 29.5),
-        Offset(16, 36),
-      ], 2.5));
+      s.shape(
+        _roundPoly(const [
+          Offset(4, 24),
+          Offset(16, 12),
+          Offset(16, 18.5),
+          Offset(32, 18.5),
+          Offset(32, 12),
+          Offset(44, 24),
+          Offset(32, 36),
+          Offset(32, 29.5),
+          Offset(16, 29.5),
+          Offset(16, 36),
+        ], 2.5),
+      );
 
     case AppIcon.gameArticulation:
       s.shape(_rr(7, 15, 34, 18, 9));
@@ -676,8 +693,7 @@ void _compose(_Sheet s, AppIcon icon) {
       // «По купках»: two paper trays, a round and a square piece above
       // them — the game is "this one goes there".
       s.shape(_circle(13, 13, 7), color: DT.sunBurst);
-      s.shape(_placed(_rr(-6, -6, 12, 12, 3.5), 34, 13, 0.2),
-          color: DT.coral);
+      s.shape(_placed(_rr(-6, -6, 12, 12, 3.5), 34, 13, 0.2), color: DT.coral);
       s.shape(_rr(4, 26, 18, 15, 5.5));
       s.shape(_rr(26, 26, 18, 15, 5.5));
       s.line(_poly(const [Offset(7, 31.5), Offset(19, 31.5)]));
@@ -685,10 +701,8 @@ void _compose(_Sheet s, AppIcon icon) {
 
     case AppIcon.gameSyllables:
       // «Рахуй склади»: a drum and two sticks — one beat per syllable.
-      s.fat(_poly(const [Offset(7, 9), Offset(17, 20)]), 3,
-          color: DT.peach);
-      s.fat(_poly(const [Offset(41, 9), Offset(31, 20)]), 3,
-          color: DT.peach);
+      s.fat(_poly(const [Offset(7, 9), Offset(17, 20)]), 3, color: DT.peach);
+      s.fat(_poly(const [Offset(41, 9), Offset(31, 20)]), 3, color: DT.peach);
       s.shape(_rr(8, 20, 32, 20, 8));
       s.shape(_oval(8, 16, 32, 11), color: _lit(s.accent), twoTone: false);
       s.line(_poly(const [Offset(13, 26), Offset(20, 35)]));
@@ -698,18 +712,22 @@ void _compose(_Sheet s, AppIcon icon) {
 
     // ── Daily steps ──
     case AppIcon.stepListen:
-      s.shape(Path()
-        ..moveTo(16, 17)
-        ..cubicTo(16, 5, 36, 5, 36, 18)
-        ..cubicTo(36, 25, 30, 27, 29, 33)
-        ..cubicTo(28, 41, 16, 43, 15, 34)
-        ..cubicTo(14.5, 30, 19, 29, 19, 25)
-        ..cubicTo(19, 21, 16, 21, 16, 17)
-        ..close());
-      s.line(Path()
-        ..moveTo(21, 16)
-        ..cubicTo(26, 11, 32, 15, 29, 22)
-        ..cubicTo(27, 26, 24, 24, 24, 27));
+      s.shape(
+        Path()
+          ..moveTo(16, 17)
+          ..cubicTo(16, 5, 36, 5, 36, 18)
+          ..cubicTo(36, 25, 30, 27, 29, 33)
+          ..cubicTo(28, 41, 16, 43, 15, 34)
+          ..cubicTo(14.5, 30, 19, 29, 19, 25)
+          ..cubicTo(19, 21, 16, 21, 16, 17)
+          ..close(),
+      );
+      s.line(
+        Path()
+          ..moveTo(21, 16)
+          ..cubicTo(26, 11, 32, 15, 29, 22)
+          ..cubicTo(27, 26, 24, 24, 24, 27),
+      );
 
     case AppIcon.stepCards:
       s.shape(_placed(_rr(-8, -12, 16, 23, 4), 17, 26, -0.26));
@@ -717,22 +735,30 @@ void _compose(_Sheet s, AppIcon icon) {
       s.dot(29, 20, 3.2, DT.sunBurst);
 
     case AppIcon.stepQuest:
-      s.shape(_roundPoly(const [
-        Offset(5, 12),
-        Offset(17.5, 7.5),
-        Offset(30.5, 12),
-        Offset(43, 7.5),
-        Offset(43, 36),
-        Offset(30.5, 40.5),
-        Offset(17.5, 36),
-        Offset(5, 40.5),
-      ], 3));
+      s.shape(
+        _roundPoly(const [
+          Offset(5, 12),
+          Offset(17.5, 7.5),
+          Offset(30.5, 12),
+          Offset(43, 7.5),
+          Offset(43, 36),
+          Offset(30.5, 40.5),
+          Offset(17.5, 36),
+          Offset(5, 40.5),
+        ], 3),
+      );
       s.line(_poly(const [Offset(17.5, 9), Offset(17.5, 35)]));
       s.line(_poly(const [Offset(30.5, 13), Offset(30.5, 39)]));
-      s.line(_poly(const [Offset(33, 19), Offset(39, 25)]),
-          color: DT.coral, width: 2.5);
-      s.line(_poly(const [Offset(39, 19), Offset(33, 25)]),
-          color: DT.coral, width: 2.5);
+      s.line(
+        _poly(const [Offset(33, 19), Offset(39, 25)]),
+        color: DT.coral,
+        width: 2.5,
+      );
+      s.line(
+        _poly(const [Offset(39, 19), Offset(33, 25)]),
+        color: DT.coral,
+        width: 2.5,
+      );
 
     // ── Quest-map landmarks (G13) ──
     case AppIcon.stopCardTree:
@@ -742,37 +768,48 @@ void _compose(_Sheet s, AppIcon icon) {
       s.shape(_circle(14, 17, 11));
       s.shape(_circle(34, 16, 10));
       s.shape(_circle(24, 20, 11));
-      s.shape(_placed(_rr(-4.5, -5.5, 9, 11, 2.5), 13, 28, -0.22),
-          color: DT.violet);
-      s.shape(_placed(_rr(-4.5, -5.5, 9, 11, 2.5), 34, 27, 0.18),
-          color: DT.sunBurst);
+      s.shape(
+        _placed(_rr(-4.5, -5.5, 9, 11, 2.5), 13, 28, -0.22),
+        color: DT.violet,
+      );
+      s.shape(
+        _placed(_rr(-4.5, -5.5, 9, 11, 2.5), 34, 27, 0.18),
+        color: DT.sunBurst,
+      );
 
     case AppIcon.stopBell:
       // The "listen and guess" stop: a bell with a clapper.
       s.fat(_arc(24, 12, 4, math.pi, math.pi), 3, color: _lit(s.accent));
-      s.shape(Path()
-        ..moveTo(24, 9)
-        ..cubicTo(33, 9, 35, 19, 35, 31)
-        ..lineTo(13, 31)
-        ..cubicTo(13, 19, 15, 9, 24, 9)
-        ..close());
+      s.shape(
+        Path()
+          ..moveTo(24, 9)
+          ..cubicTo(33, 9, 35, 19, 35, 31)
+          ..lineTo(13, 31)
+          ..cubicTo(13, 19, 15, 9, 24, 9)
+          ..close(),
+      );
       s.shape(_rr(9, 29, 30, 7, 3.5));
       s.shape(_circle(24, 40, 3.6), color: DT.coral, twoTone: false);
 
     case AppIcon.stopMicFlower:
       // A microphone growing like a flower: petals, stem, one leaf.
-      s.fat(_poly(const [Offset(24, 30), Offset(24, 43)]), 3.5,
-          color: DT.mint);
+      s.fat(_poly(const [Offset(24, 30), Offset(24, 43)]), 3.5, color: DT.mint);
       s.shape(_placed(_oval(-6.5, -4, 13, 8), 14, 38, -0.4), color: DT.mint);
       for (var i = 0; i < 6; i++) {
         final a = -math.pi / 2 + i * math.pi / 3;
         s.shape(_circle(24 + 9 * math.cos(a), 20 + 9 * math.sin(a), 6));
       }
       s.shape(_rr(18.5, 11, 11, 19, 5.5), color: DT.violet);
-      s.line(_poly(const [Offset(21, 17), Offset(27, 17)]),
-          color: Colors.white, width: 1.5);
-      s.line(_poly(const [Offset(21, 22), Offset(27, 22)]),
-          color: Colors.white, width: 1.5);
+      s.line(
+        _poly(const [Offset(21, 17), Offset(27, 17)]),
+        color: Colors.white,
+        width: 1.5,
+      );
+      s.line(
+        _poly(const [Offset(21, 22), Offset(27, 22)]),
+        color: Colors.white,
+        width: 1.5,
+      );
 
     case AppIcon.pawStep:
       // One paw print: pad plus four toes.
@@ -792,10 +829,12 @@ void _compose(_Sheet s, AppIcon icon) {
       // Body.
       s.shape(_rr(7, 24, 34, 16, 3.5));
       // Domed lid.
-      s.shape(Path()
-        ..moveTo(7, 24)
-        ..cubicTo(7, 9, 41, 9, 41, 24)
-        ..close());
+      s.shape(
+        Path()
+          ..moveTo(7, 24)
+          ..cubicTo(7, 9, 41, 9, 41, 24)
+          ..close(),
+      );
       // Gold: the seam band, two corner straps, the clasp.
       s.shape(_rr(7, 22.5, 34, 4, 2), color: DT.sunBurst);
       s.shape(_rr(9.5, 26.5, 4, 13.5, 1.5), color: DT.sunBurst);
@@ -803,8 +842,12 @@ void _compose(_Sheet s, AppIcon icon) {
       s.shape(_rr(20, 19, 8, 11, 2.5), color: DT.sunBurst);
       s.dot(24, 24.5, 1.8, _ink70);
       // One sparkle, so the closed chest still promises something.
-      s.shape(_star(40, 12, 4.2, 1.9, 1),
-          color: DT.sunBurst, twoTone: false, outline: false);
+      s.shape(
+        _star(40, 12, 4.2, 1.9, 1),
+        color: DT.sunBurst,
+        twoTone: false,
+        outline: false,
+      );
 
     case AppIcon.rewardChestOpen:
       // Lid thrown back, treasure heaped over the rim, sparkles above.
@@ -819,16 +862,27 @@ void _compose(_Sheet s, AppIcon icon) {
       s.shape(_rr(7, 25, 34, 4, 2), color: DT.sunBurst);
       s.shape(_rr(9.5, 29, 4, 11, 1.5), color: DT.sunBurst);
       s.shape(_rr(34.5, 29, 4, 11, 1.5), color: DT.sunBurst);
-      s.shape(_star(40, 10, 4.6, 2.1, 1),
-          color: DT.sunBurst, twoTone: false, outline: false);
-      s.shape(_star(9, 13, 3.4, 1.5, 1),
-          color: DT.sunBurst, twoTone: false, outline: false);
+      s.shape(
+        _star(40, 10, 4.6, 2.1, 1),
+        color: DT.sunBurst,
+        twoTone: false,
+        outline: false,
+      );
+      s.shape(
+        _star(9, 13, 3.4, 1.5, 1),
+        color: DT.sunBurst,
+        twoTone: false,
+        outline: false,
+      );
 
     case AppIcon.rewardGift:
       s.shape(_rr(8, 21, 32, 20, 5));
       s.shape(_rr(6, 14, 36, 10, 4.5));
       s.shape(_rr(20, 14, 8, 27, 2.5), color: DT.sunBurst, twoTone: false);
-      s.shape(_placed(_oval(-7, -4.5, 14, 9), 16, 9, -0.35), color: DT.sunBurst);
+      s.shape(
+        _placed(_oval(-7, -4.5, 14, 9), 16, 9, -0.35),
+        color: DT.sunBurst,
+      );
       s.shape(_placed(_oval(-7, -4.5, 14, 9), 32, 9, 0.35), color: DT.sunBurst);
       s.shape(_circle(24, 11, 3.2), color: DT.sunBurst, twoTone: false);
 
@@ -837,24 +891,33 @@ void _compose(_Sheet s, AppIcon icon) {
       s.fat(_arc(36, 14, 5, -math.pi / 2, math.pi), 3);
       s.shape(_rr(14, 34, 20, 7, 3));
       s.shape(_rr(21, 27, 6, 8, 2));
-      s.shape(Path()
-        ..moveTo(12, 7)
-        ..lineTo(36, 7)
-        ..cubicTo(36, 21, 32, 28, 24, 29)
-        ..cubicTo(16, 28, 12, 21, 12, 7)
-        ..close());
-      s.shape(_star(24, 16, 4.5, 2, 1), color: Colors.white, outline: false, twoTone: false);
+      s.shape(
+        Path()
+          ..moveTo(12, 7)
+          ..lineTo(36, 7)
+          ..cubicTo(36, 21, 32, 28, 24, 29)
+          ..cubicTo(16, 28, 12, 21, 12, 7)
+          ..close(),
+      );
+      s.shape(
+        _star(24, 16, 4.5, 2, 1),
+        color: Colors.white,
+        outline: false,
+        twoTone: false,
+      );
 
     case AppIcon.streakFlame:
-      s.shape(Path()
-        ..moveTo(24, 4)
-        ..cubicTo(30, 12, 40, 18, 38, 30)
-        ..cubicTo(37, 38, 31, 43.5, 24, 43.5)
-        ..cubicTo(17, 43.5, 11, 38, 10, 30)
-        ..cubicTo(9, 22, 15, 17, 16, 12)
-        ..cubicTo(18, 17, 21, 19, 22, 16)
-        ..cubicTo(23, 12, 22, 8, 24, 4)
-        ..close());
+      s.shape(
+        Path()
+          ..moveTo(24, 4)
+          ..cubicTo(30, 12, 40, 18, 38, 30)
+          ..cubicTo(37, 38, 31, 43.5, 24, 43.5)
+          ..cubicTo(17, 43.5, 11, 38, 10, 30)
+          ..cubicTo(9, 22, 15, 17, 16, 12)
+          ..cubicTo(18, 17, 21, 19, 22, 16)
+          ..cubicTo(23, 12, 22, 8, 24, 4)
+          ..close(),
+      );
       s.shape(
         Path()
           ..moveTo(24, 22)
@@ -871,10 +934,16 @@ void _compose(_Sheet s, AppIcon icon) {
       s.line(_arc(24, 34, 3.5, 0.35, math.pi - 0.7), width: 1.6, color: _ink70);
 
     case AppIcon.hint:
-      s.line(_poly(const [Offset(7, 9), Offset(11, 12.5)]),
-          color: _ink70, width: 2.5);
-      s.line(_poly(const [Offset(41, 9), Offset(37, 12.5)]),
-          color: _ink70, width: 2.5);
+      s.line(
+        _poly(const [Offset(7, 9), Offset(11, 12.5)]),
+        color: _ink70,
+        width: 2.5,
+      );
+      s.line(
+        _poly(const [Offset(41, 9), Offset(37, 12.5)]),
+        color: _ink70,
+        width: 2.5,
+      );
       s.shape(_rr(19, 35, 10, 6, 3), color: _lit(s.accent), twoTone: false);
       s.shape(_rr(18, 28, 12, 8, 3.5), twoTone: false);
       s.shape(_circle(24, 19, 13.5));
@@ -892,11 +961,7 @@ void _compose(_Sheet s, AppIcon icon) {
       );
       s.shape(
         _placed(
-          _roundPoly(const [
-            Offset(-4, -7),
-            Offset(4, -3),
-            Offset(-1, 4),
-          ], 2),
+          _roundPoly(const [Offset(-4, -7), Offset(4, -3), Offset(-1, 4)], 2),
           31,
           13,
           0.25,
@@ -949,10 +1014,16 @@ void _compose(_Sheet s, AppIcon icon) {
       s.shape(_placed(_oval(-8, -6, 16, 12), 15, 32, 0.25), color: DT.pink);
       s.shape(_placed(_oval(-8, -6, 16, 12), 33, 32, -0.25), color: DT.pink);
       s.shape(_rr(21, 10, 6, 30, 3), color: DT.peach);
-      s.line(_poly(const [Offset(23, 11), Offset(18, 4)]),
-          color: _ink70, width: 2);
-      s.line(_poly(const [Offset(25, 11), Offset(30, 4)]),
-          color: _ink70, width: 2);
+      s.line(
+        _poly(const [Offset(23, 11), Offset(18, 4)]),
+        color: _ink70,
+        width: 2,
+      );
+      s.line(
+        _poly(const [Offset(25, 11), Offset(30, 4)]),
+        color: _ink70,
+        width: 2,
+      );
       s.dot(17, 4, 2, DT.sunBurst);
       s.dot(31, 4, 2, DT.sunBurst);
       s.dot(14, 17, 2.6, Colors.white);
@@ -964,18 +1035,23 @@ void _compose(_Sheet s, AppIcon icon) {
       s.shape(_rr(8, 6, 32, 36, 6));
       s.shape(_rr(8, 6, 8, 36, 5), color: _lit(s.accent), twoTone: false);
       s.line(_poly(const [Offset(16, 8), Offset(16, 40)]));
-      s.shape(_rr(20, 12, 15, 12, 3),
-          color: Colors.white, twoTone: false);
+      s.shape(_rr(20, 12, 15, 12, 3), color: Colors.white, twoTone: false);
       s.shape(_star(27, 32, 7, 3.2, 1.2), color: DT.sunBurst);
 
     // ── Parent zone (G15) ──
     case AppIcon.calendar:
       // A wall calendar: two rings, a torn-off header and marked days.
       // The dashboard's "active days" counter, in the app's own hand.
-      s.fat(_poly(const [Offset(16, 5), Offset(16, 13)]), 3.5,
-          color: _lit(s.accent));
-      s.fat(_poly(const [Offset(32, 5), Offset(32, 13)]), 3.5,
-          color: _lit(s.accent));
+      s.fat(
+        _poly(const [Offset(16, 5), Offset(16, 13)]),
+        3.5,
+        color: _lit(s.accent),
+      );
+      s.fat(
+        _poly(const [Offset(32, 5), Offset(32, 13)]),
+        3.5,
+        color: _lit(s.accent),
+      );
       s.shape(_rr(6, 10, 36, 32, 8));
       s.line(_poly(const [Offset(7, 21), Offset(41, 21)]));
       s.dot(16, 28, 2.4);
@@ -991,8 +1067,12 @@ void _compose(_Sheet s, AppIcon icon) {
       // showing a little landscape.
       s.shape(_placed(_rr(0, 0, 25, 29, 6), 7, 11, -0.19), color: DT.sunBurst);
       s.shape(_placed(_rr(0, 0, 24, 29, 6), 19, 8, 0.12));
-      s.shape(_placed(_rr(3, 3, 18, 22, 4), 19, 8, 0.12),
-          color: Colors.white, outline: false, twoTone: false);
+      s.shape(
+        _placed(_rr(3, 3, 18, 22, 4), 19, 8, 0.12),
+        color: Colors.white,
+        outline: false,
+        twoTone: false,
+      );
       s.shape(
         _placed(
           _roundPoly(const [
@@ -1010,16 +1090,28 @@ void _compose(_Sheet s, AppIcon icon) {
         outline: false,
         twoTone: false,
       );
-      s.shape(_placed(_circle(15, 9, 3), 19, 8, 0.12),
-          color: DT.sunBurst, outline: false, twoTone: false);
+      s.shape(
+        _placed(_circle(15, 9, 3), 19, 8, 0.12),
+        color: DT.sunBurst,
+        outline: false,
+        twoTone: false,
+      );
 
     case AppIcon.navGames:
       // A peach game pad: d-pad on the left, two buttons on the right.
       s.shape(_rr(3, 12, 42, 25, 11));
-      s.shape(_rr(11, 19, 5, 13, 1.8), color: DT.onTint(s.accent),
-          outline: false, twoTone: false);
-      s.shape(_rr(7, 23, 13, 5, 1.8), color: DT.onTint(s.accent),
-          outline: false, twoTone: false);
+      s.shape(
+        _rr(11, 19, 5, 13, 1.8),
+        color: DT.onTint(s.accent),
+        outline: false,
+        twoTone: false,
+      );
+      s.shape(
+        _rr(7, 23, 13, 5, 1.8),
+        color: DT.onTint(s.accent),
+        outline: false,
+        twoTone: false,
+      );
       s.dot(33, 22, 3.4);
       s.dot(38, 28, 3.4, DT.violet);
 
@@ -1031,10 +1123,16 @@ void _compose(_Sheet s, AppIcon icon) {
       s.dot(33, 20, 4, DT.violet);
       s.dot(13, 31, 4, DT.sky);
       s.dot(25, 30, 4);
-      s.shape(_placed(_rr(-2, -3, 4, 16, 2), 36, 33, 0.55),
-          color: DT.peach, twoTone: false);
-      s.shape(_placed(_rr(-3, -6, 6, 7, 2), 36, 33, 0.55),
-          color: DT.sunBurst, twoTone: false);
+      s.shape(
+        _placed(_rr(-2, -3, 4, 16, 2), 36, 33, 0.55),
+        color: DT.peach,
+        twoTone: false,
+      );
+      s.shape(
+        _placed(_rr(-3, -6, 6, 7, 2), 36, 33, 0.55),
+        color: DT.sunBurst,
+        twoTone: false,
+      );
       s.shape(
         _placed(
           Path()

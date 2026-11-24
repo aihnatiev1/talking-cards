@@ -7,12 +7,12 @@ import 'package:talking_cards/utils/motion.dart';
 /// Navigator (via `MaterialApp.builder`) because that is where a route
 /// looks — `navigator.context` — for the OS flag.
 Widget _host({bool reduceMotion = false}) => MaterialApp(
-      builder: (context, child) => MediaQuery(
-        data: MediaQuery.of(context).copyWith(disableAnimations: reduceMotion),
-        child: child ?? const SizedBox.shrink(),
-      ),
-      home: const Scaffold(body: Text('home')),
-    );
+  builder: (context, child) => MediaQuery(
+    data: MediaQuery.of(context).copyWith(disableAnimations: reduceMotion),
+    child: child ?? const SizedBox.shrink(),
+  ),
+  home: const Scaffold(body: Text('home')),
+);
 
 typedef _Factory = PageRoute<Object?> Function(Widget page);
 
@@ -57,8 +57,9 @@ void main() {
     expect(await result, isTrue);
   });
 
-  testWidgets('overlay and sheet are non-opaque, the rest are opaque',
-      (tester) async {
+  testWidgets('overlay and sheet are non-opaque, the rest are opaque', (
+    tester,
+  ) async {
     await tester.pumpWidget(_host());
     final navigator = tester.state<NavigatorState>(find.byType(Navigator));
 
@@ -94,8 +95,9 @@ void main() {
     expect(route.animation?.isCompleted, isTrue);
   });
 
-  testWidgets('reduced motion collapses every route to zero duration',
-      (tester) async {
+  testWidgets('reduced motion collapses every route to zero duration', (
+    tester,
+  ) async {
     await tester.pumpWidget(_host(reduceMotion: true));
     final navigator = tester.state<NavigatorState>(find.byType(Navigator));
 
@@ -106,8 +108,7 @@ void main() {
       // already fully in.
       await tester.pump();
       expect(route.transitionDuration, Duration.zero, reason: entry.key);
-      expect(route.reverseTransitionDuration, Duration.zero,
-          reason: entry.key);
+      expect(route.reverseTransitionDuration, Duration.zero, reason: entry.key);
       expect(route.animation?.isCompleted, isTrue, reason: entry.key);
       expect(find.text(entry.key), findsOneWidget);
       navigator.pop();
@@ -126,15 +127,18 @@ void main() {
     expect(route.transitionDuration, Duration.zero);
   });
 
-  testWidgets('KidPageTransitionsBuilder wraps MaterialPageRoute pages',
-      (tester) async {
+  testWidgets('KidPageTransitionsBuilder wraps MaterialPageRoute pages', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: ThemeData(
-          pageTransitionsTheme: const PageTransitionsTheme(builders: {
-            TargetPlatform.android: KidPageTransitionsBuilder(),
-            TargetPlatform.iOS: KidPageTransitionsBuilder(),
-          }),
+          pageTransitionsTheme: const PageTransitionsTheme(
+            builders: {
+              TargetPlatform.android: KidPageTransitionsBuilder(),
+              TargetPlatform.iOS: KidPageTransitionsBuilder(),
+            },
+          ),
         ),
         home: Builder(
           builder: (context) => TextButton(
@@ -158,7 +162,9 @@ void main() {
     expect(find.byType(ScaleTransition), findsWidgets);
     await tester.pumpAndSettle();
     expect(find.text('themed'), findsOneWidget);
-    expect(const KidPageTransitionsBuilder().transitionDuration,
-        KidRoutes.contentIn);
+    expect(
+      const KidPageTransitionsBuilder().transitionDuration,
+      KidRoutes.contentIn,
+    );
   });
 }

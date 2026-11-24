@@ -74,30 +74,86 @@ void main() {
         expect(a.overlaps(b), isFalse);
         expect(a.left, greaterThanOrEqualTo(0));
         expect(b.right, lessThanOrEqualTo(width));
-        await tester.tap(find.text('Протилежності та знайомі слова'));
+        await tester.ensureVisible(
+          find.byKey(const ValueKey('daily-primary-action')),
+        );
+        await tester.tap(find.byKey(const ValueKey('daily-primary-action')));
         await tester.pumpAndSettle();
         expect(taps, 1);
       });
     }
   }
 
+  testWidgets('one primary action with optional activities behind disclosure', (
+    tester,
+  ) async {
+    AssetPackService.instance.debugConfigure(
+      padAssets: const {},
+      bundled: true,
+    );
+    var adventures = 0;
+    var alternatives = 0;
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: DailyHeroCard(
+                title: 'Маленька пригода',
+                accent: Colors.deepPurple,
+                isEn: false,
+                collapseTasks: true,
+                actionLabel: 'Почати пригоду',
+                onHeroTap: () => adventures++,
+                tasks: [
+                  DailyTask(
+                    icon: AppIcon.stepListen,
+                    label: 'Картка дня',
+                    isDone: false,
+                    isActive: false,
+                    onTap: () => alternatives++,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Картка дня'), findsNothing);
+    await tester.tap(find.text('Почати пригоду'));
+    expect(adventures, 1);
+    await tester.tap(find.text('Обрати інше заняття'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Картка дня'));
+    await tester.tap(find.text('Картка дня'));
+    expect(alternatives, 1);
+    expect(adventures, 1);
+    expect(tester.takeException(), isNull);
+  });
+
   // Found on an iPhone 16e at iOS XXL (2026-09-29): three columns at ×1.3
   // split «Adventure» into «Adventur / e». No word of a label may break.
   for (final scale in [1.0, 1.3]) {
-    testWidgets('no step label breaks inside a word at 390 × $scale',
-        (tester) async {
+    testWidgets('no step label breaks inside a word at 390 × $scale', (
+      tester,
+    ) async {
       const width = 390.0;
       tester.view.physicalSize = const Size(width, 1100);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
-      AssetPackService.instance.debugConfigure(padAssets: const {}, bundled: true);
+      AssetPackService.instance.debugConfigure(
+        padAssets: const {},
+        bundled: true,
+      );
       DailyTask task(String label, AppIcon icon) => DailyTask(
-            icon: icon,
-            label: label,
-            isDone: false,
-            isActive: false,
-            onTap: () {},
-          );
+        icon: icon,
+        label: label,
+        isDone: false,
+        isActive: false,
+        onTap: () {},
+      );
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
@@ -134,9 +190,9 @@ void main() {
       expect(tester.takeException(), isNull);
 
       for (final word in ["Today's", 'Pack', 'Adventure', 'Draw']) {
-        final text = find.textContaining(word == "Today's" || word == 'Pack'
-            ? "Today's Pack"
-            : word);
+        final text = find.textContaining(
+          word == "Today's" || word == 'Pack' ? "Today's Pack" : word,
+        );
         final paragraph = tester.renderObject<RenderParagraph>(text);
         final label = paragraph.text.toPlainText();
         final start = label.indexOf(word);
@@ -144,8 +200,11 @@ void main() {
           TextSelection(baseOffset: start, extentOffset: start + word.length),
         );
         final lines = boxes.map((b) => b.top.round()).toSet();
-        expect(lines, hasLength(1),
-            reason: '«$word» breaks across lines at ×$scale');
+        expect(
+          lines,
+          hasLength(1),
+          reason: '«$word» breaks across lines at ×$scale',
+        );
       }
     });
   }

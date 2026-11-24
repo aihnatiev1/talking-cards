@@ -19,10 +19,10 @@ export '../models/bloom_state.dart';
 /// `state:` override renders whatever it says.
 final bloomReactionsProvider =
     StateNotifierProvider<BloomReactions, BloomState>((ref) {
-  return BloomReactions(
-    profileLevel: () => ref.read(profileProvider).active?.level ?? 2,
-  );
-});
+      return BloomReactions(
+        profileLevel: () => ref.read(profileProvider).active?.level ?? 2,
+      );
+    });
 
 /// Turns events into a [BloomState] — priorities, debounces, idle timers.
 ///
@@ -40,12 +40,12 @@ class BloomReactions extends StateNotifier<BloomState> {
     FeedbackService? feedback,
     void Function(BloomSound sound)? playSound,
     DateTime Function()? now,
-  })  : _profileLevel = profileLevel,
-        _speaking = speaking ?? AudioService.instance.isSpeaking,
-        _feedback = feedback ?? FeedbackService.instance,
-        _play = playSound ?? _playViaAudioService,
-        _now = now ?? DateTime.now,
-        super(const BloomState()) {
+  }) : _profileLevel = profileLevel,
+       _speaking = speaking ?? AudioService.instance.isSpeaking,
+       _feedback = feedback ?? FeedbackService.instance,
+       _play = playSound ?? _playViaAudioService,
+       _now = now ?? DateTime.now,
+       super(const BloomState()) {
     _speaking.addListener(_onSpeakingChanged);
     _feedback.addListener(_onFeedback);
     if (_speaking.value) _onSpeakingChanged();
@@ -60,16 +60,16 @@ class BloomReactions extends StateNotifier<BloomState> {
   /// `sleep` 0 < `idle` 1 < `listen` 2 < `wave` 3 < `curious` = `point` 4
   /// < `blow` 5 < `happy` 6 < `cheer` 7.
   static int priorityOf(BloomEmotion e) => switch (e) {
-        BloomEmotion.sleep => 0,
-        BloomEmotion.idle => 1,
-        BloomEmotion.listen => 2,
-        BloomEmotion.wave => 3,
-        BloomEmotion.curious => 4,
-        BloomEmotion.point => 4,
-        BloomEmotion.blow => 5,
-        BloomEmotion.happy => 6,
-        BloomEmotion.cheer => 7,
-      };
+    BloomEmotion.sleep => 0,
+    BloomEmotion.idle => 1,
+    BloomEmotion.listen => 2,
+    BloomEmotion.wave => 3,
+    BloomEmotion.curious => 4,
+    BloomEmotion.point => 4,
+    BloomEmotion.blow => 5,
+    BloomEmotion.happy => 6,
+    BloomEmotion.cheer => 7,
+  };
 
   /// Rate limits and thresholds (§5.3 п. 6, 8).
   static const greetingGap = Duration(minutes: 5);
@@ -85,10 +85,10 @@ class BloomReactions extends StateNotifier<BloomState> {
 
   /// Idle time before the first hint by profile level (L1 6 / L2 8 / L3+ 10).
   static Duration firstHintAfter(int level) => switch (level) {
-        <= 1 => const Duration(seconds: 6),
-        2 => const Duration(seconds: 8),
-        _ => const Duration(seconds: 10),
-      };
+    <= 1 => const Duration(seconds: 6),
+    2 => const Duration(seconds: 8),
+    _ => const Duration(seconds: 10),
+  };
 
   /// Every N-th forward card earns a hop (L1 3 / L2+ 5).
   static int hopEvery(int level) => level <= 1 ? 3 : 5;
@@ -100,7 +100,8 @@ class BloomReactions extends StateNotifier<BloomState> {
   final DateTime Function() _now;
 
   final LinkedHashMap<Object, BloomScene> _scenes = LinkedHashMap();
-  BloomScene get scene => _scenes.isEmpty ? BloomScene.still : _scenes.values.last;
+  BloomScene get scene =>
+      _scenes.isEmpty ? BloomScene.still : _scenes.values.last;
 
   Timer? _oneShotTimer;
   Timer? _listenRelease;
@@ -199,13 +200,15 @@ class BloomReactions extends StateNotifier<BloomState> {
       _cancelOneShot();
       _wake(silent: true);
     }
-    _setState(state.copyWith(
-      ambient: scene.ambient,
-      prop: scene.prop,
-      emotion: fresh ? _levelEmotion : null,
-      clearHint: fresh,
-      clearLookAt: fresh,
-    ));
+    _setState(
+      state.copyWith(
+        ambient: scene.ambient,
+        prop: scene.prop,
+        emotion: fresh ? _levelEmotion : null,
+        clearHint: fresh,
+        clearLookAt: fresh,
+      ),
+    );
     _armIdleTimers();
   }
 
@@ -216,12 +219,14 @@ class BloomReactions extends StateNotifier<BloomState> {
     _lastNudge = null;
     _cancelOneShot();
     _wake(silent: true);
-    _setState(state.copyWith(
-      emotion: _levelEmotion,
-      ambient: scene.ambient,
-      prop: scene.prop,
-      clearHint: true,
-    ));
+    _setState(
+      state.copyWith(
+        emotion: _levelEmotion,
+        ambient: scene.ambient,
+        prop: scene.prop,
+        clearHint: true,
+      ),
+    );
     _armIdleTimers();
   }
 
@@ -333,11 +338,11 @@ class BloomReactions extends StateNotifier<BloomState> {
   }
 
   static Duration _tapLength(BloomEmotion emotion) => switch (emotion) {
-        BloomEmotion.blow => DT.motion.bloomBlow,
-        BloomEmotion.wave => DT.motion.bloomWave,
-        BloomEmotion.curious => DT.motion.bloomCurious,
-        _ => DT.motion.celebrate,
-      };
+    BloomEmotion.blow => DT.motion.bloomBlow,
+    BloomEmotion.wave => DT.motion.bloomWave,
+    BloomEmotion.curious => DT.motion.bloomCurious,
+    _ => DT.motion.celebrate,
+  };
 
   /// A host-timed nudge: point at [target] now.
   ///
@@ -442,27 +447,29 @@ class BloomReactions extends StateNotifier<BloomState> {
   // ── Levels and one-shots ──────────────────────────────────────────────
 
   BloomEmotion get _levelEmotion => switch (state.level) {
-        BloomLevel.sleep => BloomEmotion.sleep,
-        BloomLevel.idle => BloomEmotion.idle,
-        BloomLevel.listen => BloomEmotion.listen,
-      };
+    BloomLevel.sleep => BloomEmotion.sleep,
+    BloomLevel.idle => BloomEmotion.idle,
+    BloomLevel.listen => BloomEmotion.listen,
+  };
 
   void _setLevel(BloomLevel level) {
     final showLevel = _oneShot == null;
-    _setState(state.copyWith(
-      level: level,
-      emotion: showLevel ? _emotionFor(level) : null,
-      lookAt: level == BloomLevel.listen
-          ? (_hintTarget ?? _defaultCardLook)
-          : null,
-    ));
+    _setState(
+      state.copyWith(
+        level: level,
+        emotion: showLevel ? _emotionFor(level) : null,
+        lookAt: level == BloomLevel.listen
+            ? (_hintTarget ?? _defaultCardLook)
+            : null,
+      ),
+    );
   }
 
   static BloomEmotion _emotionFor(BloomLevel level) => switch (level) {
-        BloomLevel.sleep => BloomEmotion.sleep,
-        BloomLevel.idle => BloomEmotion.idle,
-        BloomLevel.listen => BloomEmotion.listen,
-      };
+    BloomLevel.sleep => BloomEmotion.sleep,
+    BloomLevel.idle => BloomEmotion.idle,
+    BloomLevel.listen => BloomEmotion.listen,
+  };
 
   /// Start a one-shot if it outranks the current one (§5.3 п. 2). Equal or
   /// lower is dropped — which is also the `happy` debounce: a hop already
@@ -483,15 +490,17 @@ class BloomReactions extends StateNotifier<BloomState> {
     if (state.level == BloomLevel.sleep) _wake(silent: true);
     _oneShotTimer?.cancel();
     _oneShot = emotion;
-    _setState(state.copyWith(
-      emotion: emotion,
-      hops: hops,
-      lookAt: lookAt ?? state.lookAt,
-      hintDirection: hintDirection,
-      clearHint: hintDirection == null,
-      swipeGesture: swipe,
-      serial: state.serial + 1,
-    ));
+    _setState(
+      state.copyWith(
+        emotion: emotion,
+        hops: hops,
+        lookAt: lookAt ?? state.lookAt,
+        hintDirection: hintDirection,
+        clearHint: hintDirection == null,
+        swipeGesture: swipe,
+        serial: state.serial + 1,
+      ),
+    );
     if (sound != null) _playSound(sound);
     _oneShotTimer = Timer(length, () => _endOneShot(emotion));
   }
@@ -503,28 +512,32 @@ class BloomReactions extends StateNotifier<BloomState> {
     if (ended == BloomEmotion.cheer) {
       // Idle with the happy face a while longer, no hop.
       _oneShot = BloomEmotion.happy;
-      _setState(state.copyWith(
-        emotion: BloomEmotion.happy,
-        hops: 0,
-        clearHint: true,
-        swipeGesture: false,
-      ));
+      _setState(
+        state.copyWith(
+          emotion: BloomEmotion.happy,
+          hops: 0,
+          clearHint: true,
+          swipeGesture: false,
+        ),
+      );
       _oneShotTimer = Timer(
         DT.motion.bloomAfterglow,
         () => _endOneShot(BloomEmotion.happy),
       );
       return;
     }
-    _setState(state.copyWith(
-      emotion: _levelEmotion,
-      hops: 1,
-      clearHint: true,
-      swipeGesture: false,
-      lookAt: state.level == BloomLevel.listen
-          ? (_hintTarget ?? _defaultCardLook)
-          : _hintTarget,
-      clearLookAt: state.level != BloomLevel.listen && _hintTarget == null,
-    ));
+    _setState(
+      state.copyWith(
+        emotion: _levelEmotion,
+        hops: 1,
+        clearHint: true,
+        swipeGesture: false,
+        lookAt: state.level == BloomLevel.listen
+            ? (_hintTarget ?? _defaultCardLook)
+            : _hintTarget,
+        clearLookAt: state.level != BloomLevel.listen && _hintTarget == null,
+      ),
+    );
   }
 
   void _cancelOneShot() {
@@ -585,7 +598,8 @@ class BloomReactions extends StateNotifier<BloomState> {
     _lookTimer = Timer(DT.motion.bloomNod, () {
       _lookTimer = null;
       if (_disposed) return;
-      final back = _hintTarget ??
+      final back =
+          _hintTarget ??
           (state.level == BloomLevel.listen ? _defaultCardLook : null);
       _setState(state.copyWith(lookAt: back, clearLookAt: back == null));
     });
@@ -603,7 +617,9 @@ class BloomReactions extends StateNotifier<BloomState> {
 
   void _wake({required bool silent}) {
     if (state.level != BloomLevel.sleep) return;
-    _setState(state.copyWith(level: BloomLevel.idle, emotion: BloomEmotion.idle));
+    _setState(
+      state.copyWith(level: BloomLevel.idle, emotion: BloomEmotion.idle),
+    );
     if (!silent) _startOneShot(BloomEmotion.happy, DT.motion.celebrate);
   }
 
@@ -662,12 +678,14 @@ class BloomReactions extends StateNotifier<BloomState> {
       return;
     }
     _hintTimer?.cancel();
-    _setState(state.copyWith(
-      level: BloomLevel.sleep,
-      emotion: BloomEmotion.sleep,
-      clearLookAt: true,
-      clearHint: true,
-    ));
+    _setState(
+      state.copyWith(
+        level: BloomLevel.sleep,
+        emotion: BloomEmotion.sleep,
+        clearLookAt: true,
+        clearHint: true,
+      ),
+    );
     _playSound(BloomSound.zzz);
   }
 
@@ -691,7 +709,8 @@ class BloomReactions extends StateNotifier<BloomState> {
     // is allowed to be one frame late, so park the write until the frame
     // is done rather than teaching every screen about the phase.
     final phase = SchedulerBinding.instance.schedulerPhase;
-    final building = phase == SchedulerPhase.persistentCallbacks ||
+    final building =
+        phase == SchedulerPhase.persistentCallbacks ||
         phase == SchedulerPhase.midFrameMicrotasks ||
         phase == SchedulerPhase.transientCallbacks;
     if (!building) {

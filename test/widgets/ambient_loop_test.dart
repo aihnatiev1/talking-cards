@@ -18,38 +18,39 @@ void main() {
     Duration? settleAfter,
     Duration period = const Duration(milliseconds: 400),
     bool tickers = true,
-  }) =>
-      MediaQuery(
-        data: MediaQueryData(disableAnimations: reduce),
-        child: Directionality(
-          textDirection: TextDirection.ltr,
-          child: TickerMode(
-            enabled: tickers,
-            child: AmbientLoop(
-              period: period,
-              reverse: reverse,
-              enabled: enabled,
-              settleAfter: settleAfter,
-              builder: (_, t, child) {
-                seen.add(t);
-                return Transform.scale(scale: 1 + t, child: child);
-              },
-              child: const SizedBox(width: 10, height: 10),
-            ),
-          ),
+  }) => MediaQuery(
+    data: MediaQueryData(disableAnimations: reduce),
+    child: Directionality(
+      textDirection: TextDirection.ltr,
+      child: TickerMode(
+        enabled: tickers,
+        child: AmbientLoop(
+          period: period,
+          reverse: reverse,
+          enabled: enabled,
+          settleAfter: settleAfter,
+          builder: (_, t, child) {
+            seen.add(t);
+            return Transform.scale(scale: 1 + t, child: child);
+          },
+          child: const SizedBox(width: 10, height: 10),
         ),
-      );
+      ),
+    ),
+  );
 
   group('MotionPolicy', () {
     testWidgets('mirrors the OS flag and the override wins', (tester) async {
       late MotionPolicy seen;
       Widget probe(bool reduce) => MediaQuery(
-            data: MediaQueryData(disableAnimations: reduce),
-            child: Builder(builder: (context) {
-              seen = MotionPolicy.of(context);
-              return const SizedBox();
-            }),
-          );
+        data: MediaQueryData(disableAnimations: reduce),
+        child: Builder(
+          builder: (context) {
+            seen = MotionPolicy.of(context);
+            return const SizedBox();
+          },
+        ),
+      );
 
       await tester.pumpWidget(probe(false));
       expect(seen.mode, MotionMode.full);
@@ -130,11 +131,9 @@ void main() {
 
     testWidgets('a wrapping loop also settles at rest', (tester) async {
       final seen = <double>[];
-      await tester.pumpWidget(host(
-        seen,
-        reverse: false,
-        settleAfter: const Duration(seconds: 1),
-      ));
+      await tester.pumpWidget(
+        host(seen, reverse: false, settleAfter: const Duration(seconds: 1)),
+      );
       await tester.pump(const Duration(milliseconds: 500));
       expect(tester.hasRunningAnimations, isTrue);
       await tester.pump(const Duration(milliseconds: 600));
@@ -178,10 +177,10 @@ void main() {
     testWidgets('re-enabling restarts the settle window', (tester) async {
       final seen = <double>[];
       Widget build(bool enabled) => host(
-            seen,
-            enabled: enabled,
-            settleAfter: const Duration(milliseconds: 500),
-          );
+        seen,
+        enabled: enabled,
+        settleAfter: const Duration(milliseconds: 500),
+      );
       await tester.pumpWidget(build(true));
       await tester.pump(const Duration(milliseconds: 600));
       await tester.pump(const Duration(milliseconds: 400));

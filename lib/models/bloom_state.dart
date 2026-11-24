@@ -181,8 +181,15 @@ class BloomScene {
       other.tapEmotion == tapEmotion;
 
   @override
-  int get hashCode => Object.hash(ambient, hintsEnabled, sleepAfter, soloActor,
-      swipeHint, prop, tapEmotion);
+  int get hashCode => Object.hash(
+    ambient,
+    hintsEnabled,
+    sleepAfter,
+    soloActor,
+    swipeHint,
+    prop,
+    tapEmotion,
+  );
 }
 
 /// Bloom right now (§5.2). A value: the widget compares it with the last
@@ -228,11 +235,11 @@ class BloomState {
     this.prop = BloomProp.none,
     this.lookAt,
     this.hops = 1,
-  })  : level = BloomLevel.idle,
-        hintDirection = null,
-        swipeGesture = false,
-        ambient = BloomAmbient.still,
-        serial = 0;
+  }) : level = BloomLevel.idle,
+       hintDirection = null,
+       swipeGesture = false,
+       ambient = BloomAmbient.still,
+       serial = 0;
 
   BloomState copyWith({
     BloomEmotion? emotion,
@@ -252,8 +259,7 @@ class BloomState {
       level: level ?? this.level,
       hops: hops ?? this.hops,
       lookAt: clearLookAt ? null : (lookAt ?? this.lookAt),
-      hintDirection:
-          clearHint ? null : (hintDirection ?? this.hintDirection),
+      hintDirection: clearHint ? null : (hintDirection ?? this.hintDirection),
       swipeGesture: swipeGesture ?? this.swipeGesture,
       prop: prop ?? this.prop,
       ambient: ambient ?? this.ambient,
@@ -276,16 +282,16 @@ class BloomState {
 
   @override
   int get hashCode => Object.hash(
-        emotion,
-        level,
-        hops,
-        lookAt,
-        hintDirection,
-        swipeGesture,
-        prop,
-        ambient,
-        serial,
-      );
+    emotion,
+    level,
+    hops,
+    lookAt,
+    hintDirection,
+    swipeGesture,
+    prop,
+    ambient,
+    serial,
+  );
 
   @override
   String toString() =>

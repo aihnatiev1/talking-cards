@@ -152,13 +152,15 @@ class ColoringSheet {
         (cy - ry * 2).round().clamp(0, h - 1),
         radius: 30,
       );
-      eyes.add(ColoringEye(
-        cx: cx,
-        cy: cy,
-        rx: (m['rx'] as num).toDouble(),
-        ry: ry,
-        hostArea: host,
-      ));
+      eyes.add(
+        ColoringEye(
+          cx: cx,
+          cy: cy,
+          rx: (m['rx'] as num).toDouble(),
+          ry: ry,
+          hostArea: host,
+        ),
+      );
     }
 
     return ColoringSheet(
@@ -176,9 +178,7 @@ class ColoringSheet {
 
   static Future<ui.Image> _decode(String asset) async {
     final data = await rootBundle.load(asset);
-    final codec = await ui.instantiateImageCodec(
-      data.buffer.asUint8List(),
-    );
+    final codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
     return (await codec.getNextFrame()).image;
   }
 }

@@ -28,7 +28,10 @@ void main() {
   setUp(() {
     debugResetKidOverlayQueue();
     SharedPreferences.setMockInitialValues({});
-    AssetPackService.instance.debugConfigure(padAssets: const {}, bundled: true);
+    AssetPackService.instance.debugConfigure(
+      padAssets: const {},
+      bundled: true,
+    );
     FeedbackService.debugMute = true;
   });
 
@@ -118,8 +121,13 @@ void main() {
       Icons.record_voice_over,
       Icons.graphic_eq,
     ]) {
-      expect(find.byIcon(icon), findsNothing, reason: '$icon promises a '
-          'machine that grades pronunciation; this app cannot hear.');
+      expect(
+        find.byIcon(icon),
+        findsNothing,
+        reason:
+            '$icon promises a '
+            'machine that grades pronunciation; this app cannot hear.',
+      );
     }
     await settleGaps(tester);
   });

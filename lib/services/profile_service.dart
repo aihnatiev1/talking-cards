@@ -21,8 +21,7 @@ class ProfileService {
   /// Returns empty string for the 'default' profile so that data written
   /// before multi-profile existed (v1.0.x) is automatically accessible
   /// without any migration.
-  static String get prefix =>
-      _activeId == _defaultId ? '' : '${_activeId}_';
+  static String get prefix => _activeId == _defaultId ? '' : '${_activeId}_';
 
   static String get activeId => _activeId;
 
@@ -33,8 +32,7 @@ class ProfileService {
     _activeId = prefs.getString(_keyActiveId) ?? _defaultId;
 
     final raw = prefs.getStringList(_keyProfiles) ?? [];
-    List<ProfileModel> profiles =
-        raw.map(ProfileModel.fromJsonString).toList();
+    List<ProfileModel> profiles = raw.map(ProfileModel.fromJsonString).toList();
 
     if (profiles.isEmpty) {
       final defaultProfile = ProfileModel(
@@ -82,7 +80,11 @@ class ProfileService {
 
   /// Add a new profile (max 3 total).
   static Future<List<ProfileModel>> addProfile(
-      String name, String avatarEmoji, {String language = 'uk', int level = 2}) async {
+    String name,
+    String avatarEmoji, {
+    String language = 'uk',
+    int level = 2,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     final existing = await _loadProfiles(prefs);
     if (existing.length >= 3) return existing;
@@ -101,11 +103,17 @@ class ProfileService {
 
   /// Update a profile's name / avatar.
   static Future<List<ProfileModel>> updateProfile(
-      String id, String name, String avatarEmoji) async {
+    String id,
+    String name,
+    String avatarEmoji,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     final existing = await _loadProfiles(prefs);
     final updated = existing
-        .map((p) => p.id == id ? p.copyWith(name: name, avatarEmoji: avatarEmoji) : p)
+        .map(
+          (p) =>
+              p.id == id ? p.copyWith(name: name, avatarEmoji: avatarEmoji) : p,
+        )
         .toList();
     await _saveProfiles(prefs, updated);
     return updated;
@@ -113,7 +121,9 @@ class ProfileService {
 
   /// Change the learning language ('uk' or 'en') for a profile.
   static Future<List<ProfileModel>> setLanguage(
-      String id, String language) async {
+    String id,
+    String language,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     final existing = await _loadProfiles(prefs);
     final updated = existing
@@ -166,8 +176,12 @@ class ProfileService {
   }
 
   static Future<void> _saveProfiles(
-      SharedPreferences prefs, List<ProfileModel> profiles) async {
+    SharedPreferences prefs,
+    List<ProfileModel> profiles,
+  ) async {
     await prefs.setStringList(
-        _keyProfiles, profiles.map((p) => p.toJsonString()).toList());
+      _keyProfiles,
+      profiles.map((p) => p.toJsonString()).toList(),
+    );
   }
 }

@@ -9,9 +9,7 @@ import 'package:talking_cards/widgets/crayon_palette.dart';
 void main() {
   Future<void> open(WidgetTester tester) async {
     await tester.pumpWidget(
-      const ProviderScope(
-        child: MaterialApp(home: MirrorDrawScreen()),
-      ),
+      const ProviderScope(child: MaterialApp(home: MirrorDrawScreen())),
     );
     await tester.pump();
   }

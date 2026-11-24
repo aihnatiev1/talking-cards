@@ -22,31 +22,46 @@ void main() {
 
   test('every event has a row', () {
     for (final e in FeedbackEvent.values) {
-      expect(FeedbackService.table.containsKey(e), isTrue,
-          reason: '$e has no row in FeedbackService.table');
+      expect(
+        FeedbackService.table.containsKey(e),
+        isTrue,
+        reason: '$e has no row in FeedbackService.table',
+      );
     }
   });
 
-  test('every row names a role that can sound today or is explicitly silent',
-      () {
-    for (final entry in FeedbackService.table.entries) {
-      final role = entry.value.sound;
-      if (role == null) continue; // FeedbackSpec.silent — a choice.
-      final own = File(role.assetPath).existsSync();
-      final standIn = File(role.fallbackPath).existsSync();
-      expect(own || standIn, isTrue,
-          reason: '${entry.key} → $role has neither ${role.assetPath} nor '
-              'its placeholder ${role.fallbackPath}');
-    }
-  });
+  test(
+    'every row names a role that can sound today or is explicitly silent',
+    () {
+      for (final entry in FeedbackService.table.entries) {
+        final role = entry.value.sound;
+        if (role == null) continue; // FeedbackSpec.silent — a choice.
+        final own = File(role.assetPath).existsSync();
+        final standIn = File(role.fallbackPath).existsSync();
+        expect(
+          own || standIn,
+          isTrue,
+          reason:
+              '${entry.key} → $role has neither ${role.assetPath} nor '
+              'its placeholder ${role.fallbackPath}',
+        );
+      }
+    },
+  );
 
   test('pitch and volume stay inside what SoLoud will honour', () {
     for (final entry in FeedbackService.table.entries) {
       final spec = entry.value;
-      expect(spec.pitch - spec.spread, greaterThanOrEqualTo(0.5),
-          reason: '${entry.key} can dip below the 0.5 pitch clamp');
-      expect(spec.pitch + spec.spread, lessThanOrEqualTo(2.0),
-          reason: '${entry.key} can exceed the 2.0 pitch clamp');
+      expect(
+        spec.pitch - spec.spread,
+        greaterThanOrEqualTo(0.5),
+        reason: '${entry.key} can dip below the 0.5 pitch clamp',
+      );
+      expect(
+        spec.pitch + spec.spread,
+        lessThanOrEqualTo(2.0),
+        reason: '${entry.key} can exceed the 2.0 pitch clamp',
+      );
       expect(spec.volume, inInclusiveRange(0.0, 1.0));
     }
   });
@@ -75,28 +90,37 @@ void main() {
   test('every SFX sits under the word', () {
     for (final entry in FeedbackService.table.entries) {
       if (entry.value.isSilent) continue;
-      expect(entry.value.volume, lessThan(1.0),
-          reason: '${entry.key} is as loud as the narrator');
+      expect(
+        entry.value.volume,
+        lessThan(1.0),
+        reason: '${entry.key} is as loud as the narrator',
+      );
     }
   });
 
-  test('the three wins cheer at the 400 ms beat; the parent milestone does not',
-      () {
-    for (final e in [
-      FeedbackEvent.roundDone,
-      FeedbackEvent.gameDone,
-      FeedbackEvent.packDone,
-    ]) {
-      final spec = FeedbackService.instance.specOf(e);
-      expect(spec.praise, isTrue, reason: '$e');
-      expect(spec.sound, KidSound.successLarge, reason: '$e');
-      expect(spec.praiseAfter, const Duration(milliseconds: 400), reason: '$e');
-    }
-    expect(
-      FeedbackService.instance.specOf(FeedbackEvent.milestone).praise,
-      isFalse,
-    );
-  });
+  test(
+    'the three wins cheer at the 400 ms beat; the parent milestone does not',
+    () {
+      for (final e in [
+        FeedbackEvent.roundDone,
+        FeedbackEvent.gameDone,
+        FeedbackEvent.packDone,
+      ]) {
+        final spec = FeedbackService.instance.specOf(e);
+        expect(spec.praise, isTrue, reason: '$e');
+        expect(spec.sound, KidSound.successLarge, reason: '$e');
+        expect(
+          spec.praiseAfter,
+          const Duration(milliseconds: 400),
+          reason: '$e',
+        );
+      }
+      expect(
+        FeedbackService.instance.specOf(FeedbackEvent.milestone).praise,
+        isFalse,
+      );
+    },
+  );
 
   test('progress steps climb and wait for the word; the swipe crossing is '
       'haptic only', () {
@@ -114,7 +138,10 @@ void main() {
 
   test('presses map to events where Bloom should hear them', () {
     expect(FeedbackService.eventOf(KidSound.tap), FeedbackEvent.tap);
-    expect(FeedbackService.eventOf(KidSound.cardTouch), FeedbackEvent.cardTouch);
+    expect(
+      FeedbackService.eventOf(KidSound.cardTouch),
+      FeedbackEvent.cardTouch,
+    );
     expect(FeedbackService.eventOf(KidSound.packOpen), FeedbackEvent.packOpen);
     expect(FeedbackService.eventOf(KidSound.flip), isNull);
   });
@@ -124,10 +151,11 @@ void main() {
     FeedbackService.instance.event(FeedbackEvent.correct, isEn: true);
     FeedbackService.instance.event(FeedbackEvent.tap, sound: false);
     FeedbackService.instance.play(KidSound.flip);
-    expect(
-      FeedbackService.debugLog,
-      [FeedbackEvent.tap, FeedbackEvent.correct, FeedbackEvent.tap],
-    );
+    expect(FeedbackService.debugLog, [
+      FeedbackEvent.tap,
+      FeedbackEvent.correct,
+      FeedbackEvent.tap,
+    ]);
     expect(FeedbackService.debugSounds, [KidSound.flip]);
   });
 }

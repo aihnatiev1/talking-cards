@@ -68,50 +68,50 @@ abstract final class KidRoutes {
   /// Home → pack, quest map, card reveal — anything in the child's zone
   /// that is "the next screen", not a game and not a parent sheet.
   static PageRoute<T> content<T>(Widget page) => _KidRoute<T>(
-        page: page,
-        duration: contentIn,
-        reverseDuration: contentOut,
-        transition: _fadeScale(_contentScaleFrom),
-      );
+    page: page,
+    duration: contentIn,
+    reverseDuration: contentOut,
+    transition: _fadeScale(_contentScaleFrom),
+  );
 
   /// Into and out of a game. Formerly `games_tab._gameRoute`.
   static PageRoute<T> game<T>(Widget page) => _KidRoute<T>(
-        page: page,
-        duration: gameIn,
-        reverseDuration: gameOut,
-        transition: _fadeScale(_gameScaleFrom),
-      );
+    page: page,
+    duration: gameIn,
+    reverseDuration: gameOut,
+    transition: _fadeScale(_gameScaleFrom),
+  );
 
   /// Parent-facing screens: paywall, dashboard, stats, word wall. Slides up
   /// from the bottom over a dimmed barrier; the route is non-opaque so the
   /// child's screen is still there underneath.
   static PageRoute<T> sheet<T>(Widget page) => _KidRoute<T>(
-        page: page,
-        duration: sheetIn,
-        reverseDuration: sheetOut,
-        opaque: false,
-        barrierColor: sheetBarrier,
-        transition: _slideUp,
-      );
+    page: page,
+    duration: sheetIn,
+    reverseDuration: sheetOut,
+    opaque: false,
+    barrierColor: sheetBarrier,
+    transition: _slideUp,
+  );
 
   /// Celebration overlays. Non-opaque fade; the screen that earned the
   /// celebration stays visible behind the barrier.
   static PageRoute<T> overlay<T>(Widget page) => _KidRoute<T>(
-        page: page,
-        duration: overlayIn,
-        reverseDuration: overlayOut,
-        opaque: false,
-        barrierColor: overlayBarrier,
-        transition: _fade,
-      );
+    page: page,
+    duration: overlayIn,
+    reverseDuration: overlayOut,
+    opaque: false,
+    barrierColor: overlayBarrier,
+    transition: _fade,
+  );
 
   /// Splash → home, onboarding → home: a plain fade for `pushReplacement`.
   static PageRoute<T> replace<T>(Widget page) => _KidRoute<T>(
-        page: page,
-        duration: replaceIn,
-        reverseDuration: replaceOut,
-        transition: _fade,
-      );
+    page: page,
+    duration: replaceIn,
+    reverseDuration: replaceOut,
+    transition: _fade,
+  );
 
   // -- transitions ---------------------------------------------------------
 
@@ -136,33 +136,31 @@ abstract final class KidRoutes {
     Animation<double> animation,
     Animation<double> __,
     Widget child,
-  ) =>
-      FadeTransition(
-        opacity: CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeOut,
-          reverseCurve: Curves.easeIn,
-        ),
-        child: child,
-      );
+  ) => FadeTransition(
+    opacity: CurvedAnimation(
+      parent: animation,
+      curve: Curves.easeOut,
+      reverseCurve: Curves.easeIn,
+    ),
+    child: child,
+  );
 
   static Widget _slideUp(
     BuildContext _,
     Animation<double> animation,
     Animation<double> __,
     Widget child,
-  ) =>
-      SlideTransition(
-        position: Tween<Offset>(
-          begin: const Offset(0, 1),
-          end: Offset.zero,
-        ).animate(CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeOutCubic,
-          reverseCurve: Curves.easeIn,
-        )),
-        child: child,
-      );
+  ) => SlideTransition(
+    position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+            reverseCurve: Curves.easeIn,
+          ),
+        ),
+    child: child,
+  );
 
   /// The [content] look, for [KidPageTransitionsBuilder].
   static Widget contentTransition(
@@ -170,13 +168,12 @@ abstract final class KidRoutes {
     Animation<double> animation,
     Animation<double> secondaryAnimation,
     Widget child,
-  ) =>
-      _fadeScale(_contentScaleFrom)(
-        context,
-        animation,
-        secondaryAnimation,
-        child,
-      );
+  ) => _fadeScale(_contentScaleFrom)(
+    context,
+    animation,
+    secondaryAnimation,
+    child,
+  );
 }
 
 /// A [PageRouteBuilder] whose durations collapse to zero under reduced
@@ -193,11 +190,11 @@ class _KidRoute<T> extends PageRouteBuilder<T> {
     super.opaque,
     super.barrierColor,
   }) : super(
-          pageBuilder: (_, __, ___) => page,
-          transitionDuration: duration,
-          reverseTransitionDuration: reverseDuration,
-          transitionsBuilder: transition,
-        );
+         pageBuilder: (_, __, ___) => page,
+         transitionDuration: duration,
+         reverseTransitionDuration: reverseDuration,
+         transitionsBuilder: transition,
+       );
 
   bool get _reduce {
     final context = navigator?.context;

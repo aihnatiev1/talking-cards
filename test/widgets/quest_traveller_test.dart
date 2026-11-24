@@ -70,8 +70,7 @@ void main() {
     expect(stopUnderBloom(tester), 2);
   });
 
-  testWidgets('walks to the treasure once every stop is done',
-      (tester) async {
+  testWidgets('walks to the treasure once every stop is done', (tester) async {
     await show(tester, QuestTask.values.take(5).toSet());
     expect(stopUnderBloom(tester), 5);
   });
@@ -88,8 +87,9 @@ void main() {
     expect(stopUnderBloom(tester), 1);
   });
 
-  testWidgets('under full motion the walk takes DT.motion.journeyStep',
-      (tester) async {
+  testWidgets('under full motion the walk takes DT.motion.journeyStep', (
+    tester,
+  ) async {
     MotionPolicy.debugOverride = MotionMode.full;
     addTearDown(() => MotionPolicy.debugOverride = MotionMode.test);
 
@@ -98,20 +98,20 @@ void main() {
     addTearDown(tester.view.reset);
 
     Widget map(Set<QuestTask> completed) => MaterialApp(
-          home: MediaQuery(
-            data: const MediaQueryData(size: size),
-            child: Scaffold(
-              body: SafeArea(
-                child: QuestJourneyMap(
-                  quest: DailyQuestState(date: 'test', completed: completed),
-                  isEn: false,
-                  onStopTap: (_) {},
-                  onClaimTreasure: () {},
-                ),
-              ),
+      home: MediaQuery(
+        data: const MediaQueryData(size: size),
+        child: Scaffold(
+          body: SafeArea(
+            child: QuestJourneyMap(
+              quest: DailyQuestState(date: 'test', completed: completed),
+              isEn: false,
+              onStopTap: (_) {},
+              onClaimTreasure: () {},
             ),
           ),
-        );
+        ),
+      ),
+    );
 
     await tester.pumpWidget(map({}));
     await tester.pump();
@@ -133,8 +133,9 @@ void main() {
   BloomState bloomState(WidgetTester tester) =>
       tester.widget<BloomMascot>(find.byType(BloomMascot)).state!;
 
-  testWidgets('arriving at a new stop he looks curious, then settles',
-      (tester) async {
+  testWidgets('arriving at a new stop he looks curious, then settles', (
+    tester,
+  ) async {
     // bloom_character §3.7: the walk ends in «що тут?», not a blank stand.
     MotionPolicy.debugOverride = MotionMode.full;
     addTearDown(() => MotionPolicy.debugOverride = MotionMode.test);
@@ -143,20 +144,20 @@ void main() {
     addTearDown(tester.view.reset);
 
     Widget map(Set<QuestTask> completed) => MaterialApp(
-          home: MediaQuery(
-            data: const MediaQueryData(size: size),
-            child: Scaffold(
-              body: SafeArea(
-                child: QuestJourneyMap(
-                  quest: DailyQuestState(date: 'test', completed: completed),
-                  isEn: false,
-                  onStopTap: (_) {},
-                  onClaimTreasure: () {},
-                ),
-              ),
+      home: MediaQuery(
+        data: const MediaQueryData(size: size),
+        child: Scaffold(
+          body: SafeArea(
+            child: QuestJourneyMap(
+              quest: DailyQuestState(date: 'test', completed: completed),
+              isEn: false,
+              onStopTap: (_) {},
+              onClaimTreasure: () {},
             ),
           ),
-        );
+        ),
+      ),
+    );
     await tester.pumpWidget(map({}));
     // Full motion keeps the chest's ambient sparks looping, so no settle —
     // explicit frames, like the walk test above.

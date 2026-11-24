@@ -10,6 +10,7 @@ import 'ambient_loop.dart';
 import 'bloom_mascot.dart';
 import 'card_image.dart';
 import 'kid_tap.dart';
+import 'journey_living_scene.dart';
 
 const _ink = Color(0xFF254F49);
 const _tasks = [
@@ -141,7 +142,7 @@ class QuestJourneyMap extends StatelessWidget {
     // Where the traveller stands: the first unfinished stop, or the chest.
     final current = firstOpen < 0 ? 5 : firstOpen;
     final labelStyle = DT.tileTitle.copyWith(fontSize: 14, color: _ink);
-    return DecoratedBox(
+    final map = DecoratedBox(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -158,16 +159,6 @@ class QuestJourneyMap extends StatelessWidget {
                 constraints: const BoxConstraints(maxWidth: 720),
                 child: Column(
                   children: [
-                    _PawHeader(
-                      done: [for (final t in _tasks) q.completed.contains(t)],
-                      opened: q.allDone,
-                      themeImage: themeImage,
-                      themeLabel: themeLabel,
-                      label: s(
-                        'Кроків до скарбу: ${q.doneCount} з 5',
-                        'Steps to the treasure: ${q.doneCount} of 5',
-                      ),
-                    ),
                     LayoutBuilder(
                       builder: (context, bounds) {
                         final width = bounds.maxWidth;
@@ -213,32 +204,46 @@ class QuestJourneyMap extends StatelessWidget {
                                   ),
                                 ),
                               ),
+                              Positioned.fill(
+                                child: JourneyLivingScene(
+                                  celebrateIndex: justCompleted == null
+                                      ? -1
+                                      : _tasks.indexOf(justCompleted!),
+                                  completed: [
+                                    for (final task in _tasks)
+                                      q.completed.contains(task),
+                                  ],
+                                ),
+                              ),
                               for (var i = 0; i < 6; i++)
                                 Positioned(
                                   left: positions[i].dx - nodeWidth / 2,
                                   top: positions[i].dy,
                                   width: nodeWidth,
                                   height: rowHeight,
-                                  child: _JourneyStop(
-                                    key: ValueKey('journey-stop-$i'),
-                                    index: i,
-                                    label: labels[i],
-                                    done: i < 5
-                                        ? q.completed.contains(_tasks[i])
-                                        : q.rewardClaimed,
-                                    active: i == current,
-                                    celebrate:
-                                        i < 5 && _tasks[i] == justCompleted,
-                                    opened:
-                                        i == 5 &&
-                                        (q.allDone || q.rewardClaimed),
-                                    onTap: i == 5
-                                        ? (q.allDone && !q.rewardClaimed
-                                              ? onClaimTreasure
-                                              : null)
-                                        : q.completed.contains(_tasks[i])
-                                        ? null
-                                        : () => onStopTap(_tasks[i]),
+                                  child: _FollowCurrentStop(
+                                    active: i == current && i > 0,
+                                    child: _JourneyStop(
+                                      key: ValueKey('journey-stop-$i'),
+                                      index: i,
+                                      label: labels[i],
+                                      done: i < 5
+                                          ? q.completed.contains(_tasks[i])
+                                          : q.rewardClaimed,
+                                      active: i == current,
+                                      celebrate:
+                                          i < 5 && _tasks[i] == justCompleted,
+                                      opened:
+                                          i == 5 &&
+                                          (q.allDone || q.rewardClaimed),
+                                      onTap: i == 5
+                                          ? (q.allDone && !q.rewardClaimed
+                                                ? onClaimTreasure
+                                                : null)
+                                          : q.completed.contains(_tasks[i])
+                                          ? null
+                                          : () => onStopTap(_tasks[i]),
+                                    ),
                                   ),
                                 ),
                               // The moving layer: its own repaint boundary
@@ -250,22 +255,22 @@ class QuestJourneyMap extends StatelessWidget {
                               Positioned.fill(
                                 child: RepaintBoundary(
                                   child: _Traveller(
-                                      index: current,
-                                      anchor: centres[current] + shift(current),
-                                      route: current == 0
-                                          ? null
-                                          : _trailSegment(
-                                              centres[current - 1],
-                                              centres[current],
-                                              width,
-                                              arch: false,
-                                            ),
-                                      fromShift: current == 0
-                                          ? Offset.zero
-                                          : shift(current - 1),
-                                      toShift: shift(current),
-                                      cheering: q.allDone,
-                                      semanticsLabel: s('Блум', 'Bloom'),
+                                    index: current,
+                                    anchor: centres[current] + shift(current),
+                                    route: current == 0
+                                        ? null
+                                        : _trailSegment(
+                                            centres[current - 1],
+                                            centres[current],
+                                            width,
+                                            arch: false,
+                                          ),
+                                    fromShift: current == 0
+                                        ? Offset.zero
+                                        : shift(current - 1),
+                                    toShift: shift(current),
+                                    cheering: q.allDone,
+                                    semanticsLabel: s('Блум', 'Bloom'),
                                   ),
                                 ),
                               ),
@@ -273,18 +278,6 @@ class QuestJourneyMap extends StatelessWidget {
                           ),
                         );
                       },
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-                      child: AnimatedSwitcher(
-                        duration: MotionPolicy.of(context).dur(DT.motion.base),
-                        child: Text(
-                          labels[current],
-                          key: ValueKey(labels[current]),
-                          textAlign: TextAlign.center,
-                          style: labelStyle,
-                        ),
-                      ),
                     ),
                   ],
                 ),
@@ -294,7 +287,171 @@ class QuestJourneyMap extends StatelessWidget {
         },
       ),
     );
+    final action = current == 5
+        ? (q.allDone && !q.rewardClaimed ? onClaimTreasure : null)
+        : () => onStopTap(_tasks[current]);
+    return Column(
+      children: [
+        Center(
+          key: const ValueKey('journey-progress'),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: _PawHeader(
+              done: [for (final t in _tasks) q.completed.contains(t)],
+              opened: q.allDone,
+              themeImage: themeImage,
+              themeLabel: themeLabel,
+              label: s(
+                'Кроків до скарбу: ${q.doneCount} з 5',
+                'Steps to the treasure: ${q.doneCount} of 5',
+              ),
+            ),
+          ),
+        ),
+        Expanded(child: map),
+        Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            boxShadow: [
+              BoxShadow(
+                color: _ink.withValues(alpha: .08),
+                blurRadius: 20,
+                offset: const Offset(0, -4),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            top: false,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 720),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
+                  child: AnimatedSwitcher(
+                    duration: MotionPolicy.of(
+                      context,
+                    ).dur(DT.motion.journeyAction),
+                    child: Semantics(
+                      button: true,
+                      enabled: action != null,
+                      excludeSemantics: true,
+                      label: '${q.doneCount} / 5. ${labels[current]}',
+                      onTap: action,
+                      child: KidTap(
+                        key: ValueKey('journey-next-$current'),
+                        onTap: action,
+                        sound: null,
+                        child: Container(
+                          constraints: const BoxConstraints(minHeight: 64),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 18,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _ink,
+                            borderRadius: BorderRadius.circular(22),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0xFF163B35),
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              AppIconView(
+                                _icons[current],
+                                size: 34,
+                                sticker: true,
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      s(
+                                        '${q.doneCount} з 5 кроків',
+                                        '${q.doneCount} of 5 steps',
+                                      ),
+                                      style: DT.caption.copyWith(
+                                        color: Colors.white70,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                    Text(
+                                      labels[current],
+                                      style: labelStyle.copyWith(
+                                        color: Colors.white,
+                                        fontSize: 17,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (action != null) ...[
+                                const SizedBox(width: 12),
+                                const AppIconView(
+                                  AppIcon.play,
+                                  size: 24,
+                                  color: Colors.white,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
+}
+
+/// Follow a newly active stop once; ordinary rebuilds never steal a scroll
+/// gesture. This also brings today's saved position into view on reopening.
+class _FollowCurrentStop extends StatefulWidget {
+  const _FollowCurrentStop({required this.active, required this.child});
+  final bool active;
+  final Widget child;
+
+  @override
+  State<_FollowCurrentStop> createState() => _FollowCurrentStopState();
+}
+
+class _FollowCurrentStopState extends State<_FollowCurrentStop> {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.active) _follow();
+  }
+
+  @override
+  void didUpdateWidget(_FollowCurrentStop oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.active && !oldWidget.active) _follow();
+  }
+
+  void _follow() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !widget.active) return;
+      Scrollable.ensureVisible(
+        context,
+        alignment: .35,
+        duration: MotionPolicy.of(context).dur(DT.motion.journeyFocus),
+        curve: Curves.easeInOutCubic,
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 /// «Маленькі кроки до скарбу»: five paw prints that fill in, and the chest
@@ -325,7 +482,8 @@ class _PawHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 10),
       child: Semantics(
-        label: label,
+        label: [if (themeLabel != null) themeLabel!, label].join('. '),
+        excludeSemantics: true,
         container: true,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -508,7 +666,7 @@ class _JourneyStop extends StatelessWidget {
             offset: const Offset(0, 11),
             blurRadius: 10,
           ),
-          if (pressable)
+          if (active && pressable)
             BoxShadow(
               color: color.withValues(alpha: .4),
               blurRadius: 22,
@@ -525,6 +683,8 @@ class _JourneyStop extends StatelessWidget {
     return Semantics(
       button: true,
       enabled: onTap != null,
+      excludeSemantics: true,
+      onTap: onTap,
       label: label,
       child: KidTap(
         onTap: onTap,
@@ -551,7 +711,7 @@ class _JourneyStop extends StatelessWidget {
                   _ArrivalPop(
                     play: celebrate,
                     child: _Breathing(
-                      enabled: pressable,
+                      enabled: active && pressable,
                       child: AnimatedScale(
                         scale: done ? 0.86 : 1,
                         duration: MotionPolicy.of(context).dur(DT.motion.base),
@@ -559,8 +719,9 @@ class _JourneyStop extends StatelessWidget {
                           // Finished and locked stops step back; what can
                           // be pressed is the brightest thing on the map.
                           opacity: pressable ? 1 : (done ? 0.45 : 0.55),
-                          duration:
-                              MotionPolicy.of(context).dur(DT.motion.base),
+                          duration: MotionPolicy.of(
+                            context,
+                          ).dur(DT.motion.base),
                           child: plate,
                         ),
                       ),
@@ -611,10 +772,8 @@ class _Breathing extends StatelessWidget {
     if (!enabled) return child;
     return AmbientLoop(
       period: DT.motion.questBreath,
-      builder: (_, t, inner) => Transform.scale(
-        scale: 1 + 0.06 * t,
-        child: inner,
-      ),
+      builder: (_, t, inner) =>
+          Transform.scale(scale: 1 + 0.06 * t, child: inner),
       child: child,
     );
   }
@@ -678,8 +837,7 @@ class _FireworksPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_FireworksPainter old) =>
-      old.t != t || old.color != color;
+  bool shouldRepaint(_FireworksPainter old) => old.t != t || old.color != color;
 }
 
 /// Bloom walking the trail (G13).
@@ -779,8 +937,7 @@ class _Traveller extends StatefulWidget {
   State<_Traveller> createState() => _TravellerState();
 }
 
-class _TravellerState extends State<_Traveller>
-    with TickerProviderStateMixin {
+class _TravellerState extends State<_Traveller> with TickerProviderStateMixin {
   late final AnimationController _walk = AnimationController(
     vsync: this,
     duration: DT.motion.journeyStep,
@@ -793,14 +950,13 @@ class _TravellerState extends State<_Traveller>
   /// reached («що тут?»), `happy` when the child taps him (§3.7). A
   /// controller rather than a timer so the test clock and reduced motion
   /// treat it like every other beat of his.
-  late final AnimationController _beat = AnimationController(
-    vsync: this,
-    duration: DT.motion.bloomCurious,
-  )..addStatusListener((s) {
-      if (s == AnimationStatus.completed && mounted) {
-        setState(() => _beatEmotion = null);
-      }
-    });
+  late final AnimationController _beat =
+      AnimationController(vsync: this, duration: DT.motion.bloomCurious)
+        ..addStatusListener((s) {
+          if (s == AnimationStatus.completed && mounted) {
+            setState(() => _beatEmotion = null);
+          }
+        });
   BloomEmotion? _beatEmotion;
 
   void _startBeat(BloomEmotion emotion, Duration length) {
@@ -882,7 +1038,8 @@ class _TravellerState extends State<_Traveller>
         final beat = _beatEmotion;
         final emotion = walking
             ? BloomEmotion.happy
-            : beat ?? (widget.cheering ? BloomEmotion.cheer : BloomEmotion.idle);
+            : beat ??
+                  (widget.cheering ? BloomEmotion.cheer : BloomEmotion.idle);
         return Stack(
           children: [
             Positioned(

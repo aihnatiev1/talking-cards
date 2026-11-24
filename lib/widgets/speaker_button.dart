@@ -51,10 +51,8 @@ class SpeakerButton extends StatelessWidget {
               child: AmbientLoop(
                 period: const Duration(milliseconds: 650),
                 enabled: speaking && autoOn,
-                builder: (_, t, child) => Transform.scale(
-                  scale: 1.0 + 0.06 * t,
-                  child: child,
-                ),
+                builder: (_, t, child) =>
+                    Transform.scale(scale: 1.0 + 0.06 * t, child: child),
                 child: Container(
                   // The one control a child presses on the cards screen, so
                   // it carries the full 72 dp target (CLAUDE.md rule 1 /

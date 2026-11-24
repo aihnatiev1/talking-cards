@@ -40,13 +40,15 @@ void main() {
       (3, BubbleDeviceClass.tabletL, 20, 6, 12),
     ];
     for (final (level, device, target, alive, slop) in cases) {
-      test('L$level on ${device.name}: $target pops, $alive alive, +$slop dp',
-          () {
-        final t = BubbleTuning.forLevel(level, device);
-        expect(t.targetPops, target);
-        expect(t.maxAlive, alive);
-        expect(t.hitSlop, slop);
-      });
+      test(
+        'L$level on ${device.name}: $target pops, $alive alive, +$slop dp',
+        () {
+          final t = BubbleTuning.forLevel(level, device);
+          expect(t.targetPops, target);
+          expect(t.maxAlive, alive);
+          expect(t.hitSlop, slop);
+        },
+      );
     }
 
     test('L4 shares the L3 preset', () {
@@ -61,8 +63,11 @@ void main() {
       for (final level in [1, 2, 3]) {
         for (final device in BubbleDeviceClass.values) {
           final t = BubbleTuning.forLevel(level, device);
-          expect(t.minDiameter, greaterThanOrEqualTo(88),
-              reason: 'L$level ${device.name}');
+          expect(
+            t.minDiameter,
+            greaterThanOrEqualTo(88),
+            reason: 'L$level ${device.name}',
+          );
           expect(t.minDiameter + 2 * t.hitSlop, greaterThanOrEqualTo(72));
         }
       }
@@ -86,11 +91,8 @@ void main() {
   group('BubbleWordQueue — a child hears whole words (§3)', () {
     /// A queue over a fake narrator: [speaking] is the flag the real
     /// `AudioService` raises, [said] is what came out of the speaker.
-    ({
-      BubbleWordQueue queue,
-      ValueNotifier<bool> speaking,
-      List<String> said,
-    }) make() {
+    ({BubbleWordQueue queue, ValueNotifier<bool> speaking, List<String> said})
+    make() {
       final speaking = ValueNotifier(false);
       final said = <String>[];
       final queue = BubbleWordQueue(
@@ -106,16 +108,15 @@ void main() {
     }
 
     CardModel word(String id) => CardModel(
-          id: id,
-          sound: id,
-          text: id,
-          emoji: '🐱',
-          colorBg: const Color(0xFFFFFFFF),
-          colorAccent: const Color(0xFF000000),
-        );
+      id: id,
+      sound: id,
+      text: id,
+      emoji: '🐱',
+      colorBg: const Color(0xFFFFFFFF),
+      colorAccent: const Color(0xFF000000),
+    );
 
-    test('the pop waits 80 ms so the transient is off the first consonant',
-        () {
+    test('the pop waits 80 ms so the transient is off the first consonant', () {
       fakeAsync((async) {
         final q = make();
         q.queue.say(word('cat'));
@@ -139,8 +140,11 @@ void main() {
         async.elapse(const Duration(milliseconds: 300));
         expect(q.said, ['cat'], reason: 'the narrator was not interrupted');
         expect(first.started.value, isTrue);
-        expect(second.started.value, isFalse,
-            reason: 'the second card holds until its own word starts');
+        expect(
+          second.started.value,
+          isFalse,
+          reason: 'the second card holds until its own word starts',
+        );
 
         // The narrator falls quiet → the queued word takes the channel.
         q.speaking.value = false;
@@ -206,7 +210,8 @@ void main() {
         var overBloom = 0;
         for (var i = 0; i < 100; i++) {
           final size =
-              t.minDiameter + rng.nextDouble() * (t.maxDiameter - t.minDiameter);
+              t.minDiameter +
+              rng.nextDouble() * (t.maxDiameter - t.minDiameter);
           final amp = t.swayMin + rng.nextDouble() * (t.swayMax - t.swayMin);
           final x = BubbleStage.spawnAnchorX(
             rng: rng,
@@ -219,7 +224,11 @@ void main() {
           final right = x + size / 2 + amp;
           // Still never off the screen.
           expect(left, greaterThanOrEqualTo(-0.001), reason: 'spawn $i');
-          expect(right, lessThanOrEqualTo(body.width + 0.001), reason: 'spawn $i');
+          expect(
+            right,
+            lessThanOrEqualTo(body.width + 0.001),
+            reason: 'spawn $i',
+          );
           xs.add(x);
           if (right > bloom.left - BubbleStage.bloomMargin &&
               left < bloom.right + BubbleStage.bloomMargin) {
@@ -229,10 +238,16 @@ void main() {
 
         // The floor, both halves of it. Under the old rule nothing was
         // ever born past ~45 % of a phone's width.
-        expect(xs.reduce(min), lessThan(body.width * 0.35),
-            reason: 'nothing born on the left');
-        expect(xs.reduce(max), greaterThan(body.width * 0.65),
-            reason: 'nothing born on the right — this is the lane bug');
+        expect(
+          xs.reduce(min),
+          lessThan(body.width * 0.35),
+          reason: 'nothing born on the left',
+        );
+        expect(
+          xs.reduce(max),
+          greaterThan(body.width * 0.65),
+          reason: 'nothing born on the right — this is the lane bug',
+        );
         // His ears stay mostly clear — a preference, not a wall. With
         // level-1 bubbles (the biggest in the game) on a phone the clear
         // window is narrow, so a fifth of them passing over him is the
@@ -242,7 +257,10 @@ void main() {
     }
 
     test('Bloom sits 16 dp from the right and 24 dp from the bottom', () {
-      final r = BubbleStage.bloomRect(const Size(390, 700), BubbleDeviceClass.phone);
+      final r = BubbleStage.bloomRect(
+        const Size(390, 700),
+        BubbleDeviceClass.phone,
+      );
       expect(r.width, 112);
       expect(r.right, 390 - 16);
       expect(r.bottom, 700 - 24);
@@ -252,7 +270,10 @@ void main() {
   group('BubblePopScreen', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
-      AssetPackService.instance.debugConfigure(padAssets: const {}, bundled: true);
+      AssetPackService.instance.debugConfigure(
+        padAssets: const {},
+        bundled: true,
+      );
       FeedbackService.debugMute = true;
       FeedbackService.debugLog.clear();
       debugResetKidOverlayQueue();
@@ -263,15 +284,15 @@ void main() {
     });
 
     CardModel card(String id) => CardModel(
-          id: id,
-          sound: id,
-          text: id,
-          emoji: '🐱',
-          colorBg: const Color(0xFFFFFFFF),
-          colorAccent: const Color(0xFF000000),
-          image: 'missing_$id', // resolves to a picture that fails → emoji
-          audioKey: 'no_such_$id', // unknown key → AudioService stays quiet
-        );
+      id: id,
+      sound: id,
+      text: id,
+      emoji: '🐱',
+      colorBg: const Color(0xFFFFFFFF),
+      colorAccent: const Color(0xFF000000),
+      image: 'missing_$id', // resolves to a picture that fails → emoji
+      audioKey: 'no_such_$id', // unknown key → AudioService stays quiet
+    );
 
     final pack = PackModel(
       id: 'animals',
@@ -284,24 +305,24 @@ void main() {
     );
 
     Widget host({int level = 2}) => ProviderScope(
-          overrides: [
-            // Synchronous: the round starts post-first-frame and reads the
-            // catalogue then — in the app it has been loaded for ages.
-            packsProvider.overrideWith((ref) => [pack]),
-            profileProvider.overrideWith(
-              (ref) => ProfileNotifier(ref, [
-                ProfileModel(
-                  id: ProfileService.activeId,
-                  name: 'Тест',
-                  avatarEmoji: '👶',
-                  createdAt: DateTime(2026),
-                  level: level,
-                ),
-              ]),
+      overrides: [
+        // Synchronous: the round starts post-first-frame and reads the
+        // catalogue then — in the app it has been loaded for ages.
+        packsProvider.overrideWith((ref) => [pack]),
+        profileProvider.overrideWith(
+          (ref) => ProfileNotifier(ref, [
+            ProfileModel(
+              id: ProfileService.activeId,
+              name: 'Тест',
+              avatarEmoji: '👶',
+              createdAt: DateTime(2026),
+              level: level,
             ),
-          ],
-          child: const MaterialApp(home: BubblePopScreen()),
-        );
+          ]),
+        ),
+      ],
+      child: const MaterialApp(home: BubblePopScreen()),
+    );
 
     /// Pump the screen and let `packsProvider` resolve and the round start.
     Future<void> open(WidgetTester tester, {int level = 2}) async {
@@ -315,8 +336,9 @@ void main() {
     group('under MotionMode.test', () {
       useTestMotion();
 
-      testWidgets('pumpAndSettle terminates and the round is on the pill',
-          (tester) async {
+      testWidgets('pumpAndSettle terminates and the round is on the pill', (
+        tester,
+      ) async {
         await open(tester, level: 1);
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
@@ -327,8 +349,9 @@ void main() {
         expect(find.byKey(const ValueKey('bubble_2')), findsOneWidget);
       });
 
-      testWidgets('a miss does not move the counter, but is answered',
-          (tester) async {
+      testWidgets('a miss does not move the counter, but is answered', (
+        tester,
+      ) async {
         await open(tester, level: 1);
         await tester.pumpAndSettle();
 
@@ -340,11 +363,15 @@ void main() {
 
         expect(find.text('0/8'), findsOneWidget);
         expect(FeedbackService.debugLog, contains(FeedbackEvent.emptyTap));
-        expect(FeedbackService.debugLog, isNot(contains(FeedbackEvent.bubblePop)));
+        expect(
+          FeedbackService.debugLog,
+          isNot(contains(FeedbackEvent.bubblePop)),
+        );
       });
 
-      testWidgets('the revealed card settles — the hold is not a hang',
-          (tester) async {
+      testWidgets('the revealed card settles — the hold is not a hang', (
+        tester,
+      ) async {
         await open(tester, level: 1);
         await tester.pumpAndSettle();
         await tester.tap(find.byKey(const ValueKey('bubble_1')));
@@ -374,8 +401,9 @@ void main() {
       });
     });
 
-    testWidgets('a tap on Bloom blows one bubble, then asks for patience',
-        (tester) async {
+    testWidgets('a tap on Bloom blows one bubble, then asks for patience', (
+      tester,
+    ) async {
       await open(tester, level: 1); // L1 phone: two alive at a time
       expect(find.byKey(const ValueKey('bubble_1')), findsOneWidget);
       expect(find.byKey(const ValueKey('bubble_2')), findsOneWidget);
@@ -421,8 +449,12 @@ void main() {
           return null;
         },
       );
-      addTearDown(() => tester.binding.defaultBinaryMessenger
-          .setMockMethodCallHandler(SystemChannels.platform, null));
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
 
       tester.view.physicalSize = const Size(1194, 834); // iPad, landscape
       tester.view.devicePixelRatio = 1;
@@ -430,19 +462,25 @@ void main() {
       await tester.pumpWidget(host());
       await tester.pump();
 
-      expect(locks.single, [
-        'DeviceOrientation.landscapeLeft',
-        'DeviceOrientation.landscapeRight',
-      ], reason: 'a device that flips mid-round throws every bubble '
-          'somewhere else');
+      expect(
+        locks.single,
+        ['DeviceOrientation.landscapeLeft', 'DeviceOrientation.landscapeRight'],
+        reason:
+            'a device that flips mid-round throws every bubble '
+            'somewhere else',
+      );
 
       await tester.pumpWidget(const SizedBox());
-      expect(locks.last, hasLength(4),
-          reason: 'the rest of the app decides its own orientations again');
+      expect(
+        locks.last,
+        hasLength(4),
+        reason: 'the rest of the app decides its own orientations again',
+      );
     });
 
-    testWidgets('a phone is left alone — main.dart owns portrait',
-        (tester) async {
+    testWidgets('a phone is left alone — main.dart owns portrait', (
+      tester,
+    ) async {
       final locks = <List<String>>[];
       tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
         SystemChannels.platform,
@@ -453,8 +491,12 @@ void main() {
           return null;
         },
       );
-      addTearDown(() => tester.binding.defaultBinaryMessenger
-          .setMockMethodCallHandler(SystemChannels.platform, null));
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
 
       await open(tester, level: 2);
       await tester.pumpWidget(const SizedBox());
@@ -475,7 +517,11 @@ void main() {
       expect(find.byKey(const ValueKey('bubble_1')), findsNothing);
       expect(find.byKey(const ValueKey('bubble_2')), findsNothing);
       expect(find.text('0/12'), findsOneWidget);
-      expect(FeedbackService.debugLog, isEmpty, reason: 'no sound for an escape');
+      expect(
+        FeedbackService.debugLog,
+        isEmpty,
+        reason: 'no sound for an escape',
+      );
       expect(tester.takeException(), isNull);
 
       // Leave the screen so its ticker and Bloom's blink stop.

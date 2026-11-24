@@ -20,13 +20,68 @@ ThemeData buildAppTheme() {
   final base = ThemeData(
     colorSchemeSeed: DT.brand,
     useMaterial3: true,
-    fontFamily: 'Roboto',
+    fontFamily: DT.kidFont,
     brightness: Brightness.light,
     scaffoldBackgroundColor: DT.bgWarm,
     splashFactory: NoSplash.splashFactory,
   );
   return base.copyWith(
     textTheme: _kidTextTheme(base.textTheme),
+    colorScheme: base.colorScheme.copyWith(
+      primary: DT.solid(DT.brand),
+      surface: DT.surfaceWhite,
+      onSurface: DT.textPrimary,
+      outline: DT.outline,
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(style: _actionStyle()),
+    filledButtonTheme: FilledButtonThemeData(style: _actionStyle()),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: _actionStyle(outlined: true),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: DT.solid(DT.brand),
+        textStyle: DT.h2,
+        minimumSize: const Size(72, 56),
+      ),
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: DT.surfaceWhite,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      titleTextStyle: DT.display,
+      contentTextStyle: DT.body,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(DT.rXl),
+        side: const BorderSide(color: DT.outline, width: 2),
+      ),
+    ),
+    bottomSheetTheme: const BottomSheetThemeData(
+      backgroundColor: DT.surfaceWhite,
+      surfaceTintColor: Colors.transparent,
+      showDragHandle: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(DT.rXl)),
+        side: BorderSide(color: DT.outline, width: 2),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: DT.bgWarm,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(DT.rMd),
+        borderSide: const BorderSide(color: DT.outline, width: 2),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(DT.rMd),
+        borderSide: const BorderSide(color: DT.outline, width: 2),
+      ),
+    ),
+    progressIndicatorTheme: const ProgressIndicatorThemeData(
+      color: DT.brand,
+      linearTrackColor: DT.disabled,
+      borderRadius: BorderRadius.all(Radius.circular(DT.rMd)),
+    ),
     // One transition language on both platforms: any MaterialPageRoute that
     // has not moved to KidRoutes yet still fades + scales like the rest.
     pageTransitionsTheme: const PageTransitionsTheme(
@@ -76,7 +131,8 @@ TextTheme _kidTextTheme(TextTheme roboto) {
     titleLarge: DT.h1,
     titleMedium: DT.h2,
     titleSmall: DT.tileTitle,
-    bodyLarge: roboto.bodyLarge?.merge(kidBody.copyWith(fontSize: 16)) ??
+    bodyLarge:
+        roboto.bodyLarge?.merge(kidBody.copyWith(fontSize: 16)) ??
         kidBody.copyWith(fontSize: 16),
     bodyMedium: roboto.bodyMedium?.merge(kidBody) ?? kidBody,
     bodySmall: roboto.bodySmall?.merge(DT.caption) ?? DT.caption,
@@ -85,3 +141,33 @@ TextTheme _kidTextTheme(TextTheme roboto) {
     labelSmall: roboto.labelSmall?.merge(DT.caption) ?? DT.caption,
   );
 }
+
+// Base styling for Material actions; PlayAction adds the tactile lower edge.
+ButtonStyle _actionStyle({bool outlined = false}) => ButtonStyle(
+  minimumSize: const WidgetStatePropertyAll(Size(72, 72)),
+  padding: const WidgetStatePropertyAll(
+    EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+  ),
+  textStyle: const WidgetStatePropertyAll(DT.kidButton),
+  elevation: const WidgetStatePropertyAll(0),
+  backgroundColor: WidgetStateProperty.resolveWith(
+    (states) => states.contains(WidgetState.disabled)
+        ? DT.disabled
+        : outlined
+        ? DT.surfaceWhite
+        : DT.solid(DT.brand),
+  ),
+  foregroundColor: WidgetStateProperty.resolveWith(
+    (states) => states.contains(WidgetState.disabled)
+        ? DT.textSecondary
+        : outlined
+        ? DT.solid(DT.brand)
+        : DT.surfaceWhite,
+  ),
+  shape: WidgetStatePropertyAll(
+    RoundedRectangleBorder(borderRadius: BorderRadius.circular(DT.rMd)),
+  ),
+  side: WidgetStatePropertyAll(
+    outlined ? const BorderSide(color: DT.outline, width: 2) : BorderSide.none,
+  ),
+);

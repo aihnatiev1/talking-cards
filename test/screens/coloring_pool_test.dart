@@ -8,24 +8,24 @@ import 'package:talking_cards/screens/coloring_screen.dart';
 import 'package:talking_cards/services/asset_pack_service.dart';
 
 CardModel _card(String id, {String? image}) => CardModel(
-      id: id,
-      sound: id,
-      text: id,
-      emoji: '🙂',
-      colorBg: const Color(0xFFFFFFFF),
-      colorAccent: const Color(0xFF000000),
-      image: image,
-    );
+  id: id,
+  sound: id,
+  text: id,
+  emoji: '🙂',
+  colorBg: const Color(0xFFFFFFFF),
+  colorAccent: const Color(0xFF000000),
+  image: image,
+);
 
 PackModel _pack(String id, List<CardModel> cards) => PackModel(
-      id: id,
-      title: id,
-      icon: '📦',
-      color: const Color(0xFF000000),
-      isLocked: false,
-      isFree: true,
-      cards: cards,
-    );
+  id: id,
+  title: id,
+  icon: '📦',
+  color: const Color(0xFF000000),
+  isLocked: false,
+  isFree: true,
+  cards: cards,
+);
 
 /// Colouring-book pool + picker (design audit 2026-09-08, #25).
 void main() {
@@ -33,8 +33,12 @@ void main() {
 
   // Every other test in this file runs on a bundled build, where nothing
   // needs downloading — the same shape as iOS and debug.
-  setUp(() => AssetPackService.instance
-      .debugConfigure(padAssets: const {}, bundled: true));
+  setUp(
+    () => AssetPackService.instance.debugConfigure(
+      padAssets: const {},
+      bundled: true,
+    ),
+  );
 
   group('ColoringScreen.coloringPool', () {
     test('drops pictures still inside an undelivered Play asset pack', () {
@@ -57,28 +61,27 @@ void main() {
       expect(ids, ['free_one']);
     });
 
-    test('drops negative-mood images, null images, virtual and verse packs',
-        () {
-      final verseId = PackModel.nonWordPackIds.first;
-      final packs = [
-        _pack('emotions', [
-          _card('happy', image: 'happy'),
-          _card('sad', image: 'sad'),
-          _card('angry', image: 'angry'),
-          _card('hurts', image: 'en_it_hurts'),
-        ]),
-        _pack('animals', [
-          _card('cat', image: 'cat'),
-          _card('no_image'),
-        ]),
-        _pack('_favorites', [_card('fav', image: 'fav')]),
-        _pack(verseId, [_card('poem', image: 'poem')]),
-      ];
+    test(
+      'drops negative-mood images, null images, virtual and verse packs',
+      () {
+        final verseId = PackModel.nonWordPackIds.first;
+        final packs = [
+          _pack('emotions', [
+            _card('happy', image: 'happy'),
+            _card('sad', image: 'sad'),
+            _card('angry', image: 'angry'),
+            _card('hurts', image: 'en_it_hurts'),
+          ]),
+          _pack('animals', [_card('cat', image: 'cat'), _card('no_image')]),
+          _pack('_favorites', [_card('fav', image: 'fav')]),
+          _pack(verseId, [_card('poem', image: 'poem')]),
+        ];
 
-      final ids = ColoringScreen.coloringPool(packs).map((c) => c.id);
+        final ids = ColoringScreen.coloringPool(packs).map((c) => c.id);
 
-      expect(ids, ['happy', 'cat']);
-    });
+        expect(ids, ['happy', 'cat']);
+      },
+    );
 
     test('every excluded image name is a real card image', () {
       // Guards against typos in the constant silently excluding nothing.

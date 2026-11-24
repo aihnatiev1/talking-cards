@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/widgets.dart';
 
 import '../../utils/design_tokens.dart';
@@ -52,13 +50,11 @@ final class PaintedBloom implements MascotRenderer {
     );
     canvas.scale(scale, scale);
 
-    // The outline may not drop under 1.5 dp on screen at any size, so the
-    // design-space stroke grows as the drawing shrinks (§2.1).
-    final stroke = math.max(2.0, 1.5 / scale);
+    // Soft warm contour keeps the cream silhouette readable at small sizes.
     final ink = Paint()
-      ..color = DT.bloomInk.withValues(alpha: DT.bloomInkAlpha)
+      ..color = DT.bloomShade
       ..style = PaintingStyle.stroke
-      ..strokeWidth = stroke
+      ..strokeWidth = 1.4
       ..strokeJoin = StrokeJoin.round;
     final body = Paint()..color = DT.bloomBody;
 
@@ -144,32 +140,34 @@ final class PaintedBloom implements MascotRenderer {
     final joinY = top + height / 3;
     final radius = Radius.circular(width / 2);
     final lower = Path()
-      ..addRRect(RRect.fromRectAndRadius(
-        Rect.fromLTRB(-width / 2, joinY - width / 2, width / 2, bottom),
-        radius,
-      ));
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTRB(-width / 2, joinY - width / 2, width / 2, bottom),
+          radius,
+        ),
+      );
     if (bend == 0) {
       final whole = Path()
-        ..addRRect(RRect.fromRectAndRadius(
-          Rect.fromLTRB(-width / 2, top, width / 2, bottom),
-          radius,
-        ));
+        ..addRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromLTRB(-width / 2, top, width / 2, bottom),
+            radius,
+          ),
+        );
       return whole;
     }
     final upper = Path()
-      ..addRRect(RRect.fromRectAndRadius(
-        Rect.fromLTRB(-width / 2, top, width / 2, joinY + width / 2),
-        radius,
-      ));
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTRB(-width / 2, top, width / 2, joinY + width / 2),
+          radius,
+        ),
+      );
     final m = Matrix4.identity()
       ..translateByDouble(0, joinY, 0, 1)
       ..rotateZ(bend)
       ..translateByDouble(0, -joinY, 0, 1);
-    return Path.combine(
-      PathOperation.union,
-      lower,
-      upper.transform(m.storage),
-    );
+    return Path.combine(PathOperation.union, lower, upper.transform(m.storage));
   }
 
   void _body(Canvas canvas, Paint body, Paint ink) {
@@ -185,16 +183,32 @@ final class PaintedBloom implements MascotRenderer {
       Paint()..color = DT.bloomHighlight,
     );
     canvas.drawRRect(rrect, ink);
+    for (final x in [43.0, 77.0]) {
+      canvas.drawOval(
+        Rect.fromCenter(center: Offset(x, 114), width: 25, height: 10),
+        Paint()..color = DT.bloomShade,
+      );
+      canvas.drawOval(
+        Rect.fromCenter(center: Offset(x, 112), width: 24, height: 10),
+        body,
+      );
+    }
   }
 
   void _head(Canvas canvas, Paint body, Paint ink) {
-    final head = Rect.fromCenter(
-      center: const Offset(60, 60),
-      width: 66,
-      height: 60,
+    final head = Path()
+      ..moveTo(29, 57)
+      ..cubicTo(28, 38, 42, 29, 60, 30)
+      ..cubicTo(79, 28, 91, 41, 92, 58)
+      ..cubicTo(99, 77, 80, 89, 60, 90)
+      ..cubicTo(38, 89, 22, 76, 29, 57)
+      ..close();
+    canvas.drawPath(head, body);
+    canvas.drawPath(head, ink);
+    canvas.drawOval(
+      const Rect.fromLTWH(41, 61, 38, 23),
+      Paint()..color = DT.bloomMuzzle,
     );
-    canvas.drawOval(head, body);
-    canvas.drawOval(head, ink);
   }
 
   void _cheeks(Canvas canvas, BloomPose pose, Paint body, Paint ink) {
@@ -251,13 +265,18 @@ final class PaintedBloom implements MascotRenderer {
         );
         continue;
       }
-      final centre = c + shift;
       canvas.drawOval(
-        Rect.fromCenter(center: centre, width: 6.8, height: 6.8 * open),
+        Rect.fromCenter(center: c, width: 16, height: 21 * open),
+        shine,
+      );
+      final centre = c + shift + const Offset(1.4, 1);
+
+      canvas.drawOval(
+        Rect.fromCenter(center: centre, width: 9, height: 13 * open),
         ink,
       );
       if (open > 0.6) {
-        canvas.drawCircle(centre + const Offset(-1.2, -1.2), 1.1, shine);
+        canvas.drawCircle(centre + const Offset(-1.6, -2.4), 1.6, shine);
       }
     }
   }
@@ -307,11 +326,7 @@ final class PaintedBloom implements MascotRenderer {
           ..quadraticBezierTo(60, 78, 66, 72);
         canvas.drawPath(path, stroke);
       case BloomMouth.o:
-        canvas.drawCircle(
-          const Offset(60, 74),
-          3,
-          stroke..strokeWidth = 2.0,
-        );
+        canvas.drawCircle(const Offset(60, 74), 3, stroke..strokeWidth = 2.0);
       case BloomMouth.cheerD:
         final d = Path()
           ..moveTo(52, 71)

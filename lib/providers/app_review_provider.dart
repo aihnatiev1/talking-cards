@@ -15,8 +15,7 @@ final appReviewControllerProvider = Provider<AppReviewController>(
 /// `gameStatsProvider.record` — afterwards the answer is always false. While
 /// stats are still loading this says false: no prompt is the safe default.
 bool isFirstGame(WidgetRef ref) =>
-    !(ref.read(gameStatsProvider).valueOrNull?.any((g) => g.plays > 0) ??
-        true);
+    !(ref.read(gameStatsProvider).valueOrNull?.any((g) => g.plays > 0) ?? true);
 
 class AppReviewController {
   AppReviewController();
@@ -77,8 +76,10 @@ class AppReviewController {
   Future<bool> _ask(String trigger) async {
     final requested = await AppReviewService.instance.requestReview();
     if (requested) {
-      AnalyticsService.instance.logEvent('review_prompt_requested',
-          parameters: {'trigger': trigger});
+      AnalyticsService.instance.logEvent(
+        'review_prompt_requested',
+        parameters: {'trigger': trigger},
+      );
     }
     return requested;
   }

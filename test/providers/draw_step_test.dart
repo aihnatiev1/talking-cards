@@ -38,8 +38,11 @@ void main() {
     expect(c.read(dailyQuestProvider).totalCount, 5);
 
     await n.recordDrawing();
-    expect(c.read(dailyQuestProvider).doneCount, 0,
-        reason: 'a bonus task is not one of the five');
+    expect(
+      c.read(dailyQuestProvider).doneCount,
+      0,
+      reason: 'a bonus task is not one of the five',
+    );
 
     for (final task in [
       QuestTask.listenCardOfDay,
