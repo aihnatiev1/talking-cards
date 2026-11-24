@@ -336,7 +336,7 @@ class _ChildSetupPage extends StatelessWidget {
           Center(
             child: FittedBox(
               fit: BoxFit.contain,
-              child: Text(selectedAvatar, style: const TextStyle(fontSize: 72)),
+              child: ProfileAvatar(selectedAvatar, size: 110),
             ),
           ),
           const SizedBox(height: 20),
