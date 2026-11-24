@@ -1738,6 +1738,7 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     return KidScreen.game(
       accent: DT.brand,
       meadow: true,
+      backdrop: 'assets/images/backdrops/bubble_sky.webp',
       title: _ProgressTube(value: (_popped / _goal).clamp(0.0, 1.0)),
       trailing: KidCountPill(label: '$_popped/$_goal'),
       body: LayoutBuilder(

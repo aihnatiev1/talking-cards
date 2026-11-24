@@ -54,6 +54,7 @@ class KidScreen extends StatelessWidget {
     this.mascotCorner,
     this.background = DT.bgWarm,
     this.meadow = false,
+    this.backdrop,
     this.resizeToAvoidBottomInset,
   }) : _close = false;
 
@@ -71,6 +72,7 @@ class KidScreen extends StatelessWidget {
     this.mascotCorner,
     this.background = DT.bgWarm,
     this.meadow = false,
+    this.backdrop,
     this.resizeToAvoidBottomInset,
   }) : _close = true;
 
@@ -115,6 +117,10 @@ class KidScreen extends StatelessWidget {
   /// table of face-down cards) keep their own colour.
   final bool meadow;
 
+  /// A painted sky (asset path) that replaces [MeadowScene] when [meadow] is
+  /// on — for the game that has its own picture to play in.
+  final String? backdrop;
+
   final bool? resizeToAvoidBottomInset;
 
   /// Header band: a 72 dp control plus [DT.sp8] above and below.
@@ -148,6 +154,7 @@ class KidScreen extends StatelessWidget {
         resizeToAvoidBottomInset: resizeToAvoidBottomInset,
         body: _behindTheGame(
           meadow: meadow,
+          backdrop: backdrop,
           child: SafeArea(
             child: Column(
               children: [
@@ -201,11 +208,24 @@ class KidScreen extends StatelessWidget {
 }
 
 /// The sky, when a screen asked for one.
-Widget _behindTheGame({required bool meadow, required Widget child}) {
+Widget _behindTheGame({
+  required bool meadow,
+  String? backdrop,
+  required Widget child,
+}) {
   if (!meadow) return child;
   return Stack(
     children: [
-      const Positioned.fill(child: MeadowScene()),
+      Positioned.fill(
+        child: backdrop == null
+            ? const MeadowScene()
+            : Image.asset(
+                backdrop,
+                fit: BoxFit.cover,
+                alignment: Alignment.bottomCenter,
+                errorBuilder: (_, __, ___) => const MeadowScene(),
+              ),
+      ),
       Positioned.fill(child: child),
     ],
   );
