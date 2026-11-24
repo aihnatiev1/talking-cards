@@ -754,7 +754,7 @@ class _RateAppTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           child: Row(
             children: [
-              const Text('⭐', style: TextStyle(fontSize: 22)),
+              const AppArt('star', size: 30),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
@@ -859,7 +859,7 @@ class _WordsTab extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('📚', style: TextStyle(fontSize: 56)),
+              const AppArt('book', size: 80),
               const SizedBox(height: 16),
               Text(
                 s(
@@ -1183,8 +1183,7 @@ class _PacksTab extends ConsumerWidget {
                                 ),
                               ),
                             ),
-                            if (isDone)
-                              const Text('⭐', style: TextStyle(fontSize: 14)),
+                            if (isDone) const AppArt('star', size: 20),
                           ],
                         ),
                         const SizedBox(height: 6),
@@ -1415,7 +1414,7 @@ class _WeakWordsTab extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('🎉', style: TextStyle(fontSize: 48)),
+              const AppArt('party', size: 72),
               const SizedBox(height: 12),
               Text(
                 s(

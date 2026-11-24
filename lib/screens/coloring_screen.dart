@@ -1229,7 +1229,7 @@ class _PaywallGate extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('🎨', style: TextStyle(fontSize: 96)),
+            const AppArt('palette', size: 120),
             const SizedBox(height: 16),
             Text(
               s(

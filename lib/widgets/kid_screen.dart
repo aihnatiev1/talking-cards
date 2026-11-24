@@ -222,7 +222,7 @@ Widget _behindTheGame({
         child: backdrop == null
             ? const MeadowScene()
             : Image.asset(
-                backdrop!,
+                backdrop,
                 fit: BoxFit.cover,
                 alignment: Alignment.bottomCenter,
                 errorBuilder: (_, __, ___) => const MeadowScene(),

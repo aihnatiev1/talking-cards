@@ -8,6 +8,7 @@ import '../providers/profile_provider.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../widgets/profile_avatar.dart';
+import '../utils/app_icons.dart';
 
 // ─────────────────────────────────────────────
 //  Profile selector bottom sheet
@@ -386,13 +387,13 @@ class _ProfileEditDialogState extends State<_ProfileEditDialog> {
             const SizedBox(height: 8),
             Row(
               children: [
-                _levelChip(1, '🍼', s('1-2р', '1-2y')),
+                _levelChip(1, 'bottle', s('1-2р', '1-2y')),
                 const SizedBox(width: 6),
-                _levelChip(2, '🐣', s('2-3р', '2-3y')),
+                _levelChip(2, 'chick', s('2-3р', '2-3y')),
                 const SizedBox(width: 6),
-                _levelChip(3, '🌟', s('3-4р', '3-4y')),
+                _levelChip(3, 'star', s('3-4р', '3-4y')),
                 const SizedBox(width: 6),
-                _levelChip(4, '🚀', s('4-5р', '4-5y')),
+                _levelChip(4, 'rocket', s('4-5р', '4-5y')),
               ],
             ),
             const SizedBox(height: 16),
@@ -504,7 +505,7 @@ class _ProfileEditDialogState extends State<_ProfileEditDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(emoji, style: const TextStyle(fontSize: 18)),
+              AppArt(emoji, size: 26),
               const SizedBox(height: 2),
               Text(
                 label,

@@ -14,6 +14,7 @@ import '../widgets/activity_chart.dart';
 import '../widgets/card_image.dart';
 import '../widgets/parental_gate.dart';
 import '../widgets/share_progress_card.dart';
+import '../utils/app_icons.dart';
 
 /// The parent's report: packs completed, minutes, the week's activity and
 /// every pack's progress row.
@@ -178,13 +179,20 @@ class StatsScreen extends ConsumerWidget {
                             ),
                             child: Column(
                               children: [
-                                Text(
-                                  '🔥 ${streak.currentStreak}',
-                                  style: const TextStyle(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const AppArt('flame', size: 32),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${streak.currentStreak}',
+                                      style: const TextStyle(
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                                 Text(
                                   s.isEn
@@ -215,7 +223,7 @@ class StatsScreen extends ConsumerWidget {
                       ),
                       child: Column(
                         children: [
-                          const Text('⏱️', style: TextStyle(fontSize: 28)),
+                          const AppArt('stopwatch', size: 40),
                           const SizedBox(height: 6),
                           Text(
                             s(
@@ -319,10 +327,7 @@ class StatsScreen extends ConsumerWidget {
                                       ),
                                       if (isDone) ...[
                                         const SizedBox(width: 6),
-                                        const Text(
-                                          '⭐',
-                                          style: TextStyle(fontSize: 14),
-                                        ),
+                                        const AppArt('star', size: 20),
                                       ],
                                     ],
                                   ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/design_tokens.dart';
+import '../utils/app_icons.dart';
 
 class WhatsNewService {
   WhatsNewService._();
@@ -68,7 +69,7 @@ class _WhatsNewSheet extends StatelessWidget {
           const SizedBox(height: 20),
 
           // Header
-          const Text('✨', style: TextStyle(fontSize: 48)),
+          const AppArt('sparkle', size: 72),
           const SizedBox(height: 8),
           Text(
             isEn ? "What's new!" : 'Що нового!',

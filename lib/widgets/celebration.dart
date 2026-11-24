@@ -720,7 +720,7 @@ class _FlameBadge extends StatelessWidget {
           ),
         );
       },
-      child: const Text('🔥', style: TextStyle(fontSize: 64)),
+      child: const AppArt('flame', size: 88),
     );
   }
 }
