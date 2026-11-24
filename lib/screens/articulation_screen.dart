@@ -388,6 +388,7 @@ class ArticulationScreen extends ConsumerWidget {
     final s = AppS(isEn);
 
     return KidScreen(
+      backdrop: 'assets/images/backdrops/home_sky.webp',
       accent: _accent,
       body: ListView(
         padding: const EdgeInsets.fromLTRB(DT.sp20, 0, DT.sp20, DT.sp32),
@@ -596,6 +597,7 @@ class _ArticulationDetailScreenState extends State<ArticulationDetailScreen>
     final steps = widget.isEn ? ex.stepsEn : ex.steps;
 
     return KidScreen(
+      backdrop: 'assets/images/backdrops/home_sky.webp',
       accent: _accent,
       trailing: SizedBox(
         width: 72,

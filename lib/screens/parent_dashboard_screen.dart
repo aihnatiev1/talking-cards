@@ -38,78 +38,88 @@ class ParentDashboardScreen extends ConsumerWidget {
 
     return DefaultTabController(
       length: 6,
-      child: Scaffold(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        appBar: AppBar(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () => Navigator.of(context).pop(),
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          color: DT.bgWarm,
+          image: DecorationImage(
+            image: AssetImage('assets/images/backdrops/home_sky.webp'),
+            fit: BoxFit.cover,
+            alignment: Alignment.bottomCenter,
           ),
-          title: GestureDetector(
-            onTap: () => showProfileSelector(context),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ProfileAvatar(profile.active?.avatarEmoji ?? '👶', size: 28),
-                const SizedBox(width: 6),
-                Text(
-                  profile.active?.name ?? s('Малюк', 'Kiddo'),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
+        ),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            title: GestureDetector(
+              onTap: () => showProfileSelector(context),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ProfileAvatar(profile.active?.avatarEmoji ?? '👶', size: 28),
+                  const SizedBox(width: 6),
+                  Text(
+                    profile.active?.name ?? s('Малюк', 'Kiddo'),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 4),
-                Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  size: 18,
-                  color: Colors.grey[500],
-                ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    size: 18,
+                    color: Colors.grey[500],
+                  ),
+                ],
+              ),
+            ),
+            centerTitle: false,
+            bottom: TabBar(
+              indicatorSize: TabBarIndicatorSize.tab,
+              indicator: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              indicatorPadding: const EdgeInsets.symmetric(vertical: 6),
+              dividerColor: Colors.transparent,
+              labelColor: Theme.of(context).colorScheme.onPrimaryContainer,
+              isScrollable: MediaQuery.of(context).size.width < kLargeScreen,
+              tabAlignment: MediaQuery.of(context).size.width >= kLargeScreen
+                  ? TabAlignment.fill
+                  : TabAlignment.start,
+              labelStyle: TextStyle(
+                fontSize: responsiveFont(context, 13),
+                fontWeight: FontWeight.w600,
+              ),
+              unselectedLabelStyle: TextStyle(
+                fontSize: responsiveFont(context, 13),
+              ),
+              tabs: [
+                Tab(text: s('Огляд', 'Overview')),
+                Tab(text: s('Тиждень', 'Week')),
+                Tab(text: s('Слова', 'Words')),
+                Tab(text: s('Паки', 'Packs')),
+                Tab(text: s('Ігри', 'Games')),
+                Tab(text: s('Помилки', 'Mistakes')),
               ],
             ),
           ),
-          centerTitle: false,
-          bottom: TabBar(
-            indicatorSize: TabBarIndicatorSize.tab,
-            indicator: BoxDecoration(
-              color: Theme.of(context).colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            indicatorPadding: const EdgeInsets.symmetric(vertical: 6),
-            dividerColor: Colors.transparent,
-            labelColor: Theme.of(context).colorScheme.onPrimaryContainer,
-            isScrollable: MediaQuery.of(context).size.width < kLargeScreen,
-            tabAlignment: MediaQuery.of(context).size.width >= kLargeScreen
-                ? TabAlignment.fill
-                : TabAlignment.start,
-            labelStyle: TextStyle(
-              fontSize: responsiveFont(context, 13),
-              fontWeight: FontWeight.w600,
-            ),
-            unselectedLabelStyle: TextStyle(
-              fontSize: responsiveFont(context, 13),
-            ),
-            tabs: [
-              Tab(text: s('Огляд', 'Overview')),
-              Tab(text: s('Тиждень', 'Week')),
-              Tab(text: s('Слова', 'Words')),
-              Tab(text: s('Паки', 'Packs')),
-              Tab(text: s('Ігри', 'Games')),
-              Tab(text: s('Помилки', 'Mistakes')),
+          body: const TabBarView(
+            children: [
+              _OverviewTab(),
+              _WeeklyTab(),
+              _WordsTab(),
+              _PacksTab(),
+              _GamesTab(),
+              _WeakWordsTab(),
             ],
           ),
-        ),
-        body: const TabBarView(
-          children: [
-            _OverviewTab(),
-            _WeeklyTab(),
-            _WordsTab(),
-            _PacksTab(),
-            _GamesTab(),
-            _WeakWordsTab(),
-          ],
         ),
       ),
     );
