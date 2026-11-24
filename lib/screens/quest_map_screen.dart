@@ -187,6 +187,7 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen> {
     // own heading and counter.
     final theme = _themeOf(packs);
     return KidScreen(
+      backdrop: 'assets/images/backdrops/home_sky.webp',
       accent: DT.mint,
       background: DT.mintTint,
       showLeading: widget.showBackButton,
