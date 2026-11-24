@@ -442,8 +442,8 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
             if (fits && bounds.maxHeight > 280)
               Positioned(
                 left: 24,
-                right: companion + 32,
-                bottom: 24,
+                right: companion + 14,
+                bottom: 30,
                 child: IgnorePointer(
                   child: Semantics(
                     liveRegion: true,
@@ -451,15 +451,21 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
                       duration: MotionPolicy.of(
                         context,
                       ).dur(DT.motion.selectionChange),
-                      child: CuePill(
-                        child: Text(
-                          cue,
-                          key: ValueKey(cue),
-                          style: DT.caption.copyWith(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                            height: 1.3,
-                            color: DT.textPrimary,
+                      // Bloom's own words: a speech bubble with its tail on
+                      // him, hugging the text at his side.
+                      child: Align(
+                        key: ValueKey(cue),
+                        alignment: Alignment.centerRight,
+                        child: CueBubble(
+                          child: Text(
+                            cue,
+                            textAlign: TextAlign.center,
+                            style: DT.caption.copyWith(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              height: 1.3,
+                              color: DT.textPrimary,
+                            ),
                           ),
                         ),
                       ),

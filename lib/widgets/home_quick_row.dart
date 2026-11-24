@@ -270,17 +270,45 @@ class _QuestTile extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // A treasure chest and the words "Скарб дня": the stars alone did
-          // not say what this tile is for.
-          const AppArt('chest', size: 40),
-          const SizedBox(height: 2),
+          // One picture, one word. Progress is a badge on the chest, not
+          // a number squeezed into the caption.
+          SizedBox(
+            height: 46,
+            width: 62,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                const Center(child: AppArt('chest', size: 46)),
+                Positioned(
+                  right: -8,
+                  top: -4,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: quest.allDone ? DT.success : DT.brand,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: DT.surfaceWhite, width: 2),
+                    ),
+                    child: Text(
+                      '${quest.allDone ? quest.totalCount : quest.doneCount}/${quest.totalCount}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
           FittedBox(
             fit: BoxFit.scaleDown,
-            child: Text(
-              '$label  ${quest.allDone ? quest.totalCount : quest.doneCount}/${quest.totalCount}',
-              style: _Tile.labelStyle,
-              maxLines: 1,
-            ),
+            child: Text(label, style: _Tile.labelStyle, maxLines: 1),
           ),
         ],
       ),
@@ -336,7 +364,6 @@ class _CardOfDayTileState extends State<_CardOfDayTile> {
       child: AnimatedContainer(
         duration: d,
         height: MediaQuery.textScalerOf(context).scale(_Tile.height),
-        padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
           color: _playing ? DT.mintTint : DT.surfaceWhite,
           borderRadius: BorderRadius.circular(DT.rMd),
@@ -345,26 +372,55 @@ class _CardOfDayTileState extends State<_CardOfDayTile> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Expanded(
-              child: AnimatedScale(
-                scale: _playing ? 1.12 : 1,
-                duration: d,
-                curve: Curves.easeOutBack,
-                child: CardImage.forCard(widget.card, padding: EdgeInsets.zero),
+            // Today's picture as a little rounded card, the same size as the
+            // chest and the puzzle, with the "listen" ear as its badge.
+            AnimatedScale(
+              scale: _playing ? 1.12 : 1,
+              duration: d,
+              curve: Curves.easeOutBack,
+              child: SizedBox(
+                height: 46,
+                width: 62,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Center(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: SizedBox.square(
+                          dimension: 46,
+                          child: CardImage.forCard(
+                            widget.card,
+                            fit: BoxFit.cover,
+                            padding: EdgeInsets.zero,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      right: -6,
+                      bottom: -4,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: DT.surfaceWhite,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: _playing ? DT.brand : DT.outline,
+                            width: 2,
+                          ),
+                        ),
+                        child: const AppArt('listen', size: 22),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 2),
-            // "Слово дня" says what the picture is: today's word, tap to hear.
+            const SizedBox(height: 4),
             FittedBox(
               fit: BoxFit.scaleDown,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const AppArt('listen', size: 20),
-                  const SizedBox(width: 4),
-                  Text(widget.label, style: _Tile.labelStyle, maxLines: 1),
-                ],
-              ),
+              child: Text(widget.label, style: _Tile.labelStyle, maxLines: 1),
             ),
           ],
         ),

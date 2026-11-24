@@ -1075,7 +1075,8 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
                   duration: policy.dur(DT.motion.selectionChange),
                   child: Align(
                     alignment: Alignment.centerLeft,
-                    child: CuePill(
+                    child: CueBubble(
+                      tailRight: false,
                       key: ValueKey(cue),
                       child: Text(cue, style: style),
                     ),
