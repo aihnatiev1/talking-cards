@@ -237,9 +237,20 @@ class _Crayon extends StatelessWidget {
               curve: Curves.easeOutCubic,
               width: selected ? face : face - 10,
               height: selected ? face : face - 10,
+              // A puffy clay blob of paint: lit from the top left, a soft
+              // darker underside and a glossy highlight.
               decoration: BoxDecoration(
-                color: crayon.color,
-                borderRadius: BorderRadius.circular(selected ? 20 : 16),
+                gradient: RadialGradient(
+                  center: const Alignment(-0.35, -0.45),
+                  radius: 0.95,
+                  colors: [
+                    Color.lerp(crayon.color, Colors.white, 0.35)!,
+                    crayon.color,
+                    Color.lerp(crayon.color, Colors.black, 0.18)!,
+                  ],
+                  stops: const [0.0, 0.55, 1.0],
+                ),
+                borderRadius: BorderRadius.circular(selected ? 24 : 20),
                 border: Border.all(
                   color: hinted ? DT.hint : Colors.white,
                   width: selected || hinted ? 4 : 2,
@@ -254,6 +265,19 @@ class _Crayon extends StatelessWidget {
                     spreadRadius: hinted ? 2 : 0,
                   ),
                 ],
+              ),
+              child: Align(
+                alignment: const Alignment(-0.45, -0.55),
+                child: FractionallySizedBox(
+                  widthFactor: 0.38,
+                  heightFactor: 0.22,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.55),
+                      borderRadius: BorderRadius.circular(40),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),

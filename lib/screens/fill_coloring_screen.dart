@@ -427,9 +427,11 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
                     padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
                     child: LayoutBuilder(
                       builder: (context, box) {
+                        // Room for the marshmallow frame around the page.
+                        const frame = 10.0;
                         final scale = math.min(
-                          box.maxWidth / sheet.width,
-                          box.maxHeight / sheet.height,
+                          (box.maxWidth - frame * 2) / sheet.width,
+                          (box.maxHeight - frame * 2) / sheet.height,
                         );
                         final w = sheet.width * scale;
                         final h = sheet.height * scale;
@@ -437,26 +439,43 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
                           child: _AlivePicture(
                             alive: _done,
                             pop: _pop,
-                            child: SizedBox(
-                              width: w,
-                              height: h,
-                              child: GestureDetector(
-                                behavior: HitTestBehavior.opaque,
-                                onTapUp: (d) => _fill(
-                                  sheet.areaNear(
-                                    (d.localPosition.dx / scale).round(),
-                                    (d.localPosition.dy / scale).round(),
+                            child: Container(
+                              padding: const EdgeInsets.all(frame),
+                              decoration: BoxDecoration(
+                                color: DT.surfaceWhite,
+                                borderRadius: BorderRadius.circular(28),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.12),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 8),
                                   ),
-                                ),
-                                child: AmbientLoop(
-                                  period: DT.motion.drawingBlink,
-                                  enabled: _done,
-                                  builder: (_, t, __) => CustomPaint(
-                                    painter: _SheetPainter(
-                                      sheet: sheet,
-                                      layer: _paint,
-                                      filled: _filled,
-                                      lid: _lidAt(t),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(18),
+                                child: SizedBox(
+                                  width: w,
+                                  height: h,
+                                  child: GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTapUp: (d) => _fill(
+                                      sheet.areaNear(
+                                        (d.localPosition.dx / scale).round(),
+                                        (d.localPosition.dy / scale).round(),
+                                      ),
+                                    ),
+                                    child: AmbientLoop(
+                                      period: DT.motion.drawingBlink,
+                                      enabled: _done,
+                                      builder: (_, t, __) => CustomPaint(
+                                        painter: _SheetPainter(
+                                          sheet: sheet,
+                                          layer: _paint,
+                                          filled: _filled,
+                                          lid: _lidAt(t),
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),

@@ -16,6 +16,7 @@ import 'ambient_loop.dart';
 import 'card_image.dart';
 import 'kid_tap.dart';
 import '../utils/design_tokens.dart';
+import '../utils/app_icons.dart';
 
 class FlashCard extends ConsumerStatefulWidget {
   final CardModel card;
@@ -262,7 +263,7 @@ class FlashCardState extends ConsumerState<FlashCard>
                     ),
                   ],
                 ),
-                child: const Icon(Icons.favorite, color: Colors.red, size: 22),
+                child: const Center(child: AppArt('heart', size: 28)),
               ),
             ),
           ),
@@ -279,10 +280,25 @@ class FlashCardState extends ConsumerState<FlashCard>
                   vertical: 10,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(14),
+                  color: DT.surfaceWhite,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: DT.outline, width: 2),
                 ),
-                child: const Text('🇬🇧 English ↻', style: DT.caption),
+                // A painted globe and the word — no flag emoji, no arrow glyph.
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const AppArt('globe', size: 22),
+                    const SizedBox(width: 6),
+                    Text(
+                      'English',
+                      style: DT.caption.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: DT.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
