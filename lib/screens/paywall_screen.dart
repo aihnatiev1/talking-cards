@@ -428,131 +428,149 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     // Null until the catalogue for the active language has loaded (or when
     // it failed): the copy then names no number rather than a stale one.
     final packCount = ref.watch(packsProvider).asData?.value.length;
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              DT.brand.withValues(alpha: 0.06),
-              Theme.of(context).scaffoldBackgroundColor,
-            ],
-          ),
+    return DecoratedBox(
+      // The painted clay sky every screen shares.
+      decoration: const BoxDecoration(
+        color: DT.bgWarm,
+        image: DecorationImage(
+          image: AssetImage('assets/images/backdrops/home_sky.webp'),
+          fit: BoxFit.cover,
+          alignment: Alignment.bottomCenter,
         ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              Align(
-                alignment: Alignment.topRight,
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: IconButton(
-                    onPressed: () {
-                      AnalyticsService.instance.logPaywallDismiss(
-                        widget.isOnboarding
-                            ? 'paywall_onboarding'
-                            : 'paywall_screen',
-                      );
-                      Navigator.of(context).pop(false);
-                    },
-                    // grey[700] on the lavender top: ≈5:1 (≥3:1 for UI).
-                    // IconButton's 48 pt hit area stays.
-                    icon: Icon(Icons.close, color: Colors.grey[700], size: 28),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                DT.brand.withValues(alpha: 0.06),
+                Theme.of(context).scaffoldBackgroundColor,
+              ],
+            ),
+          ),
+          child: SafeArea(
+            child: Column(
+              children: [
+                Align(
+                  alignment: Alignment.topRight,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: IconButton(
+                      onPressed: () {
+                        AnalyticsService.instance.logPaywallDismiss(
+                          widget.isOnboarding
+                              ? 'paywall_onboarding'
+                              : 'paywall_screen',
+                        );
+                        Navigator.of(context).pop(false);
+                      },
+                      // grey[700] on the lavender top: ≈5:1 (≥3:1 for UI).
+                      // IconButton's 48 pt hit area stays.
+                      icon: Icon(
+                        Icons.close,
+                        color: Colors.grey[700],
+                        size: 28,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 28),
-                  child: Column(
-                    children: [
-                      _trialBanner(context, s, trialDays, packCount),
-                      const SizedBox(height: 18),
-                      Text(
-                        _headline(s),
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: responsiveFont(context, 22),
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(
-                            context,
-                          ).textTheme.headlineSmall?.color,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      _benefit(AppIcon.stepCards, _packsBenefit(s, packCount)),
-                      const SizedBox(height: 10),
-                      _benefit(
-                        AppIcon.sound,
-                        s(
-                          '400+ яскравих карток зі звуком',
-                          '400+ vivid cards with sound',
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      // Was «Нові розділи щомісяця / New packs every month» — a
-                      // schedule nobody had promised to keep. Replaced with a
-                      // fact the store listing already states.
-                      _benefit(AppIcon.check, s('Без реклами', 'No ads')),
-                      const SizedBox(height: 18),
-                      _testimonial(s),
-                      const SizedBox(height: 22),
-                      ...List.generate(plans.length, (i) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: _planTile(i, plans),
-                        );
-                      }),
-                      const SizedBox(height: 16),
-                      TextButton(
-                        onPressed: _busy ? null : _restore,
-                        child: Text(
-                          s('Відновити покупки', 'Restore purchases'),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 28),
+                    child: Column(
+                      children: [
+                        _trialBanner(context, s, trialDays, packCount),
+                        const SizedBox(height: 18),
+                        Text(
+                          _headline(s),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            color: Colors.grey[700],
-                            fontSize: responsiveFont(context, 15),
-                            fontWeight: FontWeight.w500,
+                            fontSize: responsiveFont(context, 22),
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(
+                              context,
+                            ).textTheme.headlineSmall?.color,
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 20),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Wrap(
-                          alignment: WrapAlignment.center,
-                          spacing: 12,
-                          runSpacing: 8,
-                          children: [
-                            _legalLink(
-                              s('Умови використання', 'Terms of Use'),
-                              isEn
-                                  ? 'https://aihnatiev1.github.io/talking-cards/terms-en.html'
-                                  : 'https://aihnatiev1.github.io/talking-cards/terms.html',
-                            ),
-                            _legalLink(
-                              'EULA',
-                              'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/',
-                            ),
-                            _legalLink(
-                              s('Конфіденційність', 'Privacy'),
-                              isEn
-                                  ? 'https://aihnatiev1.github.io/talking-cards/privacy-policy-en.html'
-                                  : 'https://aihnatiev1.github.io/talking-cards/privacy-policy.html',
-                            ),
-                          ],
+                        const SizedBox(height: 20),
+                        _benefit(
+                          AppIcon.stepCards,
+                          _packsBenefit(s, packCount),
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
+                        const SizedBox(height: 10),
+                        _benefit(
+                          AppIcon.sound,
+                          s(
+                            '400+ яскравих карток зі звуком',
+                            '400+ vivid cards with sound',
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        // Was «Нові розділи щомісяця / New packs every month» — a
+                        // schedule nobody had promised to keep. Replaced with a
+                        // fact the store listing already states.
+                        _benefit(AppIcon.check, s('Без реклами', 'No ads')),
+                        const SizedBox(height: 18),
+                        _testimonial(s),
+                        const SizedBox(height: 22),
+                        ...List.generate(plans.length, (i) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: _planTile(i, plans),
+                          );
+                        }),
+                        const SizedBox(height: 16),
+                        TextButton(
+                          onPressed: _busy ? null : _restore,
+                          child: Text(
+                            s('Відновити покупки', 'Restore purchases'),
+                            style: TextStyle(
+                              color: Colors.grey[700],
+                              fontSize: responsiveFont(context, 15),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Wrap(
+                            alignment: WrapAlignment.center,
+                            spacing: 12,
+                            runSpacing: 8,
+                            children: [
+                              _legalLink(
+                                s('Умови використання', 'Terms of Use'),
+                                isEn
+                                    ? 'https://aihnatiev1.github.io/talking-cards/terms-en.html'
+                                    : 'https://aihnatiev1.github.io/talking-cards/terms.html',
+                              ),
+                              _legalLink(
+                                'EULA',
+                                'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/',
+                              ),
+                              _legalLink(
+                                s('Конфіденційність', 'Privacy'),
+                                isEn
+                                    ? 'https://aihnatiev1.github.io/talking-cards/privacy-policy-en.html'
+                                    : 'https://aihnatiev1.github.io/talking-cards/privacy-policy.html',
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              _stickyCta(context, s, plans, trialDays),
-            ],
+                _stickyCta(context, s, plans, trialDays),
+              ],
+            ),
           ),
         ),
       ),

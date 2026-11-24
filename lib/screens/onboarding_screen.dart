@@ -208,96 +208,107 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Widget build(BuildContext context) {
     final hideCta = _pages[_page] == _OnbStep.magic;
     final isLast = _page == _pages.length - 1;
-    return Scaffold(
-      backgroundColor: DT.bgWarm,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Progress dots — faded out on the magic moment, which has its
-            // own three card dots; two rows of dots read as two progress bars
-            // (audit #4). Faded, not removed: dropping this child shifts the
-            // PageView's slot in the Column and Flutter rebuilds it from page
-            // zero, right as the flow advances.
-            AnimatedOpacity(
-              opacity: hideCta ? 0 : 1,
-              duration: MotionPolicy.of(
-                context,
-              ).dur(const Duration(milliseconds: 200)),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(
-                    _pages.length,
-                    (i) => AnimatedContainer(
-                      duration: MotionPolicy.of(
-                        context,
-                      ).dur(const Duration(milliseconds: 300)),
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      width: i == _page ? 24 : 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: i == _page
-                            ? DT.brand
-                            : DT.brand.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            // Pages
-            Expanded(
-              child: PageView(
-                controller: _pageCtrl,
-                physics: const NeverScrollableScrollPhysics(),
-                onPageChanged: (p) => setState(() => _page = p),
-                children: _pages.map(_buildStep).toList(),
-              ),
-            ),
-
-            // Next / Start button (hidden on Magic Moment — it drives its own CTA)
-            if (!hideCta)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(32, 12, 32, 24),
-                child: KidTap(
-                  onTap: _canProceed ? _next : null,
-                  // The button keeps its look and disabled state; the tap
-                  // (squeeze, haptic, pop) belongs to the KidTap around it.
-                  child: IgnorePointer(
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _canProceed ? () {} : null,
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(72, 72),
-                          backgroundColor: DT.brand,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: Text(
-                          _selectedLang == 'en'
-                              ? (isLast ? "Let's start" : 'Next')
-                              : (isLast ? 'Почати' : 'Далі'),
-                          style: const TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w700,
-                          ),
+    return DecoratedBox(
+      // The painted clay sky every screen shares.
+      decoration: const BoxDecoration(
+        color: DT.bgWarm,
+        image: DecorationImage(
+          image: AssetImage('assets/images/backdrops/home_sky.webp'),
+          fit: BoxFit.cover,
+          alignment: Alignment.bottomCenter,
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Progress dots — faded out on the magic moment, which has its
+              // own three card dots; two rows of dots read as two progress bars
+              // (audit #4). Faded, not removed: dropping this child shifts the
+              // PageView's slot in the Column and Flutter rebuilds it from page
+              // zero, right as the flow advances.
+              AnimatedOpacity(
+                opacity: hideCta ? 0 : 1,
+                duration: MotionPolicy.of(
+                  context,
+                ).dur(const Duration(milliseconds: 200)),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(
+                      _pages.length,
+                      (i) => AnimatedContainer(
+                        duration: MotionPolicy.of(
+                          context,
+                        ).dur(const Duration(milliseconds: 300)),
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        width: i == _page ? 24 : 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: i == _page
+                              ? DT.brand
+                              : DT.brand.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(4),
                         ),
                       ),
                     ),
                   ),
                 ),
-              )
-            else
-              const SizedBox(height: 24),
-          ],
+              ),
+
+              // Pages
+              Expanded(
+                child: PageView(
+                  controller: _pageCtrl,
+                  physics: const NeverScrollableScrollPhysics(),
+                  onPageChanged: (p) => setState(() => _page = p),
+                  children: _pages.map(_buildStep).toList(),
+                ),
+              ),
+
+              // Next / Start button (hidden on Magic Moment — it drives its own CTA)
+              if (!hideCta)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(32, 12, 32, 24),
+                  child: KidTap(
+                    onTap: _canProceed ? _next : null,
+                    // The button keeps its look and disabled state; the tap
+                    // (squeeze, haptic, pop) belongs to the KidTap around it.
+                    child: IgnorePointer(
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _canProceed ? () {} : null,
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: const Size(72, 72),
+                            backgroundColor: DT.brand,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: Text(
+                            _selectedLang == 'en'
+                                ? (isLast ? "Let's start" : 'Next')
+                                : (isLast ? 'Почати' : 'Далі'),
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+              else
+                const SizedBox(height: 24),
+            ],
+          ),
         ),
       ),
     );

@@ -231,41 +231,53 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: _imageReady
-            ? FadeTransition(
-                opacity: _fadeAnim,
-                child: ScaleTransition(
-                  scale: _scaleAnim,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // No wordmark here: the splash stays language-neutral so new
-                      // locales need zero design work. The icon alone carries the brand.
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(64),
-                        child: Image.asset(
-                          'assets/images/webp/splash.webp',
-                          width: 280,
-                          height: 280,
-                          fit: BoxFit.contain,
+    return DecoratedBox(
+      // The painted clay sky every screen shares.
+      decoration: const BoxDecoration(
+        color: DT.bgWarm,
+        image: DecorationImage(
+          image: AssetImage('assets/images/backdrops/home_sky.webp'),
+          fit: BoxFit.cover,
+          alignment: Alignment.bottomCenter,
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Center(
+          child: _imageReady
+              ? FadeTransition(
+                  opacity: _fadeAnim,
+                  child: ScaleTransition(
+                    scale: _scaleAnim,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // No wordmark here: the splash stays language-neutral so new
+                        // locales need zero design work. The icon alone carries the brand.
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(64),
+                          child: Image.asset(
+                            'assets/images/webp/splash.webp',
+                            width: 280,
+                            height: 280,
+                            fit: BoxFit.contain,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 32),
-                      const SizedBox(
-                        width: 32,
-                        height: 32,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 3,
-                          color: DT.brand,
+                        const SizedBox(height: 32),
+                        const SizedBox(
+                          width: 32,
+                          height: 32,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 3,
+                            color: DT.brand,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              )
-            : const SizedBox.shrink(),
+                )
+              : const SizedBox.shrink(),
+        ),
       ),
     );
   }

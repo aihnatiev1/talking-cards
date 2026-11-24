@@ -23,7 +23,7 @@ void main() {
   useTestMotion();
 
   group('paywall hero art', () {
-    testWidgets('is Bloom plus a fan of three cards, not an emoji', (
+    testWidgets('is the painted Bloom with the cards, not an emoji', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -37,12 +37,13 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byType(BloomMascot), findsOneWidget);
-      // One glyph per card: a picture, its sound, the star of what's new.
-      expect(find.byType(AppIconView), findsNWidgets(3));
-      expect(find.byKey(const ValueKey('fan-left')), findsOneWidget);
-      expect(find.byKey(const ValueKey('fan-mid')), findsOneWidget);
-      expect(find.byKey(const ValueKey('fan-right')), findsOneWidget);
+      // The painted clay hero: Bloom hugging the cards — never an emoji.
+      final image = tester.widget<Image>(find.byType(Image));
+      expect(
+        (image.image as AssetImage).assetName,
+        'assets/images/games/paywall_hero.webp',
+      );
+      expect(find.text('🎉'), findsNothing);
     });
 
     testWidgets('fits the paywall banner width without overflowing', (

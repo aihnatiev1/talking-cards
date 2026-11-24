@@ -41,27 +41,35 @@ class PaywallHeroArt extends StatelessWidget {
       label: semanticsLabel,
       image: true,
       excludeSemantics: true,
-      child: SizedBox(
-        height: height,
-        // On a 320 dp phone the banner is 224 dp wide and the composition
-        // wants 225 — scale, never clip or overflow.
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              BloomMascot(
-                size: bloom,
-                state: const BloomState.still(BloomEmotion.happy),
-                facing: BloomFacing.right,
-                interactive: false,
-                semanticsLabel: semanticsLabel,
-              ),
-              const SizedBox(width: DT.sp4),
-              _CardFan(height: height),
-            ],
+      // The painted clay hero (Firefly): Bloom hugging a fan of picture
+      // cards under a rainbow. The drawn composition stays as the fallback.
+      child: Image.asset(
+        'assets/images/games/paywall_hero.webp',
+        height: height * 1.45,
+        fit: BoxFit.contain,
+        filterQuality: FilterQuality.medium,
+        errorBuilder: (_, __, ___) => SizedBox(
+          height: height,
+          // On a 320 dp phone the banner is 224 dp wide and the composition
+          // wants 225 — scale, never clip or overflow.
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                BloomMascot(
+                  size: bloom,
+                  state: const BloomState.still(BloomEmotion.happy),
+                  facing: BloomFacing.right,
+                  interactive: false,
+                  semanticsLabel: semanticsLabel,
+                ),
+                const SizedBox(width: DT.sp4),
+                _CardFan(height: height),
+              ],
+            ),
           ),
         ),
       ),
