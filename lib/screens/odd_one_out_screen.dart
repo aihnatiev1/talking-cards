@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -49,6 +50,27 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
   final Random _rng = Random();
   late _Round _round;
 
+  /// A child who simply waits is helped, not left alone with the board:
+  /// after a pause Bloom points at the odd card, and a while later it glows
+  /// — the same help two misses bring, offered without a miss.
+  Timer? _idleTimer;
+  Timer? _idleGlowTimer;
+  bool _idleGlow = false;
+
+  void _armIdleHelp() {
+    _idleTimer?.cancel();
+    _idleGlowTimer?.cancel();
+    _idleTimer = Timer(DT.motion.lessonHint, () {
+      if (!mounted || _answered) return;
+      FeedbackService.instance.event(FeedbackEvent.lockedHint);
+      _bloom.nudged(quizOptionDirection(3, 4));
+    });
+    _idleGlowTimer = Timer(DT.motion.lessonHint * 2, () {
+      if (!mounted || _answered) return;
+      setState(() => _idleGlow = true);
+    });
+  }
+
   late final BloomReactions _bloom = ref.read(bloomReactionsProvider.notifier);
 
   @override
@@ -80,7 +102,9 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
       _answered = false;
       _misses.reset();
       _nudges.clear();
+      _idleGlow = false;
     });
+    _armIdleHelp();
   }
 
   _Round _semantic(OddOneOutTask task) => _Round(
@@ -116,6 +140,7 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
 
   void _onTap(_Slot slot) {
     if (_answered) return;
+    _armIdleHelp();
 
     // Play the tapped card's word — child hears the item they're evaluating,
     // which anchors the sort-by-category reasoning in speech, not silence.
@@ -163,6 +188,8 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
 
   @override
   void dispose() {
+    _idleTimer?.cancel();
+    _idleGlowTimer?.cancel();
     _bloom.sceneLeft(this);
     super.dispose();
   }
@@ -273,7 +300,7 @@ class _OddOneOutScreenState extends ConsumerState<OddOneOutScreen>
         ? AnswerMark.none
         : _answered
         ? AnswerMark.correct
-        : _misses.showHint
+        : (_misses.showHint || _idleGlow)
         ? AnswerMark.hint
         : AnswerMark.none;
 
