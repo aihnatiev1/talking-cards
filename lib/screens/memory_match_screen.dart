@@ -938,7 +938,9 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
             behavior: HitTestBehavior.translucent,
             onLongPress: _showParentTools,
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              // Room under the stars: the board's mat starts right below
+              // and was clipping their points.
+              padding: const EdgeInsets.fromLTRB(0, 8, 0, 18),
               child: Semantics(
                 liveRegion: true,
                 label: AppS(ref.watch(languageProvider) == 'en')(
@@ -1616,7 +1618,7 @@ class _ProgressStars extends StatelessWidget {
     required this.policy,
   });
 
-  static const _size = 28.0;
+  static const _size = 34.0;
 
   @override
   Widget build(BuildContext context) {
