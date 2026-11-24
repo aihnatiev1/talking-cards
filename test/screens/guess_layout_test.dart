@@ -10,6 +10,7 @@ import 'package:talking_cards/screens/guess_screen.dart';
 import 'package:talking_cards/services/asset_pack_service.dart';
 import 'package:talking_cards/services/audio_service.dart';
 import 'package:talking_cards/services/feedback_service.dart';
+import 'package:talking_cards/utils/app_icons.dart';
 import 'package:talking_cards/widgets/quiz_option.dart';
 import 'package:talking_cards/widgets/quiz_options_board.dart';
 import '../helpers/motion.dart';
@@ -189,7 +190,9 @@ void main() {
         );
       }
       await tester.pumpAndSettle();
-      final speaker = find.byIcon(Icons.volume_up_rounded);
+      final speaker = find.byWidgetPredicate(
+        (w) => w is AppArt && w.name == 'ear',
+      );
       expect(tester.getRect(speaker).bottom, lessThan(100));
       final before = replays;
       await tester.tap(speaker);

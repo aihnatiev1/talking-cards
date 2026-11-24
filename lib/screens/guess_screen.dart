@@ -18,6 +18,7 @@ import '../services/audio_service.dart';
 import '../services/feedback_service.dart';
 import '../providers/bloom_reactions_provider.dart';
 import '../widgets/bloom_mascot.dart';
+import '../utils/app_icons.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../utils/motion.dart';
@@ -347,10 +348,8 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
               ),
             ],
           ),
-          child: const Icon(
-            Icons.volume_up_rounded,
-            size: 44,
-            color: Colors.white,
+          child: const Center(
+            child: AppArt('ear', size: 48, silhouette: Colors.white),
           ),
         ),
       ),

@@ -25,6 +25,7 @@ import '../utils/design_tokens.dart';
 import '../utils/game_state_mixin.dart';
 import '../utils/app_icons.dart';
 import '../utils/l10n.dart';
+import '../widgets/ambient_loop.dart';
 import '../widgets/card_image.dart';
 import '../widgets/game_celebration_overlay.dart';
 import '../widgets/kid_screen.dart';
@@ -487,23 +488,28 @@ class _RepeatGameScreenState extends ConsumerState<RepeatGameScreen>
 
                         const SizedBox(height: 8),
 
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.volume_up_rounded,
-                              color: Colors.grey[400],
-                              size: 16,
+                        // The ear breathes while the word is being said, so
+                        // the card visibly "talks" and the child sees whose
+                        // turn it is.
+                        ValueListenableBuilder<bool>(
+                          valueListenable: AudioService.instance.isSpeaking,
+                          builder: (_, speaking, ear) => AmbientLoop(
+                            period: DT.motion.speakerPulse,
+                            enabled: speaking,
+                            builder: (_, t, child) => Transform.scale(
+                              scale: 1.0 + 0.18 * t,
+                              child: child,
                             ),
-                            const SizedBox(width: 4),
-                            Text(
-                              s('Натисни, щоб послухати', 'Tap to listen'),
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.grey[400],
-                              ),
+                            child: ear,
+                          ),
+                          child: AppArt(
+                            'ear',
+                            size: 44,
+                            semanticLabel: s(
+                              'Натисни, щоб послухати',
+                              'Tap to listen',
                             ),
-                          ],
+                          ),
                         ),
                       ],
                     ),

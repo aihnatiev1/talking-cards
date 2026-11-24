@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../utils/app_icons.dart';
+
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
 import '../providers/language_provider.dart';
@@ -364,17 +366,8 @@ class _QuestionCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.volume_up_rounded, color: Colors.grey[400], size: 14),
-              const SizedBox(width: 4),
-              Text(
-                s('торкнись', 'tap to hear'),
-                style: TextStyle(fontSize: 11, color: Colors.grey[400]),
-              ),
-            ],
-          ),
+          // A picture of an ear says "tap to hear" to a child who cannot read.
+          AppArt('ear', size: 32, semanticLabel: s('торкнись', 'tap to hear')),
         ],
       ),
     );
