@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talking_cards/screens/mirror_draw_screen.dart';
+import 'package:talking_cards/utils/app_icons.dart';
 import 'package:talking_cards/widgets/crayon_palette.dart';
 
 /// Mirror drawing has one rule: nothing a child does here can be wrong,
@@ -46,7 +47,9 @@ void main() {
     final before = tester.widget<CustomPaint>(canvas).painter;
     expect(before, isNotNull);
 
-    await tester.tap(find.byIcon(Icons.refresh_rounded));
+    await tester.tap(
+      find.byWidgetPredicate((w) => w is AppArt && w.name == 'restart'),
+    );
     await tester.pump();
     expect(find.byType(MirrorDrawScreen), findsOneWidget);
   });

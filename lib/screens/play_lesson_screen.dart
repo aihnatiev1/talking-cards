@@ -355,9 +355,14 @@ class _PlayLessonScreenState extends ConsumerState<PlayLessonScreen>
                     Navigator.of(context).pop();
                   },
                 ),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(s('На головну', 'Home')),
+                CuePill(
+                  child: TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(
+                      s('На головну', 'Home'),
+                      style: DT.tileTitle.copyWith(color: DT.brand),
+                    ),
+                  ),
                 ),
               ],
             ),

@@ -643,3 +643,47 @@ abstract final class _KidOverlayQueue {
     _waiting.clear();
   }
 }
+
+/// 72 dp white puffy round button with a painted [art] icon — the header
+/// action of a game (start again, take one off, new picture). When
+/// [enabled] is false the picture fades so the child sees there is nothing
+/// to undo yet; the tap still lands harmlessly (forgiving input).
+class KidArtButton extends StatelessWidget {
+  const KidArtButton({
+    super.key,
+    required this.art,
+    required this.label,
+    required this.onTap,
+    this.enabled = true,
+  });
+
+  final String art;
+  final String label;
+  final VoidCallback onTap;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) => KidTap(
+    onTap: onTap,
+    child: Semantics(
+      button: true,
+      enabled: enabled,
+      label: label,
+      child: Container(
+        width: 72,
+        height: 72,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: DT.surfaceWhite,
+          boxShadow: DT.shadowSoft(DT.brand),
+        ),
+        alignment: Alignment.center,
+        child: AnimatedOpacity(
+          opacity: enabled ? 1 : .45,
+          duration: DT.motion.quick,
+          child: AppArt(art, size: 46),
+        ),
+      ),
+    ),
+  );
+}

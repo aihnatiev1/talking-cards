@@ -498,13 +498,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                           ),
                         ),
                         const SizedBox(height: 20),
-                        _benefit(
-                          AppIcon.stepCards,
-                          _packsBenefit(s, packCount),
-                        ),
+                        _benefit('cards', _packsBenefit(s, packCount)),
                         const SizedBox(height: 10),
                         _benefit(
-                          AppIcon.sound,
+                          'listen',
                           s(
                             '400+ яскравих карток зі звуком',
                             '400+ vivid cards with sound',
@@ -514,7 +511,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                         // Was «Нові розділи щомісяця / New packs every month» — a
                         // schedule nobody had promised to keep. Replaced with a
                         // fact the store listing already states.
-                        _benefit(AppIcon.check, s('Без реклами', 'No ads')),
+                        _benefit('heart', s('Без реклами', 'No ads')),
                         const SizedBox(height: 18),
                         _testimonial(s),
                         const SizedBox(height: 22),
@@ -1139,18 +1136,19 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   /// One benefit line. The glyph is an [AppIcon] — the same drawing the
   /// child sees on the tabs and the quest map, so the parent recognises
   /// what they are buying (G15) instead of reading a Material pictogram.
-  Widget _benefit(AppIcon icon, String text) {
+  Widget _benefit(String art, String text) {
     return Row(
       children: [
         Container(
-          width: 38,
-          height: 38,
+          width: 52,
+          height: 52,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: DT.brand.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(DT.rSm),
+            color: DT.surfaceWhite,
+            shape: BoxShape.circle,
+            boxShadow: DT.shadowSoft(DT.brand),
           ),
-          child: AppIconView(icon, size: 26),
+          child: AppArt(art, size: 38),
         ),
         const SizedBox(width: 12),
         Expanded(

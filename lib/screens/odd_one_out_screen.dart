@@ -22,6 +22,7 @@ import '../widgets/card_image.dart';
 import '../widgets/game_celebration_overlay.dart';
 import '../widgets/cue_pill.dart';
 import '../widgets/kid_screen.dart';
+import '../utils/app_icons.dart';
 import '../widgets/quiz_options_board.dart';
 import '../widgets/kid_tap.dart';
 
@@ -525,24 +526,6 @@ class _CardChip extends StatelessWidget {
 class _QuestionBadge extends StatelessWidget {
   const _QuestionBadge();
   @override
-  Widget build(BuildContext context) => Container(
-    width: 56,
-    height: 56,
-    alignment: Alignment.center,
-    decoration: BoxDecoration(
-      color: DT.violet,
-      shape: BoxShape.circle,
-      border: Border.all(color: Colors.white, width: 3),
-      boxShadow: const [BoxShadow(color: DT.outline, offset: Offset(0, 3))],
-    ),
-    child: Text(
-      '?',
-      style: DT.h1.copyWith(
-        color: Colors.white,
-        fontSize: 34,
-        fontWeight: FontWeight.w900,
-        height: 1,
-      ),
-    ),
-  );
+  Widget build(BuildContext context) =>
+      const AppArt('question', size: 60, semanticLabel: '?');
 }

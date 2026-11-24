@@ -102,14 +102,11 @@ class _StickerSceneScreenState extends ConsumerState<StickerSceneScreen> {
       backdrop: 'assets/images/backdrops/guess_sky.webp',
       accent: DT.brand,
       meadow: true,
-      trailing: IconButton(
-        tooltip: s('Прибрати одну', 'Take one off'),
-        onPressed: _undo,
-        icon: Icon(
-          Icons.undo_rounded,
-          size: 28,
-          color: placed.isEmpty ? DT.textMuted : DT.brand,
-        ),
+      trailing: KidArtButton(
+        art: 'undo',
+        label: s('Прибрати одну', 'Take one off'),
+        onTap: _undo,
+        enabled: placed.isNotEmpty,
       ),
       body: pool.isEmpty
           ? Center(

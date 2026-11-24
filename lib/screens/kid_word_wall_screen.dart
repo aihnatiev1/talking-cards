@@ -182,13 +182,20 @@ class _KidWordWallScreenState extends ConsumerState<KidWordWallScreen> {
           children: [
             // Looking into the empty box (§3.3): a still `curious`,
             // pupils down — not the header's live Bloom twice.
-            const BloomMascot(
-              size: 96,
-              interactive: false,
-              state: BloomState.still(
-                BloomEmotion.curious,
-                lookAt: Alignment.bottomCenter,
-              ),
+            const Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                BloomMascot(
+                  size: 130,
+                  interactive: false,
+                  state: BloomState.still(
+                    BloomEmotion.curious,
+                    lookAt: Alignment.bottomRight,
+                  ),
+                ),
+                AppArt('chest', size: 110),
+              ],
             ),
             const SizedBox(height: 20),
             DecoratedBox(

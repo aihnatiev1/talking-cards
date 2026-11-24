@@ -400,22 +400,20 @@ class _FillColoringScreenState extends ConsumerState<FillColoringScreen>
           : Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                IconButton(
-                  tooltip: s('Спочатку', 'Start over'),
-                  onPressed: _clear,
-                  icon: Icon(
-                    Icons.refresh_rounded,
-                    size: 28,
-                    color: _filled.isEmpty ? DT.textMuted : DT.brand,
-                  ),
+                KidArtButton(
+                  art: 'restart',
+                  label: s('Спочатку', 'Start over'),
+                  onTap: _clear,
+                  enabled: _filled.isNotEmpty,
                 ),
-                if (_ids.length > 1)
-                  IconButton(
-                    tooltip: s('Нова картинка', 'New picture'),
-                    onPressed: _newPicture,
-                    icon: const Icon(Icons.auto_awesome_rounded, size: 26),
-                    color: DT.brand,
+                if (_ids.length > 1) ...[
+                  const SizedBox(width: 8),
+                  KidArtButton(
+                    art: 'sparkle',
+                    label: s('Нова картинка', 'New picture'),
+                    onTap: _newPicture,
                   ),
+                ],
               ],
             ),
       body: sheet == null

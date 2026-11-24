@@ -370,18 +370,26 @@ class _BloomBodyState extends State<_BloomBody> with TickerProviderStateMixin {
         Widget child = RepaintBoundary(
           child: SizedBox.square(
             dimension: widget.size,
-            child: Image.asset(
-              'assets/images/bloom/$sprite.webp',
-              fit: BoxFit.contain,
-              alignment: Alignment.bottomCenter,
-              gaplessPlayback: true,
-              filterQuality: FilterQuality.medium,
-              errorBuilder: (_, __, ___) => CustomPaint(
-                size: Size.square(widget.size),
-                painter: BloomPainter(
-                  pose: pose,
-                  look: lookOffset,
-                  eyeOpen: _eyeOpen,
+            // A new emotion cross-fades in (no hard cut between poses);
+            // a blink stays an instant swap inside the same keyed child.
+            child: AnimatedSwitcher(
+              duration: DT.motion.quick,
+              child: Image.asset(
+                key: ValueKey(_shown.emotion),
+                width: widget.size,
+                height: widget.size,
+                'assets/images/bloom/$sprite.webp',
+                fit: BoxFit.contain,
+                alignment: Alignment.bottomCenter,
+                gaplessPlayback: true,
+                filterQuality: FilterQuality.medium,
+                errorBuilder: (_, __, ___) => CustomPaint(
+                  size: Size.square(widget.size),
+                  painter: BloomPainter(
+                    pose: pose,
+                    look: lookOffset,
+                    eyeOpen: _eyeOpen,
+                  ),
                 ),
               ),
             ),

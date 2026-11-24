@@ -12,7 +12,6 @@ import '../utils/l10n.dart';
 import '../widgets/crayon_palette.dart';
 import '../widgets/ambient_loop.dart';
 import '../widgets/kid_screen.dart';
-import '../widgets/kid_tap.dart';
 
 /// One drawn line, in the colour it was drawn with.
 class _Stroke {
@@ -90,16 +89,11 @@ class _MirrorDrawScreenState extends ConsumerState<MirrorDrawScreen> {
         s('Дзеркальце', 'Mirror'),
         style: DT.tileTitle.copyWith(color: DT.textPrimary),
       ),
-      trailing: KidTap(
+      trailing: KidArtButton(
+        art: 'restart',
+        label: s('Спочатку', 'Start over'),
         onTap: _clear,
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: Icon(
-            Icons.refresh_rounded,
-            size: 28,
-            color: _strokes.isEmpty ? DT.textMuted : DT.brand,
-          ),
-        ),
+        enabled: _strokes.isNotEmpty,
       ),
       body: Column(
         children: [
