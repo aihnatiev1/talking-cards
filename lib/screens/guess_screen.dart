@@ -425,7 +425,11 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
         final painter = TextPainter(
           text: TextSpan(
             text: cue,
-            style: DT.caption.copyWith(fontSize: 16, height: 1.3),
+            style: DT.caption.copyWith(
+              fontSize: 18,
+              height: 1.3,
+              fontWeight: FontWeight.w800,
+            ),
           ),
           textDirection: Directionality.of(context),
           textScaler: MediaQuery.textScalerOf(context),
@@ -456,7 +460,8 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
                           cue,
                           key: ValueKey(cue),
                           style: DT.caption.copyWith(
-                            fontSize: 16,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
                             height: 1.3,
                             color: DT.textPrimary,
                           ),
