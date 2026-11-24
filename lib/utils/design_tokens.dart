@@ -93,6 +93,12 @@ class DT {
   static const sunBurst = Color(0xFFFFD93D);
   static const mint = Color(0xFF6BCB77);
   static const sky = Color(0xFF4D96FF);
+
+  /// The four colours of a soap film, as the bubble glass sweeps them.
+  static const soapCyan = Color(0xFF7DE3FF);
+  static const soapPink = Color(0xFFFF9BD8);
+  static const soapYellow = Color(0xFFFFE27A);
+  static const soapMint = Color(0xFFA6F0B0);
   static const violet = Color(0xFFA78BFA);
   static const peach = Color(0xFFFF8C42);
   static const pink = Color(0xFFE91E8C);

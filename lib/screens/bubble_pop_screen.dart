@@ -2201,14 +2201,44 @@ class _GlassPainter extends CustomPainter {
     final r = d / 2;
     final c = size.center(Offset.zero);
 
-    // Rim — the one high-contrast element in the sky.
+    final disc = Rect.fromCircle(center: c, radius: r);
+
+    // Soap film: a faint rainbow sweeping round the inside of the glass,
+    // the thing that makes a circle read as a bubble and not a coin.
+    canvas.drawCircle(
+      c,
+      r - rimWidth * 2.2,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = rimWidth * 3.2
+        ..shader = SweepGradient(
+          colors: [
+            DT.soapCyan.withValues(alpha: 0.40),
+            DT.soapPink.withValues(alpha: 0.40),
+            DT.soapYellow.withValues(alpha: 0.40),
+            DT.soapMint.withValues(alpha: 0.40),
+            DT.soapCyan.withValues(alpha: 0.40),
+          ],
+        ).createShader(disc),
+    );
+
+    // Rim — the one high-contrast element in the sky; the pack colour with
+    // a pearly sheen travelling round it.
     canvas.drawCircle(
       c,
       r - rimWidth / 2,
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = rimWidth
-        ..color = tint.withValues(alpha: 0.95),
+        ..shader = SweepGradient(
+          colors: [
+            tint.withValues(alpha: 0.95),
+            Color.lerp(tint, Colors.white, 0.45)!.withValues(alpha: 0.95),
+            tint.withValues(alpha: 0.95),
+            Color.lerp(tint, DT.soapPink, 0.35)!.withValues(alpha: 0.95),
+            tint.withValues(alpha: 0.95),
+          ],
+        ).createShader(disc),
     );
     // Edge of glass just inside the rim.
     canvas.drawCircle(
@@ -2242,6 +2272,20 @@ class _GlassPainter extends CustomPainter {
         ).createShader(hi),
     );
     canvas.restore();
+
+    // A curved window-light along the upper-left glass, the classic bubble
+    // glint.
+    canvas.drawArc(
+      Rect.fromCircle(center: c, radius: r - rimWidth * 2.4),
+      pi * 1.08,
+      pi * 0.28,
+      false,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeWidth = max(2.0, 0.035 * d)
+        ..color = DT.surfaceWhite.withValues(alpha: 0.85),
+    );
 
     // Second, smaller highlight lower right.
     canvas.drawCircle(
