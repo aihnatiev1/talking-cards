@@ -359,13 +359,31 @@ class _BloomBodyState extends State<_BloomBody> with TickerProviderStateMixin {
           reachScale: PaintedBloom.designSize / widget.size,
         );
         final pose = frame.adjust(base);
+        // The clay Bloom: one painted pose per emotion, moved by the same
+        // hop / tilt / squash / breath as before. A blink swaps in the
+        // eyes-shut pose of the resting emotions.
+        final blinking =
+            _eyeOpen < 0.5 &&
+            (_shown.emotion == BloomEmotion.idle ||
+                _shown.emotion == BloomEmotion.listen);
+        final sprite = blinking ? 'blink' : _shown.emotion.name;
         Widget child = RepaintBoundary(
-          child: CustomPaint(
-            size: Size.square(widget.size),
-            painter: BloomPainter(
-              pose: pose,
-              look: lookOffset,
-              eyeOpen: _eyeOpen,
+          child: SizedBox.square(
+            dimension: widget.size,
+            child: Image.asset(
+              'assets/images/bloom/$sprite.webp',
+              fit: BoxFit.contain,
+              alignment: Alignment.bottomCenter,
+              gaplessPlayback: true,
+              filterQuality: FilterQuality.medium,
+              errorBuilder: (_, __, ___) => CustomPaint(
+                size: Size.square(widget.size),
+                painter: BloomPainter(
+                  pose: pose,
+                  look: lookOffset,
+                  eyeOpen: _eyeOpen,
+                ),
+              ),
             ),
           ),
         );

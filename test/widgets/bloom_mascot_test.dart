@@ -38,7 +38,7 @@ void main() {
       ),
     );
     expect(tester.getSize(find.byType(BloomMascot)), const Size(72, 72));
-    expect(tester.getSize(find.byType(CustomPaint).last), const Size(56, 56));
+    expect(tester.getSize(find.byType(Image).last), const Size(56, 56));
   });
 
   testWidgets('a frozen state renders without a ProviderScope', (tester) async {
