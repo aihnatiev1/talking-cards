@@ -59,11 +59,12 @@ void main() {
     AudioService.debugSpeakSink = spoken.add;
     AudioService.debugAfterWordSink = voices.add;
     AudioService.debugWordSink = words.add;
+    AudioService.debugAfterWordResult = (_) => AfterWord.played;
     AnalyticsService.debugSink = (name, params) {
       if (name.startsWith('game_')) events.add('$name:${params['game_id']}');
     };
     AudioService.instance.debugSetWordEnds({
-      for (final n in [...four, 'pig', 'sheep', 'hen', 'bunny', 'deer'])
+      for (final n in [...four, 'pig', 'sheep', 'hen', 'duck', 'bunny', 'deer'])
         'snd_$n': 800,
     });
   });
@@ -73,6 +74,7 @@ void main() {
     AudioService.debugSpeakSink = null;
     AudioService.debugAfterWordSink = null;
     AudioService.debugWordSink = null;
+    AudioService.debugAfterWordResult = null;
     AnalyticsService.debugSink = null;
     AudioService.instance.debugSetWordEnds(const {});
   });
@@ -198,6 +200,66 @@ void main() {
     expect(find.textContaining('Так! Це'), findsOneWidget);
     await tester.pump(const Duration(seconds: 2));
     await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('a voice that cannot be played lights the answer instead of '
+      'asking in silence', (tester) async {
+    AudioService.debugAfterWordResult = (_) => AfterWord.unavailable;
+    await pumpGame(tester);
+    await meetAll(tester);
+    final target = voices.last!;
+    expect(find.text('Дивись, я підкажу'), findsOneWidget);
+    expect(tester.widget<QuizOption>(tileOf(target)).mark, AnswerMark.hint);
+    // The child can still finish the question and hear the name.
+    await tapTile(tester, target);
+    expect(spoken.last, target);
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('a voice overtaken by a newer one is not treated as a failure', (
+    tester,
+  ) async {
+    AudioService.debugAfterWordResult = (_) => AfterWord.overtaken;
+    await pumpGame(tester);
+    await meetAll(tester);
+    expect(find.text('Хто це сказав?'), findsOneWidget);
+    expect(
+      tester.widget<QuizOption>(tileOf(voices.last!)).mark,
+      AnswerMark.none,
+    );
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('«Ще раз» meets new animals first', (tester) async {
+    await pumpGame(tester, names: [...four, 'pig', 'sheep', 'hen', 'duck']);
+    final first = {
+      for (final o in tester.widgetList<QuizOption>(find.byType(QuizOption)))
+        o.card.audioKey!,
+    };
+    for (final key in first) {
+      await tapTile(tester, key);
+    }
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump(const Duration(seconds: 1));
+    for (var i = 0; i < WhoSaidScreen.setSize; i++) {
+      await tapTile(tester, voices.last!);
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump(const Duration(seconds: 1));
+    }
+    await tester.pump(const Duration(seconds: 1));
+    await tester.tap(find.text('Ще раз'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text('Торкнись і послухай'), findsOneWidget);
+    final second = {
+      for (final o in tester.widgetList<QuizOption>(find.byType(QuizOption)))
+        o.card.audioKey!,
+    };
+    expect(second, hasLength(4));
+    expect(second.intersection(first), isEmpty);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 3));
   });
 
   testWidgets('the green play button skips the introductions', (tester) async {

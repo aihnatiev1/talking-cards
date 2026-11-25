@@ -1028,26 +1028,30 @@ class AudioService {
   /// The voice is started paused, moved past the word and only then let
   /// go, and the position is read back first: if the seek did not take,
   /// nothing plays at all. Saying «котик» before asking who miaowed would
-  /// give the answer away, so silence is the safe failure here. Returns
-  /// whether the sound actually played.
-  Future<bool> playAfterWord(String? audioKey) async {
+  /// give the answer away, so silence is the safe failure here — and the
+  /// caller is told ([AfterWord.unavailable]) so it can help the child
+  /// another way instead of leaving a question nobody asked out loud.
+  Future<AfterWord> playAfterWord(String? audioKey) async {
     debugAfterWordSink?.call(audioKey);
-    if (audioKey == null) return false;
+    final scripted = debugAfterWordResult;
+    if (scripted != null) return scripted(audioKey);
+    if (audioKey == null) return AfterWord.unavailable;
     final wordEnd = _wordEndOf(audioKey);
-    if (wordEnd == null) return false;
+    if (wordEnd == null) return AfterWord.unavailable;
 
     // Same order as [speakCard]: silence first, load second.
     stop();
     final gen = _speakGeneration;
 
     final source = await _getSource(audioKey);
-    if (source == null || _speakGeneration != gen) return false;
+    if (_speakGeneration != gen) return AfterWord.overtaken;
+    if (source == null) return AfterWord.unavailable;
 
     try {
       final handle = await _soloud.play(source, paused: true);
       if (_speakGeneration != gen) {
         _soloud.stop(handle);
-        return false;
+        return AfterWord.overtaken;
       }
       final target = Duration(milliseconds: wordEnd) + _afterWordLead;
       _soloud.seek(handle, target);
@@ -1061,7 +1065,7 @@ class AudioService {
       if (at < Duration(milliseconds: wordEnd)) {
         _soloud.stop(handle);
         _reportSilence(_audioMap[audioKey] ?? audioKey, 'seek_failed');
-        return false;
+        return AfterWord.unavailable;
       }
       _currentHandle = handle;
       _protectVoice(handle);
@@ -1072,13 +1076,13 @@ class AudioService {
         await Future.delayed(const Duration(milliseconds: 50));
       }
       if (_speakGeneration == gen) isSpeaking.value = false;
-      return true;
+      return AfterWord.played;
     } catch (e) {
       if (_speakGeneration == gen) isSpeaking.value = false;
       if (kDebugMode) {
         debugPrint('AudioService: playAfterWord error "$audioKey": $e');
       }
-      return false;
+      return AfterWord.unavailable;
     }
   }
 
@@ -1141,6 +1145,11 @@ class AudioService {
   /// Every "sound without its word" a screen asks [playAfterWord] for.
   @visibleForTesting
   static void Function(String? audioKey)? debugAfterWordSink;
+
+  /// Test seam: what [playAfterWord] reports, since SoLoud is not loaded
+  /// in the test runner and every clip would otherwise be `unavailable`.
+  @visibleForTesting
+  static AfterWord Function(String? audioKey)? debugAfterWordResult;
 
   /// Test seam: word-end offsets, which the app loads from the manifest in
   /// [precache] — a widget test never runs that.
@@ -1365,4 +1374,17 @@ class AudioService {
     }
     isSpeaking.value = false;
   }
+}
+
+/// How [AudioService.playAfterWord] ended.
+enum AfterWord {
+  /// The sound started (it may have been stopped later — that is fine).
+  played,
+
+  /// Nothing could be played: no recording on the device, no known word
+  /// end, or the seek past the word did not take.
+  unavailable,
+
+  /// A newer sound took over before this one began. Not a failure.
+  overtaken,
 }

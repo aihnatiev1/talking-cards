@@ -218,6 +218,7 @@ class _WhoSaidScreenState extends ConsumerState<WhoSaidScreen>
       _phase = _Phase.ask;
       _showCorrect = false;
       _waitingNext = false;
+      _voiceless = false;
       _misses.reset();
       _nudges.clear();
     });
@@ -235,12 +236,25 @@ class _WhoSaidScreenState extends ConsumerState<WhoSaidScreen>
   }
 
   /// The animal's voice, without its name.
-  void _playVoice() {
+  ///
+  /// If the voice cannot be played — the clip is not on the device, or it
+  /// could not be started past the word — the question would be a silent
+  /// «хто це сказав?» with no way to answer it. Then the right picture
+  /// lights up at once, exactly as it does after two misses: the child
+  /// still gets to tap it and hear «котик … няв».
+  Future<void> _playVoice() async {
     if (_waitingNext || _phase != _Phase.ask) return;
     final state = ref.read(_provider);
     if (state == null || state.finished) return;
-    AudioService.instance.playAfterWord(state.correctCard.audioKey);
+    final card = state.correctCard;
+    final result = await AudioService.instance.playAfterWord(card.audioKey);
+    if (result != AfterWord.unavailable || !mounted || _waitingNext) return;
+    if (ref.read(_provider)?.correctCard.id != card.id) return;
+    if (!_voiceless) setState(() => _voiceless = true);
   }
+
+  /// The current question's voice could not be played — see [_playVoice].
+  bool _voiceless = false;
 
   Future<void> _onAnswer(String cardId) async {
     if (_waitingNext) return;
@@ -291,6 +305,7 @@ class _WhoSaidScreenState extends ConsumerState<WhoSaidScreen>
     setState(() {
       _showCorrect = false;
       _waitingNext = false;
+      _voiceless = false;
       _misses.reset();
       _nudges.clear();
     });
@@ -391,12 +406,13 @@ class _WhoSaidScreenState extends ConsumerState<WhoSaidScreen>
       _onFinished();
       return const SizedBox.shrink();
     }
+    final helping = _voiceless || _misses.misses >= state.hintAfterMisses;
     final cue = _showCorrect
         ? s(
             'Так! Це ${state.correctCard.sound.toLowerCase()}',
             'Yes! ${state.correctCard.sound}',
           )
-        : _misses.misses >= state.hintAfterMisses
+        : helping
         ? s('Дивись, я підкажу', 'Look, I’ll show you')
         : _misses.misses > 0
         ? s('Послухай ще раз', 'Listen once more')
@@ -410,7 +426,7 @@ class _WhoSaidScreenState extends ConsumerState<WhoSaidScreen>
             ? AnswerMark.none
             : _showCorrect
             ? AnswerMark.correct
-            : _misses.misses >= state.hintAfterMisses
+            : helping
             ? AnswerMark.hint
             : AnswerMark.none;
         return QuizOption(
