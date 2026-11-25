@@ -30,22 +30,22 @@ import '../widgets/meadow_world.dart';
 /// row on the meadow, the front row by the pond and in the mud — placed so
 /// no two overlap.
 const farmSpots = <String, (double x, double y, double size)>{
-  'horse': (.33, .58, .25),
-  'cow': (.50, .58, .25),
-  'sheep': (.67, .58, .25),
+  'horse': (.33, .62, .25),
+  'cow': (.50, .62, .25),
+  'sheep': (.67, .62, .25),
   'bird': (.80, .50, .19),
   'owl': (.91, .44, .19),
-  'chicken': (.10, .80, .22),
-  'dog': (.28, .80, .22),
-  'cat': (.56, .80, .22),
-  'rooster': (.74, .80, .22),
+  'chicken': (.10, .83, .21),
+  'dog': (.28, .83, .21),
+  'cat': (.56, .83, .21),
+  'rooster': (.76, .83, .21),
   'frog': (.41, .96, .19),
-  'duck': (.66, .99, .19),
+  'duck': (.64, .995, .17),
   'pig': (.89, .97, .24),
 };
 
 /// The fish's patch of the pond, as fractions of the picture.
-const farmPond = (left: .48, top: .80, right: .58, bottom: .99);
+const farmPond = (left: .48, top: .82, right: .58, bottom: .99);
 
 /// The two ways to play the farm, chosen with the big buttons at the side.
 enum FarmMode { listen, riddle }
@@ -417,103 +417,125 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
       showLeading: false,
       edgeToEdge: true,
       background: DT.farmSky,
-      body: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      body: Stack(
         children: [
-          Expanded(
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: _FarmBoard(
-                    animals: animals,
-                    onTop: _cloud ?? _speaking,
-                    friend: (animal, phase) => MeadowFriend(
-                      key: ValueKey('farm-${animal.key}'),
-                      animal: animal,
-                      isEn: s.isEn,
-                      speaking: _speaking == animal.key,
-                      cloud: _cloud == animal.key,
-                      hops: _hops[animal.key] ?? 0,
-                      wiggles: _wiggles[animal.key] ?? 0,
-                      phase: phase,
-                      onTap: () => _tap(animal),
-                    ),
-                    fish: MeadowPond(pops: _fishPops, onTap: _tapFish),
-                  ),
-                ),
-                // Close, Bloom and his line — over the sky.
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  right: 0,
-                  child: SafeArea(
-                    right: false,
-                    bottom: false,
-                    child: Padding(
-                      padding: const EdgeInsets.all(DT.sp8),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const KidCloseButton(accent: DT.brand),
-                          const SizedBox(width: 4),
-                          BloomMascot(
-                            size: 68,
-                            state: BloomState(emotion: _bloom),
-                            interactive: false,
-                            semanticsLabel: s('Блум', 'Bloom'),
-                          ),
-                          const SizedBox(width: 4),
-                          Flexible(
-                            child: AnimatedSwitcher(
-                              duration: policy.dur(DT.motion.selectionChange),
-                              child: line == null
-                                  ? const SizedBox.shrink()
-                                  : Padding(
-                                      key: ValueKey(line),
-                                      padding: const EdgeInsets.only(top: 6),
-                                      child: Semantics(
-                                        liveRegion: true,
-                                        child: CueBubble(
-                                          tailRight: false,
-                                          child: Text(
-                                            line,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: DT.caption.copyWith(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.w800,
-                                              color: DT.textPrimary,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                            ),
-                          ),
-                          if (_mode == FarmMode.riddle)
-                            Padding(
-                              padding: const EdgeInsets.only(left: 8, top: 10),
-                              child: _Stars(found: _found),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+          // The farm across the whole screen, like the toy's board.
+          Positioned.fill(
+            child: _FarmBoard(
+              animals: animals,
+              onTop: _cloud ?? _speaking,
+              friend: (animal, phase) => MeadowFriend(
+                key: ValueKey('farm-${animal.key}'),
+                animal: animal,
+                isEn: s.isEn,
+                speaking: _speaking == animal.key,
+                cloud: _cloud == animal.key,
+                hops: _hops[animal.key] ?? 0,
+                wiggles: _wiggles[animal.key] ?? 0,
+                phase: phase,
+                onTap: () => _tap(animal),
+              ),
+              fish: MeadowPond(pops: _fishPops, onTap: _tapFish),
             ),
           ),
-          // The toy's buttons: big, round, no words.
-          _FarmButtons(
-            mode: _mode,
-            onListen: () => _setMode(FarmMode.listen),
-            onRiddle: () => _setMode(FarmMode.riddle),
-            isEn: s.isEn,
+          // Along the sky: close, Bloom and his line, then the toy's two
+          // big round buttons — the sky is the one place on the board with
+          // no animal under it.
+          Positioned(
+            left: 0,
+            top: 0,
+            right: 0,
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.all(DT.sp8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const KidCloseButton(accent: DT.brand),
+                    const SizedBox(width: 4),
+                    BloomMascot(
+                      size: 68,
+                      state: BloomState(emotion: _bloom),
+                      interactive: false,
+                      semanticsLabel: s('Блум', 'Bloom'),
+                    ),
+                    const SizedBox(width: 4),
+                    // A fixed slot: the buttons beside it never move when
+                    // the line changes.
+                    SizedBox(
+                      width: _lineSlot,
+                      child: AnimatedSwitcher(
+                        duration: policy.dur(DT.motion.selectionChange),
+                        child: line == null
+                            ? const SizedBox.shrink()
+                            : Align(
+                                key: ValueKey('$line$_found'),
+                                alignment: Alignment.topLeft,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(top: 6),
+                                  child: Semantics(
+                                    liveRegion: true,
+                                    child: CueBubble(
+                                      tailRight: false,
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Flexible(
+                                            child: Text(
+                                              line,
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: DT.caption.copyWith(
+                                                fontSize: 16,
+                                                height: 1.2,
+                                                fontWeight: FontWeight.w800,
+                                                color: DT.textPrimary,
+                                              ),
+                                            ),
+                                          ),
+                                          if (_mode == FarmMode.riddle) ...[
+                                            const SizedBox(width: 6),
+                                            _Stars(found: _found),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(width: DT.sp12),
+                    _RoundButton(
+                      key: const ValueKey('farm-listen'),
+                      art: 'listen',
+                      label: s('Слухай', 'Listen'),
+                      on: _mode == FarmMode.listen,
+                      color: DT.sky,
+                      onTap: () => _setMode(FarmMode.listen),
+                    ),
+                    const SizedBox(width: DT.sp12),
+                    _RoundButton(
+                      key: const ValueKey('farm-riddle'),
+                      art: 'question',
+                      label: s('Загадка', 'Riddle'),
+                      on: _mode == FarmMode.riddle,
+                      color: DT.sunBurst,
+                      onTap: () => _setMode(FarmMode.riddle),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ],
       ),
     );
   }
+
+  /// Width of Bloom's line beside him.
+  static const _lineSlot = 220.0;
 }
 
 /// The farm picture fitted to the width and standing on the bottom edge —
@@ -591,58 +613,6 @@ class _FarmBoard extends StatelessWidget {
   );
 }
 
-/// The two round buttons at the side, like the toy's.
-class _FarmButtons extends StatelessWidget {
-  const _FarmButtons({
-    required this.mode,
-    required this.onListen,
-    required this.onRiddle,
-    required this.isEn,
-  });
-
-  final FarmMode mode;
-  final VoidCallback onListen;
-  final VoidCallback onRiddle;
-  final bool isEn;
-
-  @override
-  Widget build(BuildContext context) {
-    final s = AppS(isEn);
-    // Up to the screen's edge, its buttons clear of the rounded corner.
-    final inset = MediaQuery.paddingOf(context);
-    return Container(
-      width: 104 + inset.right,
-      padding: EdgeInsets.only(right: inset.right),
-      decoration: const BoxDecoration(
-        color: DT.peachTint,
-        border: Border(left: BorderSide(color: DT.outline, width: 2)),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _RoundButton(
-            key: const ValueKey('farm-listen'),
-            art: 'listen',
-            label: s('Слухай', 'Listen'),
-            on: mode == FarmMode.listen,
-            color: DT.sky,
-            onTap: onListen,
-          ),
-          const SizedBox(height: 20),
-          _RoundButton(
-            key: const ValueKey('farm-riddle'),
-            art: 'question',
-            label: s('Загадка', 'Riddle'),
-            on: mode == FarmMode.riddle,
-            color: DT.sunBurst,
-            onTap: onRiddle,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _RoundButton extends StatelessWidget {
   const _RoundButton({
     super.key,
@@ -666,21 +636,35 @@ class _RoundButton extends StatelessWidget {
     label: label,
     child: KidTap(
       onTap: onTap,
-      child: AnimatedContainer(
+      child: AnimatedScale(
+        scale: on ? 1.06 : .94,
         duration: MotionPolicy.of(context).dur(DT.motion.selectionChange),
-        width: 84,
-        height: 84,
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: on ? color : DT.surfaceWhite,
-          border: Border.all(
-            color: on ? DT.surfaceWhite : DT.outline,
-            width: 4,
+        child: AnimatedContainer(
+          duration: MotionPolicy.of(context).dur(DT.motion.selectionChange),
+          width: 76,
+          height: 76,
+          padding: const EdgeInsets.all(10),
+          // A clay button: lit from the top left, standing on its own edge.
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: RadialGradient(
+              center: const Alignment(-.35, -.45),
+              radius: 1.1,
+              colors: on
+                  ? [Color.lerp(color, DT.surfaceWhite, .45)!, color]
+                  : const [DT.surfaceWhite, DT.bgWarm],
+            ),
+            border: Border.all(color: DT.surfaceWhite, width: 4),
+            boxShadow: [
+              BoxShadow(
+                color: on ? color : DT.outline,
+                offset: const Offset(0, 5),
+              ),
+              ...DT.shadowSoft(color),
+            ],
           ),
-          boxShadow: DT.shadowSoft(color),
+          child: AppArt(art, size: 52),
         ),
-        child: AppArt(art, size: 56),
       ),
     ),
   );
@@ -704,7 +688,7 @@ class _Stars extends StatelessWidget {
             curve: Curves.easeOutBack,
             child: Opacity(
               opacity: i < found ? 1 : .35,
-              child: const AppArt('star', size: 32),
+              child: const AppArt('star', size: 22),
             ),
           ),
         ),

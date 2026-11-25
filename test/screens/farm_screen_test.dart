@@ -138,6 +138,12 @@ void main() {
     // A phone on its side.
     tester.view.physicalSize = const Size(844, 390);
     tester.view.devicePixelRatio = 1;
+    // The notch and the home bar of a phone on its side.
+    tester.view.padding = const FakeViewPadding(
+      left: 47,
+      right: 47,
+      bottom: 21,
+    );
     addTearDown(tester.view.reset);
     await tester.pumpWidget(
       ProviderScope(
@@ -170,6 +176,18 @@ void main() {
       expect(screen.contains(r.center), isTrue);
       // A toddler's finger: 72 dp at least.
       expect(r.shortestSide, greaterThanOrEqualTo(72));
+    }
+    // The buttons stand in the sky: at most an ear tip under them.
+    for (final button in ['farm-listen', 'farm-riddle']) {
+      final b = tester.getRect(find.byKey(ValueKey(button)));
+      for (final (i, r) in rects.indexed) {
+        final o = b.intersect(r);
+        expect(
+          o.width > 0 && o.height > 12,
+          isFalse,
+          reason: '$button on ${meadowVoices.keys.elementAt(i)}',
+        );
+      }
     }
     for (var i = 0; i < rects.length; i++) {
       for (var j = i + 1; j < rects.length; j++) {

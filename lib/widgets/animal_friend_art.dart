@@ -14,6 +14,27 @@ class AnimalFriendArt extends StatelessWidget {
   /// rabbit `bunny` and the sound pack calls the hen `hen`.
   static String friendOf(String image) => PlayTopic.friendKey(image);
 
+  /// The friends painted in clay (`assets/images/friends/<key>.webp`, the
+  /// same puffy style as Bloom). Anything else falls back to the old flat
+  /// atlas or the drawn painter — which must never reach a child's screen
+  /// for a friend: a test holds every lesson's friend to this set.
+  static const clay = {
+    'cow',
+    'cat',
+    'dog',
+    'rabbit',
+    'horse',
+    'pig',
+    'chicken',
+    'duck',
+    'frog',
+    'fish',
+    'sheep',
+    'rooster',
+    'bird',
+    'owl',
+  };
+
   @override
   Widget build(BuildContext context) {
     final animal = friendOf(this.animal);
@@ -32,18 +53,6 @@ class AnimalFriendArt extends StatelessWidget {
     };
     // The clay friends (Firefly, same puffy style as Bloom). The flat atlas
     // and the drawn painter remain the fallback for anything missing.
-    const clay = {
-      'cow',
-      'cat',
-      'dog',
-      'rabbit',
-      'horse',
-      'pig',
-      'chicken',
-      'duck',
-      'frog',
-      'fish',
-    };
     if (clay.contains(animal)) {
       return ExcludeSemantics(
         child: RepaintBoundary(

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talking_cards/models/play_session.dart';
@@ -41,22 +43,16 @@ void main() {
     });
 
     test('every topic brings a friend that has clay art', () {
-      const clay = {
-        'cow',
-        'cat',
-        'dog',
-        'rabbit',
-        'horse',
-        'pig',
-        'chicken',
-        'duck',
-        'frog',
-        'fish',
-        'owl',
-        'sheep',
-        'rooster',
-        'bird',
-      };
+      // The widget's own list: a friend missing from it is drawn by the
+      // old painter instead of its clay art.
+      const clay = AnimalFriendArt.clay;
+      for (final key in clay) {
+        expect(
+          File('assets/images/friends/$key.webp').existsSync(),
+          isTrue,
+          reason: key,
+        );
+      }
       for (final t in all) {
         expect(
           clay,
