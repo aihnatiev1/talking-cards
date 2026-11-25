@@ -75,6 +75,7 @@ flutter:
     - assets/images/bloom/
     - assets/images/avatars/
     - assets/images/friends/
+    - assets/images/friends/talk/
     - assets/images/hide/
     # Articulation exercise positions, one webp per exercise id. Bundled
     # unconditionally (twelve small drawings, not paid content), which is
