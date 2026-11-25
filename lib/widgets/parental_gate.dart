@@ -127,56 +127,91 @@ class _ParentalGateDialogState extends State<_ParentalGateDialog> {
   @override
   Widget build(BuildContext context) {
     final s = widget.isEn;
+    final question = [
+      Text(
+        s ? 'For parents' : 'Для батьків',
+        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+      ),
+      const SizedBox(height: 8),
+      Text(
+        _question,
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+      ),
+      const SizedBox(height: 12),
+      Text(
+        _entered.isEmpty ? ' ' : _entered,
+        style: const TextStyle(
+          fontSize: 28,
+          fontWeight: FontWeight.w900,
+          color: DT.brand,
+          letterSpacing: 4,
+        ),
+      ),
+    ];
+    final keypad = [
+      for (final row in const [
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9],
+      ])
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [for (final d in row) _key(d)],
+        ),
+      Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [_key(0)],
+      ),
+    ];
+    final cancel = TextButton(
+      onPressed: () => Navigator.of(context).pop(false),
+      child: Text(
+        s ? 'Cancel' : 'Скасувати',
+        style: TextStyle(color: Colors.grey[600]),
+      ),
+    );
+    // A phone on its side (the farm) has no height for the keypad under
+    // the question: the question goes beside it.
+    final wide = MediaQuery.sizeOf(context).height < 560;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      insetPadding: wide
+          ? const EdgeInsets.symmetric(horizontal: 40, vertical: 12)
+          : const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              s ? 'For parents' : 'Для батьків',
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _question,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              _entered.isEmpty ? ' ' : _entered,
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.w900,
-                color: DT.brand,
-                letterSpacing: 4,
+        padding: wide
+            ? const EdgeInsets.fromLTRB(24, 12, 16, 12)
+            : const EdgeInsets.fromLTRB(24, 24, 24, 16),
+        child: wide
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ...question,
+                        const SizedBox(height: 8),
+                        cancel,
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Column(mainAxisSize: MainAxisSize.min, children: keypad),
+                ],
+              )
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ...question,
+                  const SizedBox(height: 8),
+                  ...keypad,
+                  cancel,
+                ],
               ),
-            ),
-            const SizedBox(height: 8),
-            for (final row in const [
-              [1, 2, 3],
-              [4, 5, 6],
-              [7, 8, 9],
-            ])
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [for (final d in row) _key(d)],
-              ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [_key(0)],
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text(
-                s ? 'Cancel' : 'Скасувати',
-                style: TextStyle(color: Colors.grey[600]),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

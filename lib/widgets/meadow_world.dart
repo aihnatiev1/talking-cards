@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -6,17 +5,12 @@ import 'package:flutter/material.dart';
 import '../models/card_model.dart';
 import '../models/pack_model.dart';
 import '../models/play_topic.dart';
-import '../services/audio_service.dart';
-import '../services/feedback_service.dart';
 import '../utils/design_tokens.dart';
-import '../utils/l10n.dart';
 import '../utils/motion.dart';
 import 'ambient_loop.dart';
 import 'animal_friend_art.dart';
-import 'bloom_mascot.dart';
-import 'cue_pill.dart';
 import 'kid_tap.dart';
-import 'play_components.dart';
+import '../utils/app_icons.dart';
 
 /// One animal of «Лужок»: its clay friend, the sound card that gives it a
 /// voice, and how the sound is written (for the grown-up to say along).
@@ -27,6 +21,7 @@ class MeadowAnimal {
     required this.soundUk,
     required this.soundEn,
     this.earned = false,
+    this.locked = false,
   });
 
   /// The clay friend: `assets/images/friends/<key>.webp` and its
@@ -40,6 +35,10 @@ class MeadowAnimal {
 
   /// Brought by a lesson — it wears a star.
   final bool earned;
+
+  /// Lives in the paid pack and has not been earned: it stands on the farm
+  /// as a grey silhouette with a padlock.
+  final bool locked;
 
   String sound(bool isEn) => isEn ? soundEn : soundUk;
 }
@@ -71,9 +70,13 @@ const meadowFree = <String>{'cat', 'dog', 'cow', 'horse', 'pig'};
 /// it: the five free ones, and every friend a lesson brought — and that
 /// friend has its voice even when the voice is in the paid pack, because
 /// the child earned it. Lesson friends come first and wear a star.
+///
+/// [withLocked] keeps the rest too, marked [MeadowAnimal.locked] — the farm
+/// shows every animal in its place and the locked ones asleep in grey.
 List<MeadowAnimal> meadowAnimals({
   required List<PackModel> packs,
   required Set<String> rewards,
+  bool withLocked = false,
 }) {
   final soundPack = packs
       .where((p) => p.id == 'animal_sounds' || p.id == 'en_animal_sounds')
@@ -88,9 +91,8 @@ List<MeadowAnimal> meadowAnimals({
   for (final entry in meadowVoices.entries) {
     final key = entry.key;
     final isEarned = earned.contains(key);
-    if (soundPack.isLocked && !meadowFree.contains(key) && !isEarned) {
-      continue;
-    }
+    final locked = soundPack.isLocked && !meadowFree.contains(key) && !isEarned;
+    if (locked && !withLocked) continue;
     final (image, uk, en) = entry.value;
     final card = soundPack.cards
         .where((c) => c.image == image && c.audioKey != null)
@@ -103,6 +105,7 @@ List<MeadowAnimal> meadowAnimals({
         soundUk: uk,
         soundEn: en,
         earned: isEarned,
+        locked: locked,
       ),
     );
   }
@@ -111,169 +114,10 @@ List<MeadowAnimal> meadowAnimals({
   return animals;
 }
 
-/// «Лужок» — the free play: a wide meadow to walk with a finger, the
-/// animals on it breathing; a tap and the animal opens its mouth, its
-/// sound appears in a cloud by it and the recording plays — the name,
-/// then the real voice. Bloom then invites the child to say it too, and
-/// waits: no microphone, no verdict.
-class MeadowWorld extends StatefulWidget {
-  const MeadowWorld({super.key, required this.animals, required this.isEn});
-
-  final List<MeadowAnimal> animals;
-  final bool isEn;
-
-  /// Height of the meadow strip.
-  static const height = 330.0;
-
-  @override
-  State<MeadowWorld> createState() => _MeadowWorldState();
-}
-
-class _MeadowWorldState extends State<MeadowWorld> {
-  /// The animal speaking now, by key.
-  String? _speaking;
-
-  /// The animal whose sound cloud is showing.
-  String? _cloud;
-
-  /// Taps per animal, to hop it again each time.
-  final Map<String, int> _hops = {};
-
-  /// Bloom's line: the invitation to repeat after an animal has spoken.
-  MeadowAnimal? _invite;
-
-  int _fishPops = 0;
-  int _turn = 0;
-  Timer? _cloudTimer;
-  Timer? _inviteTimer;
-
-  @override
-  void dispose() {
-    _cloudTimer?.cancel();
-    _inviteTimer?.cancel();
-    _turn++;
-    super.dispose();
-  }
-
-  Future<void> _tap(MeadowAnimal animal) async {
-    final turn = ++_turn;
-    _cloudTimer?.cancel();
-    _inviteTimer?.cancel();
-    setState(() {
-      _speaking = animal.key;
-      _cloud = animal.key;
-      _invite = null;
-      _hops[animal.key] = (_hops[animal.key] ?? 0) + 1;
-    });
-    await AudioService.instance.speakCard(
-      animal.card.audioKey,
-      animal.card.sound,
-      animal.card.text,
-    );
-    if (!mounted || turn != _turn) return;
-    setState(() {
-      _speaking = null;
-      _invite = animal;
-    });
-    // The cloud stays a little while the child answers.
-    _cloudTimer = Timer(const Duration(seconds: 3), () {
-      if (mounted && turn == _turn) setState(() => _cloud = null);
-    });
-    _inviteTimer = Timer(const Duration(seconds: 5), () {
-      if (mounted && turn == _turn) setState(() => _invite = null);
-    });
-  }
-
-  void _tapFish() {
-    FeedbackService.instance.event(FeedbackEvent.bubblePop);
-    setState(() => _fishPops++);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final s = AppS(widget.isEn);
-    final invite = _invite;
-    final line = invite == null
-        ? s('Торкнись друга й послухай', 'Tap a friend and listen')
-        : s(
-            'А ти скажи: «${invite.soundUk}»!',
-            'Now you say: «${invite.soundEn}»!',
-          );
-    return Column(
-      children: [
-        // Bloom and his line.
-        SizedBox(
-          height: 96,
-          child: Row(
-            children: [
-              BloomMascot(
-                size: 88,
-                state: BloomState(
-                  emotion: invite == null
-                      ? BloomEmotion.wave
-                      : BloomEmotion.listen,
-                ),
-                interactive: false,
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: AnimatedSwitcher(
-                  duration: MotionPolicy.of(
-                    context,
-                  ).dur(DT.motion.selectionChange),
-                  child: Align(
-                    key: ValueKey(line),
-                    alignment: Alignment.centerLeft,
-                    child: CueBubble(
-                      tailRight: false,
-                      child: Text(
-                        line,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: DT.caption.copyWith(
-                          fontSize: 17,
-                          height: 1.25,
-                          fontWeight: FontWeight.w800,
-                          color: DT.textPrimary,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(DT.rLg),
-          child: SizedBox(
-            height: MeadowWorld.height,
-            child: _MeadowStrip(
-              animals: widget.animals,
-              friend: (animal) => _MeadowFriend(
-                key: ValueKey('meadow-${animal.key}'),
-                animal: animal,
-                isEn: widget.isEn,
-                speaking: _speaking == animal.key,
-                cloud: _cloud == animal.key,
-                hops: _hops[animal.key] ?? 0,
-                phase: widget.animals.indexOf(animal),
-                onTap: () => _tap(animal),
-              ),
-              fish: _Pond(pops: _fishPops, onTap: _tapFish),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 /// One animal: breathing at rest, a hop on a tap, the mouth-open pose
 /// while its recording plays and its sound in a cloud beside it.
-class _MeadowFriend extends StatelessWidget {
-  const _MeadowFriend({
+class MeadowFriend extends StatelessWidget {
+  const MeadowFriend({
     super.key,
     required this.animal,
     required this.isEn,
@@ -282,6 +126,7 @@ class _MeadowFriend extends StatelessWidget {
     required this.hops,
     required this.phase,
     required this.onTap,
+    this.wiggles = 0,
   });
 
   final MeadowAnimal animal;
@@ -292,9 +137,13 @@ class _MeadowFriend extends StatelessWidget {
   final int phase;
   final VoidCallback onTap;
 
+  /// Bumped on a tap of a locked animal: it shakes its head, asleep.
+  final int wiggles;
+
   @override
   Widget build(BuildContext context) {
     final policy = MotionPolicy.of(context);
+    final locked = animal.locked;
     final art = speaking
         ? 'assets/images/friends/talk/${animal.key}.webp'
         : 'assets/images/friends/${animal.key}.webp';
@@ -327,18 +176,37 @@ class _MeadowFriend extends StatelessWidget {
                     offset: Offset(0, -26 * math.sin(t * math.pi)),
                     child: child,
                   ),
-                  child: Image.asset(
-                    art,
-                    gaplessPlayback: true,
-                    fit: BoxFit.contain,
-                    alignment: Alignment.bottomCenter,
-                    filterQuality: FilterQuality.medium,
-                    errorBuilder: (_, __, ___) =>
-                        AnimalFriendArt(animal: animal.key),
+                  child: TweenAnimationBuilder<double>(
+                    key: ValueKey('wiggle-$wiggles'),
+                    tween: Tween(begin: wiggles == 0 ? 1 : 0, end: 1),
+                    duration: policy.dur(DT.motion.slow),
+                    builder: (_, t, child) => Transform.rotate(
+                      angle: .08 * math.sin(t * math.pi * 4) * (1 - t),
+                      alignment: Alignment.bottomCenter,
+                      child: child,
+                    ),
+                    child: _sleepy(
+                      locked,
+                      Image.asset(
+                        art,
+                        gaplessPlayback: true,
+                        fit: BoxFit.contain,
+                        alignment: Alignment.bottomCenter,
+                        filterQuality: FilterQuality.medium,
+                        errorBuilder: (_, __, ___) =>
+                            AnimalFriendArt(animal: animal.key),
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
+            if (locked)
+              const Positioned(
+                right: 0,
+                bottom: 0,
+                child: IgnorePointer(child: AppArt('padlock', size: 34)),
+              ),
             if (animal.earned)
               const Positioned(
                 left: 4,
@@ -369,6 +237,22 @@ class _MeadowFriend extends StatelessWidget {
     );
   }
 }
+
+/// A locked animal: a soft grey silhouette, asleep until it is opened.
+Widget _sleepy(bool locked, Widget art) => !locked
+    ? art
+    : Opacity(
+        opacity: .75,
+        child: ColorFiltered(
+          colorFilter: const ColorFilter.matrix(<double>[
+            .30, .55, .15, 0, 20, //
+            .30, .55, .15, 0, 20,
+            .30, .55, .15, 0, 20,
+            0, 0, 0, 1, 0,
+          ]),
+          child: art,
+        ),
+      );
 
 /// The small painted star on a lesson friend.
 class AppArtStar extends StatelessWidget {
@@ -440,8 +324,8 @@ class _WavesPainter extends CustomPainter {
 }
 
 /// The pond: water and the clay fish; a tap and it jumps, with bubbles.
-class _Pond extends StatelessWidget {
-  const _Pond({required this.pops, required this.onTap});
+class MeadowPond extends StatelessWidget {
+  const MeadowPond({super.key, required this.pops, required this.onTap});
   final int pops;
   final VoidCallback onTap;
 
@@ -449,19 +333,19 @@ class _Pond extends StatelessWidget {
   Widget build(BuildContext context) {
     final policy = MotionPolicy.of(context);
     return KidTap(
-      key: const ValueKey('meadow-fish'),
+      key: const ValueKey('farm-fish'),
       sound: null,
       onTap: onTap,
       child: LayoutBuilder(
         builder: (context, box) {
-          final fish = box.maxHeight * 1.1;
+          final fish = box.maxHeight * .85;
           return Stack(
             clipBehavior: Clip.none,
             children: [
               // Half in the water: the painted pond shows through below.
               Positioned(
                 left: (box.maxWidth - fish) / 2,
-                bottom: box.maxHeight * .35,
+                bottom: box.maxHeight * .12,
                 width: fish,
                 height: fish,
                 child: TweenAnimationBuilder<double>(
@@ -472,10 +356,9 @@ class _Pond extends StatelessWidget {
                     offset: Offset(0, -34 * math.sin(t * math.pi)),
                     child: child,
                   ),
-                  child: ClipRect(
-                    clipper: const _AboveWater(),
-                    child: const AnimalFriendArt(animal: 'fish'),
-                  ),
+                  // Whole: a straight cut across a fish read as a sliced
+                  // fish, not one in the water.
+                  child: const AnimalFriendArt(animal: 'fish'),
                 ),
               ),
               for (var i = 0; i < 3; i++)
@@ -512,121 +395,4 @@ class _Pond extends StatelessWidget {
       ),
     );
   }
-}
-
-/// The part of the fish above the water line (its lower quarter is under).
-class _AboveWater extends CustomClipper<Rect> {
-  const _AboveWater();
-  @override
-  Rect getClip(Size size) => Rect.fromLTWH(
-    -size.width,
-    -size.height,
-    size.width * 3,
-    size.height * 1.75,
-  );
-  @override
-  bool shouldReclip(_AboveWater old) => false;
-}
-
-/// The painted meadow, as wide as its animals need: the panorama repeats
-/// sideways, and every repeat ends in its pond. The animals stand in one
-/// row on the lawn, each on its own patch of grass and never on the water;
-/// the fish lives in the last pond.
-class _MeadowStrip extends StatelessWidget {
-  const _MeadowStrip({
-    required this.animals,
-    required this.friend,
-    required this.fish,
-  });
-
-  final List<MeadowAnimal> animals;
-  final Widget Function(MeadowAnimal animal) friend;
-  final Widget fish;
-
-  /// The panorama is 4 : 1.
-  static const _aspect = 4.0;
-
-  /// Where the pond is on one panorama, as fractions of its width/height.
-  static const _pondLeft = .835;
-  static const _pondTop = .67;
-  static const _pondBottom = .9;
-
-  @override
-  Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, box) {
-      final h = box.maxHeight;
-      final tile = h * _aspect;
-      final size = h * .5;
-      final step = size + 14;
-      // One row, left to right, stepping over each pond.
-      final xs = <double>[];
-      var x = 16.0;
-      for (var i = 0; i < animals.length; i++) {
-        final inTile = x % tile;
-        if (inTile + size > tile * _pondLeft) {
-          x += tile - inTile + 16;
-        }
-        xs.add(x);
-        x += step;
-      }
-      final tiles = math.max(1, ((x + 16) / tile).ceil());
-      final width = math.max(box.maxWidth, tiles * tile);
-      final pond = Rect.fromLTRB(
-        (tiles - 1) * tile + tile * _pondLeft,
-        h * _pondTop,
-        tiles * tile,
-        h * _pondBottom,
-      );
-      return SingleChildScrollView(
-        key: const ValueKey('meadow-scroll'),
-        scrollDirection: Axis.horizontal,
-        child: SizedBox(
-          width: width,
-          height: h,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: DT.skyTint,
-                    image: DecorationImage(
-                      image: const AssetImage(
-                        'assets/images/backdrops/meadow_panorama.webp',
-                      ),
-                      fit: BoxFit.fitHeight,
-                      alignment: Alignment.centerLeft,
-                      repeat: ImageRepeat.repeatX,
-                      filterQuality: FilterQuality.medium,
-                      onError: (_, __) {},
-                    ),
-                  ),
-                ),
-              ),
-              for (final (i, animal) in animals.indexed)
-                Positioned(
-                  left: xs[i],
-                  // Standing on the lawn, feet a little above the flowers.
-                  bottom: h * .06,
-                  width: size,
-                  height: size,
-                  child: friend(animal),
-                ),
-              Positioned.fromRect(rect: pond, child: fish),
-            ],
-          ),
-        ),
-      );
-    },
-  );
-}
-
-/// Kept so a screen can show an empty meadow while the catalogue loads.
-class MeadowPlaceholder extends StatelessWidget {
-  const MeadowPlaceholder({super.key});
-  @override
-  Widget build(BuildContext context) => const SizedBox(
-    height: MeadowWorld.height,
-    child: PlayPanel(child: SizedBox.expand()),
-  );
 }

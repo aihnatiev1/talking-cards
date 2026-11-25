@@ -48,7 +48,19 @@ Future<void> openNextPlayLesson(BuildContext context, WidgetRef ref) async {
     ref.read(homeDestinationProvider.notifier).state = HomeDestination.play;
     return;
   }
+  await openPlayLesson(context, ref, topic, packs);
+}
+
+/// Starts [topic] in the journal and opens its lesson; returns when the
+/// child is back. Nothing happens when the lesson cannot be played.
+Future<void> openPlayLesson(
+  BuildContext context,
+  WidgetRef ref,
+  PlayTopic topic,
+  List<PackModel> packs,
+) async {
   final cards = topic.cards(packs);
+  if (cards.length != 3) return;
   await ref
       .read(playSessionProvider.notifier)
       .start(topic.id, cards.map((c) => c.id).toList());

@@ -108,6 +108,9 @@ class DT {
   static const sunTint = Color(0xFFFFF8D6);
   static const mintTint = Color(0xFFE8F5E9);
   static const skyTint = Color(0xFFE3F2FD);
+
+  /// The painted sky of the farm scene, to carry it above the picture.
+  static const farmSky = Color(0xFFB0E2F6);
   static const violetTint = Color(0xFFF3E8FF);
   static const peachTint = Color(0xFFFFF3E0);
   static const pinkTint = Color(0xFFFCE4EC);

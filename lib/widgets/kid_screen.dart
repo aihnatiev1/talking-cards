@@ -57,7 +57,8 @@ class KidScreen extends StatelessWidget {
     this.meadow = false,
     this.backdrop,
     this.resizeToAvoidBottomInset,
-  }) : _close = false;
+  }) : _close = false,
+       edgeToEdge = false;
 
   /// A game: close (X) instead of back, and usually a [progress] pill.
   const KidScreen.game({
@@ -75,6 +76,7 @@ class KidScreen extends StatelessWidget {
     this.meadow = false,
     this.backdrop,
     this.resizeToAvoidBottomInset,
+    this.edgeToEdge = false,
   }) : _close = true;
 
   final bool _close;
@@ -100,6 +102,11 @@ class KidScreen extends StatelessWidget {
   final Color accent;
 
   final Widget body;
+
+  /// The body reaches every edge, under the notch and the home bar, and
+  /// keeps clear of them itself — a scene that must not end in a stripe of
+  /// background (the farm on a phone on its side).
+  final bool edgeToEdge;
 
   /// Fixed area under the body — game action bars, "next picture" rows.
   final Widget? bottom;
@@ -157,6 +164,10 @@ class KidScreen extends StatelessWidget {
           meadow: meadow,
           backdrop: backdrop,
           child: SafeArea(
+            left: !edgeToEdge,
+            top: !edgeToEdge,
+            right: !edgeToEdge,
+            bottom: !edgeToEdge,
             child: Column(
               children: [
                 // An empty band is not a header. `showLeading: false` keeps

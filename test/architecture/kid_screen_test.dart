@@ -28,7 +28,7 @@ void main() {
     'lib/screens/quest_map_screen.dart',
     'lib/screens/kid_word_wall_screen.dart',
     'lib/screens/rewards_screen.dart',
-    'lib/screens/who_said_screen.dart',
+    'lib/screens/farm_screen.dart',
     'lib/screens/feed_bloom_screen.dart',
     'lib/screens/hide_seek_screen.dart',
     'lib/screens/shadow_match_screen.dart',

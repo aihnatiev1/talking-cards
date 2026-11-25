@@ -332,7 +332,7 @@ void main() {
       find.byKey(const ValueKey('capture')),
       matchesGoldenFile('../goldens/images/play_world.png'),
     );
-    expect(find.text('Торкнись друга й послухай'), findsOneWidget);
+    expect(find.byKey(const ValueKey('world-farm')), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
     await tester.pump();

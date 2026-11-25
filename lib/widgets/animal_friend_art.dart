@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../models/play_topic.dart';
 import '../utils/design_tokens.dart';
 
 /// Scene companions, not replacements for the actual vocabulary card art.
@@ -10,14 +12,7 @@ class AnimalFriendArt extends StatelessWidget {
   /// The clay friend for a card's picture name: a photo card (`ph_cat`)
   /// and a drawn card (`cat`) are the same friend; the drawn pack calls the
   /// rabbit `bunny` and the sound pack calls the hen `hen`.
-  static String friendOf(String image) {
-    final name = image.startsWith('ph_') ? image.substring(3) : image;
-    return switch (name) {
-      'bunny' => 'rabbit',
-      'hen' => 'chicken',
-      _ => name,
-    };
-  }
+  static String friendOf(String image) => PlayTopic.friendKey(image);
 
   @override
   Widget build(BuildContext context) {

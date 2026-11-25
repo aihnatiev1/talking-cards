@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/language_provider.dart';
-import '../providers/packs_provider.dart';
-import '../providers/play_session_provider.dart';
 import '../screens/coloring_hub_screen.dart';
+import '../screens/farm_screen.dart';
 import '../screens/kid_word_wall_screen.dart';
 import '../services/audio_service.dart';
 import '../utils/design_tokens.dart';
@@ -12,17 +11,12 @@ import '../utils/kid_routes.dart';
 import '../utils/l10n.dart';
 import '../widgets/cue_pill.dart';
 import '../widgets/kid_tap.dart';
-import '../widgets/play_components.dart';
-import '../widgets/meadow_world.dart';
 
 class WorldTab extends ConsumerWidget {
   const WorldTab({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final s = AppS(ref.watch(languageProvider) == 'en');
-    final journal = ref.watch(playSessionProvider);
-    final packs = ref.watch(packsProvider);
-    final rewards = journal.valueOrNull?.rewards ?? const <String>{};
     return SafeArea(
       bottom: false,
       child: Center(
@@ -64,30 +58,20 @@ class WorldTab extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              if (journal.isLoading || packs.isLoading)
-                const Center(child: CircularProgressIndicator())
-              else if (journal.hasError || packs.hasError)
-                PlayAction(
-                  label: s('Спробувати ще', 'Try again'),
-                  onPressed: () {
-                    ref.invalidate(playSessionProvider);
-                    ref.invalidate(packsProvider);
-                  },
-                )
-              else
-                // «Лужок»: never empty — the five free animals live here
-                // from the start, and every lesson brings a friend.
-                PlayPanel(
-                  color: DT.mintTint,
-                  padding: const EdgeInsets.all(DT.sp12),
-                  child: MeadowWorld(
-                    isEn: s.isEn,
-                    animals: meadowAnimals(
-                      packs: packs.valueOrNull ?? const [],
-                      rewards: rewards,
-                    ),
-                  ),
+              // «Ферма»: the toy farm board, every animal in its place.
+              _FarmDoor(
+                title: s('Ферма', 'The farm'),
+                hint: s(
+                  'Тваринки говорять — послухай і вгадай',
+                  'The animals talk — listen and guess',
                 ),
+                onTap: () {
+                  AudioService.instance.stop();
+                  Navigator.of(
+                    context,
+                  ).push(KidRoutes.game(const FarmScreen()));
+                },
+              ),
               const SizedBox(height: 20),
               IntrinsicHeight(
                 child: Row(
@@ -134,6 +118,70 @@ class WorldTab extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// The farm's door: wide, the painted animals talking, its name and line.
+class _FarmDoor extends StatelessWidget {
+  const _FarmDoor({
+    required this.title,
+    required this.hint,
+    required this.onTap,
+  });
+  final String title;
+  final String hint;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => KidTap(
+    key: const ValueKey('world-farm'),
+    onTap: onTap,
+    child: Container(
+      height: 190,
+      decoration: BoxDecoration(
+        color: DT.farmSky,
+        borderRadius: BorderRadius.circular(DT.rLg),
+        border: Border.all(color: DT.outline, width: 2),
+        boxShadow: const [BoxShadow(color: DT.outline, offset: Offset(0, 4))],
+        image: const DecorationImage(
+          image: AssetImage('assets/images/backdrops/farm_scene.webp'),
+          fit: BoxFit.cover,
+          alignment: Alignment.bottomCenter,
+        ),
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            right: 8,
+            bottom: 8,
+            child: Image.asset(
+              'assets/images/games/who.webp',
+              height: 130,
+              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+            ),
+          ),
+          Positioned(
+            left: 12,
+            top: 12,
+            right: 150,
+            child: CuePill(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: DT.tileTitle),
+                    const SizedBox(height: 2),
+                    Text(hint, style: DT.caption, maxLines: 2),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 /// A big picture door: the painted icon, its name, one line of what's behind.

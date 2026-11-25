@@ -18,11 +18,11 @@ import '../screens/opposite_game_screen.dart';
 import '../screens/repeat_game_screen.dart';
 import '../services/analytics_service.dart';
 import '../screens/coloring_hub_screen.dart';
+import '../screens/farm_screen.dart';
 import '../screens/feed_bloom_screen.dart';
 import '../screens/free_touch_screen.dart';
 import '../screens/hide_seek_screen.dart';
 import '../screens/shadow_match_screen.dart';
-import '../screens/who_said_screen.dart';
 import '../services/audio_service.dart';
 import '../services/paywall_flow.dart';
 import '../utils/app_icons.dart';
@@ -318,16 +318,6 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                       .where((c) => c.audioKey != null && c.image != null)
                       .length;
 
-            // The animals «Хто це сказав?» can ask about right now: the
-            // free preview for a family without Pro, the whole list with
-            // it, and only what is already on the device.
-            final soundPack = packs
-                .where((p) => whoSaidPackIds.contains(p.id))
-                .firstOrNull;
-            final whoSaid = soundPack == null
-                ? const <CardModel>[]
-                : whoSaidPool(soundPack, contentReady: contentReady);
-
             // The foods on Bloom's table, by the same access rule.
             final foodPack = packs
                 .where((p) => feedBloomPackIds.contains(p.id))
@@ -400,25 +390,22 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                     ? 'Open more cards in Packs first'
                     : 'Спочатку відкрий більше карток',
               ),
+              // The toy farm board: every animal in its place, its real
+              // voice on a tap, and riddles. Always open — the free five
+              // and the lesson friends are there from the start.
               _BigGame(
-                id: 'who_said',
-                title: isEn ? 'Who said that?' : 'Хто це сказав?',
+                id: 'farm',
+                title: isEn ? 'The farm' : 'Ферма',
                 subtitle: isEn
-                    ? 'Hear the animal, find it'
-                    : 'Послухай тваринку і знайди',
+                    ? 'Listen to the animals and guess'
+                    : 'Послухай тваринок і вгадай',
                 color: DT.streakOrange,
                 bg: DT.peachTint,
-                thumb: whoSaid.firstOrNull,
+                thumb: null,
                 art: 'who',
                 badge: AppIcon.gameGuess,
-                onTap: whoSaid.length >= WhoSaidScreen.setSize
-                    ? () => _openGame(
-                        KidRoutes.game(WhoSaidScreen(cards: whoSaid)),
-                      )
-                    : null,
-                lockedHint: isEn
-                    ? 'The animals are still arriving'
-                    : 'Тваринки ще завантажуються',
+                onTap: () => _openGame(KidRoutes.game(const FarmScreen())),
+                lockedHint: '',
               ),
               _BigGame(
                 id: 'feed_bloom',

@@ -29,17 +29,18 @@ class PlayTopic {
   String title(bool isEn) => isEn ? titleEn : titleUk;
 
   /// A locked pack lends only its free preview; a lesson that needs more
-  /// than that is simply not offered without it.
+  /// than that is simply not offered without it. The one exception is the
+  /// lesson's friend (its first picture): the lesson is how a child earns
+  /// that friend, voice and all, so it is lent from the whole pack.
   List<CardModel> cards(List<PackModel> packs) {
-    final available = packs
-        .where((p) => packIds.contains(p.id))
-        .expand(
-          (p) =>
-              p.isLocked ? p.cards.take(p.effectiveFreePreviewCount) : p.cards,
-        );
+    final mine = packs.where((p) => packIds.contains(p.id));
+    final available = mine.expand(
+      (p) => p.isLocked ? p.cards.take(p.effectiveFreePreviewCount) : p.cards,
+    );
+    final everything = mine.expand((p) => p.cards);
     final result = <CardModel>[];
-    for (final image in images) {
-      final card = available
+    for (final (i, image) in images.indexed) {
+      final card = (i == 0 ? everything : available)
           .where((c) => c.image == image && c.audioKey != null)
           .firstOrNull;
       if (card == null) return const [];
@@ -103,18 +104,65 @@ class PlayTopic {
       'frog',
       'fish',
     ]),
+    // The rooster is this lesson's friend: the dog is on the farm already.
     PlayTopic('yard_friends', 'На подвір’ї', 'In the yard', [
-      'dog',
       'rooster',
+      'dog',
       'bee',
     ]),
     PlayTopic(
       'sound_pond',
-      'Голоси біля ставка',
-      'Voices by the pond',
-      ['ph_frog', 'ph_duck', 'ph_bird'],
+      'Ква-ква, жабка!',
+      'Ribbit, little frog!',
+      // The frog with two free voices, so the lesson can always be played.
+      ['ph_frog', 'ph_cow', 'ph_horse'],
+      packIds: _sounds,
+      withSounds: true,
+    ),
+    // One lesson for every farm animal that is not free, so a sleeping one
+    // on the farm can always be woken by playing.
+    PlayTopic('coop_friends', 'Курочка в гостях', 'Visiting the hen', [
+      'chicken',
+      'cat',
+      'bee',
+    ]),
+    PlayTopic('meadow_friends', 'На лузі', 'In the meadow', [
+      'dog',
+      'butterfly',
+      'snail',
+    ]),
+    PlayTopic('sky_friends', 'Хто літає?', 'Who can fly?', [
+      'bird',
+      'butterfly',
+      'bee',
+    ]),
+    PlayTopic(
+      'sheep_voices',
+      'Бе-е, вівечка!',
+      'Baa, little sheep!',
+      ['ph_sheep', 'ph_pig', 'ph_cow'],
       packIds: _sounds,
       withSounds: true,
     ),
   ];
+
+  /// The lesson that brings the friend [key] (a farm animal), if one can be
+  /// played with these [packs].
+  static PlayTopic? bringing(String key, List<PackModel> packs) => all
+      .where(
+        (t) =>
+            friendKey(t.images.first) == key && t.cards(packs).length == 3,
+      )
+      .firstOrNull;
+
+  /// The clay friend a picture stands for: `ph_cat` → `cat`, the bunny is
+  /// Bloom's `rabbit`, the hen is the `chicken`.
+  static String friendKey(String image) {
+    final name = image.startsWith('ph_') ? image.substring(3) : image;
+    return switch (name) {
+      'bunny' => 'rabbit',
+      'hen' => 'chicken',
+      _ => name,
+    };
+  }
 }
