@@ -184,7 +184,10 @@ void main() {
     // The owner's rule: a pack is tappable without scrolling, at 700 pt.
     expect(find.text('Тваринки').hitTestable(), findsOneWidget);
     // One big action sits above the fold; the shelf follows it.
-    expect(find.textContaining('Привіт, тваринки!').hitTestable(), findsOneWidget);
+    expect(
+      find.textContaining('Привіт, тваринки!').hitTestable(),
+      findsOneWidget,
+    );
     expect(
       find.widgetWithText(PlayAction, 'Грати').hitTestable(),
       findsOneWidget,
@@ -202,7 +205,10 @@ void main() {
     await settle(tester);
     expect(find.byType(PacksTab).hitTestable(), findsOneWidget);
     expect(find.byType(PlayLessonScreen), findsNothing);
-    expect(find.textContaining('Привіт, тваринки!').hitTestable(), findsNothing);
+    expect(
+      find.textContaining('Привіт, тваринки!').hitTestable(),
+      findsNothing,
+    );
     expect(tester.takeException(), isNull);
   });
 

@@ -84,10 +84,11 @@ class PlayTopic {
       'pig',
       'chicken',
     ]),
+    // The owl, not the bunny, is this lesson's friend: the bunny is Bloom.
     PlayTopic('forest_friends', 'У лісі', 'In the forest', [
+      'owl',
       'bunny',
       'bear',
-      'owl',
     ]),
     PlayTopic(
       'sound_farm',

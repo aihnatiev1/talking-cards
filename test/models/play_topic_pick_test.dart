@@ -52,6 +52,10 @@ void main() {
         'duck',
         'frog',
         'fish',
+        'owl',
+        'sheep',
+        'rooster',
+        'bird',
       };
       for (final t in all) {
         expect(
