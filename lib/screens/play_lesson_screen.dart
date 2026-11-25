@@ -19,7 +19,6 @@ import '../widgets/meadow_scene.dart';
 import '../widgets/play_components.dart';
 import '../widgets/cue_pill.dart';
 import '../widgets/card_image.dart';
-import '../widgets/quiz_options_board.dart';
 import '../widgets/kid_screen.dart';
 
 /// The three pictures of a find question: the two others in their usual
@@ -487,7 +486,11 @@ class _PlayLessonScreenState extends ConsumerState<PlayLessonScreen>
                           // Two pictures stand one above the other on a
                           // phone; three are two and one, each picture
                           // filling its tile.
-                          return QuizOptionsBoard(
+                          // Whole pictures, never cropped: the cards are
+                          // drawn 3 : 4, so each tile is 3 : 4 too — two
+                          // side by side, a third centred under them — and
+                          // as big as the space allows.
+                          return _LessonBoard(
                             options: options,
                             tileBuilder: (_, card) => Semantics(
                               button: true,
@@ -531,7 +534,7 @@ class _PlayLessonScreenState extends ConsumerState<PlayLessonScreen>
                                           child: CardImage.forCard(
                                             card,
                                             size: CardArtSize.hero,
-                                            fit: BoxFit.cover,
+                                            fit: BoxFit.contain,
                                             padding: EdgeInsets.zero,
                                           ),
                                         ),
@@ -660,4 +663,56 @@ class _PlayLessonScreenState extends ConsumerState<PlayLessonScreen>
       ],
     );
   }
+}
+
+/// The lesson's answers in portrait tiles of the cards' own 3 : 4 shape:
+/// two side by side, a third centred under them, sized to fill the space
+/// without cropping a picture.
+class _LessonBoard extends StatelessWidget {
+  const _LessonBoard({required this.options, required this.tileBuilder});
+
+  final List<CardModel> options;
+  final Widget Function(int index, CardModel card) tileBuilder;
+
+  static const _gap = 12.0;
+  static const _aspect = 3 / 4;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, box) {
+      final rows = (options.length / 2).ceil();
+      var width = (box.maxWidth - _gap) / 2;
+      var height = width / _aspect;
+      final fit = (box.maxHeight - _gap * (rows - 1)) / rows;
+      if (height > fit) {
+        height = fit;
+        width = height * _aspect;
+      }
+      Widget tile(int i) => SizedBox(
+        width: width,
+        height: height,
+        child: tileBuilder(i, options[i]),
+      );
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var row = 0; row < rows; row++) ...[
+              if (row > 0) const SizedBox(height: _gap),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  tile(row * 2),
+                  if (row * 2 + 1 < options.length) ...[
+                    const SizedBox(width: _gap),
+                    tile(row * 2 + 1),
+                  ],
+                ],
+              ),
+            ],
+          ],
+        ),
+      );
+    },
+  );
 }
