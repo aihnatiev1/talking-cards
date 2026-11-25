@@ -289,6 +289,11 @@ void main() {
     expect(events, contains('game_complete:who_said'));
     // Every question was one of the four that had been introduced.
     expect(voices.toSet(), {for (final n in four) 'snd_$n'});
+    // Close the celebration properly: overlays queue app-wide, and one left
+    // open would keep the next test's celebration waiting behind it.
+    await tester.tap(find.text('Готово'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 3));
   });

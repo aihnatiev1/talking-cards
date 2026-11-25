@@ -56,6 +56,17 @@ class _GamesTabState extends ConsumerState<GamesTab> {
     return early.length >= atLeast ? early : cards;
   }
 
+  /// The same rule by *word* — for a pack whose cards are not the plan's
+  /// own. The plan's food words («яблуко», «каша», «водичка») sit under the
+  /// home pack's ids, while Bloom's table is laid from the food pack.
+  List<CardModel> _forAgeByWord(List<CardModel> cards, {required int atLeast}) {
+    final level = ref.read(profileProvider).active?.level ?? 2;
+    if (level > 2) return cards;
+    final plan = {for (final c in ref.read(speakSetProvider)) c.sound};
+    final early = cards.where((c) => plan.contains(c.sound)).toList();
+    return early.length >= atLeast ? early : cards;
+  }
+
   void _openQuiz(List<CardModel> allCards) {
     final lang = ref.read(languageProvider);
     // Playable = real recorded audio AND a webp illustration — the game
@@ -372,7 +383,14 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                 badge: AppIcon.gameGuess,
                 onTap: feedFoods.length >= 4
                     ? () => _openGame(
-                        KidRoutes.game(FeedBloomScreen(cards: feedFoods)),
+                        KidRoutes.game(
+                          FeedBloomScreen(
+                            cards: _forAgeByWord(
+                              feedFoods,
+                              atLeast: FeedBloomScreen.setSize,
+                            ),
+                          ),
+                        ),
                       )
                     : null,
                 lockedHint: isEn

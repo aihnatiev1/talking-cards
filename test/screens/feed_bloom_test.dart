@@ -261,6 +261,48 @@ void main() {
     expect(events.first, 'game_start:feed_bloom');
     expect(events, contains('game_complete:feed_bloom'));
     expect(spoken.toSet(), hasLength(FeedBloomScreen.setSize));
+    // Close the celebration properly: overlays queue app-wide, and one left
+    // open would keep the next test's celebration waiting behind it.
+    await tester.tap(find.text('Готово'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 3));
+  });
+
+  testWidgets('«Ще раз» lays a new table that brings the new foods', (
+    tester,
+  ) async {
+    await pumpGame(tester, count: 7);
+    for (var i = 0; i < FeedBloomScreen.setSize; i++) {
+      await tester.tap(plateOf(words.last!));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      await settleMeal(tester);
+    }
+    await tester.pump(const Duration(seconds: 1));
+    final firstMeal = spoken.toSet();
+    final asked = words.length;
+    await tester.tap(find.text('Ще раз'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.byType(QuizOption), findsNWidgets(2));
+    expect(bloomPose(tester), contains('hungry'));
+    expect(words.length, greaterThan(asked));
+    // The two foods that were not on the first table are on this one.
+    final fresh = foods.keys.toSet().difference(firstMeal);
+    expect(fresh, hasLength(2));
+    final second = <String>{};
+    for (var i = 0; i < FeedBloomScreen.setSize; i++) {
+      second.add(words.last!);
+      await tester.tap(plateOf(words.last!));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      await settleMeal(tester);
+    }
+    expect(second, containsAll(fresh));
+    await tester.pump(const Duration(seconds: 1));
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 3));
   });

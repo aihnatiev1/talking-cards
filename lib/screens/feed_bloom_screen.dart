@@ -378,8 +378,14 @@ class _FeedBloomScreenState extends ConsumerState<FeedBloomScreen>
       _misses.reset();
       _nudges.clear();
     });
-    ref.read(_provider.notifier).start();
-    _scheduleWord(DT.motion.gameInstructionGap);
+    // After the frame, as in `initState`: the new provider is auto-disposed
+    // and must be watched by a build before its first question is dealt,
+    // or the question is gone and the table stays empty.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(_provider.notifier).start();
+      _scheduleWord(DT.motion.gameInstructionGap);
+    });
   }
 
   // ── Build ───────────────────────────────────────────────────────────
