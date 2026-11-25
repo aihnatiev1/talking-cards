@@ -24,6 +24,7 @@ import '../widgets/kid_screen.dart';
 import '../utils/design_tokens.dart';
 import '../utils/kid_routes.dart';
 import '../providers/content_pack_provider.dart';
+import '../providers/profile_provider.dart';
 import '../widgets/card_image.dart';
 import '../widgets/entrance_stagger.dart';
 import '../widgets/kid_tap.dart';
@@ -36,6 +37,22 @@ class GamesTab extends ConsumerStatefulWidget {
 }
 
 class _GamesTabState extends ConsumerState<GamesTab> {
+  /// The words a game may use for this child.
+  ///
+  /// For a profile of 1–3 years that is the teaching plan — the sixty
+  /// words a toddler actually uses («мама», «котик», «їсти») — when enough
+  /// of them are playable. The whole library used to be dealt at random,
+  /// so a two-year-old was asked to find «підводний човен» and
+  /// «різнобарвний». Older profiles, and languages without a plan, keep
+  /// the library.
+  List<CardModel> _forAge(List<CardModel> cards, {required int atLeast}) {
+    final level = ref.read(profileProvider).active?.level ?? 2;
+    if (level > 2) return cards;
+    final plan = {for (final c in ref.read(speakSetProvider)) c.id};
+    final early = cards.where((c) => plan.contains(c.id)).toList();
+    return early.length >= atLeast ? early : cards;
+  }
+
   void _openQuiz(List<CardModel> allCards) {
     final lang = ref.read(languageProvider);
     // Playable = real recorded audio AND a webp illustration — the game
@@ -59,7 +76,10 @@ class _GamesTabState extends ConsumerState<GamesTab> {
     final packs = ref.read(packsProvider).valueOrNull ?? [];
     _openGame(
       KidRoutes.game(
-        GuessScreen(cards: cards, cardGroups: cardGroupsOf(packs)),
+        GuessScreen(
+          cards: _forAge(cards, atLeast: 12),
+          cardGroups: cardGroupsOf(packs),
+        ),
       ),
     );
   }
@@ -85,7 +105,11 @@ class _GamesTabState extends ConsumerState<GamesTab> {
     // No pair count from here: the board sizes itself from the profile's
     // level and from how calm the last rounds were
     // (memory_match_redesign §6).
-    _openGame(KidRoutes.game(MemoryMatchScreen(pack: pack, cards: playable)));
+    _openGame(
+      KidRoutes.game(
+        MemoryMatchScreen(pack: pack, cards: _forAge(playable, atLeast: 12)),
+      ),
+    );
   }
 
   static const _oddOneOutExclude = {
