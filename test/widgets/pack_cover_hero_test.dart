@@ -76,11 +76,12 @@ void main() {
 
     await tester.tap(find.byType(PackGridCard));
     await tester.pump();
-    // Mid-flight: one shuttle in the overlay, and neither end is drawing
-    // its own picture (both are showing the tinted placeholder).
+    // Mid-flight: one shuttle in the overlay; the tile keeps its picture
+    // (a flight that never lands must not leave an empty pane) and the
+    // header shows only its tint where the shuttle will land.
     await tester.pump(const Duration(milliseconds: 60));
     expect(find.byKey(PackCoverHero.shuttleKeyFor(pack.id)), findsOneWidget);
-    expect(find.byType(CardImage), findsOneWidget);
+    expect(find.byType(CardImage), findsNWidgets(2));
 
     await tester.pumpAndSettle();
     expect(find.byKey(PackCoverHero.shuttleKeyFor(pack.id)), findsNothing);

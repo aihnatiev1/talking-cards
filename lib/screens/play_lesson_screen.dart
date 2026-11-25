@@ -321,6 +321,9 @@ class _PlayLessonScreenState extends ConsumerState<PlayLessonScreen>
             ],
           ),
         ),
+        // Air under the round close button: the line below used to start
+        // right at its edge and the button sat on top of it.
+        const SizedBox(height: 10),
         if (complete)
           Expanded(
             child: KidStage(
@@ -540,9 +543,9 @@ class _PlayLessonScreenState extends ConsumerState<PlayLessonScreen>
                                                 )
                                               else if (session.hint &&
                                                   card.id == target.id)
-                                                const AppIconView(
-                                                  AppIcon.hint,
-                                                  color: DT.hint,
+                                                const AppArt(
+                                                  'sparkle',
+                                                  size: 30,
                                                 )
                                               else
                                                 const SizedBox(height: 24),
@@ -631,7 +634,7 @@ class _PlayLessonScreenState extends ConsumerState<PlayLessonScreen>
                                                 step,
                                               ),
                                             ),
-                                      icon: const AppIconView(AppIcon.hint),
+                                      icon: const AppArt('sparkle', size: 30),
                                       label: Text(
                                         _feedback ??
                                             s('Покажи мені', 'Show me'),

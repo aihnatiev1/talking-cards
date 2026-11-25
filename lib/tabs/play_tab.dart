@@ -287,7 +287,7 @@ class _PlayTabState extends ConsumerState<PlayTab> {
       if (complete && topic != null)
         TextButton.icon(
           onPressed: _opening ? null : () => _open(topic),
-          icon: const AppIconView(AppIcon.replay),
+          icon: const AppArt('restart', size: 28),
           label: Text(s('Пограти ще', 'Play again')),
         ),
     ];

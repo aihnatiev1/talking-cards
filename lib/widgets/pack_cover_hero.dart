@@ -74,9 +74,19 @@ class PackCoverHero extends StatelessWidget {
       transitionOnUserGestures: transitionOnUserGestures,
       createRectTween: (begin, end) =>
           MaterialRectArcTween(begin: begin, end: end),
-      placeholderBuilder: (_, __, ___) => DecoratedBox(
-        decoration: BoxDecoration(color: _tint, borderRadius: borderRadius),
-      ),
+      // The picture itself stays behind, not a tint: a flight that never
+      // lands (the pack closed under a paywall, a back-swipe given up
+      // half-way) used to leave the tile an empty pink pane.
+      // The tile's own end (the one that allows back-swipes) only, so the
+      // header does not show a second picture where the shuttle lands.
+      placeholderBuilder: (_, __, child) => transitionOnUserGestures
+          ? child
+          : DecoratedBox(
+              decoration: BoxDecoration(
+                color: _tint,
+                borderRadius: borderRadius,
+              ),
+            ),
       flightShuttleBuilder: (_, __, ___, ____, _____) => ClipRRect(
         key: shuttleKeyFor(pack.id),
         borderRadius: borderRadius,

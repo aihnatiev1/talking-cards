@@ -764,9 +764,10 @@ class _FinishedPanel extends StatelessWidget {
           Row(
             children: [
               Expanded(
+                flex: 2,
                 child: _BigButton(
                   label: s('Ще раз', 'Again'),
-                  icon: AppIcon.replay,
+                  art: 'restart',
                   background: DT.surfaceWhite,
                   foreground: DT.brand,
                   onTap: onAgain,
@@ -774,11 +775,13 @@ class _FinishedPanel extends StatelessWidget {
               ),
               if (onAnother != null) ...[
                 const SizedBox(width: 12),
+                // 3 : 2, not 2 : 1 — at a third of the row «Ще раз» ran
+                // into its own edge and read as a cut-off button.
                 Expanded(
-                  flex: 2,
+                  flex: 3,
                   child: _BigButton(
                     label: s('Ще малюнок', 'New picture'),
-                    icon: AppIcon.navColoring,
+                    art: 'palette',
                     background: DT.brand,
                     foreground: Colors.white,
                     onTap: onAnother!,
@@ -795,14 +798,16 @@ class _FinishedPanel extends StatelessWidget {
 
 class _BigButton extends StatelessWidget {
   final String label;
-  final AppIcon icon;
+
+  /// A painted picture (`assets/images/icons/`), as on every other button.
+  final String art;
   final Color background;
   final Color foreground;
   final VoidCallback onTap;
 
   const _BigButton({
     required this.label,
-    required this.icon,
+    required this.art,
     required this.background,
     required this.foreground,
     required this.onTap,
@@ -814,10 +819,17 @@ class _BigButton extends StatelessWidget {
       onTap: onTap,
       child: Container(
         height: DT.size.tapMin,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
           color: background,
           borderRadius: BorderRadius.circular(DT.rLg),
-          border: Border.all(color: Colors.white, width: 2),
+          // A white button needs an edge of its own on the lilac wall.
+          border: Border.all(
+            color: background == DT.surfaceWhite
+                ? foreground.withValues(alpha: .45)
+                : Colors.white,
+            width: 2,
+          ),
           boxShadow: [
             BoxShadow(
               color: background.withValues(alpha: .35),
@@ -829,14 +841,16 @@ class _BigButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            AppIconView(icon, size: 30),
+            AppArt(art, size: 36),
             const SizedBox(width: 8),
             Flexible(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: DT.tileTitle.copyWith(fontSize: 17, color: foreground),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  style: DT.tileTitle.copyWith(fontSize: 17, color: foreground),
+                ),
               ),
             ),
           ],

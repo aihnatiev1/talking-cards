@@ -285,11 +285,9 @@ class _AnswerFrameState extends State<AnswerFrame>
                 child: switch (mark) {
                   AnswerMark.none => const SizedBox.shrink(),
                   AnswerMark.correct => const _CheckSticker(),
-                  AnswerMark.hint => AppIconView(
-                    AppIcon.hint,
-                    size: DT.size.iconMd,
-                    sticker: true,
-                  ),
+                  // A painted sparkle, like every other picture in the app —
+                  // the drawn lightbulb was the last flat glyph on a tile.
+                  AnswerMark.hint => AppArt('sparkle', size: DT.size.iconMd),
                 },
               ),
             ),
