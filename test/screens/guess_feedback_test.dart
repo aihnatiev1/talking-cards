@@ -61,7 +61,7 @@ void main() {
     await tester.ensureVisible(find.byWidget(wrong));
     await tester.tap(find.byWidget(wrong));
     await tester.pump();
-    expect(find.text('Послухай ще раз. Я допоможу'), findsOneWidget);
+    expect(find.text('Послухай ще раз'), findsOneWidget);
     // The board rebuilt after the miss, so locate the current tile by id.
     final rightTile = find.byWidgetPredicate(
       (w) => w is QuizOption && w.card.id == right.card.id,

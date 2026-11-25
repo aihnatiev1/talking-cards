@@ -20,6 +20,7 @@ import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../services/paywall_flow.dart';
 import '../utils/app_icons.dart';
+import '../widgets/kid_screen.dart';
 import '../utils/design_tokens.dart';
 import '../utils/kid_routes.dart';
 import '../providers/content_pack_provider.dart';
@@ -195,6 +196,17 @@ class _GamesTabState extends ConsumerState<GamesTab> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
+          // The same round 72 dp way back as every game, instead of the
+          // bare system chevron — when there is somewhere to go back to.
+          toolbarHeight: 84,
+          leadingWidth: 92,
+          leading: Navigator.of(context).canPop()
+              ? const Padding(
+                  padding: EdgeInsets.only(left: 12),
+                  child: Center(child: KidBackButton(accent: DT.brand)),
+                )
+              : null,
+          automaticallyImplyLeading: false,
           title: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -445,8 +457,8 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                 id: 'opposites',
                 title: isEn ? 'Opposites' : 'Протилежності',
                 subtitle: isEn
-                    ? 'Big↔small, hot↔cold'
-                    : 'Великий↔малий, тепло↔холод',
+                    ? 'Big and small, hot and cold'
+                    : 'Великий і малий, тепло і холод',
                 color: DT.pink,
                 bg: DT.pinkTint,
                 thumb: oppPack != null ? _pickThumb(oppPack.cards) : null,

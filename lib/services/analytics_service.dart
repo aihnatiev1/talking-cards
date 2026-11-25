@@ -8,7 +8,13 @@ class AnalyticsService {
   AnalyticsService._();
   static final instance = AnalyticsService._();
 
+  /// Debug builds stay out of the production property unless asked in:
+  /// the screenshot rig and local runs had written 4,782 of ~6,100
+  /// `game_start` events in ninety days, drowning the real families.
+  static const _debugCollection = bool.fromEnvironment('ANALYTICS_IN_DEBUG');
+
   FirebaseAnalytics? get _analytics {
+    if (kDebugMode && !_debugCollection) return null;
     try {
       return FirebaseAnalytics.instance;
     } catch (_) {

@@ -409,8 +409,12 @@ class _GuessScreenState extends ConsumerState<GuessScreen> {
             'Так! Це ${state.correctCard.sound.toLowerCase()}',
             'Yes! ${state.correctCard.sound}',
           )
+        // Help is promised only once it is on screen: the target tile
+        // starts to breathe after `hintAfterMisses`, not on the first miss.
+        : _misses.misses >= state.hintAfterMisses
+        ? s('Дивись, я підкажу', 'Look, I’ll show you')
         : _misses.misses > 0
-        ? s('Послухай ще раз. Я допоможу', 'Listen once more. I’ll help you')
+        ? s('Послухай ще раз', 'Listen once more')
         : s('Послухай й обери картинку', 'Listen and choose a picture');
     return LayoutBuilder(
       builder: (context, bounds) {
