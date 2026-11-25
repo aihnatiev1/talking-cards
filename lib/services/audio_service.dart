@@ -862,6 +862,7 @@ class AudioService {
     String sound,
     String fullText,
   ) async {
+    debugSpeakSink?.call(audioKey);
     if (audioKey == null) return;
 
     // Silence first, load second. `_getSource` reads from disk — and on
@@ -1004,6 +1005,83 @@ class AudioService {
   /// Whether audio exists for the given key (loaded lazily on first play).
   bool hasSound(String? key) => key != null && _knownKeys.contains(key);
 
+  /// Whether [key] can be played *without its word*: there is a recording
+  /// and the manifest knows where the word ends. «Хто це сказав?» asks the
+  /// child to name an animal from its voice, so a clip that cannot be
+  /// started after the narrator's word can never be the question.
+  bool hasSoundAfterWord(String? key) {
+    if (key == null || !_knownKeys.contains(key)) return false;
+    return _wordEndOf(key) != null;
+  }
+
+  int? _wordEndOf(String audioKey) =>
+      _wordEndMs[_audioMap[audioKey] ?? audioKey] ?? _wordEndMs[audioKey];
+
+  /// How far into the silence after the word playback starts. The clips
+  /// are WORD · ≥450 ms silence · sound, so this lands well clear of the
+  /// word's tail and well before the sound.
+  static const _afterWordLead = Duration(milliseconds: 300);
+
+  /// Plays the part of a recording that comes *after* the word — for the
+  /// animal-sound cards, the animal's own voice without its name.
+  ///
+  /// The voice is started paused, moved past the word and only then let
+  /// go, and the position is read back first: if the seek did not take,
+  /// nothing plays at all. Saying «котик» before asking who miaowed would
+  /// give the answer away, so silence is the safe failure here. Returns
+  /// whether the sound actually played.
+  Future<bool> playAfterWord(String? audioKey) async {
+    debugAfterWordSink?.call(audioKey);
+    if (audioKey == null) return false;
+    final wordEnd = _wordEndOf(audioKey);
+    if (wordEnd == null) return false;
+
+    // Same order as [speakCard]: silence first, load second.
+    stop();
+    final gen = _speakGeneration;
+
+    final source = await _getSource(audioKey);
+    if (source == null || _speakGeneration != gen) return false;
+
+    try {
+      final handle = await _soloud.play(source, paused: true);
+      if (_speakGeneration != gen) {
+        _soloud.stop(handle);
+        return false;
+      }
+      final target = Duration(milliseconds: wordEnd) + _afterWordLead;
+      _soloud.seek(handle, target);
+      final at = _soloud.getPosition(handle);
+      if (kDebugMode) {
+        debugPrint(
+          'AudioService: afterWord "$audioKey" wordEnd=$wordEnd '
+          'seek=${target.inMilliseconds} at=${at.inMilliseconds}',
+        );
+      }
+      if (at < Duration(milliseconds: wordEnd)) {
+        _soloud.stop(handle);
+        _reportSilence(_audioMap[audioKey] ?? audioKey, 'seek_failed');
+        return false;
+      }
+      _currentHandle = handle;
+      _protectVoice(handle);
+      isSpeaking.value = true;
+      _soloud.setPause(handle, false);
+      while (_currentHandle == handle &&
+          _soloud.getIsValidVoiceHandle(handle)) {
+        await Future.delayed(const Duration(milliseconds: 50));
+      }
+      if (_speakGeneration == gen) isSpeaking.value = false;
+      return true;
+    } catch (e) {
+      if (_speakGeneration == gen) isSpeaking.value = false;
+      if (kDebugMode) {
+        debugPrint('AudioService: playAfterWord error "$audioKey": $e');
+      }
+      return false;
+    }
+  }
+
   /// Availability for a lesson's explicit fallback UI; resolution stays here.
   bool isWordAvailable(String? key) =>
       key != null &&
@@ -1055,6 +1133,23 @@ class AudioService {
   /// is the only observable. Set in `setUp`, cleared in `tearDown`.
   @visibleForTesting
   static void Function(String? audioKey)? debugWordSink;
+
+  /// Every whole clip (word + phrase) a screen asks [speakCard] for.
+  @visibleForTesting
+  static void Function(String? audioKey)? debugSpeakSink;
+
+  /// Every "sound without its word" a screen asks [playAfterWord] for.
+  @visibleForTesting
+  static void Function(String? audioKey)? debugAfterWordSink;
+
+  /// Test seam: word-end offsets, which the app loads from the manifest in
+  /// [precache] — a widget test never runs that.
+  @visibleForTesting
+  void debugSetWordEnds(Map<String, int> ends) {
+    _wordEndMs
+      ..clear()
+      ..addAll(ends);
+  }
 
   @visibleForTesting
   static void Function(String file, double pitch, double volume)? debugFxSink;
