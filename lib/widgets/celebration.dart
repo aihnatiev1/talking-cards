@@ -344,25 +344,9 @@ class _CelebrationState extends State<Celebration>
             Positioned(
               right: 12,
               bottom: 8,
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: _accent.withValues(alpha: .12),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: const AppIconView(
-                  AppIcon.check,
-                  size: 24,
-                  color: DT.success,
-                ),
-              ),
+              // A painted party popper, not a flat tick: the end of a
+              // round is a treat, not a form that validated.
+              child: const AppArt('party', size: 60),
             ),
           ],
         ),
@@ -439,12 +423,15 @@ class _CelebrationState extends State<Celebration>
                 _Pill(
                   label: widget.doneLabel ?? s('Готово', 'Done'),
                   accent: accent,
+                  // Back to the quest map, where the chest is waiting.
+                  art: widget.doneLabel == null ? 'house' : 'chest',
                   onTap: () => _leave(widget.onDone),
                 ),
                 if (widget.onAgain != null)
                   _Pill.outlined(
                     label: s('Ще раз', 'Play again'),
                     accent: accent,
+                    art: 'restart',
                     onTap: () => _close(widget.onAgain),
                   ),
               ]
@@ -453,11 +440,13 @@ class _CelebrationState extends State<Celebration>
                   _Pill(
                     label: s('Ще раз', 'Play again'),
                     accent: accent,
+                    art: 'restart',
                     onTap: () => _close(widget.onAgain),
                   ),
                 _Pill.outlined(
                   label: widget.doneLabel ?? s('Готово', 'Done'),
                   accent: accent,
+                  art: 'house',
                   onTap: () => _leave(widget.onDone),
                 ),
               ],
@@ -733,13 +722,22 @@ class _Pill extends StatelessWidget {
   final VoidCallback onTap;
   final bool filled;
 
-  const _Pill({required this.label, required this.accent, required this.onTap})
-    : filled = true;
+  /// A painted picture before the word: the child choosing between «again»
+  /// and «done» cannot read either.
+  final String? art;
+
+  const _Pill({
+    required this.label,
+    required this.accent,
+    required this.onTap,
+    this.art,
+  }) : filled = true;
 
   const _Pill.outlined({
     required this.label,
     required this.accent,
     required this.onTap,
+    this.art,
   }) : filled = false;
 
   @override
@@ -761,13 +759,24 @@ class _Pill extends StatelessWidget {
           borderRadius: BorderRadius.circular(DT.rLg),
           border: filled ? null : Border.all(color: accent, width: 2),
         ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: DT.tileTitle.copyWith(
-            fontSize: 20,
-            color: filled ? DT.surfaceWhite : accent,
-          ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (art != null) ...[
+              AppArt(art!, size: 40),
+              const SizedBox(width: DT.sp12),
+            ],
+            Flexible(
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                style: DT.tileTitle.copyWith(
+                  fontSize: 20,
+                  color: filled ? DT.surfaceWhite : accent,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
