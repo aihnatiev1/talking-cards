@@ -22,6 +22,7 @@ import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../services/feedback_service.dart';
 import '../utils/design_tokens.dart';
+import '../utils/game_words.dart';
 import '../utils/l10n.dart';
 import '../utils/motion.dart';
 import '../widgets/bloom_mascot.dart';
@@ -1082,11 +1083,12 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
           .toList();
       // For a profile of 1–3 years, the teaching plan's words when there
       // are enough of them — the same rule as «Вгадай звук».
-      final level = ref.read(profileProvider).active?.level ?? 2;
-      if (level > 2) return all;
-      final plan = {for (final c in ref.read(speakSetProvider)) c.id};
-      final early = all.where((c) => plan.contains(c.id)).toList();
-      return early.length >= 12 ? early : all;
+      return wordsForAge(
+        all,
+        level: ref.read(profileProvider).active?.level ?? 2,
+        plan: ref.read(speakSetProvider),
+        atLeast: 12,
+      );
     }
 
     // Tricky: union of weak words + SRS due, mapped back to CardModel via

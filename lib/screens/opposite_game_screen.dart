@@ -239,6 +239,10 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
                         key: ValueKey(question.id),
                         card: question,
                         s: s,
+                        // A short phone gives the picture less, so the
+                        // answers below keep a height a finger can hit.
+                        artHeight: (MediaQuery.sizeOf(context).height * .19)
+                            .clamp(72.0, 150.0),
                       ),
               ),
             ),
@@ -251,10 +255,19 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
               children: [
                 const _SwapBadge(size: 40),
                 const SizedBox(width: 10),
-                CuePill(
-                  child: Text(
-                    s('Що протилежне?', 'What is the opposite?'),
-                    style: DT.h2.copyWith(fontSize: 20, color: DT.textPrimary),
+                // Shrinks on a narrow phone instead of running off the edge.
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: CuePill(
+                      child: Text(
+                        s('Що протилежне?', 'What is the opposite?'),
+                        style: DT.h2.copyWith(
+                          fontSize: 20,
+                          color: DT.textPrimary,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -320,8 +333,14 @@ class _Round {
 class _QuestionCard extends StatelessWidget {
   final CardModel card;
   final AppS s;
+  final double artHeight;
 
-  const _QuestionCard({super.key, required this.card, required this.s});
+  const _QuestionCard({
+    super.key,
+    required this.card,
+    required this.s,
+    this.artHeight = 150,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -351,13 +370,13 @@ class _QuestionCard extends StatelessWidget {
           // slips through (never emoji in gameplay).
           if (card.image != null)
             SizedBox(
-              height: 150,
+              height: artHeight,
               child: CardImage.forCard(card, padding: EdgeInsets.zero),
             )
           else
             Container(
               width: 110,
-              height: 150,
+              height: artHeight,
               decoration: BoxDecoration(
                 color: card.colorAccent.withValues(alpha: 0.25),
                 borderRadius: BorderRadius.circular(18),

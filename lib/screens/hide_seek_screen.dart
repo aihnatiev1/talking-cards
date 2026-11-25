@@ -253,7 +253,11 @@ class _HideSeekScreenState extends ConsumerState<HideSeekScreen>
     scorePoint();
     setState(() {
       _step = _Step.found;
-      _up.add(index);
+      // Only the one that was found stands: a friend that had popped up to
+      // say hello a moment ago must not be left out under «Ось котик!».
+      _up
+        ..clear()
+        ..add(index);
     });
     // The whole clip — the name and its phrase — while the friend is out.
     await Future.wait([

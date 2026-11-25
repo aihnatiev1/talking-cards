@@ -18,7 +18,10 @@ import '../services/profile_service.dart';
 import '../widgets/quest_journey_map.dart';
 import '../widgets/kid_screen.dart';
 import '../widgets/reward_pack_picker.dart';
+import '../providers/curriculum_progress_provider.dart';
+import '../providers/profile_provider.dart';
 import '../utils/design_tokens.dart';
+import '../utils/game_words.dart';
 import '../utils/l10n.dart';
 import '../utils/kid_routes.dart';
 import 'card_reveal_screen.dart';
@@ -141,6 +144,9 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Keeps the speaking plan loaded for the quiz stop (see `wordsForAge`):
+    // read cold on tap it is still empty, and the plan words are skipped.
+    ref.watch(speakSetProvider);
     final quest = ref.watch(dailyQuestProvider);
     final packsAsync = ref.watch(packsProvider);
     final packs = packsAsync.valueOrNull ?? [];
@@ -283,7 +289,12 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen> {
           );
           return;
         }
-        final allCards = packs.expand((p) => p.cards).toList();
+        // The same board rules as the games hub: no verse or photo packs,
+        // and the plan's words for a child of 1–3 (see `game_words.dart`).
+        final allCards = packs
+            .where(isPictureGamePack)
+            .expand((p) => p.cards)
+            .toList();
         final lang = ref.read(languageProvider);
         // Same sanitation as games_tab: real recorded audio + webp image.
         final playable = lang == 'en'
@@ -300,7 +311,12 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen> {
         if (playable.length >= 4) {
           _travel(
             GuessScreen(
-              cards: playable,
+              cards: wordsForAge(
+                playable,
+                level: ref.read(profileProvider).active?.level ?? 2,
+                plan: ref.read(speakSetProvider),
+                atLeast: 12,
+              ),
               cardGroups: cardGroupsOf(packs),
               returnToAdventure: true,
             ),

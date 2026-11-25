@@ -26,6 +26,7 @@ import '../services/paywall_flow.dart';
 import '../utils/app_icons.dart';
 import '../widgets/kid_screen.dart';
 import '../utils/design_tokens.dart';
+import '../utils/game_words.dart';
 import '../utils/kid_routes.dart';
 import '../providers/content_pack_provider.dart';
 import '../providers/profile_provider.dart';
@@ -49,13 +50,13 @@ class _GamesTabState extends ConsumerState<GamesTab> {
   /// so a two-year-old was asked to find «підводний човен» and
   /// «різнобарвний». Older profiles, and languages without a plan, keep
   /// the library.
-  List<CardModel> _forAge(List<CardModel> cards, {required int atLeast}) {
-    final level = ref.read(profileProvider).active?.level ?? 2;
-    if (level > 2) return cards;
-    final plan = {for (final c in ref.read(speakSetProvider)) c.id};
-    final early = cards.where((c) => plan.contains(c.id)).toList();
-    return early.length >= atLeast ? early : cards;
-  }
+  List<CardModel> _forAge(List<CardModel> cards, {required int atLeast}) =>
+      wordsForAge(
+        cards,
+        level: ref.read(profileProvider).active?.level ?? 2,
+        plan: ref.read(speakSetProvider),
+        atLeast: atLeast,
+      );
 
   /// The same rule by *word* — for a pack whose cards are not the plan's
   /// own. The plan's food words («яблуко», «каша», «водичка») sit under the
@@ -298,8 +299,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
             // game with fewer cards.
             final contentReady = ref.watch(contentPackProvider).isReady;
             final allCards = packs
-                .where((p) => !PackModel.nonWordPackIds.contains(p.id))
-                .where((p) => !PackModel.photoPackIds.contains(p.id))
+                .where(isPictureGamePack)
                 .where((p) => contentReady || p.isFree)
                 .expand((p) => p.cards)
                 .toList();

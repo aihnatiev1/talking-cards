@@ -67,13 +67,32 @@ class QuizOption extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            Text(
-              card.sound,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: DT.tileTitle.copyWith(color: DT.textPrimary, fontSize: 19),
-            ),
+            // One word shrinks to fit its tile instead of breaking or
+            // ending in «…» — three tiles on a phone are about 110 pt wide
+            // and «МАЛЕНЬКИЙ» is not. Two words still wrap onto two lines.
+            if (card.sound.contains(' '))
+              Text(
+                card.sound,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: DT.tileTitle.copyWith(
+                  color: DT.textPrimary,
+                  fontSize: 19,
+                ),
+              )
+            else
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  card.sound,
+                  maxLines: 1,
+                  style: DT.tileTitle.copyWith(
+                    color: DT.textPrimary,
+                    fontSize: 19,
+                  ),
+                ),
+              ),
           ],
         ),
       ),

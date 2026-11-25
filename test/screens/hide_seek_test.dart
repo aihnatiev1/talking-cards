@@ -233,6 +233,29 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
   });
 
+  testWidgets('«Ще раз» starts another game of five', (tester) async {
+    await pumpGame(tester);
+    for (var i = 0; i < HideSeekScreen.rounds; i++) {
+      await untilAsked(tester);
+      await tester.tap(placeOf(imageOf(words.last)));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 1400));
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    await tester.pump(const Duration(seconds: 1));
+    final asked = words.length;
+    await tester.tap(find.text('Ще раз'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    // A friend stands up and is named again; nothing is left of the last game.
+    expect(find.byType(AnimalFriendArt), findsOneWidget);
+    expect(words.length, greaterThan(asked));
+    await untilAsked(tester);
+    expect(find.textContaining('Де '), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 3));
+  });
+
   testWidgets('from three years two friends hide behind three places and '
       'only one is asked for', (tester) async {
     tester.view.physicalSize = const Size(390, 844);
