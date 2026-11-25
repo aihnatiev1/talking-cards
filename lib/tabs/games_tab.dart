@@ -19,6 +19,7 @@ import '../screens/repeat_game_screen.dart';
 import '../services/analytics_service.dart';
 import '../screens/coloring_hub_screen.dart';
 import '../screens/feed_bloom_screen.dart';
+import '../screens/hide_seek_screen.dart';
 import '../screens/who_said_screen.dart';
 import '../services/audio_service.dart';
 import '../services/paywall_flow.dart';
@@ -332,6 +333,14 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                 ? const <CardModel>[]
                 : feedBloomPool(foodPack, contentReady: contentReady);
 
+            // The clay friends that can hide, from the free animals pack.
+            final animalsPack = packs
+                .where((p) => hideSeekPackIds.contains(p.id) && !p.isLocked)
+                .firstOrNull;
+            final hiders = animalsPack == null
+                ? const <CardModel>[]
+                : hideSeekPool(animalsPack);
+
             final toddlerGames = <_BigGame>[
               _BigGame(
                 id: 'quiz',
@@ -395,6 +404,26 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                 lockedHint: isEn
                     ? 'The food is still arriving'
                     : 'Їжа ще завантажується',
+              ),
+              _BigGame(
+                id: 'hide_seek',
+                title: isEn ? 'Hide and seek' : 'Хованки',
+                subtitle: isEn
+                    ? 'Who is behind the bush?'
+                    : 'Хто сховався за кущем?',
+                color: DT.mint,
+                bg: DT.mintTint,
+                thumb: hiders.firstOrNull,
+                art: 'hide',
+                badge: AppIcon.gameGuess,
+                onTap: hiders.length >= 2
+                    ? () => _openGame(
+                        KidRoutes.game(HideSeekScreen(cards: hiders)),
+                      )
+                    : null,
+                lockedHint: isEn
+                    ? 'The animals are still arriving'
+                    : 'Тваринки ще завантажуються',
               ),
               _BigGame(
                 id: 'memory_match',

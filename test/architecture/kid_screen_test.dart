@@ -30,6 +30,7 @@ void main() {
     'lib/screens/rewards_screen.dart',
     'lib/screens/who_said_screen.dart',
     'lib/screens/feed_bloom_screen.dart',
+    'lib/screens/hide_seek_screen.dart',
   ];
 
   String read(String path) => File(path).readAsStringSync();
