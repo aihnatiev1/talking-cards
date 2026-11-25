@@ -142,6 +142,7 @@ class MeadowFriend extends StatelessWidget {
     required this.phase,
     required this.onTap,
     this.wiggles = 0,
+    this.beckon = false,
   });
 
   final MeadowAnimal animal;
@@ -152,8 +153,11 @@ class MeadowFriend extends StatelessWidget {
   final int phase;
   final VoidCallback onTap;
 
-  /// Bumped on a tap of a locked animal: it shakes its head, asleep.
+  /// Bumped to shake its head: asleep (locked), or «not me» in a riddle.
   final int wiggles;
+
+  /// The riddle's hint after two misses: this one breathes big and glows.
+  final bool beckon;
 
   @override
   Widget build(BuildContext context) {
@@ -172,13 +176,42 @@ class MeadowFriend extends StatelessWidget {
         child: Stack(
           clipBehavior: Clip.none,
           children: [
+            // The hint's glow, on the ground under it.
+            if (beckon)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: 40,
+                child: IgnorePointer(
+                  child: AmbientLoop(
+                    period: DT.motion.speakerPulse * 2,
+                    builder: (_, t, child) =>
+                        Opacity(opacity: .45 + .4 * t, child: child),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: DT.sunBurst.withValues(alpha: .8),
+                            blurRadius: 26,
+                            spreadRadius: 10,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             Positioned.fill(
               child: AmbientLoop(
                 // Each breathes at its own pace, so the meadow is not a
                 // row of metronomes.
-                period: DT.motion.speakerPulse * (3 + .3 * (phase % 5)),
+                period: beckon
+                    ? DT.motion.speakerPulse
+                    : DT.motion.speakerPulse * (3 + .3 * (phase % 5)),
                 builder: (_, t, child) => Transform.scale(
-                  scale: 1 + .025 * t,
+                  scale: 1 + (beckon ? .09 : .025) * t,
                   alignment: Alignment.bottomCenter,
                   child: child,
                 ),
@@ -216,12 +249,33 @@ class MeadowFriend extends StatelessWidget {
                 ),
               ),
             ),
-            if (locked)
+            if (locked) ...[
               const Positioned(
                 right: 0,
                 bottom: 0,
-                child: IgnorePointer(child: AppArt('padlock', size: 34)),
+                child: IgnorePointer(child: AppArt('padlock', size: 30)),
               ),
+              // Asleep: «z z z» drifting up from its head.
+              Positioned(
+                right: 0,
+                top: -8,
+                child: IgnorePointer(
+                  child: AmbientLoop(
+                    period: DT.motion.speakerPulse * (4 + .3 * (phase % 3)),
+                    reverse: false,
+                    curve: Curves.linear,
+                    builder: (_, t, child) => Opacity(
+                      opacity: math.sin(t * math.pi),
+                      child: Transform.translate(
+                        offset: Offset(6 * t, -14 * t),
+                        child: child,
+                      ),
+                    ),
+                    child: const _Zzz(),
+                  ),
+                ),
+              ),
+            ],
             if (animal.earned)
               const Positioned(
                 left: 4,
@@ -253,21 +307,33 @@ class MeadowFriend extends StatelessWidget {
   }
 }
 
-/// A locked animal: a soft grey silhouette, asleep until it is opened.
+/// A locked animal, asleep until it is woken: solid (a see-through grey
+/// read as a ghost), its colours dimmed and cooled like a toy in the shade.
 Widget _sleepy(bool locked, Widget art) => !locked
     ? art
-    : Opacity(
-        opacity: .75,
-        child: ColorFiltered(
-          colorFilter: const ColorFilter.matrix(<double>[
-            .30, .55, .15, 0, 20, //
-            .30, .55, .15, 0, 20,
-            .30, .55, .15, 0, 20,
-            0, 0, 0, 1, 0,
-          ]),
-          child: art,
-        ),
+    : ColorFiltered(
+        colorFilter: const ColorFilter.matrix(<double>[
+          .38, .42, .10, 0, 18, //
+          .30, .50, .10, 0, 20,
+          .30, .40, .25, 0, 34,
+          0, 0, 0, 1, 0,
+        ]),
+        child: art,
       );
+
+/// «z z z» over a sleeping animal.
+class _Zzz extends StatelessWidget {
+  const _Zzz();
+  @override
+  Widget build(BuildContext context) => Text(
+    'z z Z',
+    style: DT.tileTitle.copyWith(
+      fontSize: 20,
+      color: DT.violet,
+      shadows: const [Shadow(color: DT.surfaceWhite, blurRadius: 6)],
+    ),
+  );
+}
 
 /// The small painted star on a lesson friend.
 class AppArtStar extends StatelessWidget {
@@ -340,9 +406,17 @@ class _WavesPainter extends CustomPainter {
 
 /// The pond: water and the clay fish; a tap and it jumps, with bubbles.
 class MeadowPond extends StatelessWidget {
-  const MeadowPond({super.key, required this.pops, required this.onTap});
+  const MeadowPond({
+    super.key,
+    required this.pops,
+    required this.onTap,
+    this.word,
+  });
   final int pops;
   final VoidCallback onTap;
+
+  /// The fish's name in a cloud over it while it is said; null hides it.
+  final String? word;
 
   @override
   Widget build(BuildContext context) {
@@ -404,6 +478,22 @@ class MeadowPond extends StatelessWidget {
                     ),
                   ),
                 ),
+              Positioned(
+                left: -40,
+                right: -40,
+                bottom: box.maxHeight * .12 + fish + 2,
+                child: IgnorePointer(
+                  child: Center(
+                    child: AnimatedScale(
+                      scale: word == null ? 0 : 1,
+                      duration: policy.dur(DT.motion.successPop),
+                      curve: Curves.easeOutBack,
+                      alignment: Alignment.bottomCenter,
+                      child: _SoundCloud(text: word ?? ''),
+                    ),
+                  ),
+                ),
+              ),
             ],
           );
         },

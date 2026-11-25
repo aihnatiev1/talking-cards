@@ -44,6 +44,9 @@ const farmSpots = <String, (double x, double y, double size)>{
   'pig': (.89, .97, .24),
 };
 
+/// Bloom's seat on the barn roof: feet, size — as for the animals.
+const farmBloom = (.21, .36, .18);
+
 /// The fish's patch of the pond, as fractions of the picture.
 const farmPond = (left: .48, top: .82, right: .58, bottom: .99);
 
@@ -99,6 +102,13 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
   /// The animal the riddle asks for, and how many were found this round.
   MeadowAnimal? _asked;
   int _found = 0;
+
+  /// Wrong animals tapped for this riddle; at two the answer beckons.
+  int _misses = 0;
+
+  /// The fish's name in its cloud while it is said.
+  String? _fishWord;
+  Timer? _fishTimer;
   bool _cheering = false;
 
   int _turn = 0;
@@ -149,6 +159,7 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
     }
     _cloudTimer?.cancel();
     _lineTimer?.cancel();
+    _fishTimer?.cancel();
     _turn++;
     AudioService.instance.stop();
     super.dispose();
@@ -209,9 +220,24 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
     final asked = _asked;
     if (_mode == FarmMode.riddle && asked != null) {
       if (animal.key == asked.key) return _foundIt(animal);
-      // Not the one asked — that is fine: this one says who it is, and the
-      // voice asked for comes again.
-      FeedbackService.instance.event(FeedbackEvent.cardTouch);
+      // Not the one asked. Shown gently — never a red cross: the animal
+      // shakes its head with the soft «miss» note, Bloom says who it is,
+      // then it says so itself, and the voice asked for comes again.
+      final turn0 = ++_turn;
+      FeedbackService.instance.event(FeedbackEvent.wrong);
+      setState(() {
+        _misses++;
+        _wiggles[animal.key] = (_wiggles[animal.key] ?? 0) + 1;
+      });
+      _say(
+        s(
+          'Ні, це ${animal.card.sound.toLowerCase()}!',
+          'No — the ${animal.card.sound.toLowerCase()}!',
+        ),
+        BloomEmotion.listen,
+      );
+      await Future<void>.delayed(DT.motion.slow);
+      if (!mounted || turn0 != _turn || _asked?.key != asked.key) return;
       final turn = await _speak(animal);
       if (!mounted || turn != _turn || _asked?.key != asked.key) return;
       await Future<void>.delayed(const Duration(seconds: 1));
@@ -302,7 +328,10 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
     if (open.length > 1 && last != null) {
       open.removeWhere((a) => a.key == last.key);
     }
-    setState(() => _asked = open[_random.nextInt(open.length)]);
+    setState(() {
+      _asked = open[_random.nextInt(open.length)];
+      _misses = 0;
+    });
     _askAgain();
   }
 
@@ -386,10 +415,15 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
         .firstOrNull;
     if (fish == null) return;
     final turn = ++_turn;
+    final word = fish.sound.toLowerCase();
+    _fishTimer?.cancel();
+    setState(() => _fishWord = word);
+    _fishTimer = Timer(const Duration(seconds: 3), () {
+      if (mounted) setState(() => _fishWord = null);
+    });
     await AudioService.instance.playWordOnly(fish.audioKey, fish.sound);
     if (!mounted || turn != _turn) return;
     final s = AppS(ref.read(languageProvider) == 'en');
-    final word = fish.sound.toLowerCase();
     if (_mode == FarmMode.riddle && _asked != null) {
       _askAgain();
       return;
@@ -432,79 +466,75 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
                 cloud: _cloud == animal.key,
                 hops: _hops[animal.key] ?? 0,
                 wiggles: _wiggles[animal.key] ?? 0,
+                beckon:
+                    _mode == FarmMode.riddle &&
+                    _asked?.key == animal.key &&
+                    _misses >= 2,
                 phase: phase,
                 onTap: () => _tap(animal),
               ),
-              fish: MeadowPond(pops: _fishPops, onTap: _tapFish),
-            ),
-          ),
-          // Along the sky: close, Bloom and his line.
-          Positioned(
-            left: 0,
-            top: 0,
-            right: 0,
-            child: SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.all(DT.sp8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const KidCloseButton(accent: DT.brand),
-                    const SizedBox(width: 4),
-                    BloomMascot(
-                      size: 68,
-                      state: BloomState(emotion: _bloom),
-                      interactive: false,
-                      semanticsLabel: s('Блум', 'Bloom'),
-                    ),
-                    const SizedBox(width: 4),
-                    // A fixed slot, clear of the bird flying past.
-                    SizedBox(
-                      width: _lineSlot,
-                      child: AnimatedSwitcher(
-                        duration: policy.dur(DT.motion.selectionChange),
-                        child: line == null
-                            ? const SizedBox.shrink()
-                            : Align(
-                                key: ValueKey('$line$_found'),
-                                alignment: Alignment.topLeft,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(top: 6),
-                                  child: Semantics(
-                                    liveRegion: true,
-                                    child: CueBubble(
-                                      tailRight: false,
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Flexible(
-                                            child: Text(
-                                              line,
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: DT.caption.copyWith(
-                                                fontSize: 16,
-                                                height: 1.2,
-                                                fontWeight: FontWeight.w800,
-                                                color: DT.textPrimary,
-                                              ),
-                                            ),
-                                          ),
-                                          if (_mode == FarmMode.riddle) ...[
-                                            const SizedBox(width: 6),
-                                            _Stars(found: _found),
-                                          ],
-                                        ],
+              bloom: (size) => BloomMascot(
+                size: size,
+                state: BloomState(emotion: _bloom),
+                interactive: false,
+                semanticsLabel: s('Блум', 'Bloom'),
+              ),
+              line: SizedBox(
+                width: _lineSlot,
+                child: AnimatedSwitcher(
+                  duration: policy.dur(DT.motion.selectionChange),
+                  child: line == null
+                      ? const SizedBox.shrink()
+                      : Align(
+                          key: ValueKey(line),
+                          alignment: Alignment.topLeft,
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Semantics(
+                              liveRegion: true,
+                              child: CueBubble(
+                                tailRight: false,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        line,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: DT.caption.copyWith(
+                                          fontSize: 16,
+                                          height: 1.2,
+                                          fontWeight: FontWeight.w800,
+                                          color: DT.textPrimary,
+                                        ),
                                       ),
                                     ),
-                                  ),
+                                  ],
                                 ),
                               ),
-                      ),
-                    ),
-                  ],
+                            ),
+                          ),
+                        ),
                 ),
+              ),
+              fish: MeadowPond(
+                pops: _fishPops,
+                onTap: _tapFish,
+                word: _fishWord,
+              ),
+            ),
+          ),
+          // Close, over the sky.
+          const Positioned(
+            left: 0,
+            top: 0,
+            child: SafeArea(
+              right: false,
+              bottom: false,
+              child: Padding(
+                padding: EdgeInsets.all(DT.sp8),
+                child: KidCloseButton(accent: DT.brand),
               ),
             ),
           ),
@@ -537,6 +567,12 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
                       color: DT.sunBurst,
                       onTap: () => _setMode(FarmMode.riddle),
                     ),
+                    // The riddle round's four stars, under its button.
+                    if (_mode == FarmMode.riddle)
+                      Padding(
+                        padding: const EdgeInsets.only(top: DT.sp8),
+                        child: _Stars(found: _found),
+                      ),
                   ],
                 ),
               ),
@@ -548,7 +584,7 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
   }
 
   /// Width of Bloom's line beside him.
-  static const _lineSlot = 260.0;
+  static const _lineSlot = 230.0;
 }
 
 /// The farm picture fitted to the width and standing on the bottom edge —
@@ -559,10 +595,18 @@ class _FarmBoard extends StatelessWidget {
     required this.animals,
     required this.friend,
     required this.fish,
+    required this.bloom,
+    required this.line,
     this.onTop,
   });
 
   final List<MeadowAnimal> animals;
+
+  /// Bloom, sitting on the barn roof, at the size the board gives him.
+  final Widget Function(double size) bloom;
+
+  /// His line, beside him over the sky.
+  final Widget line;
 
   /// The animal speaking: drawn over its neighbours, so its cloud is never
   /// hidden behind the one standing next to it.
@@ -600,6 +644,15 @@ class _FarmBoard extends StatelessWidget {
                   const ColoredBox(color: DT.mintTint),
             ),
           ),
+          // Bloom on the barn roof, his line beside him.
+          if (farmBloom case (final x, final y, final size)) ...[
+            Positioned.fromRect(rect: spot(x, y, size), child: bloom(size * h)),
+            Positioned(
+              left: spot(x, y, size).right,
+              top: math.max(DT.sp8, spot(x, y, size).top + 4),
+              child: line,
+            ),
+          ],
           Positioned(
             left: farmPond.left * w,
             top: top + farmPond.top * h,

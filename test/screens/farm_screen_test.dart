@@ -300,6 +300,9 @@ void main() {
       spoken.clear();
       await tester.tap(find.byKey(ValueKey('farm-$wrong')));
       await tester.pump(const Duration(milliseconds: 100));
+      // Shown, gently: Bloom says who it was; then it says so itself.
+      expect(find.text('Ні, це $wrong!'), findsOneWidget);
+      await tester.pump(const Duration(milliseconds: 500));
       expect(spoken, ['snd_$wrong']);
       // A breath, then the riddle again — with no cloud left on anyone.
       await tester.pump(const Duration(milliseconds: 1100));
@@ -325,12 +328,70 @@ void main() {
     await leave(tester);
   });
 
+  testWidgets('two misses and the answer beckons — it breathes big and glows', (
+    tester,
+  ) async {
+    await pumpFarm(tester);
+    await tester.tap(find.byKey(const ValueKey('farm-riddle')));
+    await tester.pump();
+    final asked = riddles.last!.substring(4);
+    final wrong = meadowFree.where((k) => k != asked).take(2).toList();
+    bool beckons() =>
+        tester.widget<MeadowFriend>(find.byKey(ValueKey('farm-$asked'))).beckon;
+    for (final (i, key) in wrong.indexed) {
+      expect(beckons(), isFalse, reason: 'after $i misses');
+      await tester.tap(find.byKey(ValueKey('farm-$key')));
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 1500));
+    }
+    expect(beckons(), isTrue);
+    // Found: the next riddle starts with no hint.
+    await tester.tap(find.byKey(ValueKey('farm-$asked')));
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 1100));
+    final next = riddles.last!.substring(4);
+    expect(
+      tester.widget<MeadowFriend>(find.byKey(ValueKey('farm-$next'))).beckon,
+      isFalse,
+    );
+    await leave(tester);
+  });
+
+  testWidgets('a sleeping animal sleeps: «z z Z» over it', (tester) async {
+    await pumpFarm(tester);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('farm-sheep')),
+        matching: find.text('z z Z'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('farm-cat')),
+        matching: find.text('z z Z'),
+      ),
+      findsNothing,
+    );
+    await leave(tester);
+  });
+
   testWidgets('the fish jumps and says its name', (tester) async {
     await pumpFarm(tester);
     await tester.tap(find.byKey(const ValueKey('farm-fish')));
     await tester.pump(const Duration(seconds: 1));
     expect(tester.takeException(), isNull);
     expect(words, ['ribka']);
+    // Its name in a cloud over it, like every animal's sound.
+    final cloud = tester.widget<AnimatedScale>(
+      find
+          .ancestor(
+            of: find.text('рибка'),
+            matching: find.byType(AnimatedScale),
+          )
+          .first,
+    );
+    expect(cloud.scale, 1);
     expect(find.text('А ти скажи: «рибка»!'), findsOneWidget);
     await leave(tester);
   });
