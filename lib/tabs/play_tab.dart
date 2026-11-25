@@ -258,37 +258,22 @@ class _PlayTabState extends ConsumerState<PlayTab> {
         .toList();
     final topic = PlayTopic.pick(available, journal);
     final session = topic == null ? null : journal?.sessions[topic.id];
-    final complete = session?.complete ?? false;
-    final continuing = session != null && session.step > 0 && !complete;
+    // A finished lesson is never what the hero offers: `pick` has already
+    // moved on to the next one, and a lesson met again starts afresh. The
+    // friends live in «Мій світ», one tab away.
+    final continuing = session != null && session.step > 0 && !session.complete;
     return [
       if (topic != null && journal != null)
         _HeroCard(
           topic: topic,
           cards: topic.cards(packs),
-          complete: complete,
+          complete: false,
           continuing: continuing,
           opening: _opening,
-          label: complete
-              ? s('До мого світу', 'My world')
-              : continuing
-              ? s('Продовжити', 'Continue')
-              : s('Грати', 'Play'),
-          icon: complete ? AppIcon.catWorld : AppIcon.play,
+          label: continuing ? s('Продовжити', 'Continue') : s('Грати', 'Play'),
+          icon: AppIcon.play,
           title: topic.title(isEn),
-          onPressed: () {
-            if (complete) {
-              ref.read(homeDestinationProvider.notifier).state =
-                  HomeDestination.world;
-            } else {
-              _open(topic);
-            }
-          },
-        ),
-      if (complete && topic != null)
-        TextButton.icon(
-          onPressed: _opening ? null : () => _open(topic),
-          icon: const AppArt('restart', size: 28),
-          label: Text(s('Пограти ще', 'Play again')),
+          onPressed: () => _open(topic),
         ),
     ];
   }

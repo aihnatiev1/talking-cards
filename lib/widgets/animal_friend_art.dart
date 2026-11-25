@@ -6,8 +6,22 @@ import '../utils/design_tokens.dart';
 class AnimalFriendArt extends StatelessWidget {
   const AnimalFriendArt({super.key, required this.animal});
   final String animal;
+
+  /// The clay friend for a card's picture name: a photo card (`ph_cat`)
+  /// and a drawn card (`cat`) are the same friend; the drawn pack calls the
+  /// rabbit `bunny` and the sound pack calls the hen `hen`.
+  static String friendOf(String image) {
+    final name = image.startsWith('ph_') ? image.substring(3) : image;
+    return switch (name) {
+      'bunny' => 'rabbit',
+      'hen' => 'chicken',
+      _ => name,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
+    final animal = friendOf(this.animal);
     final sprite = switch (animal) {
       'cow' => ('animal-friends-atlas-v1.png', 2.0, Alignment.topLeft),
       'cat' => ('animal-friends-atlas-v1.png', 2.0, Alignment.topRight),

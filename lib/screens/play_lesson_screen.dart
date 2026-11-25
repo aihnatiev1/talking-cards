@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,6 +18,8 @@ import '../widgets/kid_stage.dart';
 import '../widgets/meadow_scene.dart';
 import '../widgets/play_components.dart';
 import '../widgets/cue_pill.dart';
+import '../widgets/card_image.dart';
+import '../widgets/quiz_options_board.dart';
 import '../widgets/kid_screen.dart';
 
 /// The three pictures of a find question: the two others in their usual
@@ -100,12 +101,29 @@ class _PlayLessonScreenState extends ConsumerState<PlayLessonScreen>
       return;
     }
     setState(() => _speaking = true);
+    final step =
+        ref
+            .read(playSessionProvider)
+            .valueOrNull
+            ?.sessions[widget.topic.id]
+            ?.step ??
+        0;
     try {
-      await AudioService.instance.playWordOnly(
-        card.audioKey,
-        card.sound,
-        locale: ref.read(languageProvider) == 'en' ? 'en-US' : 'uk-UA',
-      );
+      // Meeting an animal-sound card is the whole recording — the name,
+      // then the animal's own voice. Asking for it is the name alone.
+      if (widget.topic.withSounds && step < 3) {
+        await AudioService.instance.speakCard(
+          card.audioKey,
+          card.sound,
+          card.text,
+        );
+      } else {
+        await AudioService.instance.playWordOnly(
+          card.audioKey,
+          card.sound,
+          locale: ref.read(languageProvider) == 'en' ? 'en-US' : 'uk-UA',
+        );
+      }
     } finally {
       if (_ownsSession && generation == _voice) {
         setState(() => _speaking = false);
@@ -464,99 +482,87 @@ class _PlayLessonScreenState extends ConsumerState<PlayLessonScreen>
                               : step.isEven
                               ? [other, target]
                               : [target, other];
-                          // The picture fills its tile — no empty card below.
-                          // As tall as the picture is at the tile's width, and
-                          // no taller — an empty white card is not a choice.
-                          final tileWidth =
-                              box.maxWidth / options.length - 8 - 16;
-                          final optionArt = math.min(
-                            (box.maxHeight - 48).clamp(80.0, 640.0),
-                            tileWidth * 1.4,
-                          );
-                          return Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              for (final card in options)
-                                Expanded(
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 4,
+                          // A board, not a row: three narrow columns left a
+                          // small picture at the top of a tall white strip.
+                          // Two pictures stand one above the other on a
+                          // phone; three are two and one, each picture
+                          // filling its tile.
+                          return QuizOptionsBoard(
+                            options: options,
+                            tileBuilder: (_, card) => Semantics(
+                              button: true,
+                              label: card.sound,
+                              selected: _correct && card.id == target.id,
+                              child: KidTap(
+                                sound: null,
+                                key: ValueKey('lesson-option-${card.id}'),
+                                onTap: _saving || _correct
+                                    ? null
+                                    : () => _choose(card, target, session),
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: _correct && card.id == target.id
+                                        ? DT.mintTint
+                                        : DT.surfaceWhite,
+                                    borderRadius: BorderRadius.circular(DT.rLg),
+                                    border: Border.all(
+                                      color:
+                                          card.id == target.id &&
+                                              (_correct || session.hint)
+                                          ? (_correct ? DT.brand : DT.hint)
+                                          : DT.outline,
+                                      width: 3,
                                     ),
-                                    child: Semantics(
-                                      button: true,
-                                      label: card.sound,
-                                      selected:
-                                          _correct && card.id == target.id,
-                                      child: KidTap(
-                                        sound: null,
-                                        key: ValueKey(
-                                          'lesson-option-${card.id}',
-                                        ),
-                                        onTap: _saving || _correct
-                                            ? null
-                                            : () => _choose(
-                                                card,
-                                                target,
-                                                session,
-                                              ),
-                                        child: Container(
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(
-                                            color:
-                                                _correct && card.id == target.id
-                                                ? DT.mintTint
-                                                : DT.surfaceWhite,
-                                            borderRadius: BorderRadius.circular(
-                                              DT.rLg,
-                                            ),
-                                            border: Border.all(
-                                              color:
-                                                  card.id == target.id &&
-                                                      (_correct || session.hint)
-                                                  ? (_correct
-                                                        ? DT.brand
-                                                        : DT.hint)
-                                                  : DT.outline,
-                                              width: 3,
-                                            ),
-                                            boxShadow: const [
-                                              BoxShadow(
-                                                color: DT.outline,
-                                                offset: Offset(0, 4),
-                                              ),
-                                            ],
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        color: DT.outline,
+                                        offset: Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Stack(
+                                    children: [
+                                      Positioned.fill(
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            DT.rMd,
                                           ),
-                                          child: Column(
-                                            children: [
-                                              SizedBox(
-                                                height: optionArt,
-                                                child: PlayArt(
-                                                  card: card,
-                                                  padding: 0,
-                                                ),
-                                              ),
-                                              if (_correct &&
-                                                  card.id == target.id)
-                                                const AppIconView(
-                                                  AppIcon.check,
-                                                  color: DT.brand,
-                                                )
-                                              else if (session.hint &&
-                                                  card.id == target.id)
-                                                const AppArt(
-                                                  'sparkle',
-                                                  size: 30,
-                                                )
-                                              else
-                                                const SizedBox(height: 24),
-                                            ],
+                                          child: CardImage.forCard(
+                                            card,
+                                            size: CardArtSize.hero,
+                                            fit: BoxFit.cover,
+                                            padding: EdgeInsets.zero,
                                           ),
                                         ),
                                       ),
-                                    ),
+                                      if ((_correct || session.hint) &&
+                                          card.id == target.id)
+                                        Positioned(
+                                          top: 6,
+                                          right: 6,
+                                          child: Container(
+                                            padding: const EdgeInsets.all(4),
+                                            decoration: const BoxDecoration(
+                                              color: DT.surfaceWhite,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: _correct
+                                                ? const AppIconView(
+                                                    AppIcon.check,
+                                                    color: DT.brand,
+                                                  )
+                                                : const AppArt(
+                                                    'sparkle',
+                                                    size: 30,
+                                                  ),
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                 ),
-                            ],
+                              ),
+                            ),
                           );
                         },
                       ),

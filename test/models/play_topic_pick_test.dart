@@ -4,6 +4,7 @@ import 'package:talking_cards/models/play_session.dart';
 import 'package:talking_cards/models/play_topic.dart';
 import 'package:talking_cards/screens/play_lesson_screen.dart';
 import 'package:talking_cards/utils/design_tokens.dart';
+import 'package:talking_cards/widgets/animal_friend_art.dart';
 
 void main() {
   const all = PlayTopic.all;
@@ -27,12 +28,42 @@ void main() {
       expect(PlayTopic.pick(all, j), all[2]);
     });
 
-    test('everything earned: it rests on the last one played', () {
+    test('everything earned: the lessons come round again, never the same '
+        'one twice in a row', () {
       var j = const PlayJournal();
       for (final t in all) {
         j = j.put(session(t, 7));
       }
-      expect(PlayTopic.pick(all, j), all.last);
+      // The last one played was the last in the list: round to the first.
+      expect(PlayTopic.pick(all, j), all.first);
+      j = j.put(session(all.first, 7));
+      expect(PlayTopic.pick(all, j), all[1]);
+    });
+
+    test('every topic brings a friend that has clay art', () {
+      const clay = {
+        'cow',
+        'cat',
+        'dog',
+        'rabbit',
+        'horse',
+        'pig',
+        'chicken',
+        'duck',
+        'frog',
+        'fish',
+      };
+      for (final t in all) {
+        expect(
+          clay,
+          contains(AnimalFriendArt.friendOf(t.images.first)),
+          reason: t.id,
+        );
+      }
+      // No friend twice in «Мій світ».
+      expect({
+        for (final t in all) AnimalFriendArt.friendOf(t.images.first),
+      }, hasLength(all.length));
     });
   });
 

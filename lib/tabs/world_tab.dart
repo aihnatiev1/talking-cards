@@ -13,6 +13,8 @@ import '../utils/kid_routes.dart';
 import '../utils/l10n.dart';
 import '../widgets/bloom_mascot.dart';
 import '../widgets/cue_pill.dart';
+import '../models/card_model.dart';
+import '../utils/motion.dart';
 import '../widgets/kid_tap.dart';
 import 'play_tab.dart';
 import '../widgets/play_components.dart';
@@ -30,7 +32,7 @@ class WorldTab extends ConsumerWidget {
       for (final topic in PlayTopic.all)
         if (rewards.contains(topic.id) &&
             topic.cards(packs.valueOrNull ?? []).isNotEmpty)
-          topic.cards(packs.valueOrNull ?? []).first,
+          (topic, topic.cards(packs.valueOrNull ?? []).first),
     ];
     return SafeArea(
       bottom: false,
@@ -139,65 +141,11 @@ class WorldTab extends ConsumerWidget {
                         style: DT.h2,
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 20),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(DT.rLg),
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: CustomPaint(
-                            painter: const PlayGardenPainter(),
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Wrap(
-                                alignment: WrapAlignment.center,
-                                spacing: 12,
-                                runSpacing: 16,
-                                children: [
-                                  for (final card in animals)
-                                    SizedBox(
-                                      width: 160,
-                                      child: Semantics(
-                                        button: true,
-                                        label: card.sound,
-                                        child: KidTap(
-                                          sound: null,
-                                          onTap: () => AudioService.instance
-                                              .playWordOnly(
-                                                card.audioKey,
-                                                card.sound,
-                                              ),
-                                          child: Column(
-                                            children: [
-                                              Container(
-                                                height: 160,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.transparent,
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                        DT.rLg,
-                                                      ),
-                                                ),
-                                                child: AnimalFriendArt(
-                                                  animal: card.image ?? 'cow',
-                                                ),
-                                              ),
-                                              const SizedBox(height: 8),
-                                              Text(
-                                                card.sound,
-                                                style: DT.tileTitle,
-                                                textAlign: TextAlign.center,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                      const SizedBox(height: 12),
+                      // A deck to leaf through, one friend at a time — a
+                      // column of every friend grew longer than the screen
+                      // as the lessons were played.
+                      _FriendDeck(friends: animals),
                     ],
                   ),
                 ),
@@ -285,6 +233,187 @@ class _WorldDoor extends StatelessWidget {
           const SizedBox(height: 2),
           Text(hint, style: DT.caption, textAlign: TextAlign.center),
         ],
+      ),
+    ),
+  );
+}
+
+/// The friends from the lessons as a deck of big cards: swipe or tap the
+/// arrows to leaf through, tap a friend to hear it.
+class _FriendDeck extends StatefulWidget {
+  const _FriendDeck({required this.friends});
+
+  final List<(PlayTopic, CardModel)> friends;
+
+  @override
+  State<_FriendDeck> createState() => _FriendDeckState();
+}
+
+class _FriendDeckState extends State<_FriendDeck> {
+  // The newest friend first: the one the child has just met.
+  late final PageController _pages = PageController(
+    viewportFraction: .82,
+    initialPage: widget.friends.length - 1,
+  );
+  late int _page = widget.friends.length - 1;
+
+  @override
+  void dispose() {
+    _pages.dispose();
+    super.dispose();
+  }
+
+  void _go(int page) {
+    if (page < 0 || page >= widget.friends.length) return;
+    _pages.animateToPage(
+      page,
+      duration: MotionPolicy.of(context).dur(DT.motion.base),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  void _hear((PlayTopic, CardModel) friend) {
+    final (topic, card) = friend;
+    if (topic.withSounds) {
+      AudioService.instance.speakCard(card.audioKey, card.sound, card.text);
+    } else {
+      AudioService.instance.playWordOnly(card.audioKey, card.sound);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final friends = widget.friends;
+    return Column(
+      children: [
+        SizedBox(
+          height: 300,
+          child: PageView.builder(
+            controller: _pages,
+            itemCount: friends.length,
+            onPageChanged: (page) => setState(() => _page = page),
+            itemBuilder: (context, i) {
+              final (topic, card) = friends[i];
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: Semantics(
+                  button: true,
+                  label: card.sound,
+                  child: KidTap(
+                    key: ValueKey('friend-${topic.id}'),
+                    sound: null,
+                    onTap: () => _hear(friends[i]),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: DT.surfaceWhite,
+                        borderRadius: BorderRadius.circular(28),
+                        boxShadow: DT.shadowSoft(DT.brand),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: CustomPaint(
+                        painter: const PlayGardenPainter(),
+                        child: Column(
+                          children: [
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  16,
+                                  16,
+                                  4,
+                                ),
+                                child: AnimalFriendArt(
+                                  animal: card.image ?? 'cow',
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 14),
+                              child: Text(
+                                card.sound,
+                                style: DT.tileTitle.copyWith(fontSize: 22),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        if (friends.length > 1) ...[
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _DeckArrow(
+                key: const ValueKey('friend-prev'),
+                left: true,
+                enabled: _page > 0,
+                onTap: () => _go(_page - 1),
+              ),
+              const SizedBox(width: 16),
+              for (var i = 0; i < friends.length; i++)
+                AnimatedContainer(
+                  duration: MotionPolicy.of(context).dur(DT.motion.quick),
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: i == _page ? 18 : 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: i == _page ? DT.brand : DT.outline,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              const SizedBox(width: 16),
+              _DeckArrow(
+                key: const ValueKey('friend-next'),
+                left: false,
+                enabled: _page < friends.length - 1,
+                onTap: () => _go(_page + 1),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _DeckArrow extends StatelessWidget {
+  const _DeckArrow({
+    super.key,
+    required this.left,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  final bool left;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => KidTap(
+    onTap: enabled ? onTap : null,
+    child: AnimatedOpacity(
+      opacity: enabled ? 1 : .35,
+      duration: MotionPolicy.of(context).dur(DT.motion.quick),
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          color: DT.surfaceWhite,
+          shape: BoxShape.circle,
+          boxShadow: DT.shadowSoft(DT.brand),
+        ),
+        alignment: Alignment.center,
+        child: Transform.flip(
+          flipX: left,
+          child: const AppArt('play', size: 30),
+        ),
       ),
     ),
   );
