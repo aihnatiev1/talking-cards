@@ -526,16 +526,14 @@ class _HeroCard extends StatelessWidget {
                 else if (continuing)
                   _PawSteps(done: step)
                 else
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      isEn
-                          ? 'Lesson: 3 animals, one becomes your friend'
-                          : 'Заняття: 3 тваринки, одна стане другом',
-                      style: DT.caption.copyWith(fontSize: 13),
-                      maxLines: 1,
-                    ),
+                  // Readable size on two lines, not shrunk into a speck.
+                  Text(
+                    isEn
+                        ? 'Lesson: 3 animals, one becomes your friend'
+                        : 'Заняття: 3 тваринки, одна стане другом',
+                    style: DT.caption.copyWith(fontSize: 13, height: 1.25),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 const SizedBox(height: DT.sp8),
                 PlayAction(
