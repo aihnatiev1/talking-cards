@@ -236,7 +236,8 @@ void main() {
     expect(spoken, ['snd_cat']);
     expect(find.text('няв-няв'), findsOneWidget);
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.text('А ти скажи: «няв-няв»!'), findsOneWidget);
+    // One word: never broken at its hyphen.
+    expect(find.text('А ти скажи: «няв-\u2060няв»!'), findsOneWidget);
     await leave(tester);
   });
 

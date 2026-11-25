@@ -50,6 +50,11 @@ const farmBloom = (.21, .36, .18);
 /// The fish's patch of the pond, as fractions of the picture.
 const farmPond = (left: .48, top: .82, right: .58, bottom: .99);
 
+/// A sound kept on one line: a word joiner after each hyphen, so
+/// «няв-няв» is never broken into «няв-» and «няв» — when the line is too
+/// long the whole sound moves down together.
+String _whole(String sound) => sound.replaceAll('-', '-\u2060');
+
 /// The two ways to play the farm, chosen with the big buttons at the side.
 enum FarmMode { listen, riddle }
 
@@ -250,8 +255,8 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
     if (!mounted || turn != _turn) return;
     _say(
       s(
-        'А ти скажи: «${animal.soundUk}»!',
-        'Now you say: «${animal.soundEn}»!',
+        'А ти скажи: «${_whole(animal.soundUk)}»!',
+        'Now you say: «${_whole(animal.soundEn)}»!',
       ),
       BloomEmotion.happy,
       forHowLong: const Duration(seconds: 5),
