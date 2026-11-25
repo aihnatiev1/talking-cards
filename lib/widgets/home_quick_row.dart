@@ -535,7 +535,15 @@ class _CardOfDayTileState extends State<_CardOfDayTile> {
             const SizedBox(height: 4),
             FittedBox(
               fit: BoxFit.scaleDown,
-              child: Text(widget.label, style: _Tile.labelStyle, maxLines: 1),
+              // While it speaks, the caption is the word itself: the tap
+              // used to change a tint and nothing a parent could read.
+              child: Text(
+                _playing ? widget.card.sound : widget.label,
+                style: _Tile.labelStyle.copyWith(
+                  color: _playing ? DT.brand : null,
+                ),
+                maxLines: 1,
+              ),
             ),
           ],
         ),
