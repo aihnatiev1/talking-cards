@@ -129,6 +129,8 @@ class _ProfileSelectorSheet extends ConsumerWidget {
             language: result.$3,
             level: result.$4,
           );
+      // The list stays open here, unlike after an edit: a new profile is
+      // not the active one yet, and this is where it is chosen.
     }
   }
 
@@ -164,6 +166,9 @@ class _ProfileSelectorSheet extends ConsumerWidget {
             .read(profileProvider.notifier)
             .setLevel(profile.id, result.$4);
       }
+      // Saved: back to the screen the parent came from, not to the list
+      // of profiles for another tap.
+      if (context.mounted) Navigator.of(context).pop();
     }
   }
 
@@ -433,25 +438,47 @@ class _ProfileEditDialogState extends State<_ProfileEditDialog> {
           ],
         ),
       ),
+      actionsPadding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+      // One row, each button half the width. As plain `actions` the two
+      // did not fit side by side on a phone, so the dialog stacked them:
+      // «Скасувати» on a line of its own above «Зберегти».
       actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(s('Скасувати', 'Cancel')),
-        ),
-        ElevatedButton(
-          onPressed: _nameCtrl.text.trim().isEmpty
-              ? null
-              : () => Navigator.of(context).pop((
-                  _nameCtrl.text.trim(),
-                  _selectedAvatar,
-                  _selectedLang,
-                  _selectedLevel,
-                )),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: DT.brand,
-            foregroundColor: Colors.white,
+        SizedBox(
+          width: double.maxFinite,
+          child: Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(s('Скасувати', 'Cancel'), maxLines: 1),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _nameCtrl.text.trim().isEmpty
+                      ? null
+                      : () => Navigator.of(context).pop((
+                          _nameCtrl.text.trim(),
+                          _selectedAvatar,
+                          _selectedLang,
+                          _selectedLevel,
+                        )),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: DT.solid(DT.brand),
+                    foregroundColor: Colors.white,
+                  ),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(s('Зберегти', 'Save'), maxLines: 1),
+                  ),
+                ),
+              ),
+            ],
           ),
-          child: Text(s('Зберегти', 'Save')),
         ),
       ],
     );
