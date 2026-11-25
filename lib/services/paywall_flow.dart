@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../models/pack_model.dart';
 import '../providers/packs_provider.dart';
 import '../screens/paywall_screen.dart';
 import '../utils/kid_routes.dart';
@@ -23,12 +24,14 @@ Future<bool> runPaywallFlow(
   WidgetRef ref, {
   bool isOnboarding = false,
   String source = 'paywall_screen',
+  PackModel? pack,
 }) async {
   final purchased = await Navigator.of(context).push<bool>(
     KidRoutes.sheet(
       PaywallScreen(
         isOnboarding: isOnboarding,
         source: isOnboarding ? 'paywall_onboarding' : source,
+        pack: pack,
       ),
     ),
   );

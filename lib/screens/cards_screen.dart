@@ -511,7 +511,12 @@ class _CardsScreenState extends ConsumerState<CardsScreen> {
   }
 
   Future<void> _handleUnlock() async {
-    final purchased = await runPaywallFlow(context, ref, source: 'preview_end');
+    final purchased = await runPaywallFlow(
+      context,
+      ref,
+      source: 'preview_end',
+      pack: widget.pack,
+    );
     if (purchased && mounted) Navigator.of(context).pop();
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../models/pack_model.dart';
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../providers/profile_provider.dart';
@@ -13,6 +14,7 @@ import '../utils/app_icons.dart';
 import '../utils/design_tokens.dart';
 import '../utils/l10n.dart';
 import '../utils/uk_grammar.dart';
+import '../widgets/card_image.dart';
 import '../widgets/paywall_hero_art.dart';
 
 class PaywallScreen extends ConsumerStatefulWidget {
@@ -24,10 +26,16 @@ class PaywallScreen extends ConsumerStatefulWidget {
   /// Entry point, for `paywall_view.source` — see runPaywallFlow.
   final String source;
 
+  /// The locked pack the parent tapped, when there was one. The offer then
+  /// opens with that pack's cover and name: a tap on «Звуки тварин» used
+  /// to land on a generic «Розблокуй всі картки» that never mentioned it.
+  final PackModel? pack;
+
   const PaywallScreen({
     super.key,
     this.isOnboarding = false,
     this.source = 'paywall_screen',
+    this.pack,
   });
 
   @override
@@ -427,7 +435,11 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     );
     // Null until the catalogue for the active language has loaded (or when
     // it failed): the copy then names no number rather than a stale one.
-    final packCount = ref.watch(packsProvider).asData?.value.length;
+    final allPacks = ref.watch(packsProvider).asData?.value;
+    final packCount = allPacks?.length;
+    // Counted from the catalogue, like the packs: the line said «400+»
+    // while the app shipped 591 cards.
+    final cardCount = allPacks?.fold<int>(0, (n, p) => n + p.cards.length);
     return DecoratedBox(
       // The painted clay sky every screen shares.
       decoration: const BoxDecoration(
@@ -452,13 +464,20 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
             ),
           ),
           child: SafeArea(
+            // The CTA bar paints down to the screen edge itself; a bottom
+            // inset here left an empty strip under it.
+            bottom: false,
             child: Column(
               children: [
                 Align(
                   alignment: Alignment.topRight,
                   child: Padding(
                     padding: const EdgeInsets.all(12),
-                    child: IconButton(
+                    child: IconButton.filled(
+                      style: IconButton.styleFrom(
+                        backgroundColor: DT.surfaceWhite,
+                        fixedSize: const Size.square(48),
+                      ),
                       onPressed: () {
                         AnalyticsService.instance.logPaywallDismiss(
                           widget.isOnboarding
@@ -467,12 +486,12 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                         );
                         Navigator.of(context).pop(false);
                       },
-                      // grey[700] on the lavender top: ≈5:1 (≥3:1 for UI).
-                      // IconButton's 48 pt hit area stays.
+                      // A solid white disc: the bare grey cross was lost on
+                      // the painted rainbow behind it.
                       icon: Icon(
                         Icons.close,
-                        color: Colors.grey[700],
-                        size: 28,
+                        color: Colors.grey[800],
+                        size: 26,
                       ),
                     ),
                   ),
@@ -483,6 +502,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                     child: Column(
                       children: [
                         _trialBanner(context, s, trialDays, packCount),
+                        if (widget.pack != null) ...[
+                          const SizedBox(height: 14),
+                          _packContext(s, widget.pack!),
+                        ],
                         const SizedBox(height: 18),
                         Text(
                           _headline(s),
@@ -500,11 +523,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                         const SizedBox(height: 20),
                         _benefit('cards', _packsBenefit(s, packCount)),
                         const SizedBox(height: 10),
+                        _benefit('listen', _cardsBenefit(s, cardCount)),
+                        const SizedBox(height: 10),
                         _benefit(
-                          'listen',
+                          'puzzle',
                           s(
-                            '400+ яскравих карток зі звуком',
-                            '400+ vivid cards with sound',
+                            'Усі ігри, розмальовки й наліпки',
+                            'Every game, colouring page and sticker',
                           ),
                         ),
                         const SizedBox(height: 10),
@@ -512,15 +537,17 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                         // schedule nobody had promised to keep. Replaced with a
                         // fact the store listing already states.
                         _benefit('heart', s('Без реклами', 'No ads')),
-                        const SizedBox(height: 18),
-                        _testimonial(s),
-                        const SizedBox(height: 22),
+                        const SizedBox(height: 20),
+                        // Prices before praise: the plans used to sit
+                        // under the review, a full scroll from the offer.
                         ...List.generate(plans.length, (i) {
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 10),
                             child: _planTile(i, plans),
                           );
                         }),
+                        const SizedBox(height: 12),
+                        _testimonial(s),
                         const SizedBox(height: 16),
                         TextButton(
                           onPressed: _busy ? null : _restore,
@@ -585,7 +612,12 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     int? trialDays,
   ) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(28, 12, 28, 8),
+      padding: EdgeInsets.fromLTRB(
+        28,
+        12,
+        28,
+        8 + MediaQuery.paddingOf(context).bottom,
+      ),
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
         boxShadow: [
@@ -1130,6 +1162,71 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     return s(
       '$count ${packWord(count)} для розвитку',
       '$count learning ${count == 1 ? 'pack' : 'packs'}',
+    );
+  }
+
+  String _cardsBenefit(AppS s, int? count) {
+    if (count == null || count == 0) {
+      return s('Яскраві картки зі звуком', 'Vivid cards with sound');
+    }
+    return s('$count карток зі звуком', '$count cards with sound');
+  }
+
+  /// What the parent came for: the cover and name of the pack they tapped.
+  Widget _packContext(AppS s, PackModel pack) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: DT.surfaceWhite,
+        borderRadius: BorderRadius.circular(DT.rLg),
+        boxShadow: DT.shadowSoft(DT.brand),
+      ),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: SizedBox.square(
+              dimension: 64,
+              child: CardImage(
+                name:
+                    pack.cover ??
+                    (pack.cards.isNotEmpty ? pack.cards.first.image : null),
+                fallbackEmoji: pack.icon,
+                fit: BoxFit.cover,
+                padding: EdgeInsets.zero,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '«${pack.title}»',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: DT.tileTitle.copyWith(color: DT.textPrimary),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  s(
+                    'відкриється одразу — разом з усіма паками та іграми',
+                    'opens right away, with every pack and game',
+                  ),
+                  style: TextStyle(
+                    fontSize: responsiveFont(context, 14),
+                    color: DT.textPrimary,
+                    height: 1.25,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 6),
+          const AppArt('padlock', size: 30),
+        ],
+      ),
     );
   }
 

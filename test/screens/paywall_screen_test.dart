@@ -113,7 +113,7 @@ void main() {
       // RC-default headline (no child profile in tests → non-personalized)
       expect(find.text('Розблокуй всі картки!'), findsOneWidget);
       expect(find.text('3 розділи для розвитку'), findsOneWidget);
-      expect(find.textContaining('400+ яскравих карток'), findsOneWidget);
+      expect(find.textContaining('зі звуком'), findsOneWidget);
       expect(find.text('Без реклами'), findsOneWidget);
       // A monthly schedule nobody promised to keep must not come back.
       expect(find.textContaining('щомісяця'), findsNothing);
@@ -284,7 +284,7 @@ void main() {
       await tester.pump();
       expect(find.byIcon(Icons.close), findsOneWidget);
       final icon = tester.widget<Icon>(find.byIcon(Icons.close));
-      expect(icon.color, Colors.grey[700]);
+      expect(icon.color, Colors.grey[800]);
       await tester.pump(PurchaseService.storeBudget);
       await tester.pumpAndSettle();
     });

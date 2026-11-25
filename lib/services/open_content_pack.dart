@@ -38,7 +38,12 @@ Future<void> openContentPack(
     // The tile itself is silent (its sound is `pack_open` on entering the
     // cards); a tap that goes to the paywall instead still gets a tock.
     FeedbackService.instance.event(FeedbackEvent.tap, haptic: false);
-    final purchased = await runPaywallFlow(context, ref, source: 'locked_tile');
+    final purchased = await runPaywallFlow(
+      context,
+      ref,
+      source: 'locked_tile',
+      pack: pack,
+    );
     if (!context.mounted) return;
     if (purchased) {
       // After purchase, packsProvider rebuilds with isLocked=false.
