@@ -569,20 +569,34 @@ class _PlayLessonScreenState extends ConsumerState<PlayLessonScreen>
                   // button is never below the fold: Bloom on the left, the
                   // next step (or the "show me" help) on the right.
                   SizedBox(
-                    height: 80,
+                    height: 96,
                     child: Row(
                       children: [
-                        BloomMascot(
-                          size: 72,
-                          interactive: false,
-                          state: BloomState(
-                            emotion: _correct
-                                ? BloomEmotion.happy
-                                : !exploring && !repeating && session.hint
-                                ? BloomEmotion.point
-                                : _speaking
-                                ? BloomEmotion.listen
-                                : BloomEmotion.wave,
+                        // His picture has wide empty margins, so the slot
+                        // is narrower than the canvas and the bunny himself
+                        // fills it — at 72 dp he was a speck beside the
+                        // button.
+                        SizedBox(
+                          width: 78,
+                          child: OverflowBox(
+                            minWidth: 112,
+                            maxWidth: 112,
+                            minHeight: 112,
+                            maxHeight: 112,
+                            alignment: Alignment.bottomCenter,
+                            child: BloomMascot(
+                              size: 112,
+                              interactive: false,
+                              state: BloomState(
+                                emotion: _correct
+                                    ? BloomEmotion.happy
+                                    : !exploring && !repeating && session.hint
+                                    ? BloomEmotion.point
+                                    : _speaking
+                                    ? BloomEmotion.listen
+                                    : BloomEmotion.wave,
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 12),

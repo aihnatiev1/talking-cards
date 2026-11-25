@@ -14,6 +14,7 @@ import '../providers/bloom_reactions_provider.dart';
 import '../providers/daily_quest_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
+import '../providers/curriculum_progress_provider.dart';
 import '../providers/profile_provider.dart';
 import '../providers/srs_provider.dart';
 import '../providers/weak_words_provider.dart';
@@ -418,6 +419,7 @@ bool _isExcludedPack(PackModel p) {
   if (p.id.startsWith('_')) return true;
   if (p.id.startsWith('seasonal_')) return true;
   if (PackModel.nonWordPackIds.contains(p.id)) return true;
+  if (PackModel.photoPackIds.contains(p.id)) return true;
   return false;
 }
 
@@ -1074,7 +1076,17 @@ class _BubblePopScreenState extends ConsumerState<BubblePopScreen>
     // Find plays over the same open catalogue as free popping; only the
     // *targets* are chosen with more care (see [_findTargets]).
     if (mode != BubbleMode.tricky) {
-      return allowedPacks.expand((p) => p.cards).where(isPlayable).toList();
+      final all = allowedPacks
+          .expand((p) => p.cards)
+          .where(isPlayable)
+          .toList();
+      // For a profile of 1–3 years, the teaching plan's words when there
+      // are enough of them — the same rule as «Вгадай звук».
+      final level = ref.read(profileProvider).active?.level ?? 2;
+      if (level > 2) return all;
+      final plan = {for (final c in ref.read(speakSetProvider)) c.id};
+      final early = all.where((c) => plan.contains(c.id)).toList();
+      return early.length >= 12 ? early : all;
     }
 
     // Tricky: union of weak words + SRS due, mapped back to CardModel via

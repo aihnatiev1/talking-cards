@@ -37,6 +37,11 @@ class PackModel {
     'en_phrases', // Phrases (EN)
   };
 
+  /// Packs illustrated with photographs rather than drawings. They have a
+  /// game of their own («Хто це сказав?»); in the picture games a photo of
+  /// a cat beside a drawn cat reads as two different apps on one board.
+  static const Set<String> photoPackIds = {'animal_sounds', 'en_animal_sounds'};
+
   /// Effective free preview count for this pack (override or global default).
   int get effectiveFreePreviewCount =>
       freePreviewCountOverride ?? freePreviewCount;

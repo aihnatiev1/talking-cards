@@ -126,24 +126,22 @@ class _GamesTabState extends ConsumerState<GamesTab> {
     );
   }
 
-  static const _oddOneOutExclude = {
-    'adjectives',
-    'actions',
-    'opposites',
-    'phrases',
-    'rozmovlyalky',
-    'poems',
-    'sound_r',
-    'sound_l',
-    'sound_sh',
-    'sound_s',
-    'sound_z',
-    'sound_zh',
-    'sound_ch',
-    'sound_shch',
-    'sound_ts',
-    'en_actions',
-    'en_opposites',
+  /// The packs that are one kind of thing each — animals, vehicles, food,
+  /// parts of the body, letters — so «which one does not belong» has one
+  /// fair answer. It was a list of exclusions, which let in the shapes
+  /// pack (an oval drawn like an egg, the «odd» one among food), the home
+  /// pack (people, toys, porridge and feelings together) and the animal
+  /// photos (a second cat among the cats).
+  static const _oddOneOutPacks = {
+    'animals',
+    'transport',
+    'food',
+    'body',
+    'alphabet',
+    'en_animals',
+    'en_transport',
+    'en_food',
+    'en_body',
   };
 
   void _openOddOneOut(List<PackModel> packs) {
@@ -153,7 +151,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
           (p) =>
               !p.id.startsWith('_') &&
               !p.isLocked &&
-              !_oddOneOutExclude.contains(p.id) &&
+              _oddOneOutPacks.contains(p.id) &&
               p.cards.length >= 4 &&
               (lang == 'en' ? p.cards.any((c) => c.image != null) : true),
         )
@@ -300,6 +298,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
             final contentReady = ref.watch(contentPackProvider).isReady;
             final allCards = packs
                 .where((p) => !PackModel.nonWordPackIds.contains(p.id))
+                .where((p) => !PackModel.photoPackIds.contains(p.id))
                 .where((p) => contentReady || p.isFree)
                 .expand((p) => p.cards)
                 .toList();
@@ -493,7 +492,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                   (p) =>
                       !p.id.startsWith('_') &&
                       !p.isLocked &&
-                      !_oddOneOutExclude.contains(p.id) &&
+                      _oddOneOutPacks.contains(p.id) &&
                       p.cards.length >= 4 &&
                       (isEn ? p.cards.any((c) => c.image != null) : true),
                 )
@@ -505,7 +504,7 @@ class _GamesTabState extends ConsumerState<GamesTab> {
               (p) =>
                   !p.id.startsWith('_') &&
                   p.isLocked &&
-                  !_oddOneOutExclude.contains(p.id) &&
+                  _oddOneOutPacks.contains(p.id) &&
                   p.cards.length >= 4 &&
                   (isEn ? p.cards.any((c) => c.image != null) : true),
             );
