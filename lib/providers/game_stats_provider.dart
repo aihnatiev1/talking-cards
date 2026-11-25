@@ -36,6 +36,10 @@ const gameDefinitions = [
     uk: 'Повтори за мною',
     en: 'Repeat after me',
   ),
+  (id: 'who_said', emoji: '🐮', uk: 'Хто це сказав?', en: 'Who said that?'),
+  (id: 'feed_bloom', emoji: '🍎', uk: 'Нагодуй Блума', en: 'Feed Bloom'),
+  (id: 'hide_seek', emoji: '🌳', uk: 'Хованки', en: 'Hide and seek'),
+  (id: 'shadow_match', emoji: '👤', uk: 'Чия тінь?', en: 'Whose shadow?'),
 ];
 
 final gameStatsProvider =

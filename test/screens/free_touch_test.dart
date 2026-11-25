@@ -92,7 +92,9 @@ void main() {
     final gesture = await tester.startGesture(origin + at);
     await gesture.up();
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
+    // Past the moment a word is "just starting", so the next touch is its
+    // own touch.
+    await tester.pump(const Duration(milliseconds: 700));
   }
 
   testWidgets('a touch anywhere makes a picture there and says its word', (
@@ -126,6 +128,48 @@ void main() {
     await touch(tester, const Offset(190, 310));
     expect(pictures(), findsOneWidget);
     expect(words, [words.first, words.first]);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('a whole hand is one touch: one picture, one word', (
+    tester,
+  ) async {
+    await pumpGame(tester);
+    final origin = tester.getTopLeft(board());
+    final fingers = [
+      for (var i = 0; i < 5; i++)
+        await tester.startGesture(
+          origin + Offset(60.0 + 55 * i, 220.0 + 20 * i),
+          pointer: 10 + i,
+        ),
+    ];
+    for (final finger in fingers) {
+      await finger.up();
+    }
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(pictures(), findsOneWidget);
+    expect(words, hasLength(1));
+
+    // Tapping again while the word is still starting does not cut it.
+    final again = await tester.startGesture(origin + const Offset(300, 420));
+    await again.up();
+    await tester.pump();
+    expect(pictures(), findsOneWidget);
+    expect(words, hasLength(1));
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('a touch beside Bloom still answers, with the picture above '
+      'his corner', (tester) async {
+    await pumpGame(tester);
+    final area = tester.getRect(board());
+    await touch(tester, Offset(40, area.height - 10));
+    expect(pictures(), findsOneWidget);
+    expect(words, hasLength(1));
+    final bloom = tester.getRect(find.byType(BloomMascot));
+    expect(tester.getRect(pictures()).bottom, lessThanOrEqualTo(bloom.top));
     await tester.pumpWidget(const SizedBox());
   });
 
@@ -198,6 +242,10 @@ void main() {
     }
     expect(events, contains('game_complete:free_touch'));
     expect(events.where((e) => e.startsWith('game_complete')), hasLength(1));
+    // Not «the first game this family finished»: that would spend the one
+    // automatic review ask on a baby's ten taps.
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getKeys().where((k) => k.contains('game_plays_')), isEmpty);
     // No celebration over the board; another touch still works.
     expect(find.text('Ще раз'), findsNothing);
     final said = words.length;

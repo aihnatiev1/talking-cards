@@ -68,6 +68,13 @@ class _FreeTouchScreenState extends ConsumerState<FreeTouchScreen>
   @override
   Null get questTask => null;
 
+  /// Not a finished game in the family's stats. Ten taps of a baby's palm
+  /// must not count as «the first game we completed» — that moment spends
+  /// the one automatic App Store review ask, and it belongs to a game a
+  /// parent watched being won. `game_complete` is still logged.
+  @override
+  bool get recordToStats => false;
+
   final _random = math.Random();
   final List<_Picture> _pictures = [];
   List<CardModel> _deck = const [];
@@ -75,6 +82,14 @@ class _FreeTouchScreenState extends ConsumerState<FreeTouchScreen>
   int _serial = 0;
   int _touches = 0;
   CardModel? _lastSaid;
+
+  /// A word has just started: for this long a new touch pops the picture
+  /// that is speaking instead of starting another word over it. A palm is
+  /// five fingers at once and a toddler taps faster than a word lasts —
+  /// without this, five pictures appeared and no word was ever heard whole.
+  bool _wordStarting = false;
+  Timer? _wordTimer;
+  _Picture? _speaking;
 
   @override
   void initState() {
@@ -98,6 +113,7 @@ class _FreeTouchScreenState extends ConsumerState<FreeTouchScreen>
     for (final p in _pictures) {
       p.timer?.cancel();
     }
+    _wordTimer?.cancel();
     AudioService.instance.stop();
     super.dispose();
   }
@@ -117,8 +133,13 @@ class _FreeTouchScreenState extends ConsumerState<FreeTouchScreen>
     return _deck[_next++];
   }
 
-  void _say(CardModel card) {
+  void _say(_Picture picture) {
+    final card = picture.card;
     AudioService.instance.playWordOnly(card.audioKey, card.sound);
+    _speaking = picture;
+    _wordStarting = true;
+    _wordTimer?.cancel();
+    _wordTimer = Timer(DT.motion.quizRetell, () => _wordStarting = false);
     setState(() => _lastSaid = card);
   }
 
@@ -132,6 +153,16 @@ class _FreeTouchScreenState extends ConsumerState<FreeTouchScreen>
   /// A finger came down at [at] in a board of [size] whose pictures are
   /// [side] across.
   void _touch(Offset at, Size size, double side) {
+    // While a word is starting, every finger answers — the picture that is
+    // speaking pops again — but nothing new is said over it.
+    if (_wordStarting) {
+      final speaking = _speaking;
+      if (speaking != null && !speaking.leaving) {
+        setState(() => speaking.pops++);
+      }
+      return;
+    }
+
     // On a picture that is already there: its word again.
     for (final picture in _pictures.reversed) {
       if (!picture.leaving && (picture.center - at).distance <= side / 2) {
@@ -139,7 +170,7 @@ class _FreeTouchScreenState extends ConsumerState<FreeTouchScreen>
         _count();
         setState(() => picture.pops++);
         _stay(picture);
-        _say(picture.card);
+        _say(picture);
         return;
       }
     }
@@ -160,7 +191,7 @@ class _FreeTouchScreenState extends ConsumerState<FreeTouchScreen>
       if (standing.length > FreeTouchScreen.maxPictures) _leave(standing.first);
     });
     _stay(picture);
-    _say(picture.card);
+    _say(picture);
   }
 
   /// (Re)starts the time a picture stays before it drifts away.
@@ -204,52 +235,53 @@ class _FreeTouchScreenState extends ConsumerState<FreeTouchScreen>
       body: Stack(
         children: [
           Positioned.fill(
-            child: Padding(
-              // The board stops above Bloom's corner: a picture never
-              // lands on him or on his words.
-              padding: EdgeInsets.only(bottom: strip),
-              child: LayoutBuilder(
-                builder: (context, box) {
-                  final size = Size(box.maxWidth, box.maxHeight);
-                  // Big enough to be a picture, small enough for five.
-                  final side = (size.shortestSide * .36).clamp(96.0, 168.0);
-                  return Listener(
-                    key: const ValueKey('free-touch-board'),
-                    behavior: HitTestBehavior.opaque,
-                    // Every finger counts — a toddler uses the whole hand.
-                    onPointerDown: (e) => _touch(e.localPosition, size, side),
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        for (final picture in _pictures)
-                          Positioned(
-                            key: ValueKey('picture-${picture.id}'),
-                            left: picture.center.dx - side / 2,
-                            top: picture.center.dy - side / 2,
-                            width: side,
-                            height: side,
-                            child: IgnorePointer(
-                              child: AnimatedOpacity(
-                                opacity: picture.leaving ? 0 : 1,
-                                duration: policy.dur(DT.motion.slow),
-                                child: TweenAnimationBuilder<double>(
-                                  // A new key per touch: it pops again.
-                                  key: ValueKey(picture.pops),
-                                  tween: Tween(begin: .6, end: 1),
-                                  duration: policy.dur(DT.motion.successPop),
-                                  curve: Curves.easeOutBack,
-                                  builder: (_, t, child) =>
-                                      Transform.scale(scale: t, child: child),
-                                  child: _PictureDisc(card: picture.card),
-                                ),
+            child: LayoutBuilder(
+              builder: (context, box) {
+                // The whole screen listens — a touch beside Bloom still
+                // answers — but pictures are kept above his corner, so
+                // one never lands on him or on his words.
+                final size = Size(
+                  box.maxWidth,
+                  math.max(0, box.maxHeight - strip),
+                );
+                // Big enough to be a picture, small enough for five.
+                final side = (size.shortestSide * .36).clamp(96.0, 168.0);
+                return Listener(
+                  key: const ValueKey('free-touch-board'),
+                  behavior: HitTestBehavior.opaque,
+                  // Every finger counts — a toddler uses the whole hand.
+                  onPointerDown: (e) => _touch(e.localPosition, size, side),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      for (final picture in _pictures)
+                        Positioned(
+                          key: ValueKey('picture-${picture.id}'),
+                          left: picture.center.dx - side / 2,
+                          top: picture.center.dy - side / 2,
+                          width: side,
+                          height: side,
+                          child: IgnorePointer(
+                            child: AnimatedOpacity(
+                              opacity: picture.leaving ? 0 : 1,
+                              duration: policy.dur(DT.motion.slow),
+                              child: TweenAnimationBuilder<double>(
+                                // A new key per touch: it pops again.
+                                key: ValueKey(picture.pops),
+                                tween: Tween(begin: .6, end: 1),
+                                duration: policy.dur(DT.motion.successPop),
+                                curve: Curves.easeOutBack,
+                                builder: (_, t, child) =>
+                                    Transform.scale(scale: t, child: child),
+                                child: _PictureDisc(card: picture.card),
                               ),
                             ),
                           ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+                        ),
+                    ],
+                  ),
+                );
+              },
             ),
           ),
           Positioned(
