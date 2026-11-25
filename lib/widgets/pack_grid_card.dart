@@ -178,25 +178,32 @@ class _PackGridCardState extends ConsumerState<PackGridCard>
                           // and the icon also stands in while the artwork
                           // is still downloading, which this tile used to
                           // render as an empty pane (and a fatal report).
-                          child: CardImage(
-                            name: pack.cover ?? thumb?.image,
-                            fallbackEmoji: pack.icon,
-                            // Sound packs (Р/Л/Ш…) carry a bare letter as
-                            // their icon; while the cover is still on its
-                            // way it is drawn as a paper sticker in the
-                            // pack colour rather than a font glyph.
-                            fallback: isLetterIcon(pack.icon)
-                                ? Padding(
-                                    padding: const EdgeInsets.all(10),
-                                    child: LetterStickerIcon(
-                                      letter: pack.icon,
-                                      color: accent,
-                                      size: 48,
-                                    ),
-                                  )
-                                : null,
-                            padding: const EdgeInsets.all(8),
-                          ),
+                          // The virtual packs have a painted picture of
+                          // their own — the favourites were a ❤️ emoji.
+                          child: _virtualArt[pack.id] != null
+                              ? Padding(
+                                  padding: const EdgeInsets.all(18),
+                                  child: AppArt(_virtualArt[pack.id]!),
+                                )
+                              : CardImage(
+                                  name: pack.cover ?? thumb?.image,
+                                  fallbackEmoji: pack.icon,
+                                  // Sound packs (Р/Л/Ш…) carry a bare letter as
+                                  // their icon; while the cover is still on its
+                                  // way it is drawn as a paper sticker in the
+                                  // pack colour rather than a font glyph.
+                                  fallback: isLetterIcon(pack.icon)
+                                      ? Padding(
+                                          padding: const EdgeInsets.all(10),
+                                          child: LetterStickerIcon(
+                                            letter: pack.icon,
+                                            color: accent,
+                                            size: 48,
+                                          ),
+                                        )
+                                      : null,
+                                  padding: const EdgeInsets.all(8),
+                                ),
                         ),
                       ),
                       // Status badge (top-right)
@@ -349,3 +356,9 @@ class _StatusBadge extends StatelessWidget {
     );
   }
 }
+
+/// Pictures for the packs that are not packs — the child's own sets.
+const _virtualArt = <String, String>{
+  '_favorites': 'heart',
+  '_review': 'restart',
+};

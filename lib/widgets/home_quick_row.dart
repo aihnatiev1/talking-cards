@@ -78,7 +78,7 @@ class _HomeQuickRowState extends ConsumerState<HomeQuickRow> {
       if (daily != null)
         _CardOfDayTile(
           card: daily.$1,
-          label: s('Слово дня', 'Word of the day'),
+          label: s('Слово дня', 'Today’s word'),
           onTap: () {
             final card = daily.$1;
             AnalyticsService.instance.logCardOfDayTap(card.id);
@@ -353,9 +353,12 @@ class _Tile extends StatelessWidget {
         children: [
           icon,
           const SizedBox(height: 4),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(this.label, style: _Tile.labelStyle, maxLines: 1),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(this.label, style: _Tile.labelStyle, maxLines: 1),
+            ),
           ),
         ],
       ),
@@ -421,9 +424,12 @@ class _QuestTile extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(label, style: _Tile.labelStyle, maxLines: 1),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(label, style: _Tile.labelStyle, maxLines: 1),
+            ),
           ),
         ],
       ),
@@ -533,16 +539,19 @@ class _CardOfDayTileState extends State<_CardOfDayTile> {
               ),
             ),
             const SizedBox(height: 4),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              // While it speaks, the caption is the word itself: the tap
-              // used to change a tint and nothing a parent could read.
-              child: Text(
-                _playing ? widget.card.sound : widget.label,
-                style: _Tile.labelStyle.copyWith(
-                  color: _playing ? DT.brand : null,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                // While it speaks, the caption is the word itself: the tap
+                // used to change a tint and nothing a parent could read.
+                child: Text(
+                  _playing ? widget.card.sound : widget.label,
+                  style: _Tile.labelStyle.copyWith(
+                    color: _playing ? DT.brand : null,
+                  ),
+                  maxLines: 1,
                 ),
-                maxLines: 1,
               ),
             ),
           ],

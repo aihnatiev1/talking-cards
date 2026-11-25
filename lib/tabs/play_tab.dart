@@ -29,6 +29,35 @@ import '../widgets/home_quick_row.dart';
 import '../services/open_content_pack.dart';
 import '../widgets/profile_avatar.dart';
 
+/// Opens the lesson the home screen would offer now — the one in progress,
+/// else the next not yet earned. For doors outside the home screen («Мій
+/// світ» before its first friend), so they lead into play and not back to
+/// the screen that leads into play.
+Future<void> openNextPlayLesson(BuildContext context, WidgetRef ref) async {
+  final packs = ref.read(packsProvider).valueOrNull;
+  final journal = ref.read(playSessionProvider).valueOrNull;
+  if (packs == null || journal == null) {
+    ref.read(homeDestinationProvider.notifier).state = HomeDestination.play;
+    return;
+  }
+  final available = PlayTopic.all
+      .where((topic) => topic.cards(packs).length == 3)
+      .toList();
+  final topic = PlayTopic.pick(available, journal);
+  if (topic == null) {
+    ref.read(homeDestinationProvider.notifier).state = HomeDestination.play;
+    return;
+  }
+  final cards = topic.cards(packs);
+  await ref
+      .read(playSessionProvider.notifier)
+      .start(topic.id, cards.map((c) => c.id).toList());
+  if (!context.mounted) return;
+  await Navigator.of(
+    context,
+  ).push(KidRoutes.game(PlayLessonScreen(topic: topic, cards: cards)));
+}
+
 class PlayTab extends ConsumerStatefulWidget {
   const PlayTab({super.key, this.active = true});
   final bool active;

@@ -81,10 +81,19 @@ class SpeakerButton extends StatelessWidget {
                   child: Center(
                     child: autoOn
                         ? const AppArt('listen', size: 50)
-                        : AppIconView(
-                            AppIcon.soundOff,
-                            size: 38,
-                            color: _offColor,
+                        // The same painted ear, faded and grey: «off» reads
+                        // as the sound button resting, not a flat red glyph.
+                        : const Opacity(
+                            opacity: .45,
+                            child: ColorFiltered(
+                              colorFilter: ColorFilter.matrix(<double>[
+                                .33, .33, .33, 0, 0, //
+                                .33, .33, .33, 0, 0, //
+                                .33, .33, .33, 0, 0, //
+                                0, 0, 0, 1, 0,
+                              ]),
+                              child: AppArt('listen', size: 50),
+                            ),
                           ),
                   ),
                 ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/play_topic.dart';
-import '../providers/home_tab_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../providers/play_session_provider.dart';
@@ -15,6 +14,7 @@ import '../utils/l10n.dart';
 import '../widgets/bloom_mascot.dart';
 import '../widgets/cue_pill.dart';
 import '../widgets/kid_tap.dart';
+import 'play_tab.dart';
 import '../widgets/play_components.dart';
 import '../widgets/animal_friend_art.dart';
 
@@ -48,9 +48,13 @@ class WorldTab extends ConsumerWidget {
               // On a frosted plate: the title and its line used to lie
               // straight on the painted clouds, and the line could not be
               // read.
-              Align(
-                alignment: Alignment.centerLeft,
-                child: CuePill(
+              // Full width and the same inset as the card below it.
+              CuePill(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 8,
+                  ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,9 +114,9 @@ class WorldTab extends ConsumerWidget {
                       const SizedBox(height: 24),
                       PlayAction(
                         label: s('Грати', 'Play'),
-                        onPressed: () =>
-                            ref.read(homeDestinationProvider.notifier).state =
-                                HomeDestination.play,
+                        // Straight into the lesson that brings the first
+                        // friend — not back to the home screen to find it.
+                        onPressed: () => openNextPlayLesson(context, ref),
                       ),
                     ],
                   ),
