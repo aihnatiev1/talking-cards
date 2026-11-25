@@ -69,7 +69,12 @@ class _PlayActionState extends State<PlayAction> {
       size: 26,
       color: widget.secondary ? DT.solid(DT.brand) : DT.surfaceWhite,
     );
-    final label = Text(widget.label, textAlign: TextAlign.center);
+    // One line, shrunk to fit: «Продовжити» beside the lesson picture used
+    // to break as «Продовжит / и» on a 390 pt phone.
+    final label = FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(widget.label, textAlign: TextAlign.center, maxLines: 1),
+    );
     final button = widget.secondary
         ? OutlinedButton.icon(
             statesController: _states,
