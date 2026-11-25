@@ -175,6 +175,11 @@ class _GamesTabState extends ConsumerState<GamesTab> {
 
   @override
   Widget build(BuildContext context) {
+    // Keeps the speaking plan loaded. «Повтори» reads it on tap, and a
+    // provider nobody had watched was still loading then — so the first
+    // set of every session fell back to five random library words
+    // («плавати», «гладкий») instead of «мама», «тато».
+    ref.watch(speakSetProvider);
     final packsAsync = ref.watch(packsProvider);
     final isEn = ref.watch(languageProvider) == 'en';
 
