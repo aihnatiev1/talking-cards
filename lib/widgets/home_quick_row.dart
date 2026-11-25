@@ -14,6 +14,7 @@ import '../providers/review_provider.dart';
 import '../services/analytics_service.dart';
 import '../services/audio_service.dart';
 import '../services/open_content_pack.dart';
+import '../screens/coloring_hub_screen.dart';
 import '../screens/quest_map_screen.dart';
 import '../services/widget_service.dart';
 import '../tabs/games_tab.dart';
@@ -93,15 +94,6 @@ class _HomeQuickRowState extends ConsumerState<HomeQuickRow> {
           },
           onLongPress: () => _showCardSheet(context, s, daily.$1),
         ),
-      _Tile(
-        tileKey: const ValueKey('home-games'),
-        icon: const AppArt('puzzle', size: 44),
-        label: s('Ігри', 'Games'),
-        onTap: () {
-          AudioService.instance.stop();
-          Navigator.of(context).push(KidRoutes.content(const GamesTab()));
-        },
-      ),
       if (dueCards.length >= 5)
         _Tile(
           tileKey: const ValueKey('home-review'),
@@ -143,12 +135,89 @@ class _HomeQuickRowState extends ConsumerState<HomeQuickRow> {
           ),
         ),
     ];
-    return Row(
-      children: [
-        for (var i = 0; i < tiles.length; i++) ...[
-          if (i > 0) const SizedBox(width: 8),
-          Expanded(child: tiles[i]),
+    // A short phone keeps a pack on the first screen (the owner's rule):
+    // there the doors join the small tiles in one row instead of taking a
+    // row of their own.
+    if (MediaQuery.sizeOf(context).height < 760) {
+      final all = [
+        _Tile(
+          tileKey: const ValueKey('home-games'),
+          icon: const AppArt('gamepad', size: 44),
+          label: s('Ігри', 'Games'),
+          onTap: () {
+            AudioService.instance.stop();
+            Navigator.of(context).push(KidRoutes.content(const GamesTab()));
+          },
+        ),
+        _Tile(
+          tileKey: const ValueKey('home-draw'),
+          icon: const AppArt('palette', size: 44),
+          label: s('Малювати', 'Draw'),
+          onTap: () {
+            AudioService.instance.stop();
+            Navigator.of(
+              context,
+            ).push(KidRoutes.content(const ColoringHubScreen()));
+          },
+        ),
+        ...tiles.take(2),
+      ];
+      return Row(
+        children: [
+          for (var i = 0; i < all.length; i++) ...[
+            if (i > 0) const SizedBox(width: 8),
+            Expanded(child: all[i]),
+          ],
         ],
+      );
+    }
+    return Column(
+      children: [
+        // The two things children come back for — games and drawing — as
+        // big picture doors. Drawing is the most played activity in the
+        // app and used to sit two taps away on the third tab.
+        Row(
+          children: [
+            Expanded(
+              child: _Door(
+                doorKey: const ValueKey('home-games'),
+                art: 'gamepad',
+                label: s('Ігри', 'Games'),
+                tint: DT.sky,
+                onTap: () {
+                  AudioService.instance.stop();
+                  Navigator.of(
+                    context,
+                  ).push(KidRoutes.content(const GamesTab()));
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _Door(
+                doorKey: const ValueKey('home-draw'),
+                art: 'palette',
+                label: s('Малювати', 'Draw'),
+                tint: DT.streakOrange,
+                onTap: () {
+                  AudioService.instance.stop();
+                  Navigator.of(
+                    context,
+                  ).push(KidRoutes.content(const ColoringHubScreen()));
+                },
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            for (var i = 0; i < tiles.length; i++) ...[
+              if (i > 0) const SizedBox(width: 8),
+              Expanded(child: tiles[i]),
+            ],
+          ],
+        ),
       ],
     );
   }
@@ -200,6 +269,52 @@ class _HomeQuickRowState extends ConsumerState<HomeQuickRow> {
       ),
     ).whenComplete(() => AudioService.instance.stop());
   }
+}
+
+/// A big picture door: one painted object, one word.
+class _Door extends StatelessWidget {
+  const _Door({
+    required this.doorKey,
+    required this.art,
+    required this.label,
+    required this.tint,
+    required this.onTap,
+  });
+  final Key doorKey;
+  final String art;
+  final String label;
+  final Color tint;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => KidTap(
+    key: doorKey,
+    onTap: onTap,
+    child: Container(
+      height: MediaQuery.textScalerOf(context).scale(124),
+      decoration: BoxDecoration(
+        color: Color.alphaBlend(tint.withValues(alpha: .14), DT.surfaceWhite),
+        borderRadius: BorderRadius.circular(DT.rLg),
+        border: Border.all(color: DT.surfaceWhite, width: 4),
+        boxShadow: DT.shadowSoft(tint),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          AppArt(art, size: 72),
+          const SizedBox(height: 4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              maxLines: 1,
+              style: DT.tileTitle.copyWith(color: DT.textPrimary),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 class _Tile extends StatelessWidget {

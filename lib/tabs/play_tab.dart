@@ -157,9 +157,19 @@ class _PlayTabState extends ConsumerState<PlayTab> {
                         ).push(KidRoutes.sheet(const ParentDashboardScreen()));
                       }
                     },
-                    icon: const AppIconView(
-                      AppIcon.lock,
-                      color: DT.textSecondary,
+                    // A white disc with the painted padlock: the grey glyph
+                    // was lost on the rainbow and a parent could not find
+                    // their own door.
+                    icon: Container(
+                      width: 52,
+                      height: 52,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: DT.surfaceWhite,
+                        shape: BoxShape.circle,
+                        boxShadow: DT.shadowSoft(DT.brand),
+                      ),
+                      child: const AppArt('padlock', size: 32),
                     ),
                   ),
                 ],
@@ -341,7 +351,9 @@ class _PlayTabState extends ConsumerState<PlayTab> {
       compact: true,
     );
 
-    final row = shelf.take(grid.crossAxisCount * 2).toList();
+    // One row: the pack to continue and the next one. The catalogue lives
+    // on the Cards tab; two rows here repeated it under the fold.
+    final row = shelf.take(grid.crossAxisCount).toList();
 
     return [
       Padding(
