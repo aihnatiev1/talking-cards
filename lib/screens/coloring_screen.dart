@@ -99,7 +99,8 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen>
 
   static const _completedCountKey = 'coloring_completed_count';
   // 72dp button + the done bar's vertical margins.
-  static const double _bottomBarHeight = 96;
+  // Tall enough for Bloom at his full 100 dp plus the bar's own padding.
+  static const double _bottomBarHeight = 142;
   // 3 free drawings before the paywall gate — one felt exhausted too fast
   // for the value this tab demonstrates.
   static const _freeAllowance = 3;
@@ -936,7 +937,9 @@ class _NewPictureButton extends StatelessWidget {
         height: height,
         // Hugs its word instead of spanning the tablet: a pill reads as a
         // button, a full-width band reads as a bar nobody presses.
-        padding: const EdgeInsets.symmetric(horizontal: 40),
+        // 28, not 40: the 12 dp a side went to Bloom, who stands beside it
+        // at 100 dp and would otherwise push the row past a 390 pt phone.
+        padding: const EdgeInsets.symmetric(horizontal: 28),
         decoration: BoxDecoration(
           color: DT.mint,
           borderRadius: BorderRadius.circular(DT.rLg),
@@ -987,7 +990,16 @@ class _ColoringBar extends StatelessWidget {
   /// The word in Bloom's bubble once the picture is finished.
   final String praise;
 
-  static const double bloomSize = 64;
+  /// As big as the corner allows. He was 64 dp — a speck in a slot with
+  /// room for half as much again (owner, 2026-11-25); the bar grows with
+  /// him and the page gives up a finger's width of height.
+  static const double bloomSize = 120;
+
+  /// The width he takes in the row. His picture is drawn on a canvas with
+  /// wide empty margins (the bunny is half its width), so the slot is
+  /// narrower than the canvas and the margins hang over the edges — the
+  /// bunny itself is what fills the corner.
+  static const double bloomSlot = 84;
 
   @override
   Widget build(BuildContext context) {
@@ -1017,7 +1029,7 @@ class _ColoringBar extends StatelessWidget {
 /// Bloom and, when the picture is done, his bubble.
 ///
 /// The bubble is a `Positioned` in a non-clipping `Stack`, so it costs no
-/// width: Bloom's slot is the same 64 dp before and after, and the button
+/// width: Bloom's slot is the same width before and after, and the button
 /// never moves under a finger already on its way down.
 ///
 /// Frozen states, not the shared brain: this screen never taught the
@@ -1033,7 +1045,7 @@ class _BloomCue extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: _ColoringBar.bloomSize,
+      width: _ColoringBar.bloomSlot,
       height: _ColoringBar.bloomSize,
       child: Stack(
         clipBehavior: Clip.none,
@@ -1042,10 +1054,18 @@ class _BloomCue extends StatelessWidget {
           // finger while the child paints, a hop when the picture is done
           // (§3.5). The frozen cheer/idle pair this replaced could not
           // look anywhere.
-          const BloomMascot(
-            size: _ColoringBar.bloomSize,
-            facing: BloomFacing.right,
-            semanticsLabel: 'Bloom',
+          const Positioned.fill(
+            child: OverflowBox(
+              minWidth: _ColoringBar.bloomSize,
+              maxWidth: _ColoringBar.bloomSize,
+              minHeight: _ColoringBar.bloomSize,
+              maxHeight: _ColoringBar.bloomSize,
+              child: BloomMascot(
+                size: _ColoringBar.bloomSize,
+                facing: BloomFacing.right,
+                semanticsLabel: 'Bloom',
+              ),
+            ),
           ),
           if (done)
             // Above him, negatively inset on both sides so a long word

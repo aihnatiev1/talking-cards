@@ -323,13 +323,24 @@ class FlashCardState extends ConsumerState<FlashCard>
     );
   }
 
+  /// The chip's height plus its inset and a little air above it.
+  static const double _chipClearance = 60;
+
   Widget _wordPane(Color cardBg, ThemeData theme) {
     return ClipRect(
       child: Container(
         width: double.infinity,
         height: double.infinity,
         color: cardBg,
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+        // The «English» chip sits in this pane's bottom-right corner. The
+        // text is laid out above it — it used to be centred in the whole
+        // pane, and a two-line phrase ran under the chip.
+        padding: EdgeInsets.fromLTRB(
+          20,
+          12,
+          20,
+          _hasEnglish && widget.showEnglishChip ? _chipClearance : 16,
+        ),
         child: FittedBox(
           fit: BoxFit.scaleDown,
           child: Column(
