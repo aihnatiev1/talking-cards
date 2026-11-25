@@ -17,6 +17,7 @@ import '../screens/odd_one_out_screen.dart';
 import '../screens/opposite_game_screen.dart';
 import '../screens/repeat_game_screen.dart';
 import '../services/analytics_service.dart';
+import '../screens/coloring_hub_screen.dart';
 import '../services/audio_service.dart';
 import '../services/paywall_flow.dart';
 import '../utils/app_icons.dart';
@@ -512,6 +513,21 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                 ),
                 const SizedBox(height: 10),
                 _GameGrid(games: toddlerGames, section: 'toddler'),
+                const SizedBox(height: 14),
+                // Drawing is the most played thing in the app and was not
+                // in the games hub at all — a child looked for it here.
+                _DrawBanner(
+                  title: isEn ? 'Draw' : 'Малювати',
+                  subtitle: isEn
+                      ? 'Colouring, stickers, mirror'
+                      : 'Розмальовки, наліпки, дзеркальце',
+                  onTap: () {
+                    AudioService.instance.stop();
+                    Navigator.of(
+                      context,
+                    ).push(KidRoutes.content(const ColoringHubScreen()));
+                  },
+                ),
                 const SizedBox(height: 22),
                 _SectionHeader(
                   title: isEn ? 'For grown-ups' : 'Для батьків',
@@ -915,4 +931,53 @@ class _BigGameTile extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The wide door to the drawing shelf, under the toddler games.
+class _DrawBanner extends StatelessWidget {
+  const _DrawBanner({
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => KidTap(
+    key: const ValueKey('games-draw'),
+    onTap: onTap,
+    child: Container(
+      constraints: const BoxConstraints(minHeight: 96),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: Color.alphaBlend(
+          DT.streakOrange.withValues(alpha: .14),
+          DT.surfaceWhite,
+        ),
+        borderRadius: BorderRadius.circular(DT.rLg),
+        border: Border.all(color: DT.surfaceWhite, width: 4),
+        boxShadow: DT.shadowSoft(DT.streakOrange),
+      ),
+      child: Row(
+        children: [
+          const AppArt('palette', size: 68),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: DT.tileTitle.copyWith(fontSize: 20)),
+                const SizedBox(height: 2),
+                Text(subtitle, style: DT.caption.copyWith(fontSize: 14)),
+              ],
+            ),
+          ),
+          const AppArt('play', size: 34),
+        ],
+      ),
+    ),
+  );
 }
