@@ -22,6 +22,7 @@ import '../widgets/card_image.dart';
 import '../widgets/game_celebration_overlay.dart';
 import '../widgets/cue_pill.dart';
 import '../widgets/kid_screen.dart';
+import '../widgets/quiz_option.dart';
 import '../widgets/quiz_options_board.dart';
 import '../widgets/kid_tap.dart';
 
@@ -90,7 +91,12 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
     final question = questionIsA ? cardA : cardB;
     final correct = questionIsA ? cardB : cardA;
 
-    // Pick 2 distractors from other pairs
+    // One wrong picture for the youngest, two after that: a child of two
+    // is choosing between two things, not scanning a list.
+    final level = ref.read(profileProvider).active?.level ?? 2;
+    final wrongCount = level <= 2 ? 1 : 2;
+
+    // Distractors come from other pairs
     final otherCards = <CardModel>[];
     for (int i = 0; i < pairCount; i++) {
       if (i == pairIndex) continue;
@@ -98,7 +104,7 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
       otherCards.add(cards[i * 2 + 1]);
     }
     otherCards.shuffle(Random());
-    final distractors = otherCards.take(2).toList();
+    final distractors = otherCards.take(wrongCount).toList();
 
     final options = [correct, ...distractors]..shuffle(Random());
 
@@ -256,32 +262,32 @@ class _OppositeGameScreenState extends ConsumerState<OppositeGameScreen>
 
             const SizedBox(height: 16),
 
-            // Answer options — vertical stack for big tap targets
+            // Answer options — big pictures side by side. They were three
+            // rows of a thumbnail and a word, which a child who cannot
+            // read had to tell apart by a 60 pt picture.
             Expanded(
-              child: Column(
-                children: _round.options.map((card) {
-                  final isCorrectCard = card.id == correct.id;
-                  final mark = !isCorrectCard
-                      ? AnswerMark.none
-                      : _answered
-                      ? AnswerMark.correct
-                      : _misses.showHint
-                      ? AnswerMark.hint
-                      : AnswerMark.none;
-
-                  return Expanded(
-                    key: ValueKey(card.id),
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: _OptionTile(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final (i, card) in _round.options.indexed) ...[
+                    if (i > 0) const SizedBox(width: 12),
+                    Expanded(
+                      key: ValueKey(card.id),
+                      child: QuizOption(
                         card: card,
-                        mark: mark,
+                        mark: card.id != correct.id
+                            ? AnswerMark.none
+                            : _answered
+                            ? AnswerMark.correct
+                            : _misses.showHint
+                            ? AnswerMark.hint
+                            : AnswerMark.none,
                         nudge: _nudges[card.id] ?? 0,
                         onTap: () => _onTap(card),
                       ),
                     ),
-                  );
-                }).toList(),
+                  ],
+                ],
               ),
             ),
           ],
@@ -459,81 +465,6 @@ class _PairHalf extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-// ─────────────────────────────────────────────
-//  Option tile — picture + word inside the shared AnswerFrame
-// ─────────────────────────────────────────────
-
-class _OptionTile extends StatelessWidget {
-  final CardModel card;
-  final AnswerMark mark;
-  final int nudge;
-  final VoidCallback onTap;
-
-  const _OptionTile({
-    required this.card,
-    required this.mark,
-    required this.nudge,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return KidTap(
-      onTap: onTap,
-      child: AnswerFrame(
-        background: card.colorBg,
-        accent: card.colorAccent,
-        mark: mark,
-        nudge: nudge,
-        radius: 20,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        // Image on the left, word beside it — matches the question card
-        // above so the whole screen reads as a column of big pictures.
-        child: LayoutBuilder(
-          builder: (context, box) {
-            final art = (box.maxHeight - 16).clamp(56.0, 104.0);
-            return Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (card.image != null)
-                  SizedBox(
-                    width: art,
-                    height: art,
-                    child: CardImage.forCard(card, padding: EdgeInsets.zero),
-                  )
-                else
-                  Container(
-                    width: art,
-                    height: art,
-                    decoration: BoxDecoration(
-                      color: card.colorAccent.withValues(alpha: 0.25),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    card.sound,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w800,
-                      color: DT.onTint(card.colorAccent),
-                    ),
-                  ),
-                ),
-                // Room for the corner sticker so it never covers the word.
-                const SizedBox(width: 36),
-              ],
-            );
-          },
-        ),
-      ),
     );
   }
 }
