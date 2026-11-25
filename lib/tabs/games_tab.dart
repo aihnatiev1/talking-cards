@@ -20,6 +20,7 @@ import '../services/analytics_service.dart';
 import '../screens/coloring_hub_screen.dart';
 import '../screens/feed_bloom_screen.dart';
 import '../screens/hide_seek_screen.dart';
+import '../screens/shadow_match_screen.dart';
 import '../screens/who_said_screen.dart';
 import '../services/audio_service.dart';
 import '../services/paywall_flow.dart';
@@ -341,6 +342,10 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                 ? const <CardModel>[]
                 : hideSeekPool(animalsPack);
 
+            final shadows = animalsPack == null
+                ? const <CardModel>[]
+                : shadowPool(animalsPack);
+
             final toddlerGames = <_BigGame>[
               _BigGame(
                 id: 'quiz',
@@ -419,6 +424,27 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                 onTap: hiders.length >= 2
                     ? () => _openGame(
                         KidRoutes.game(HideSeekScreen(cards: hiders)),
+                      )
+                    : null,
+                lockedHint: isEn
+                    ? 'The animals are still arriving'
+                    : 'Тваринки ще завантажуються',
+              ),
+              _BigGame(
+                id: 'shadow_match',
+                title: isEn ? 'Whose shadow?' : 'Чия тінь?',
+                subtitle: isEn
+                    ? 'Put the friend on its shadow'
+                    : 'Постав друга на його тінь',
+                color: DT.violet,
+                bg: DT.violetTint,
+                thumb: shadows.firstOrNull,
+                art: 'shadow',
+                badge: AppIcon.gameGuess,
+                onTap:
+                    {for (final c in shadows) shadowGroups[c.image]}.length >= 2
+                    ? () => _openGame(
+                        KidRoutes.game(ShadowMatchScreen(cards: shadows)),
                       )
                     : null,
                 lockedHint: isEn
