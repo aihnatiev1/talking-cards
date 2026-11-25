@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -127,6 +130,27 @@ void main() {
         withLocked: true,
       );
       expect(animals.where((a) => !a.locked), hasLength(12));
+    });
+
+    test('the real catalogues: all twelve on the Ukrainian farm; the '
+        'English one without the owl, whose English recording is pulled '
+        '(hidden_cards_test) — no farm animal speaks with a pulled voice', () {
+      Set<String> farm(String file) {
+        final packs = (json.decode(File(file).readAsStringSync()) as List)
+            .map((e) => PackModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+        return meadowAnimals(
+          packs: packs,
+          rewards: const {},
+          withLocked: true,
+        ).map((a) => a.key).toSet();
+      }
+
+      expect(farm('assets/data/uk_cards.json'), meadowVoices.keys.toSet());
+      expect(
+        farm('assets/data/en_cards.json'),
+        meadowVoices.keys.toSet().difference({'owl'}),
+      );
     });
 
     test('every animal has its spot', () {

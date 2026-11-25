@@ -22,6 +22,7 @@ class MeadowAnimal {
     required this.soundEn,
     this.earned = false,
     this.locked = false,
+    this.hasVoice = true,
   });
 
   /// The clay friend: `assets/images/friends/<key>.webp` and its
@@ -39,6 +40,12 @@ class MeadowAnimal {
   /// Lives in the paid pack and has not been earned: it stands on the farm
   /// as a grey silhouette with a padlock.
   final bool locked;
+
+  /// The card is the real voice (name, then the animal). False when the
+  /// sound card is out of the catalogue (the English owl, say): the animal
+  /// still says its name from the animals pack, but a riddle never asks
+  /// for a voice that is not there.
+  final bool hasVoice;
 
   String sound(bool isEn) => isEn ? soundEn : soundUk;
 }
@@ -94,9 +101,16 @@ List<MeadowAnimal> meadowAnimals({
     final locked = soundPack.isLocked && !meadowFree.contains(key) && !isEarned;
     if (locked && !withLocked) continue;
     final (image, uk, en) = entry.value;
-    final card = soundPack.cards
+    final voice = soundPack.cards
         .where((c) => c.image == image && c.audioKey != null)
         .firstOrNull;
+    final card =
+        voice ??
+        packs
+            .where((p) => p.id == 'animals' || p.id == 'en_animals')
+            .expand((p) => p.cards)
+            .where((c) => c.image == key && c.audioKey != null)
+            .firstOrNull;
     if (card == null) continue;
     animals.add(
       MeadowAnimal(
@@ -106,6 +120,7 @@ List<MeadowAnimal> meadowAnimals({
         soundEn: en,
         earned: isEarned,
         locked: locked,
+        hasVoice: voice != null,
       ),
     );
   }

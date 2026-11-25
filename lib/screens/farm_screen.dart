@@ -33,8 +33,8 @@ const farmSpots = <String, (double x, double y, double size)>{
   'horse': (.33, .62, .25),
   'cow': (.50, .62, .25),
   'sheep': (.67, .62, .25),
-  'bird': (.80, .50, .19),
-  'owl': (.91, .44, .19),
+  'bird': (.62, .35, .16),
+  'owl': (.79, .44, .19),
   'chicken': (.10, .83, .21),
   'dog': (.28, .83, .21),
   'cat': (.56, .83, .21),
@@ -296,7 +296,7 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
   }
 
   void _ask() {
-    final open = _animals().where((a) => !a.locked).toList();
+    final open = _animals().where((a) => !a.locked && a.hasVoice).toList();
     if (open.isEmpty) return;
     final last = _asked;
     if (open.length > 1 && last != null) {
@@ -438,9 +438,7 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
               fish: MeadowPond(pops: _fishPops, onTap: _tapFish),
             ),
           ),
-          // Along the sky: close, Bloom and his line, then the toy's two
-          // big round buttons — the sky is the one place on the board with
-          // no animal under it.
+          // Along the sky: close, Bloom and his line.
           Positioned(
             left: 0,
             top: 0,
@@ -461,8 +459,7 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
                       semanticsLabel: s('Блум', 'Bloom'),
                     ),
                     const SizedBox(width: 4),
-                    // A fixed slot: the buttons beside it never move when
-                    // the line changes.
+                    // A fixed slot, clear of the bird flying past.
                     SizedBox(
                       width: _lineSlot,
                       child: AnimatedSwitcher(
@@ -506,7 +503,23 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
                               ),
                       ),
                     ),
-                    const SizedBox(width: DT.sp12),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // The toy's two big round buttons, in the apple tree at the
+          // right — its crown and its trunk — where no animal lives.
+          Positioned(
+            top: 0,
+            right: 0,
+            child: SafeArea(
+              left: false,
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 30, right: DT.sp8),
+                child: Column(
+                  children: [
                     _RoundButton(
                       key: const ValueKey('farm-listen'),
                       art: 'listen',
@@ -515,7 +528,7 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
                       color: DT.sky,
                       onTap: () => _setMode(FarmMode.listen),
                     ),
-                    const SizedBox(width: DT.sp12),
+                    const SizedBox(height: DT.sp12),
                     _RoundButton(
                       key: const ValueKey('farm-riddle'),
                       art: 'question',
@@ -535,7 +548,7 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
   }
 
   /// Width of Bloom's line beside him.
-  static const _lineSlot = 220.0;
+  static const _lineSlot = 260.0;
 }
 
 /// The farm picture fitted to the width and standing on the bottom edge —
