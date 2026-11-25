@@ -19,6 +19,7 @@ import '../screens/repeat_game_screen.dart';
 import '../services/analytics_service.dart';
 import '../screens/coloring_hub_screen.dart';
 import '../screens/feed_bloom_screen.dart';
+import '../screens/free_touch_screen.dart';
 import '../screens/hide_seek_screen.dart';
 import '../screens/shadow_match_screen.dart';
 import '../screens/who_said_screen.dart';
@@ -32,6 +33,7 @@ import '../utils/kid_routes.dart';
 import '../providers/content_pack_provider.dart';
 import '../providers/profile_provider.dart';
 import '../widgets/card_image.dart';
+import '../widgets/cue_pill.dart';
 import '../widgets/entrance_stagger.dart';
 import '../widgets/kid_tap.dart';
 
@@ -346,7 +348,42 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                 ? const <CardModel>[]
                 : shadowPool(animalsPack);
 
+            // Pictures with a recorded word, for the free-touch board.
+            final touchCards = allCards
+                .where(
+                  (c) =>
+                      c.image != null &&
+                      AudioService.instance.hasSound(c.audioKey),
+                )
+                .toList();
+
             final toddlerGames = <_BigGame>[
+              // First on the shelf: the one game a one-year-old can play
+              // alone — every touch is a picture and its word.
+              _BigGame(
+                id: 'free_touch',
+                title: isEn ? 'Touch!' : 'Торкнись!',
+                subtitle: isEn
+                    ? 'Every touch is a picture and a word'
+                    : 'Кожен дотик — картинка і слово',
+                color: DT.sky,
+                bg: DT.skyTint,
+                thumb: touchCards.firstOrNull,
+                art: 'touch',
+                badge: AppIcon.gameGuess,
+                onTap: touchCards.length >= 4
+                    ? () => _openGame(
+                        KidRoutes.game(
+                          FreeTouchScreen(
+                            cards: _forAge(touchCards, atLeast: 8),
+                          ),
+                        ),
+                      )
+                    : null,
+                lockedHint: isEn
+                    ? 'Open more cards in Packs first'
+                    : 'Спочатку відкрий більше карток',
+              ),
               _BigGame(
                 id: 'quiz',
                 title: isEn ? 'Guess the word' : 'Вгадай звук',
@@ -659,6 +696,38 @@ class _GamesTabState extends ConsumerState<GamesTab> {
             return ListView(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
               children: [
+                // The one line for the grown-up, before any game: a child
+                // of two does not learn a word from a screen alone — the
+                // adult saying it with them is what makes it stay.
+                CuePill(
+                  key: const ValueKey('games-parent-tip'),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        const AppArt('speech', size: 34),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            isEn
+                                ? 'Grown-ups: play together. Say the word '
+                                      'aloud and wait for your child to '
+                                      'repeat it.'
+                                : 'Дорослим: грайте разом. Скажіть слово '
+                                      'вголос і зачекайте, поки дитина '
+                                      'повторить.',
+                            style: DT.caption.copyWith(
+                              fontSize: 13,
+                              height: 1.3,
+                              color: DT.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
                 _SectionHeader(
                   title: isEn ? 'For little ones' : 'Для малят',
                   subtitle: isEn ? 'ages 1–3' : '1–3 роки',

@@ -32,6 +32,7 @@ void main() {
     'lib/screens/feed_bloom_screen.dart',
     'lib/screens/hide_seek_screen.dart',
     'lib/screens/shadow_match_screen.dart',
+    'lib/screens/free_touch_screen.dart',
   ];
 
   String read(String path) => File(path).readAsStringSync();
