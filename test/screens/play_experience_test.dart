@@ -184,7 +184,7 @@ void main() {
     // The owner's rule: a pack is tappable without scrolling, at 700 pt.
     expect(find.text('Тваринки').hitTestable(), findsOneWidget);
     // One big action sits above the fold; the shelf follows it.
-    expect(find.text('Привіт, тваринки!').hitTestable(), findsOneWidget);
+    expect(find.textContaining('Привіт, тваринки!').hitTestable(), findsOneWidget);
     expect(
       find.widgetWithText(PlayAction, 'Грати').hitTestable(),
       findsOneWidget,
@@ -202,7 +202,7 @@ void main() {
     await settle(tester);
     expect(find.byType(PacksTab).hitTestable(), findsOneWidget);
     expect(find.byType(PlayLessonScreen), findsNothing);
-    expect(find.text('Привіт, тваринки!').hitTestable(), findsNothing);
+    expect(find.textContaining('Привіт, тваринки!').hitTestable(), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -286,7 +286,7 @@ void main() {
       find.byKey(const ValueKey('capture')),
       matchesGoldenFile('../goldens/images/play_home.png'),
     );
-    expect(find.text('Привіт, тваринки!'), findsOneWidget);
+    expect(find.textContaining('Привіт, тваринки!'), findsOneWidget);
     await tapText(tester, 'Грати');
     await screenshot(tester, '02-listen');
     final cards = PlayTopic.all.first.cards(

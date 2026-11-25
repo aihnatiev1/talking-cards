@@ -269,6 +269,8 @@ class _PlayTabState extends ConsumerState<PlayTab> {
           cards: topic.cards(packs),
           complete: false,
           continuing: continuing,
+          step: continuing ? session.step : 0,
+          isEn: isEn,
           opening: _opening,
           label: continuing ? s('Продовжити', 'Continue') : s('Грати', 'Play'),
           icon: AppIcon.play,
@@ -455,6 +457,8 @@ class _HeroCard extends StatelessWidget {
     required this.cards,
     required this.complete,
     required this.continuing,
+    required this.step,
+    required this.isEn,
     required this.opening,
     required this.label,
     required this.icon,
@@ -465,6 +469,10 @@ class _HeroCard extends StatelessWidget {
   final List<CardModel> cards;
   final bool complete;
   final bool continuing;
+
+  /// How far into the lesson (0–6 of 7) — drawn as paw steps.
+  final int step;
+  final bool isEn;
   final bool opening;
   final String label;
   final AppIcon icon;
@@ -485,6 +493,9 @@ class _HeroCard extends StatelessWidget {
               child: Semantics(
                 button: true,
                 label: title,
+                // The friend this lesson brings; the line beside it says
+                // there are three to meet. Three animals piled into a
+                // 112 dp picture read as a heap.
                 child: PlayScene(
                   cards: cards.isEmpty ? const [] : [cards.first],
                   celebrate: complete,
@@ -500,12 +511,32 @@ class _HeroCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  title,
-                  style: DT.tileTitle,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                // What this card is, for the parent reading it: a lesson,
+                // and what it gives. A title alone («Біля води») with
+                // «Продовжити» under it said neither.
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(title, style: DT.tileTitle, maxLines: 1),
                 ),
+                // On a short phone the line gives way, so a card pack still
+                // shows on the first screen (the owner's rule).
+                if (MediaQuery.sizeOf(context).height < 760)
+                  const SizedBox.shrink()
+                else if (continuing)
+                  _PawSteps(done: step)
+                else
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      isEn
+                          ? 'Lesson: 3 animals, one becomes your friend'
+                          : 'Заняття: 3 тваринки, одна стане другом',
+                      style: DT.caption.copyWith(fontSize: 13),
+                      maxLines: 1,
+                    ),
+                  ),
                 const SizedBox(height: DT.sp8),
                 PlayAction(
                   label: label,
@@ -519,6 +550,27 @@ class _HeroCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// A lesson's seven steps as paws: the ones walked are filled.
+class _PawSteps extends StatelessWidget {
+  const _PawSteps({required this.done});
+  final int done;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      for (var i = 0; i < 7; i++)
+        Padding(
+          padding: const EdgeInsets.only(right: 3),
+          child: AppIconView(
+            AppIcon.pawStep,
+            size: 16,
+            color: i < done ? DT.brand : DT.outline,
+          ),
+        ),
+    ],
+  );
 }
 
 /// The active child's avatar, opening the profile selector. The parents'
