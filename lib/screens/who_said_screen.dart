@@ -17,14 +17,13 @@ import '../utils/design_tokens.dart';
 import '../utils/game_state_mixin.dart';
 import '../utils/l10n.dart';
 import '../utils/motion.dart';
-import '../widgets/ambient_loop.dart';
 import '../widgets/answer_feedback.dart';
 import '../widgets/bloom_mascot.dart';
 import '../widgets/cue_pill.dart';
 import '../widgets/entrance_stagger.dart';
 import '../widgets/game_celebration_overlay.dart';
 import '../widgets/kid_screen.dart';
-import '../widgets/kid_tap.dart';
+import '../widgets/listen_button.dart';
 import '../widgets/quiz_option.dart';
 import '../widgets/quiz_options_board.dart';
 
@@ -516,39 +515,13 @@ class _WhoSaidScreenState extends ConsumerState<WhoSaidScreen>
     );
   }
 
-  Widget _speaker(AppS s) => Semantics(
-    button: true,
+  Widget _speaker(AppS s) => ListenButton(
+    key: const ValueKey('who-said-voice'),
     label: s('Послухати ще раз', 'Listen again'),
-    child: KidTap(
-      key: const ValueKey('who-said-voice'),
-      // Replays the voice — no pop under it.
-      sound: null,
-      onTap: () {
-        _soundTimer?.cancel();
-        _playVoice();
-      },
-      child: ValueListenableBuilder<bool>(
-        valueListenable: AudioService.instance.isSpeaking,
-        builder: (_, speaking, speaker) => AmbientLoop(
-          period: DT.motion.speakerPulse,
-          enabled: speaking,
-          builder: (_, t, child) =>
-              Transform.scale(scale: 1.0 + 0.06 * t, child: child),
-          child: speaker,
-        ),
-        child: Container(
-          width: 72,
-          height: 72,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: DT.surfaceWhite,
-            border: Border.all(color: _accent, width: 3),
-            boxShadow: DT.shadowSoft(_accent),
-          ),
-          child: const Center(child: AppArt('listen', size: 54)),
-        ),
-      ),
-    ),
+    onTap: () {
+      _soundTimer?.cancel();
+      _playVoice();
+    },
   );
 }
 

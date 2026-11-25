@@ -28,24 +28,36 @@ class CuePill extends StatelessWidget {
 /// a tail pointing at him — so the one line of text reads as *his* words,
 /// not as a system toast lying on the grass.
 class CueBubble extends StatelessWidget {
-  const CueBubble({super.key, required this.child, this.tailRight = true});
+  const CueBubble({super.key, required this.child, this.tailRight = true})
+    : tailBelow = false;
+
+  /// The speaker stands *under* the bubble: the tail hangs from the middle
+  /// of its bottom edge. For a big Bloom in the middle of the screen, where
+  /// a bubble at his side would have no room for a sentence.
+  const CueBubble.above({super.key, required this.child})
+    : tailRight = true,
+      tailBelow = true;
 
   final Widget child;
 
   /// Bloom stands to the right of the bubble (true) or to its left.
   final bool tailRight;
 
+  final bool tailBelow;
+
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      painter: _BubblePainter(tailRight: tailRight),
+      painter: _BubblePainter(tailRight: tailRight, tailBelow: tailBelow),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          tailRight ? 18 : 30,
-          12,
-          tailRight ? 30 : 18,
-          12,
-        ),
+        padding: tailBelow
+            ? const EdgeInsets.fromLTRB(20, 12, 20, 26)
+            : EdgeInsets.fromLTRB(
+                tailRight ? 18 : 30,
+                12,
+                tailRight ? 30 : 18,
+                12,
+              ),
         child: child,
       ),
     );
@@ -53,13 +65,27 @@ class CueBubble extends StatelessWidget {
 }
 
 class _BubblePainter extends CustomPainter {
-  const _BubblePainter({required this.tailRight});
+  const _BubblePainter({required this.tailRight, this.tailBelow = false});
 
   final bool tailRight;
+  final bool tailBelow;
 
   @override
   void paint(Canvas canvas, Size size) {
     const tail = 12.0;
+    if (tailBelow) {
+      final body = Rect.fromLTRB(0, 0, size.width, size.height - tail - 2);
+      final x = size.width / 2;
+      final path = Path()
+        ..addRRect(RRect.fromRectAndRadius(body, const Radius.circular(22)))
+        ..moveTo(x - 12, body.bottom - 2)
+        ..quadraticBezierTo(x - 2, body.bottom + 4, x - 6, size.height)
+        ..quadraticBezierTo(x + 8, body.bottom + 4, x + 12, body.bottom - 2)
+        ..close();
+      canvas.drawShadow(path, Colors.black.withValues(alpha: 0.35), 6, false);
+      canvas.drawPath(path, Paint()..color = DT.surfaceWhite);
+      return;
+    }
     final body = tailRight
         ? Rect.fromLTRB(0, 0, size.width - tail, size.height)
         : Rect.fromLTRB(tail, 0, size.width, size.height);
@@ -85,5 +111,5 @@ class _BubblePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _BubblePainter old) =>
-      old.tailRight != tailRight;
+      old.tailRight != tailRight || old.tailBelow != tailBelow;
 }

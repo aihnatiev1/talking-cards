@@ -28,6 +28,8 @@ void main() {
     'lib/screens/quest_map_screen.dart',
     'lib/screens/kid_word_wall_screen.dart',
     'lib/screens/rewards_screen.dart',
+    'lib/screens/who_said_screen.dart',
+    'lib/screens/feed_bloom_screen.dart',
   ];
 
   String read(String path) => File(path).readAsStringSync();

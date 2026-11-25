@@ -18,6 +18,7 @@ import '../screens/opposite_game_screen.dart';
 import '../screens/repeat_game_screen.dart';
 import '../services/analytics_service.dart';
 import '../screens/coloring_hub_screen.dart';
+import '../screens/feed_bloom_screen.dart';
 import '../screens/who_said_screen.dart';
 import '../services/audio_service.dart';
 import '../services/paywall_flow.dart';
@@ -313,6 +314,14 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                 ? const <CardModel>[]
                 : whoSaidPool(soundPack, contentReady: contentReady);
 
+            // The foods on Bloom's table, by the same access rule.
+            final foodPack = packs
+                .where((p) => feedBloomPackIds.contains(p.id))
+                .firstOrNull;
+            final feedFoods = foodPack == null
+                ? const <CardModel>[]
+                : feedBloomPool(foodPack, contentReady: contentReady);
+
             final toddlerGames = <_BigGame>[
               _BigGame(
                 id: 'quiz',
@@ -349,6 +358,26 @@ class _GamesTabState extends ConsumerState<GamesTab> {
                 lockedHint: isEn
                     ? 'The animals are still arriving'
                     : 'Тваринки ще завантажуються',
+              ),
+              _BigGame(
+                id: 'feed_bloom',
+                title: isEn ? 'Feed Bloom' : 'Нагодуй Блума',
+                subtitle: isEn
+                    ? 'Give him what he asks for'
+                    : 'Дай йому те, що він просить',
+                color: DT.coral,
+                bg: DT.coralTint,
+                thumb: feedFoods.firstOrNull,
+                art: 'feed',
+                badge: AppIcon.gameGuess,
+                onTap: feedFoods.length >= 4
+                    ? () => _openGame(
+                        KidRoutes.game(FeedBloomScreen(cards: feedFoods)),
+                      )
+                    : null,
+                lockedHint: isEn
+                    ? 'The food is still arriving'
+                    : 'Їжа ще завантажується',
               ),
               _BigGame(
                 id: 'memory_match',
