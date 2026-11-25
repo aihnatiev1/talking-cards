@@ -301,17 +301,10 @@ class QuestJourneyMap extends StatelessWidget {
           ),
         ),
         Expanded(child: map),
+        // No plate under the button: it used to be a white band across the
+        // painted sky, with the map's edge showing above it.
         Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).scaffoldBackgroundColor,
-            boxShadow: [
-              BoxShadow(
-                color: _ink.withValues(alpha: .08),
-                blurRadius: 20,
-                offset: const Offset(0, -4),
-              ),
-            ],
-          ),
+          color: Colors.transparent,
           child: SafeArea(
             top: false,
             child: Center(
@@ -339,13 +332,16 @@ class QuestJourneyMap extends StatelessWidget {
                             horizontal: 18,
                             vertical: 12,
                           ),
+                          // The app's one «go» green, like every other
+                          // primary button — it was a dark teal found
+                          // nowhere else in the palette.
                           decoration: BoxDecoration(
-                            color: _ink,
+                            color: DT.solid(DT.brand),
                             borderRadius: BorderRadius.circular(22),
-                            boxShadow: const [
+                            boxShadow: [
                               BoxShadow(
-                                color: Color(0xFF163B35),
-                                offset: Offset(0, 4),
+                                color: DT.onTint(DT.brand),
+                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),

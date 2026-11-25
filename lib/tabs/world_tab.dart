@@ -13,6 +13,7 @@ import '../utils/app_icons.dart';
 import '../utils/kid_routes.dart';
 import '../utils/l10n.dart';
 import '../widgets/bloom_mascot.dart';
+import '../widgets/cue_pill.dart';
 import '../widgets/kid_tap.dart';
 import '../widgets/play_components.dart';
 import '../widgets/animal_friend_art.dart';
@@ -44,16 +45,30 @@ class WorldTab extends ConsumerWidget {
               20 + MediaQuery.paddingOf(context).bottom,
             ),
             children: [
-              Text(s('Мій світ', 'My world'), style: DT.display),
-              const SizedBox(height: 8),
-              Text(
-                s(
-                  'Тут живуть твої маленькі відкриття.',
-                  'A home for your little discoveries.',
+              // On a frosted plate: the title and its line used to lie
+              // straight on the painted clouds, and the line could not be
+              // read.
+              Align(
+                alignment: Alignment.centerLeft,
+                child: CuePill(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(s('Мій світ', 'My world'), style: DT.h1),
+                      const SizedBox(height: 2),
+                      Text(
+                        s(
+                          'Тут живуть твої маленькі відкриття.',
+                          'A home for your little discoveries.',
+                        ),
+                        style: DT.body.copyWith(color: DT.textPrimary),
+                      ),
+                    ],
+                  ),
                 ),
-                style: DT.body,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               if (journal.isLoading || packs.isLoading)
                 const Center(child: CircularProgressIndicator())
               else if (journal.hasError || packs.hasError)

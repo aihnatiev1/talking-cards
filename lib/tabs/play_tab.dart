@@ -361,13 +361,32 @@ class _PlayTabState extends ConsumerState<PlayTab> {
         child: Row(
           children: [
             Expanded(child: Text(s('Паки карток', 'Card packs'), style: DT.h2)),
-            TextButton(
+            // A real button — a white pill with the cards picture — not a
+            // 16 pt word that only a reader would know to tap.
+            KidTap(
               key: const ValueKey('home-all-packs'),
-              style: TextButton.styleFrom(minimumSize: const Size(72, 40)),
-              onPressed: () =>
-                  ref.read(homeDestinationProvider.notifier).state =
-                      HomeDestination.cards,
-              child: Text(s('Усі', 'All')),
+              onTap: () => ref.read(homeDestinationProvider.notifier).state =
+                  HomeDestination.cards,
+              child: Container(
+                constraints: const BoxConstraints(minWidth: 96, minHeight: 48),
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                decoration: BoxDecoration(
+                  color: DT.surfaceWhite,
+                  borderRadius: BorderRadius.circular(DT.rLg),
+                  boxShadow: DT.shadowSoft(DT.brand),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const AppArt('cards', size: 30),
+                    const SizedBox(width: 6),
+                    Text(
+                      s('Усі', 'All'),
+                      style: DT.tileTitle.copyWith(color: DT.brand),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
