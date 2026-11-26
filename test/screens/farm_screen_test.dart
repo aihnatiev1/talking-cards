@@ -106,8 +106,8 @@ void main() {
         rewards: const {},
         withLocked: true,
       );
-      expect(animals, hasLength(11));
-      expect(animals.where((a) => a.locked), hasLength(6));
+      expect(animals, hasLength(12));
+      expect(animals.where((a) => a.locked), hasLength(7));
     });
 
     test(
@@ -123,16 +123,16 @@ void main() {
       },
     );
 
-    test('with Pro: all eleven awake', () {
+    test('with Pro: all twelve awake', () {
       final animals = meadowAnimals(
         packs: [soundPack(locked: false)],
         rewards: const {},
         withLocked: true,
       );
-      expect(animals.where((a) => !a.locked), hasLength(11));
+      expect(animals.where((a) => !a.locked), hasLength(12));
     });
 
-    test('the real catalogues: all eleven on the Ukrainian farm; the '
+    test('the real catalogues: all twelve on the Ukrainian farm; the '
         'English one without the owl, whose English recording is pulled '
         '(hidden_cards_test) — no farm animal speaks with a pulled voice', () {
       Set<String> farm(String file) {

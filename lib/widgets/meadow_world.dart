@@ -50,7 +50,7 @@ class MeadowAnimal {
   String sound(bool isEn) => isEn ? soundEn : soundUk;
 }
 
-/// The eleven animals with a voice, in meadow order: the sound card's
+/// The twelve animals with a voice, in meadow order: the sound card's
 /// picture name and how the sound is written.
 const meadowVoices = <String, (String card, String uk, String en)>{
   'cat': ('ph_cat', 'няв-няв', 'meow'),
@@ -61,6 +61,7 @@ const meadowVoices = <String, (String card, String uk, String en)>{
   'chicken': ('ph_hen', 'ко-ко-ко', 'cluck'),
   'duck': ('ph_duck', 'кря-кря', 'quack'),
   'frog': ('ph_frog', 'ква-ква', 'ribbit'),
+  'bee': ('ph_bee', 'дзз-дзз', 'buzz'),
   'rooster': ('ph_rooster', 'ку-ку-рі-ку', 'cock-a-doodle-doo'),
   'bird': ('ph_bird', 'цвірінь', 'tweet'),
   'owl': ('ph_owl', 'пу-гу', 'hoo-hoo'),
@@ -75,7 +76,7 @@ const meadowFree = <String>{'cat', 'dog', 'cow', 'horse', 'pig'};
 /// With the animal-sound pack open (Pro) every animal is there. Without
 /// it: the five free ones, and every friend a lesson brought — and that
 /// friend has its voice even when the voice is in the paid pack, because
-/// the child earned it. Lesson friends come first and wear a star.
+/// the child earned it. Lesson friends come first.
 ///
 /// [withLocked] keeps the rest too, marked [MeadowAnimal.locked] — the farm
 /// shows every animal in its place and the locked ones asleep in grey.
@@ -142,6 +143,7 @@ class MeadowFriend extends StatelessWidget {
     required this.onTap,
     this.wiggles = 0,
     this.beckon = false,
+    this.cloudBelow = false,
   });
 
   final MeadowAnimal animal;
@@ -157,6 +159,10 @@ class MeadowFriend extends StatelessWidget {
 
   /// The riddle's hint after two misses: this one breathes big and glows.
   final bool beckon;
+
+  /// Its cloud under it, not over its head: for the animals at the very
+  /// top of the board, where a cloud above would be off the screen.
+  final bool cloudBelow;
 
   @override
   Widget build(BuildContext context) {
@@ -275,25 +281,22 @@ class MeadowFriend extends StatelessWidget {
                 ),
               ),
             ],
-            if (animal.earned)
-              const Positioned(
-                left: 4,
-                top: 4,
-                child: IgnorePointer(child: AppArtStar()),
-              ),
             // Above the head, centred: at the side it ran off the meadow's
             // edge for the animals nearest it.
             Positioned(
               left: -30,
               right: -30,
-              top: -34,
+              top: cloudBelow ? null : -34,
+              bottom: cloudBelow ? -34 : null,
               child: IgnorePointer(
                 child: Center(
                   child: AnimatedScale(
                     scale: cloud ? 1 : 0,
                     duration: policy.dur(DT.motion.successPop),
                     curve: Curves.easeOutBack,
-                    alignment: Alignment.bottomCenter,
+                    alignment: cloudBelow
+                        ? Alignment.topCenter
+                        : Alignment.bottomCenter,
                     child: _SoundCloud(text: animal.sound(isEn)),
                   ),
                 ),
@@ -331,18 +334,6 @@ class _Zzz extends StatelessWidget {
       color: DT.violet,
       shadows: const [Shadow(color: DT.surfaceWhite, blurRadius: 6)],
     ),
-  );
-}
-
-/// The small painted star on a lesson friend.
-class AppArtStar extends StatelessWidget {
-  const AppArtStar({super.key});
-  @override
-  Widget build(BuildContext context) => Image.asset(
-    'assets/images/icons/star.webp',
-    width: 30,
-    height: 30,
-    errorBuilder: (_, __, ___) => const SizedBox.square(dimension: 30),
   );
 }
 

@@ -30,11 +30,14 @@ import '../widgets/meadow_world.dart';
 /// row on the meadow, the front row by the pond and in the mud — placed so
 /// no two overlap.
 const farmSpots = <String, (double x, double y, double size)>{
-  'horse': (.38, .62, .25),
-  'cow': (.60, .62, .25),
+  'horse': (.33, .62, .25),
+  'cow': (.50, .62, .25),
+  // Over the flowers by the fence, a little up: a bee hovers.
+  'bee': (.67, .58, .20),
   'bird': (.62, .35, .16),
   'owl': (.79, .44, .19),
-  'chicken': (.10, .83, .21),
+  // Clear of the camera cut-out at the left edge, cloud and all.
+  'chicken': (.15, .83, .21),
   'dog': (.28, .83, .21),
   'cat': (.56, .83, .21),
   'rooster': (.76, .83, .21),
@@ -47,6 +50,10 @@ const farmSpots = <String, (double x, double y, double size)>{
 const farmBloom = (.21, .36, .18);
 
 /// The fish's patch of the pond, as fractions of the picture.
+/// The animals at the top of the picture, whose cloud would run off the
+/// screen above them: theirs hangs under them.
+const farmCloudBelow = {'bird', 'owl'};
+
 const farmPond = (left: .48, top: .82, right: .58, bottom: .99);
 
 /// A sound kept on one line: a word joiner after each hyphen, so
@@ -462,12 +469,14 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
             child: _FarmBoard(
               animals: animals,
               onTop: _cloud ?? _speaking,
+              fishOnTop: _fishWord != null,
               friend: (animal, phase) => MeadowFriend(
                 key: ValueKey('farm-${animal.key}'),
                 animal: animal,
                 isEn: s.isEn,
                 speaking: _speaking == animal.key,
                 cloud: _cloud == animal.key,
+                cloudBelow: farmCloudBelow.contains(animal.key),
                 hops: _hops[animal.key] ?? 0,
                 wiggles: _wiggles[animal.key] ?? 0,
                 beckon:
@@ -549,9 +558,18 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
             right: 0,
             child: SafeArea(
               left: false,
+              right: false,
               bottom: false,
               child: Padding(
-                padding: const EdgeInsets.only(top: 30, right: DT.sp8),
+                // Out in the tree's crown, not a strip beside it: only a
+                // little of the side inset is kept, enough for a thumb.
+                padding: EdgeInsets.only(
+                  top: 30,
+                  right: math.max(
+                    DT.sp8,
+                    MediaQuery.paddingOf(context).right - 24,
+                  ),
+                ),
                 child: Column(
                   children: [
                     _RoundButton(
@@ -601,6 +619,7 @@ class _FarmBoard extends StatelessWidget {
     required this.fish,
     required this.bloom,
     required this.line,
+    this.fishOnTop = false,
     this.onTop,
   });
 
@@ -615,6 +634,10 @@ class _FarmBoard extends StatelessWidget {
   /// The animal speaking: drawn over its neighbours, so its cloud is never
   /// hidden behind the one standing next to it.
   final String? onTop;
+
+  /// While the fish says its name: the pond over the animals, so its cloud
+  /// is not hidden behind the cat standing above it.
+  final bool fishOnTop;
   final Widget Function(MeadowAnimal animal, int phase) friend;
   final Widget fish;
 
@@ -631,6 +654,16 @@ class _FarmBoard extends StatelessWidget {
         final side = size * h;
         return Rect.fromLTWH(x * w - side / 2, top + y * h - side, side, side);
       }
+
+      // Keyed: moved over the animals and back, it keeps its jump.
+      final pond = Positioned(
+        key: const ValueKey('pond'),
+        left: farmPond.left * w,
+        top: top + farmPond.top * h,
+        width: (farmPond.right - farmPond.left) * w,
+        height: (farmPond.bottom - farmPond.top) * h,
+        child: fish,
+      );
 
       return Stack(
         clipBehavior: Clip.none,
@@ -657,13 +690,7 @@ class _FarmBoard extends StatelessWidget {
               child: line,
             ),
           ],
-          Positioned(
-            left: farmPond.left * w,
-            top: top + farmPond.top * h,
-            width: (farmPond.right - farmPond.left) * w,
-            height: (farmPond.bottom - farmPond.top) * h,
-            child: fish,
-          ),
+          if (!fishOnTop) pond,
           for (final (i, animal) in [
             ...animals.indexed.where((e) => e.$2.key != onTop),
             ...animals.indexed.where((e) => e.$2.key == onTop),
@@ -677,6 +704,7 @@ class _FarmBoard extends StatelessWidget {
                 rect: spot(x, y, size),
                 child: friend(animal, i),
               ),
+          if (fishOnTop) pond,
         ],
       );
     },

@@ -385,7 +385,7 @@ class _PlayTabState extends ConsumerState<PlayTab> {
 
     return [
       Padding(
-        padding: const EdgeInsets.only(top: 8, bottom: 4),
+        padding: const EdgeInsets.only(top: 0, bottom: 12),
         child: Row(
           children: [
             Expanded(child: Text(s('Паки карток', 'Card packs'), style: DT.h2)),

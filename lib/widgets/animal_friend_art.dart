@@ -33,6 +33,7 @@ class AnimalFriendArt extends StatelessWidget {
     'rooster',
     'bird',
     'owl',
+    'bee',
   };
 
   @override

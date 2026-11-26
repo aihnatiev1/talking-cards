@@ -136,14 +136,21 @@ class PlayTopic {
       'butterfly',
       'bee',
     ]),
+    PlayTopic(
+      'bee_voices',
+      'Дзз, бджілка!',
+      'Buzz, little bee!',
+      ['ph_bee', 'ph_pig', 'ph_cow'],
+      packIds: _sounds,
+      withSounds: true,
+    ),
   ];
 
   /// The lesson that brings the friend [key] (a farm animal), if one can be
   /// played with these [packs].
   static PlayTopic? bringing(String key, List<PackModel> packs) => all
       .where(
-        (t) =>
-            friendKey(t.images.first) == key && t.cards(packs).length == 3,
+        (t) => friendKey(t.images.first) == key && t.cards(packs).length == 3,
       )
       .firstOrNull;
 
