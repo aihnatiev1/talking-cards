@@ -1279,73 +1279,130 @@ class _BarnShelf extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = AppS(isEn);
-    return Container(
-      key: shelfKey,
-      height: art + DT.sp12,
-      decoration: BoxDecoration(
-        color: DT.surfaceWhite.withValues(alpha: .92),
-        borderRadius: BorderRadius.circular(DT.rXl),
-        border: Border.all(color: DT.outline, width: 2),
-        boxShadow: DT.shadowSoft(DT.peach),
+    // A clay plank, like the fence and the barn: the animals stand on it.
+    const plank = 18.0;
+    final board = Positioned(
+      left: 0,
+      right: 0,
+      bottom: 0,
+      height: plank,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(plank / 2),
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [DT.friendGold, DT.friendBrown, DT.friendBrownDark],
+            stops: [0, .35, 1],
+          ),
+          boxShadow: const [
+            BoxShadow(color: DT.friendBrownDark, offset: Offset(0, 4)),
+          ],
+        ),
       ),
-      child: animals.isEmpty
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: DT.sp16),
-                child: Text(
-                  s(
-                    'Тут відпочивають тваринки',
-                    'Animals rest here',
+    );
+    Widget item(MeadowAnimal a) => Draggable<String>(
+      key: ValueKey('barn-${a.key}'),
+      data: a.key,
+      // Down onto the farm; sideways still scrolls the shelf.
+      affinity: Axis.vertical,
+      feedback: SizedBox.square(
+        dimension: art,
+        child: AnimalFriendArt(animal: a.key),
+      ),
+      childWhenDragging: Opacity(
+        opacity: .3,
+        child: SizedBox.square(
+          dimension: art,
+          child: AnimalFriendArt(animal: a.key),
+        ),
+      ),
+      child: Semantics(
+        button: true,
+        label: a.card.sound,
+        child: KidTap(
+          onTap: () => onTap(a),
+          child: SizedBox.square(
+            dimension: art,
+            child: AnimalFriendArt(animal: a.key),
+          ),
+        ),
+      ),
+    );
+    return SizedBox(
+      key: shelfKey,
+      height: art + plank / 2 + 4,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          board,
+          if (animals.isEmpty)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: plank + 4,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DT.sp12,
+                    vertical: 6,
                   ),
-                  textAlign: TextAlign.center,
-                  style: DT.caption.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: DT.textSecondary,
+                  decoration: BoxDecoration(
+                    color: DT.surfaceWhite.withValues(alpha: .9),
+                    borderRadius: BorderRadius.circular(DT.rLg),
+                  ),
+                  child: Text(
+                    s('Тут відпочивають тваринки', 'Animals rest here'),
+                    textAlign: TextAlign.center,
+                    style: DT.caption.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: DT.textSecondary,
+                    ),
                   ),
                 ),
               ),
             )
-          : ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(
-                horizontal: DT.sp8,
-                vertical: 6,
-              ),
-              children: [
-                for (final a in animals)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    child: Draggable<String>(
-                      key: ValueKey('barn-${a.key}'),
-                      data: a.key,
-                      // Up onto the farm; sideways still scrolls the shelf.
-                      affinity: Axis.vertical,
-                      feedback: SizedBox.square(
-                        dimension: art,
-                        child: AnimalFriendArt(animal: a.key),
-                      ),
-                      childWhenDragging: Opacity(
-                        opacity: .3,
-                        child: SizedBox.square(
-                          dimension: art,
-                          child: AnimalFriendArt(animal: a.key),
-                        ),
-                      ),
-                      child: Semantics(
-                        button: true,
-                        label: a.card.sound,
-                        child: KidTap(
-                          onTap: () => onTap(a),
-                          child: SizedBox.square(
-                            dimension: art,
-                            child: AnimalFriendArt(animal: a.key),
-                          ),
-                        ),
+          else
+            Positioned.fill(
+              bottom: plank / 2,
+              // Soft ends instead of an animal cut in half when the shelf
+              // holds more than it shows.
+              child: ShaderMask(
+                blendMode: BlendMode.dstIn,
+                shaderCallback: (r) => const LinearGradient(
+                  colors: [
+                    Colors.transparent,
+                    Colors.black,
+                    Colors.black,
+                    Colors.transparent,
+                  ],
+                  stops: [0, .08, .92, 1],
+                ).createShader(r),
+                child: LayoutBuilder(
+                  builder: (context, box) => SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minWidth: box.maxWidth),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          for (final a in animals)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
+                              child: item(a),
+                            ),
+                        ],
                       ),
                     ),
                   ),
-              ],
+                ),
+              ),
             ),
+        ],
+      ),
     );
   }
 }

@@ -438,7 +438,7 @@ void main() {
       final shelf = tester.getRect(
         find.ancestor(
           of: find.byKey(const ValueKey('barn-hedgehog')),
-          matching: find.byType(ListView),
+          matching: find.byType(SingleChildScrollView),
         ),
       );
       for (final key in meadowVoices.keys) {
