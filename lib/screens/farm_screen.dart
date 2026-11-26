@@ -32,12 +32,12 @@ import '../widgets/meadow_world.dart';
 const farmSpots = <String, (double x, double y, double size)>{
   'horse': (.33, .62, .25),
   'cow': (.50, .62, .25),
-  // Over the flowers by the fence, a little up: a bee hovers.
-  'bee': (.67, .58, .20),
+  // By the fence, where the sheep stood.
+  'chicken': (.67, .58, .21),
   'bird': (.62, .35, .16),
   'owl': (.79, .44, .19),
   // Clear of the camera cut-out at the left edge, cloud and all.
-  'chicken': (.15, .83, .21),
+  'bee': (.15, .83, .20),
   'dog': (.28, .83, .21),
   'cat': (.56, .83, .21),
   'rooster': (.76, .83, .21),
