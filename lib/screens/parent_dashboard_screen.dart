@@ -256,7 +256,7 @@ class _OverviewTab extends ConsumerWidget {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: streak.unlockedRewards
+          children: streak.badges
               .map(
                 (e) => Container(
                   padding: const EdgeInsets.symmetric(

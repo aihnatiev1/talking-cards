@@ -19,6 +19,13 @@ class StreakState {
     this.celebratedRewards = const {},
   });
 
+  /// What the parent screens print for the rewards: the guests' emoji, not
+  /// the old sticker keys the rewards are stored under.
+  Set<String> get badges => {
+    for (final m in milestones)
+      if (unlockedRewards.contains(m.id)) m.badge,
+  };
+
   StreakState copyWith({
     int? currentStreak,
     String? lastActiveDate,

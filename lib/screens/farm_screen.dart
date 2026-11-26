@@ -72,10 +72,6 @@ FarmSpot? farmSpotOf(String key, FarmLayout layout) {
 const farmBloom = (.21, .36, .18);
 
 /// The fish's patch of the pond, as fractions of the picture.
-/// The animals at the top of the picture, whose cloud would run off the
-/// screen above them: theirs hangs under them.
-const farmCloudBelow = {'bird', 'owl'};
-
 const farmPond = (left: .48, top: .82, right: .58, bottom: .99);
 
 /// A sound kept on one line: a word joiner after each hyphen, so
@@ -146,12 +142,17 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
 
   /// The animal being carried across the farm, and where its feet are now.
   String? _dragKey;
+  FarmSpot? _dragFrom;
   FarmSpot? _dragAt;
   Offset? _dragPointer;
+
+  /// How far the finger went, in points: a short smear is still a tap.
+  Offset _dragTravel = Offset.zero;
 
   /// The barn's shelf of resting animals is open.
   bool _barnOpen = false;
   final _trayKey = GlobalKey();
+  final _barnKey = GlobalKey();
   final _boardKey = GlobalKey();
 
   int _turn = 0;
@@ -233,42 +234,92 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
   // ── Carrying animals ───────────────────────────────────
 
   void _dragStart(MeadowAnimal animal, FarmSpot from) {
-    _turn++;
-    AudioService.instance.stop();
-    FeedbackService.instance.event(FeedbackEvent.tap);
+    // One animal at a time: a second finger does not take it over.
+    if (_dragKey != null) return;
     setState(() {
       _dragKey = animal.key;
+      _dragFrom = from;
       _dragAt = from;
-      _speaking = null;
-      _cloud = null;
+      _dragTravel = Offset.zero;
     });
   }
 
-  void _dragMove(Offset deltaInPicture, Offset pointer) {
-    final at = _dragAt;
-    if (at == null) return;
+  void _dragMove(String key, Offset delta, Offset at) {
+    final from = _dragFrom;
+    if (key != _dragKey || from == null) return;
+    final wasCarried = !_isSmear(key, _dragTravel);
+    final travel = _dragTravel + delta;
+    final carried = !_isSmear(key, travel);
+    final box = _boardKey.currentContext?.findRenderObject() as RenderBox?;
+    final (w, h, _) = box != null && box.hasSize
+        ? _FarmBoard.geometry(box.size)
+        : (1.0, 1.0, 0.0);
     setState(() {
-      _dragAt = (x: at.x + deltaInPicture.dx, y: at.y + deltaInPicture.dy);
-      _dragPointer = pointer;
+      _dragTravel = travel;
+      _dragPointer = at;
+      // Until it is really carried it stays on its spot.
+      _dragAt = carried
+          ? (x: from.x + travel.dx / w, y: from.y + travel.dy / h)
+          : from;
     });
+    // Picked up for real: the farm goes quiet while it is carried.
+    if (carried && !wasCarried) {
+      _turn++;
+      AudioService.instance.stop();
+      FeedbackService.instance.event(FeedbackEvent.tap);
+      setState(() {
+        _speaking = null;
+        _cloud = null;
+      });
+    }
+  }
+
+  /// Under half the animal's height of travel: a toddler's smeared tap,
+  /// not a move.
+  bool _isSmear(String key, Offset travel) {
+    final box = _boardKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return travel.distance < 40;
+    final (_, h, _) = _FarmBoard.geometry(box.size);
+    return travel.distance < farmSizeOf(key) * h / 2;
   }
 
   void _dragEnd(MeadowAnimal animal) {
+    if (animal.key != _dragKey) return;
     final at = _dragAt;
     final pointer = _dragPointer;
+    final smear = _isSmear(animal.key, _dragTravel);
     setState(() {
       _dragKey = null;
+      _dragFrom = null;
       _dragAt = null;
       _dragPointer = null;
+      _dragTravel = Offset.zero;
     });
     if (at == null) return;
-    final layout = ref.read(farmLayoutProvider.notifier);
-    if (_barnOpen && pointer != null && _overTray(pointer)) {
-      _rest(animal);
+    if (smear) {
+      // It stays where it was and answers as to any tap.
+      _tap(animal);
       return;
     }
-    layout.place(animal.key, _fit(animal.key, at));
-    FeedbackService.instance.event(FeedbackEvent.tap);
+    if (pointer != null && _overBarn(pointer)) {
+      _rest(animal);
+    } else {
+      ref
+          .read(farmLayoutProvider.notifier)
+          .place(animal.key, _fit(animal.key, at));
+      FeedbackService.instance.event(FeedbackEvent.tap);
+    }
+    _carryDone();
+  }
+
+  /// After a carry the game goes on: a riddle asks again, a cheer that the
+  /// carry cut short ends as it would have.
+  void _carryDone() {
+    if (_cheering) {
+      _setMode(FarmMode.listen);
+    } else if (_mode == FarmMode.riddle && _asked != null) {
+      _askAgain();
+    }
   }
 
   /// Into the barn: it rests, and a riddle never asks for it.
@@ -278,10 +329,17 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
     if (_mode == FarmMode.riddle && _asked?.key == animal.key) _ask();
   }
 
-  bool _overTray(Offset global) {
-    final box = _trayKey.currentContext?.findRenderObject() as RenderBox?;
-    if (box == null || !box.hasSize) return false;
-    return (box.localToGlobal(Offset.zero) & box.size).contains(global);
+  /// Let go over the barn door — or over the open shelf — it rests.
+  bool _overBarn(Offset global) {
+    bool over(GlobalKey key) {
+      final box = key.currentContext?.findRenderObject() as RenderBox?;
+      if (box == null || !box.hasSize) return false;
+      return (box.localToGlobal(Offset.zero) & box.size)
+          .inflate(8)
+          .contains(global);
+    }
+
+    return over(_barnKey) || (_barnOpen && over(_trayKey));
   }
 
   /// Kept on the visible farm, whole enough to tap again.
@@ -311,7 +369,12 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
     if (animal == null) return;
     FeedbackService.instance.event(FeedbackEvent.correct);
     setState(() => _hops[key] = (_hops[key] ?? 0) + 1);
-    if (!animal.locked) _speak(animal);
+    // In a riddle its voice would answer the question for the child.
+    if (_cheering || (_mode == FarmMode.riddle && _asked != null)) {
+      _carryDone();
+    } else if (!animal.locked) {
+      _speak(animal);
+    }
   }
 
   void _toggleBarn() {
@@ -320,10 +383,7 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
     setState(() => _barnOpen = !_barnOpen);
     if (_barnOpen) {
       _say(
-        s(
-          'Перетягни тваринку на ферму!',
-          'Drag an animal onto the farm!',
-        ),
+        s('Перетягни тваринку на ферму!', 'Drag an animal onto the farm!'),
         BloomEmotion.wave,
         forHowLong: const Duration(seconds: 5),
       );
@@ -641,13 +701,13 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
                 onDragEnd: _dragEnd,
                 onTop: _dragKey ?? _cloud ?? _speaking,
                 fishOnTop: _fishWord != null,
-                friend: (animal, phase) => MeadowFriend(
+                friend: (animal, phase, cloudBelow) => MeadowFriend(
                   key: ValueKey('farm-${animal.key}'),
                   animal: animal,
                   isEn: s.isEn,
                   speaking: _speaking == animal.key,
                   cloud: _cloud == animal.key,
-                  cloudBelow: farmCloudBelow.contains(animal.key),
+                  cloudBelow: cloudBelow,
                   hops: _hops[animal.key] ?? 0,
                   wiggles: _wiggles[animal.key] ?? 0,
                   beckon:
@@ -737,6 +797,7 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
                   children: [
                     _RoundButton(
                       key: const ValueKey('farm-barn'),
+                      boxKey: _barnKey,
                       art: 'house',
                       label: s('Комора', 'Barn'),
                       on: _barnOpen,
@@ -760,7 +821,7 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
               right: 0,
               bottom: 0,
               child: _BarnShelf(
-                key: _trayKey,
+                shelfKey: _trayKey,
                 animals: resting,
                 isEn: s.isEn,
                 art: _shelfArt,
@@ -855,10 +916,10 @@ class _FarmBoard extends StatelessWidget {
   /// Where each one's feet are, as fractions of the picture.
   final Map<String, FarmSpot> spots;
 
-  /// Carrying an animal: picked up, moved by a delta in picture fractions
-  /// (with the finger's place on screen), let go.
+  /// Carrying an animal: picked up, moved by the finger (its delta in
+  /// points and its place on screen), let go.
   final void Function(MeadowAnimal animal) onDragStart;
-  final void Function(Offset delta, Offset pointer) onDragMove;
+  final void Function(String key, Offset delta, Offset at) onDragMove;
   final void Function(MeadowAnimal animal) onDragEnd;
 
   /// The picture's width and height on a board of [size], and how far down
@@ -882,8 +943,15 @@ class _FarmBoard extends StatelessWidget {
   /// While the fish says its name: the pond over the animals, so its cloud
   /// is not hidden behind the cat standing above it.
   final bool fishOnTop;
-  final Widget Function(MeadowAnimal animal, int phase) friend;
+
+  /// One animal, its breathing [phase], and whether its cloud hangs under
+  /// it — at the top of the screen a cloud above would be cut off.
+  final Widget Function(MeadowAnimal animal, int phase, bool cloudBelow) friend;
   final Widget fish;
+
+  /// Room a cloud needs above an animal's head; nearer the top of the
+  /// screen than this, its cloud hangs under it.
+  static const _cloudRoom = 40.0;
 
   /// The picture is 2752 × 1536.
   static const _aspect = 2752 / 1536;
@@ -933,8 +1001,13 @@ class _FarmBoard extends StatelessWidget {
             ),
           ],
           if (!fishOnTop) pond,
+          // Back to front, so one standing nearer is drawn over one further
+          // away; the speaking or carried one over everyone.
           for (final (i, animal) in [
-            ...animals.indexed.where((e) => e.$2.key != onTop),
+            ...(animals.indexed.where((e) => e.$2.key != onTop).toList()..sort(
+              (a, b) =>
+                  (spots[a.$2.key]?.y ?? 0).compareTo(spots[b.$2.key]?.y ?? 0),
+            )),
             ...animals.indexed.where((e) => e.$2.key == onTop),
           ])
             if (spots[animal.key] case (:final x, :final y))
@@ -947,13 +1020,15 @@ class _FarmBoard extends StatelessWidget {
                 // A tap is the animal's; a drag past the slop carries it.
                 child: GestureDetector(
                   onPanStart: (_) => onDragStart(animal),
-                  onPanUpdate: (d) => onDragMove(
-                    Offset(d.delta.dx / w, d.delta.dy / h),
-                    d.globalPosition,
-                  ),
+                  onPanUpdate: (d) =>
+                      onDragMove(animal.key, d.delta, d.globalPosition),
                   onPanEnd: (_) => onDragEnd(animal),
                   onPanCancel: () => onDragEnd(animal),
-                  child: friend(animal, i),
+                  child: friend(
+                    animal,
+                    i,
+                    spot(x, y, farmSizeOf(animal.key)).top < _cloudRoom,
+                  ),
                 ),
               ),
           if (fishOnTop) pond,
@@ -966,6 +1041,7 @@ class _FarmBoard extends StatelessWidget {
 class _RoundButton extends StatelessWidget {
   const _RoundButton({
     super.key,
+    this.boxKey,
     required this.art,
     required this.label,
     required this.on,
@@ -979,6 +1055,9 @@ class _RoundButton extends StatelessWidget {
   final Color color;
   final VoidCallback onTap;
 
+  /// For finding the button on screen (the barn door takes animals).
+  final Key? boxKey;
+
   @override
   Widget build(BuildContext context) => Semantics(
     button: true,
@@ -990,6 +1069,7 @@ class _RoundButton extends StatelessWidget {
         scale: on ? 1.06 : .94,
         duration: MotionPolicy.of(context).dur(DT.motion.selectionChange),
         child: AnimatedContainer(
+          key: boxKey,
           duration: MotionPolicy.of(context).dur(DT.motion.selectionChange),
           width: 76,
           height: 76,
@@ -1186,13 +1266,14 @@ class _NewDot extends StatelessWidget {
 /// farm; an animal dragged down onto the shelf rests here.
 class _BarnShelf extends StatelessWidget {
   const _BarnShelf({
-    super.key,
+    required this.shelfKey,
     required this.animals,
     required this.isEn,
     required this.art,
     required this.onTap,
   });
 
+  final Key shelfKey;
   final List<MeadowAnimal> animals;
   final bool isEn;
   final double art;
@@ -1204,6 +1285,7 @@ class _BarnShelf extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Container(
+        key: shelfKey,
         height: art + DT.sp24,
         margin: const EdgeInsets.symmetric(horizontal: 120),
         decoration: BoxDecoration(
