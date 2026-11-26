@@ -33,11 +33,11 @@ const farmSpots = <String, (double x, double y, double size)>{
   'horse': (.33, .62, .25),
   'cow': (.50, .62, .25),
   // By the fence, where the sheep stood.
-  'chicken': (.67, .58, .21),
+  'chicken': (.67, .61, .21),
   'bird': (.62, .35, .16),
   'owl': (.79, .44, .19),
   // Clear of the camera cut-out at the left edge, cloud and all.
-  'bee': (.15, .83, .20),
+  'bee': (.10, .88, .20),
   'dog': (.28, .83, .21),
   'cat': (.56, .83, .21),
   'rooster': (.76, .83, .21),
