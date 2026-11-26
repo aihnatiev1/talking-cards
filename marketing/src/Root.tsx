@@ -4,6 +4,7 @@ import { StoreOverview } from './StoreOverview';
 import { PlayFeatureGraphic, playFeatureSchema } from './PlayFeatureGraphic';
 import { StoreScreenshot, storeScreenshotSchema } from './StoreScreenshot';
 import { StoreScreenshotV3, storeScreenshotV3Schema } from './StoreScreenshotV3';
+import { StoreScreenshotV3Ipad, storeScreenshotV3IpadSchema } from './StoreScreenshotV3Ipad';
 import { TikTokPreview, tikTokSchema } from './TikTokPreview';
 
 // 30 seconds @ 30 fps = 900 frames — App Store Preview max length.
@@ -37,6 +38,14 @@ export const RemotionRoot: React.FC = () => {
         width={1290}
         height={2796}
         schema={storeScreenshotV3Schema}
+        defaultProps={{ locale: 'uk' as const, slot: 1 }}
+      />
+      <Still
+        id="StoreScreenshotV3Ipad"
+        component={StoreScreenshotV3Ipad}
+        width={2064}
+        height={2752}
+        schema={storeScreenshotV3IpadSchema}
         defaultProps={{ locale: 'uk' as const, slot: 1 }}
       />
       <Composition

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -187,6 +188,14 @@ void main() {
 
     // Last: the farm turns the phone on its side, and nothing may be shot
     // while it turns back. The cow talks — her cloud and open mouth.
+    // A tablet keeps whatever way it is held; held upright the farm is
+    // mostly sky, so for its picture the tablet is turned on its side.
+    final context = tester.element(find.byType(MaterialApp).first);
+    if (MediaQuery.sizeOf(context).shortestSide >= 600) {
+      SystemChrome.setPreferredOrientations(const [
+        DeviceOrientation.landscapeLeft,
+      ]);
+    }
     nav.push(MaterialPageRoute<void>(builder: (_) => const FarmScreen()));
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(seconds: 2)),
