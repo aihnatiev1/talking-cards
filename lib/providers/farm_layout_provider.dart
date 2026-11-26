@@ -9,11 +9,10 @@ import '../services/profile_service.dart';
 /// the middle of its feet.
 typedef FarmSpot = ({double x, double y});
 
-/// The child's own farm: who they moved where, and who rests in the barn.
+/// The child's own farm: who they moved where.
 ///
-/// Only what the child changed is kept. An animal with no entry stands in
-/// its home spot (the farm's own twelve) or waits in the barn (a guest the
-/// streak just brought); an entry of `null` means «in the barn».
+/// Only what the child changed is kept; an animal with no entry stands in
+/// its home spot.
 class FarmLayout {
   const FarmLayout([this.places = const {}]);
 
@@ -21,7 +20,7 @@ class FarmLayout {
 
   bool has(String key) => places.containsKey(key);
 
-  /// The child's spot for [key], or null when it is in the barn.
+  /// The child's spot for [key], or null when it was never moved.
   FarmSpot? spotOf(String key) => places[key];
 }
 
@@ -59,9 +58,6 @@ class FarmLayoutNotifier extends StateNotifier<FarmLayout> {
   /// The child put [key] down at [spot].
   Future<void> place(String key, FarmSpot spot) =>
       _set({...state.places, key: spot});
-
-  /// The child took [key] into the barn.
-  Future<void> rest(String key) => _set({...state.places, key: null});
 
   Future<void> _set(Map<String, FarmSpot?> places) async {
     state = FarmLayout(places);

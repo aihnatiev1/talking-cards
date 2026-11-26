@@ -87,7 +87,7 @@ class StatsScreen extends ConsumerWidget {
                       .fold<int>(0, (s, e) => s + e.value),
                   totalCards: packs.fold<int>(0, (s, p) => s + p.cards.length),
                   streak: streak.currentStreak,
-                  badges: streak.badges,
+                  badges: streak.unlockedRewards,
                   isEn: ref.read(languageProvider) == 'en',
                 );
               },

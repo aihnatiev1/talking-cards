@@ -67,17 +67,6 @@ const meadowVoices = <String, (String card, String uk, String en)>{
   'owl': ('ph_owl', 'пу-гу', 'hoo-hoo'),
 };
 
-/// The guests a streak brings to the farm ([Milestone.guest]): the drawn
-/// card that says their name, and their voice card in the sound pack when
-/// there is one (only the bear has a recording yet).
-const farmGuestVoices =
-    <String, (String drawn, String? voice, String uk, String en)>{
-      'hedgehog': ('hedgehog', null, '', ''),
-      'fox': ('lisichka', null, '', ''),
-      'bear': ('bear', 'ph_bear', 'р-р-р', 'grr'),
-      'squirrel': ('bilochka', null, '', ''),
-    };
-
 /// The five that live on the meadow from the start — the animal-sound
 /// pack's free preview.
 const meadowFree = <String>{'cat', 'dog', 'cow', 'horse', 'pig'};
@@ -95,7 +84,6 @@ List<MeadowAnimal> meadowAnimals({
   required List<PackModel> packs,
   required Set<String> rewards,
   bool withLocked = false,
-  Set<String> guests = const {},
 }) {
   final soundPack = packs
       .where((p) => p.id == 'animal_sounds' || p.id == 'en_animal_sounds')
@@ -134,37 +122,6 @@ List<MeadowAnimal> meadowAnimals({
         soundEn: voice == null ? card.sound.toLowerCase() : en,
         earned: isEarned,
         locked: locked,
-        hasVoice: voice != null,
-      ),
-    );
-  }
-  // The streak's guests: always awake — the child earned them by coming
-  // back. With no recording of its own a guest says its name, and its
-  // cloud says the name too.
-  final drawn = packs
-      .where((p) => p.id == 'animals' || p.id == 'en_animals')
-      .expand((p) => p.cards)
-      .toList();
-  for (final key in guests) {
-    final entry = farmGuestVoices[key];
-    if (entry == null) continue;
-    final (image, voiceImage, uk, en) = entry;
-    final voice = voiceImage == null
-        ? null
-        : soundPack.cards
-              .where((c) => c.image == voiceImage && c.audioKey != null)
-              .firstOrNull;
-    final card =
-        voice ??
-        drawn.where((c) => c.image == image && c.audioKey != null).firstOrNull;
-    if (card == null) continue;
-    final name = card.sound.toLowerCase();
-    animals.add(
-      MeadowAnimal(
-        key: key,
-        card: card,
-        soundUk: voice == null ? name : uk,
-        soundEn: voice == null ? name : en,
         hasVoice: voice != null,
       ),
     );

@@ -22,11 +22,9 @@ Future<void> showStreakMilestone(
   final m = milestone;
   final daysLabel = isEn ? (m.days == 1 ? 'day' : 'days') : _ukDaysWord(m.days);
   final title = isEn ? '${m.days}-day streak!' : 'Серія ${m.days} $daysLabel!';
-  // The prize is a guest on the farm, said in words a parent reads out.
-  final guest = m.name(isEn);
-  final subtitle = isEn
-      ? 'A ${guest.toLowerCase()} came to the farm!'
-      : '${childName.isNotEmpty ? '$childName, н' : 'Н'}а ферму прийшов гість — ${guest.toLowerCase()}!';
+  final subtitle = childName.isNotEmpty
+      ? (isEn ? 'Awesome job, $childName!' : 'Молодець, $childName!')
+      : (isEn ? 'Awesome job!' : 'Молодець!');
 
   await celebrate(
     context,
@@ -34,7 +32,7 @@ Future<void> showStreakMilestone(
     isEn: isEn,
     title: title,
     subtitle: subtitle,
-    badge: m.badge,
+    badge: m.id,
     accent: DT.streakOrange,
   );
   onCelebrated();

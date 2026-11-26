@@ -98,8 +98,8 @@ class WorldTab extends ConsumerWidget {
                         color: DT.mintTint,
                         title: s('Мої скарби', 'My treasures'),
                         hint: s(
-                          'Слова й гості ферми, які ти зібрав',
-                          'Words and farm guests you collected',
+                          'Слова й наліпки, які ти зібрав',
+                          'Words and stickers you collected',
                         ),
                         onTap: () {
                           AudioService.instance.stop();

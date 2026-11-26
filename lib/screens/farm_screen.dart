@@ -10,7 +10,6 @@ import '../providers/language_provider.dart';
 import '../providers/farm_layout_provider.dart';
 import '../providers/packs_provider.dart';
 import '../providers/play_session_provider.dart';
-import '../providers/streak_provider.dart';
 import '../services/audio_service.dart';
 import '../services/feedback_service.dart';
 import '../utils/app_icons.dart';
@@ -20,7 +19,6 @@ import '../utils/game_state_mixin.dart';
 import '../utils/kid_routes.dart';
 import '../utils/l10n.dart';
 import '../utils/motion.dart';
-import '../widgets/animal_friend_art.dart';
 import '../widgets/bloom_mascot.dart';
 import '../widgets/cue_pill.dart';
 import '../widgets/kid_screen.dart';
@@ -49,23 +47,13 @@ const farmSpots = <String, (double x, double y, double size)>{
   'pig': (.89, .97, .24),
 };
 
-/// How big each streak guest stands, as for [farmSpots]. Guests have no
-/// home spot: they wait in the barn until the child puts them down.
-const farmGuestSize = <String, double>{
-  'hedgehog': .17,
-  'fox': .21,
-  'bear': .24,
-  'squirrel': .20,
-};
+double farmSizeOf(String key) => farmSpots[key]?.$3 ?? .2;
 
-double farmSizeOf(String key) => farmSpots[key]?.$3 ?? farmGuestSize[key] ?? .2;
-
-/// Where [key] stands for this [layout]: the child's spot, its home spot,
-/// or null — in the barn. A guest with no entry is in the barn.
+/// Where [key] stands for this [layout]: where the child put it, else its
+/// home spot.
 FarmSpot? farmSpotOf(String key, FarmLayout layout) {
-  if (layout.has(key)) return layout.spotOf(key);
   final home = farmSpots[key];
-  return home == null ? null : (x: home.$1, y: home.$2);
+  return layout.spotOf(key) ?? (home == null ? null : (x: home.$1, y: home.$2));
 }
 
 /// Bloom's seat on the barn roof: feet, size — as for the animals.
@@ -144,15 +132,10 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
   String? _dragKey;
   FarmSpot? _dragFrom;
   FarmSpot? _dragAt;
-  Offset? _dragPointer;
 
   /// How far the finger went, in points: a short smear is still a tap.
   Offset _dragTravel = Offset.zero;
 
-  /// The barn's shelf of resting animals is open.
-  bool _barnOpen = false;
-  final _trayKey = GlobalKey();
-  final _barnKey = GlobalKey();
   final _boardKey = GlobalKey();
 
   int _turn = 0;
@@ -209,26 +192,11 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
     super.dispose();
   }
 
-  /// Everyone the child has: the farm's twelve and the streak's guests.
-  List<MeadowAnimal> _everyone() {
+  List<MeadowAnimal> _animals() {
     final packs = ref.read(packsProvider).valueOrNull ?? const [];
     final rewards =
         ref.read(playSessionProvider).valueOrNull?.rewards ?? const <String>{};
-    return meadowAnimals(
-      packs: packs,
-      rewards: rewards,
-      withLocked: true,
-      guests: farmGuestsOf(ref.read(streakProvider)),
-    );
-  }
-
-  /// Those standing on the farm — the ones that play and can be asked for.
-  List<MeadowAnimal> _animals() {
-    final layout = ref.read(farmLayoutProvider);
-    return [
-      for (final a in _everyone())
-        if (farmSpotOf(a.key, layout) != null) a,
-    ];
+    return meadowAnimals(packs: packs, rewards: rewards, withLocked: true);
   }
 
   // ── Carrying animals ───────────────────────────────────
@@ -256,7 +224,6 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
         : (1.0, 1.0, 0.0);
     setState(() {
       _dragTravel = travel;
-      _dragPointer = at;
       // Until it is really carried it stays on its spot.
       _dragAt = carried
           ? (x: from.x + travel.dx / w, y: from.y + travel.dy / h)
@@ -286,13 +253,11 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
   void _dragEnd(MeadowAnimal animal) {
     if (animal.key != _dragKey) return;
     final at = _dragAt;
-    final pointer = _dragPointer;
     final smear = _isSmear(animal.key, _dragTravel);
     setState(() {
       _dragKey = null;
       _dragFrom = null;
       _dragAt = null;
-      _dragPointer = null;
       _dragTravel = Offset.zero;
     });
     if (at == null) return;
@@ -301,14 +266,10 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
       _tap(animal);
       return;
     }
-    if (pointer != null && _overBarn(pointer)) {
-      _rest(animal);
-    } else {
-      ref
-          .read(farmLayoutProvider.notifier)
-          .place(animal.key, _fit(animal.key, at));
-      FeedbackService.instance.event(FeedbackEvent.tap);
-    }
+    ref
+        .read(farmLayoutProvider.notifier)
+        .place(animal.key, _fit(animal.key, at));
+    FeedbackService.instance.event(FeedbackEvent.tap);
     _carryDone();
   }
 
@@ -320,26 +281,6 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
     } else if (_mode == FarmMode.riddle && _asked != null) {
       _askAgain();
     }
-  }
-
-  /// Into the barn: it rests, and a riddle never asks for it.
-  void _rest(MeadowAnimal animal) {
-    ref.read(farmLayoutProvider.notifier).rest(animal.key);
-    FeedbackService.instance.event(FeedbackEvent.bubblePop);
-    if (_mode == FarmMode.riddle && _asked?.key == animal.key) _ask();
-  }
-
-  /// Let go over the barn door — or over the open shelf — it rests.
-  bool _overBarn(Offset global) {
-    bool over(GlobalKey key) {
-      final box = key.currentContext?.findRenderObject() as RenderBox?;
-      if (box == null || !box.hasSize) return false;
-      return (box.localToGlobal(Offset.zero) & box.size)
-          .inflate(8)
-          .contains(global);
-    }
-
-    return over(_barnKey) || (_barnOpen && over(_trayKey));
   }
 
   /// Kept on the visible farm, whole enough to tap again.
@@ -354,34 +295,6 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
       x: at.x.clamp(halfW, 1 - halfW),
       y: at.y.clamp(visibleTop + size * .8, 1.0),
     );
-  }
-
-  /// Out of the barn and onto the farm where the child let go of it: the
-  /// shelf's picture is [art] wide, its feet at its bottom middle.
-  void _arrive(String key, Offset artTopLeft, double art) {
-    final box = _boardKey.currentContext?.findRenderObject() as RenderBox?;
-    if (box == null || !box.hasSize) return;
-    final (w, h, top) = _FarmBoard.geometry(box.size);
-    final feet = box.globalToLocal(artTopLeft + Offset(art / 2, art * .95));
-    final spot = _fit(key, (x: feet.dx / w, y: (feet.dy - top) / h));
-    ref.read(farmLayoutProvider.notifier).place(key, spot);
-    final animal = _everyone().where((a) => a.key == key).firstOrNull;
-    if (animal == null) return;
-    FeedbackService.instance.event(FeedbackEvent.correct);
-    setState(() => _hops[key] = (_hops[key] ?? 0) + 1);
-    // In a riddle its voice would answer the question for the child.
-    if (_cheering || (_mode == FarmMode.riddle && _asked != null)) {
-      _carryDone();
-    } else if (!animal.locked) {
-      _speak(animal);
-    }
-  }
-
-  void _toggleBarn() {
-    FeedbackService.instance.event(FeedbackEvent.tap);
-    setState(() => _barnOpen = !_barnOpen);
-    // The shelf stands where Bloom's line does: his line waits.
-    _say(null, _barnOpen ? BloomEmotion.wave : BloomEmotion.idle);
   }
 
   void _say(String? line, BloomEmotion emotion, {Duration? forHowLong}) {
@@ -653,26 +566,15 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
     // Rebuild when the catalogue or the friends change (a purchase, say).
     ref.watch(packsProvider);
     ref.watch(playSessionProvider);
-    ref.watch(streakProvider);
     final layout = ref.watch(farmLayoutProvider);
-    final everyone = _everyone();
-    final animals = [
-      for (final a in everyone)
-        if (farmSpotOf(a.key, layout) != null) a,
-    ];
-    final resting = [
-      for (final a in everyone)
-        if (farmSpotOf(a.key, layout) == null) a,
-    ];
-    // A guest the child has not met yet: never put down, never rested.
-    final newGuest = resting.any((a) => !layout.has(a.key));
+    final animals = _animals();
     final spots = <String, FarmSpot>{
       for (final a in animals) a.key: farmSpotOf(a.key, layout)!,
       if ((_dragKey, _dragAt) case (final String key, final FarmSpot at))
         key: at,
     };
     final policy = MotionPolicy.of(context);
-    final line = _barnOpen ? null : _line;
+    final line = _line;
     // The shell without its header band: on a phone on its side every
     // point of height belongs to the farm, so the close control sits on
     // the sky instead.
@@ -684,83 +586,80 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
         children: [
           // The farm across the whole screen, like the toy's board.
           Positioned.fill(
-            child: DragTarget<String>(
-              onAcceptWithDetails: (d) => _arrive(d.data, d.offset, _shelfArt),
-              builder: (context, _, __) => _FarmBoard(
-                key: _boardKey,
-                animals: animals,
-                spots: spots,
-                onDragStart: (animal) => _dragStart(animal, spots[animal.key]!),
-                onDragMove: _dragMove,
-                onDragEnd: _dragEnd,
-                onTop: _dragKey ?? _cloud ?? _speaking,
-                fishOnTop: _fishWord != null,
-                friend: (animal, phase, cloudBelow) => MeadowFriend(
-                  key: ValueKey('farm-${animal.key}'),
-                  animal: animal,
-                  isEn: s.isEn,
-                  speaking: _speaking == animal.key,
-                  cloud: _cloud == animal.key,
-                  cloudBelow: cloudBelow,
-                  hops: _hops[animal.key] ?? 0,
-                  wiggles: _wiggles[animal.key] ?? 0,
-                  beckon:
-                      _mode == FarmMode.riddle &&
-                      _asked?.key == animal.key &&
-                      _misses >= 2,
-                  phase: phase,
-                  onTap: () => _tap(animal),
-                ),
-                bloom: (size) => BloomMascot(
-                  size: size,
-                  state: BloomState(emotion: _bloom),
-                  interactive: false,
-                  semanticsLabel: s('Блум', 'Bloom'),
-                ),
-                line: SizedBox(
-                  width: _lineSlot,
-                  child: AnimatedSwitcher(
-                    duration: policy.dur(DT.motion.selectionChange),
-                    child: line == null
-                        ? const SizedBox.shrink()
-                        : Align(
-                            key: ValueKey(line),
-                            alignment: Alignment.topLeft,
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 6),
-                              child: Semantics(
-                                liveRegion: true,
-                                child: CueBubble(
-                                  tailRight: false,
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Flexible(
-                                        child: Text(
-                                          line,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: DT.caption.copyWith(
-                                            fontSize: 16,
-                                            height: 1.2,
-                                            fontWeight: FontWeight.w800,
-                                            color: DT.textPrimary,
-                                          ),
+            child: _FarmBoard(
+              key: _boardKey,
+              animals: animals,
+              spots: spots,
+              onDragStart: (animal) => _dragStart(animal, spots[animal.key]!),
+              onDragMove: _dragMove,
+              onDragEnd: _dragEnd,
+              onTop: _dragKey ?? _cloud ?? _speaking,
+              fishOnTop: _fishWord != null,
+              friend: (animal, phase, cloudBelow) => MeadowFriend(
+                key: ValueKey('farm-${animal.key}'),
+                animal: animal,
+                isEn: s.isEn,
+                speaking: _speaking == animal.key,
+                cloud: _cloud == animal.key,
+                cloudBelow: cloudBelow,
+                hops: _hops[animal.key] ?? 0,
+                wiggles: _wiggles[animal.key] ?? 0,
+                beckon:
+                    _mode == FarmMode.riddle &&
+                    _asked?.key == animal.key &&
+                    _misses >= 2,
+                phase: phase,
+                onTap: () => _tap(animal),
+              ),
+              bloom: (size) => BloomMascot(
+                size: size,
+                state: BloomState(emotion: _bloom),
+                interactive: false,
+                semanticsLabel: s('Блум', 'Bloom'),
+              ),
+              line: SizedBox(
+                width: _lineSlot,
+                child: AnimatedSwitcher(
+                  duration: policy.dur(DT.motion.selectionChange),
+                  child: line == null
+                      ? const SizedBox.shrink()
+                      : Align(
+                          key: ValueKey(line),
+                          alignment: Alignment.topLeft,
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Semantics(
+                              liveRegion: true,
+                              child: CueBubble(
+                                tailRight: false,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        line,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: DT.caption.copyWith(
+                                          fontSize: 16,
+                                          height: 1.2,
+                                          fontWeight: FontWeight.w800,
+                                          color: DT.textPrimary,
                                         ),
                                       ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
                           ),
-                  ),
+                        ),
                 ),
-                fish: MeadowPond(
-                  pops: _fishPops,
-                  onTap: _tapFish,
-                  word: _fishWord,
-                ),
+              ),
+              fish: MeadowPond(
+                pops: _fishPops,
+                onTap: _tapFish,
+                word: _fishWord,
               ),
             ),
           ),
@@ -777,56 +676,6 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
               ),
             ),
           ),
-          // The barn door: the shelf of animals resting, and the guests.
-          Positioned(
-            left: 0,
-            top: 92,
-            child: SafeArea(
-              right: false,
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.only(left: DT.sp8),
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    _RoundButton(
-                      key: const ValueKey('farm-barn'),
-                      boxKey: _barnKey,
-                      art: 'house',
-                      label: s('Комора', 'Barn'),
-                      on: _barnOpen,
-                      color: DT.peach,
-                      onTap: _toggleBarn,
-                    ),
-                    if (newGuest && !_barnOpen)
-                      const Positioned(
-                        right: 0,
-                        top: 0,
-                        child: _NewDot(key: ValueKey('farm-barn-new')),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          // Up in the sky between Bloom and the bird, where no animal
-          // stands: along the bottom it hid the frog and the duck.
-          if (_barnOpen)
-            Positioned(
-              top: DT.sp8,
-              left: MediaQuery.sizeOf(context).width * .27,
-              width: MediaQuery.sizeOf(context).width * .29,
-              child: _BarnShelf(
-                shelfKey: _trayKey,
-                animals: resting,
-                isEn: s.isEn,
-                art: _shelfArt,
-                onTap: (a) => AudioService.instance.playWordOnly(
-                  a.card.audioKey,
-                  a.card.sound,
-                ),
-              ),
-            ),
           // The toy's two big round buttons, in the apple tree at the
           // right — its crown and its trunk — where no animal lives.
           Positioned(
@@ -883,10 +732,6 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
 
   /// Width of Bloom's line beside him.
   static const _lineSlot = 230.0;
-
-  /// An animal's picture on the barn shelf.
-  /// A toddler's target: 72 dp (CLAUDE.md rule 1).
-  static const _shelfArt = 72.0;
 }
 
 /// The farm picture fitted to the width and standing on the bottom edge —
@@ -1038,7 +883,6 @@ class _FarmBoard extends StatelessWidget {
 class _RoundButton extends StatelessWidget {
   const _RoundButton({
     super.key,
-    this.boxKey,
     required this.art,
     required this.label,
     required this.on,
@@ -1052,9 +896,6 @@ class _RoundButton extends StatelessWidget {
   final Color color;
   final VoidCallback onTap;
 
-  /// For finding the button on screen (the barn door takes animals).
-  final Key? boxKey;
-
   @override
   Widget build(BuildContext context) => Semantics(
     button: true,
@@ -1066,7 +907,6 @@ class _RoundButton extends StatelessWidget {
         scale: on ? 1.06 : .94,
         duration: MotionPolicy.of(context).dur(DT.motion.selectionChange),
         child: AnimatedContainer(
-          key: boxKey,
           duration: MotionPolicy.of(context).dur(DT.motion.selectionChange),
           width: 76,
           height: 76,
@@ -1236,172 +1076,6 @@ class _AskButton extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// A small dot on the barn door: a new guest is waiting inside.
-class _NewDot extends StatelessWidget {
-  const _NewDot({super.key});
-
-  @override
-  Widget build(BuildContext context) => Container(
-    width: 22,
-    height: 22,
-    decoration: BoxDecoration(
-      color: DT.sunBurst,
-      shape: BoxShape.circle,
-      border: Border.all(color: DT.surfaceWhite, width: 3),
-      boxShadow: DT.shadowSoft(DT.sunBurst),
-    ),
-  );
-}
-
-/// The barn's shelf along the bottom: the animals resting and the guests
-/// the streak brought. A tap says the word; dragged up, it goes onto the
-/// farm; an animal dragged down onto the shelf rests here.
-class _BarnShelf extends StatelessWidget {
-  const _BarnShelf({
-    required this.shelfKey,
-    required this.animals,
-    required this.isEn,
-    required this.art,
-    required this.onTap,
-  });
-
-  final Key shelfKey;
-  final List<MeadowAnimal> animals;
-  final bool isEn;
-  final double art;
-  final void Function(MeadowAnimal animal) onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final s = AppS(isEn);
-    // A clay plank, like the fence and the barn: the animals stand on it.
-    const plank = 18.0;
-    final board = Positioned(
-      left: 0,
-      right: 0,
-      bottom: 0,
-      height: plank,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(plank / 2),
-          gradient: const LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [DT.friendGold, DT.friendBrown, DT.friendBrownDark],
-            stops: [0, .35, 1],
-          ),
-          boxShadow: const [
-            BoxShadow(color: DT.friendBrownDark, offset: Offset(0, 4)),
-          ],
-        ),
-      ),
-    );
-    Widget item(MeadowAnimal a) => Draggable<String>(
-      key: ValueKey('barn-${a.key}'),
-      data: a.key,
-      // Down onto the farm; sideways still scrolls the shelf.
-      affinity: Axis.vertical,
-      feedback: SizedBox.square(
-        dimension: art,
-        child: AnimalFriendArt(animal: a.key),
-      ),
-      childWhenDragging: Opacity(
-        opacity: .3,
-        child: SizedBox.square(
-          dimension: art,
-          child: AnimalFriendArt(animal: a.key),
-        ),
-      ),
-      child: Semantics(
-        button: true,
-        label: a.card.sound,
-        child: KidTap(
-          onTap: () => onTap(a),
-          child: SizedBox.square(
-            dimension: art,
-            child: AnimalFriendArt(animal: a.key),
-          ),
-        ),
-      ),
-    );
-    return SizedBox(
-      key: shelfKey,
-      height: art + plank / 2 + 4,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          board,
-          if (animals.isEmpty)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: plank + 4,
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: DT.sp12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: DT.surfaceWhite.withValues(alpha: .9),
-                    borderRadius: BorderRadius.circular(DT.rLg),
-                  ),
-                  child: Text(
-                    s('Тут відпочивають тваринки', 'Animals rest here'),
-                    textAlign: TextAlign.center,
-                    style: DT.caption.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: DT.textSecondary,
-                    ),
-                  ),
-                ),
-              ),
-            )
-          else
-            Positioned.fill(
-              bottom: plank / 2,
-              // Soft ends instead of an animal cut in half when the shelf
-              // holds more than it shows.
-              child: ShaderMask(
-                blendMode: BlendMode.dstIn,
-                shaderCallback: (r) => const LinearGradient(
-                  colors: [
-                    Colors.transparent,
-                    Colors.black,
-                    Colors.black,
-                    Colors.transparent,
-                  ],
-                  stops: [0, .08, .92, 1],
-                ).createShader(r),
-                child: LayoutBuilder(
-                  builder: (context, box) => SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(minWidth: box.maxWidth),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          for (final a in animals)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                              ),
-                              child: item(a),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
       ),
     );
   }

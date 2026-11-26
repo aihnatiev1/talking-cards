@@ -34,11 +34,6 @@ class AnimalFriendArt extends StatelessWidget {
     'bird',
     'owl',
     'bee',
-    // The streak's farm guests.
-    'hedgehog',
-    'fox',
-    'bear',
-    'squirrel',
   };
 
   @override

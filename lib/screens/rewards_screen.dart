@@ -227,7 +227,7 @@ class _NextGoalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = PackPalette.of(_pageAccent(milestone));
+    final palette = PackPalette.of(_pageAccent(milestone.sticker));
     // Never a full or an empty track: a child who has just started still
     // sees the road has a beginning.
     final progress = (streak / milestone.days).clamp(0.06, 0.94);
@@ -286,8 +286,8 @@ class _NextGoalCard extends StatelessWidget {
               // The prize at the end of the track: the paper shape of the
               // sticker that is about to become real — the same silhouette
               // the album page shows, so the two read as one promise.
-              _GuestArt(
-                guest: milestone.guest,
+              AppIconView(
+                milestone.sticker,
                 size: 56,
                 silhouette: palette.accent.withValues(alpha: 0.45),
                 semanticLabel: milestone.name(isEn),
@@ -304,50 +304,10 @@ class _NextGoalCard extends StatelessWidget {
 /// ([defaultColorOf]), except where that accent is a pale tint chosen for
 /// the drawing (the unicorn's coat) and would leave the page and its name
 /// without contrast.
-Color _pageAccent(Milestone m) => switch (m.guest) {
-  'hedgehog' => DT.mint,
-  'fox' => DT.peach,
-  'bear' => DT.sky,
-  _ => DT.violet,
+Color _pageAccent(AppIcon sticker) => switch (sticker) {
+  AppIcon.stickerUnicorn => DT.pink,
+  _ => defaultColorOf(sticker),
 };
-
-/// A farm guest in clay — or, not yet earned, its shape in one flat colour.
-class _GuestArt extends StatelessWidget {
-  const _GuestArt({
-    required this.guest,
-    required this.size,
-    required this.semanticLabel,
-    this.silhouette,
-  });
-  final String guest;
-  final double size;
-  final String semanticLabel;
-  final Color? silhouette;
-
-  @override
-  Widget build(BuildContext context) {
-    final shade = silhouette;
-    final art = Image.asset(
-      'assets/images/friends/$guest.webp',
-      width: size,
-      height: size,
-      fit: BoxFit.contain,
-      errorBuilder: (_, __, ___) => SizedBox.square(dimension: size),
-    );
-    return Semantics(
-      label: semanticLabel,
-      image: true,
-      child: ExcludeSemantics(
-        child: shade == null
-            ? art
-            : ColorFiltered(
-                colorFilter: ColorFilter.mode(shade, BlendMode.srcIn),
-                child: art,
-              ),
-      ),
-    );
-  }
-}
 
 /// One page of the album: the sticker (or its silhouette) and its name.
 ///
@@ -432,7 +392,7 @@ class _StickerPageState extends State<_StickerPage>
   @override
   Widget build(BuildContext context) {
     final m = widget.milestone;
-    final palette = PackPalette.of(_pageAccent(m));
+    final palette = PackPalette.of(_pageAccent(m.sticker));
     return KidTap(
       // The sticker itself is the sound (success row / quiet "not yet"),
       // so no tock piles on top of it.
@@ -468,10 +428,14 @@ class _StickerPageState extends State<_StickerPage>
                 final t = _bounce.value;
                 final pop = math.sin(t * math.pi);
                 final wave = math.sin(t * math.pi * 2);
-                final (tilt, slide, lift) = switch (m.guest) {
-                  'hedgehog' => (0.10 * wave, 0.0, -10.0 * pop),
-                  'fox' => (0.22 * math.sin(t * math.pi * 4), 0.0, 0.0),
-                  'bear' => (0.06 * wave, 10.0 * wave, 0.0),
+                final (tilt, slide, lift) = switch (m.sticker) {
+                  AppIcon.stickerUnicorn => (0.10 * wave, 0.0, -10.0 * pop),
+                  AppIcon.stickerDragon => (
+                    0.22 * math.sin(t * math.pi * 4),
+                    0.0,
+                    0.0,
+                  ),
+                  AppIcon.stickerRainbow => (0.06 * wave, 10.0 * wave, 0.0),
                   _ => (
                     0.14 * wave,
                     12.0 * math.sin(t * math.pi * 3),
@@ -487,14 +451,14 @@ class _StickerPageState extends State<_StickerPage>
                 );
               },
               child: widget.earned
-                  ? _GuestArt(
-                      guest: m.guest,
-                      size: 96,
+                  ? AppIconView(
+                      m.sticker,
+                      size: 72,
                       semanticLabel: m.name(widget.isEn),
                     )
-                  : _GuestArt(
-                      guest: m.guest,
-                      size: 96,
+                  : AppIconView(
+                      m.sticker,
+                      size: 72,
                       // The paper shape: dark enough to be an object, pale
                       // enough to read as "not here yet".
                       silhouette: DT.textMuted.withValues(alpha: 0.30),
