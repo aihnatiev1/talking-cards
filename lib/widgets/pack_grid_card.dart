@@ -65,7 +65,7 @@ class PackGridCard extends ConsumerStatefulWidget {
       crossAxisSpacing: 16,
       mainAxisSpacing: 18,
       mainAxisExtent:
-          math.min(tileWidth * (compact ? .75 : 1), 250) + titleHeight + 35,
+          math.min(tileWidth * (compact ? .70 : 1), 250) + titleHeight + 35,
     );
   }
 
