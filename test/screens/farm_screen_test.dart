@@ -434,6 +434,22 @@ void main() {
       await tester.pump();
       expect(find.byKey(const ValueKey('barn-hedgehog')), findsOneWidget);
       expect(find.byKey(const ValueKey('farm-barn-new')), findsNothing);
+      // The open shelf hides nobody — the frog and the duck included.
+      final shelf = tester.getRect(
+        find.ancestor(
+          of: find.byKey(const ValueKey('barn-hedgehog')),
+          matching: find.byType(ListView),
+        ),
+      );
+      for (final key in meadowVoices.keys) {
+        final animal = find.byKey(ValueKey('farm-$key'));
+        if (animal.evaluate().isEmpty) continue;
+        expect(
+          shelf.overlaps(tester.getRect(animal).deflate(8)),
+          isFalse,
+          reason: '$key is under the shelf',
+        );
+      }
       // A tap on the shelf says its name.
       await tester.tap(find.byKey(const ValueKey('barn-hedgehog')));
       await tester.pump();
@@ -450,7 +466,7 @@ void main() {
       await tester.pump();
       await tester.drag(
         find.byKey(const ValueKey('barn-hedgehog')),
-        const Offset(0, -160),
+        const Offset(0, 160),
       );
       await tester.pump();
       expect(find.byKey(const ValueKey('farm-hedgehog')), findsOneWidget);

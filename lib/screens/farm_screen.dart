@@ -379,15 +379,9 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
 
   void _toggleBarn() {
     FeedbackService.instance.event(FeedbackEvent.tap);
-    final s = AppS(ref.read(languageProvider) == 'en');
     setState(() => _barnOpen = !_barnOpen);
-    if (_barnOpen) {
-      _say(
-        s('Перетягни тваринку на ферму!', 'Drag an animal onto the farm!'),
-        BloomEmotion.wave,
-        forHowLong: const Duration(seconds: 5),
-      );
-    }
+    // The shelf stands where Bloom's line does: his line waits.
+    _say(null, _barnOpen ? BloomEmotion.wave : BloomEmotion.idle);
   }
 
   void _say(String? line, BloomEmotion emotion, {Duration? forHowLong}) {
@@ -678,7 +672,7 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
         key: at,
     };
     final policy = MotionPolicy.of(context);
-    final line = _line;
+    final line = _barnOpen ? null : _line;
     // The shell without its header band: on a phone on its side every
     // point of height belongs to the farm, so the close control sits on
     // the sky instead.
@@ -815,11 +809,13 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
               ),
             ),
           ),
+          // Up in the sky between Bloom and the bird, where no animal
+          // stands: along the bottom it hid the frog and the duck.
           if (_barnOpen)
             Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
+              top: DT.sp8,
+              left: MediaQuery.sizeOf(context).width * .27,
+              width: MediaQuery.sizeOf(context).width * .29,
               child: _BarnShelf(
                 shelfKey: _trayKey,
                 animals: resting,
@@ -889,7 +885,8 @@ class _FarmScreenState extends ConsumerState<FarmScreen> with GameStateMixin {
   static const _lineSlot = 230.0;
 
   /// An animal's picture on the barn shelf.
-  static const _shelfArt = 84.0;
+  /// A toddler's target: 72 dp (CLAUDE.md rule 1).
+  static const _shelfArt = 72.0;
 }
 
 /// The farm picture fitted to the width and standing on the bottom edge —
@@ -1282,79 +1279,73 @@ class _BarnShelf extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = AppS(isEn);
-    return SafeArea(
-      top: false,
-      child: Container(
-        key: shelfKey,
-        height: art + DT.sp24,
-        margin: const EdgeInsets.symmetric(horizontal: 120),
-        decoration: BoxDecoration(
-          color: DT.surfaceWhite.withValues(alpha: .92),
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(DT.rXl),
-          ),
-          border: Border.all(color: DT.outline, width: 2),
-          boxShadow: DT.shadowSoft(DT.peach),
-        ),
-        child: animals.isEmpty
-            ? Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: DT.sp16),
-                  child: Text(
-                    s(
-                      'Тут відпочивають тваринки. Перетягни сюди когось',
-                      'Animals rest here. Drag one down here',
-                    ),
-                    textAlign: TextAlign.center,
-                    style: DT.caption.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: DT.textSecondary,
-                    ),
+    return Container(
+      key: shelfKey,
+      height: art + DT.sp12,
+      decoration: BoxDecoration(
+        color: DT.surfaceWhite.withValues(alpha: .92),
+        borderRadius: BorderRadius.circular(DT.rXl),
+        border: Border.all(color: DT.outline, width: 2),
+        boxShadow: DT.shadowSoft(DT.peach),
+      ),
+      child: animals.isEmpty
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: DT.sp16),
+                child: Text(
+                  s(
+                    'Тут відпочивають тваринки',
+                    'Animals rest here',
+                  ),
+                  textAlign: TextAlign.center,
+                  style: DT.caption.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: DT.textSecondary,
                   ),
                 ),
-              )
-            : ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: DT.sp12,
-                  vertical: DT.sp12,
-                ),
-                children: [
-                  for (final a in animals)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
-                      child: Draggable<String>(
-                        key: ValueKey('barn-${a.key}'),
-                        data: a.key,
-                        // Up onto the farm; sideways still scrolls the shelf.
-                        affinity: Axis.vertical,
-                        feedback: SizedBox.square(
+              ),
+            )
+          : ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(
+                horizontal: DT.sp8,
+                vertical: 6,
+              ),
+              children: [
+                for (final a in animals)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    child: Draggable<String>(
+                      key: ValueKey('barn-${a.key}'),
+                      data: a.key,
+                      // Up onto the farm; sideways still scrolls the shelf.
+                      affinity: Axis.vertical,
+                      feedback: SizedBox.square(
+                        dimension: art,
+                        child: AnimalFriendArt(animal: a.key),
+                      ),
+                      childWhenDragging: Opacity(
+                        opacity: .3,
+                        child: SizedBox.square(
                           dimension: art,
                           child: AnimalFriendArt(animal: a.key),
                         ),
-                        childWhenDragging: Opacity(
-                          opacity: .3,
+                      ),
+                      child: Semantics(
+                        button: true,
+                        label: a.card.sound,
+                        child: KidTap(
+                          onTap: () => onTap(a),
                           child: SizedBox.square(
                             dimension: art,
                             child: AnimalFriendArt(animal: a.key),
                           ),
                         ),
-                        child: Semantics(
-                          button: true,
-                          label: a.card.sound,
-                          child: KidTap(
-                            onTap: () => onTap(a),
-                            child: SizedBox.square(
-                              dimension: art,
-                              child: AnimalFriendArt(animal: a.key),
-                            ),
-                          ),
-                        ),
                       ),
                     ),
-                ],
-              ),
-      ),
+                  ),
+              ],
+            ),
     );
   }
 }
