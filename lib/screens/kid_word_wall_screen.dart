@@ -7,6 +7,8 @@ import '../providers/language_provider.dart';
 import '../providers/packs_provider.dart';
 import '../providers/profile_provider.dart';
 import '../providers/srs_provider.dart';
+import '../providers/word_evidence_provider.dart';
+import '../tabs/play_tab.dart';
 import '../screens/rewards_screen.dart';
 import '../services/audio_service.dart';
 import '../utils/app_icons.dart';
@@ -18,7 +20,6 @@ import '../widgets/card_image.dart';
 import '../widgets/kid_screen.dart';
 import '../widgets/kid_tap.dart';
 import '../widgets/play_components.dart';
-import '../providers/home_tab_provider.dart';
 
 /// Which half of the treasure box is open.
 enum TreasureTab { words, stickers }
@@ -110,6 +111,7 @@ class _KidWordWallScreenState extends ConsumerState<KidWordWallScreen> {
 
   Widget _words(BuildContext context, bool isEn) {
     final srs = ref.watch(srsProvider);
+    final evidence = ref.watch(wordEvidenceProvider);
     final packsAsync = ref.watch(packsProvider);
     final profile = ref.watch(profileProvider);
     final s = AppS(isEn);
@@ -121,21 +123,32 @@ class _KidWordWallScreenState extends ConsumerState<KidWordWallScreen> {
       data: (packs) {
         // Flatten learned cards. Order: most recently reviewed first so new
         // additions surface at the top — kid sees "look, fresh ones!".
-        final orderedIds =
-            srs.cards.values
-                .where((c) => c.repetitions >= _learnedThreshold)
+        // A word is the child's once it was found by its name — in a
+        // lesson, «Вгадай», memory or «Повтори» — or a grown-up heard it
+        // said («Вийшло!»). Freshest first.
+        int lastDay(WordEvidence e) => e.recognizedDay > e.parentMarkedDay
+            ? e.recognizedDay
+            : e.parentMarkedDay;
+        final found =
+            evidence.entries
+                .where((e) => e.value.isRecognized || e.value.isParentMarked)
                 .toList()
-              ..sort((a, b) => b.nextReviewDate.compareTo(a.nextReviewDate));
+              ..sort((a, b) => lastDay(b.value).compareTo(lastDay(a.value)));
+        final orderedIds = <String>[
+          for (final e in found) e.key,
+          ...(srs.cards.values
+                  .where((c) => c.repetitions >= _learnedThreshold)
+                  .toList()
+                ..sort((a, b) => b.nextReviewDate.compareTo(a.nextReviewDate)))
+              .map((c) => c.cardId),
+        ];
         final cardLookup = <String, CardModel>{};
         for (final p in packs) {
           for (final c in p.cards) {
             cardLookup[c.id] = c;
           }
         }
-        final learned = orderedIds
-            .map((s) => cardLookup[s.cardId])
-            .whereType<CardModel>()
-            .toList();
+        final learned = {for (final id in orderedIds) ?cardLookup[id]}.toList();
 
         if (learned.isEmpty) {
           _hmmOnce();
@@ -209,8 +222,8 @@ class _KidWordWallScreenState extends ConsumerState<KidWordWallScreen> {
                   children: [
                     Text(
                       s(
-                        'Тут будуть твої скарби',
-                        'Your treasures will live here',
+                        'Тут живуть слова, які ти знайшов',
+                        'The words you found live here',
                       ),
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -221,8 +234,8 @@ class _KidWordWallScreenState extends ConsumerState<KidWordWallScreen> {
                     const SizedBox(height: 10),
                     Text(
                       s(
-                        'Грай — і слова та наліпки збиратимуться сюди!',
-                        'Play, and the words and stickers you earn collect here!',
+                        'Блум назве картинку — знайди її, і слово ляже сюди.',
+                        'Bloom names a picture — find it, and the word lands here.',
                       ),
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -238,11 +251,9 @@ class _KidWordWallScreenState extends ConsumerState<KidWordWallScreen> {
             const SizedBox(height: 20),
             PlayAction(
               label: s('Грати', 'Play'),
-              onPressed: () {
-                ref.read(homeDestinationProvider.notifier).state =
-                    HomeDestination.play;
-                Navigator.of(context).popUntil((r) => r.isFirst);
-              },
+              // Straight into a lesson, where words are found — not back to
+              // the home screen that leads to one.
+              onPressed: () => openNextPlayLesson(context, ref),
             ),
           ],
         ),

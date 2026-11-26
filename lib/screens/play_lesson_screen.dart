@@ -8,6 +8,7 @@ import '../providers/home_tab_provider.dart';
 import '../providers/language_provider.dart';
 import '../providers/play_session_provider.dart';
 import '../providers/profile_provider.dart';
+import '../providers/word_evidence_provider.dart';
 import '../services/audio_service.dart';
 import '../utils/design_tokens.dart';
 import '../utils/app_icons.dart';
@@ -196,6 +197,8 @@ class _PlayLessonScreenState extends ConsumerState<PlayLessonScreen>
         _correct = true;
         _feedback = s('Ось він!', 'You found it!');
       });
+      // Found by its name: the word goes into the treasure box («Слова»).
+      ref.read(wordEvidenceProvider.notifier).recordRecognized(target.id);
       await _say(chosen);
     } else {
       setState(
