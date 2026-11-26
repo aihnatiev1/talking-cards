@@ -50,7 +50,7 @@ class MeadowAnimal {
   String sound(bool isEn) => isEn ? soundEn : soundUk;
 }
 
-/// The twelve animals with a voice, in meadow order: the sound card's
+/// The eleven animals with a voice, in meadow order: the sound card's
 /// picture name and how the sound is written.
 const meadowVoices = <String, (String card, String uk, String en)>{
   'cat': ('ph_cat', 'няв-няв', 'meow'),
@@ -61,7 +61,6 @@ const meadowVoices = <String, (String card, String uk, String en)>{
   'chicken': ('ph_hen', 'ко-ко-ко', 'cluck'),
   'duck': ('ph_duck', 'кря-кря', 'quack'),
   'frog': ('ph_frog', 'ква-ква', 'ribbit'),
-  'sheep': ('ph_sheep', 'бе-е', 'baa'),
   'rooster': ('ph_rooster', 'ку-ку-рі-ку', 'cock-a-doodle-doo'),
   'bird': ('ph_bird', 'цвірінь', 'tweet'),
   'owl': ('ph_owl', 'пу-гу', 'hoo-hoo'),

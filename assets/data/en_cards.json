@@ -330,7 +330,7 @@
   },
   {
     "id": "en_animal_sounds",
-    "title": "Animal Sounds",
+    "title": "Animals & Sounds",
     "icon": "🔊",
     "color": "#00B894",
     "isLocked": true,
@@ -338,7 +338,7 @@
       {
         "id": "en_as01",
         "sound": "CAT",
-        "text": "The cat says meow!",
+        "text": "",
         "emoji": "🐱",
         "colorBg": "#FFF5E6",
         "colorAccent": "#F0B27A",
@@ -349,7 +349,7 @@
       {
         "id": "en_as02",
         "sound": "DOG",
-        "text": "The dog says woof!",
+        "text": "",
         "emoji": "🐕",
         "colorBg": "#FFF0E6",
         "colorAccent": "#E67E22",
@@ -360,7 +360,7 @@
       {
         "id": "en_as03",
         "sound": "COW",
-        "text": "The cow says moo!",
+        "text": "",
         "emoji": "🐄",
         "colorBg": "#F0FFF0",
         "colorAccent": "#58D68D",
@@ -371,7 +371,7 @@
       {
         "id": "en_as04",
         "sound": "HORSE",
-        "text": "The horse says neigh!",
+        "text": "",
         "emoji": "🐴",
         "colorBg": "#FFF5E6",
         "colorAccent": "#D4A373",
@@ -382,7 +382,7 @@
       {
         "id": "en_as05",
         "sound": "PIG",
-        "text": "The pig says oink!",
+        "text": "",
         "emoji": "🐷",
         "colorBg": "#FFE6F0",
         "colorAccent": "#FF85A1",
@@ -391,20 +391,9 @@
         "audio": "en_snd_pig"
       },
       {
-        "sound": "SHEEP",
-        "transcription": "[ʃiːp]",
-        "colorBg": "#F5F5F0",
-        "colorAccent": "#B8B8A8",
-        "id": "en_as06",
-        "text": "The sheep says baa!",
-        "emoji": "🐑",
-        "image": "ph_sheep",
-        "audio": "en_snd_sheep"
-      },
-      {
         "id": "en_as07",
         "sound": "CHICKEN",
-        "text": "The hen says cluck!",
+        "text": "",
         "emoji": "🐔",
         "colorBg": "#FFFFF0",
         "colorAccent": "#F4D03F",
@@ -415,7 +404,7 @@
       {
         "id": "en_as08",
         "sound": "ROOSTER",
-        "text": "The rooster says cock-a-doodle-doo!",
+        "text": "",
         "emoji": "🐓",
         "colorBg": "#FFE6E6",
         "colorAccent": "#E74C3C",
@@ -426,7 +415,7 @@
       {
         "id": "en_as09",
         "sound": "DUCK",
-        "text": "The duck says quack!",
+        "text": "",
         "emoji": "🦆",
         "colorBg": "#E6FFFF",
         "colorAccent": "#45B7D1",
@@ -437,7 +426,7 @@
       {
         "id": "en_as10",
         "sound": "FROG",
-        "text": "The frog says ribbit!",
+        "text": "",
         "emoji": "🐸",
         "colorBg": "#E6FFE6",
         "colorAccent": "#4CAF50",
@@ -448,7 +437,7 @@
       {
         "id": "en_as11",
         "sound": "BIRD",
-        "text": "The bird says tweet!",
+        "text": "",
         "emoji": "🐦",
         "colorBg": "#F0FFFF",
         "colorAccent": "#76D7EA",
@@ -460,7 +449,7 @@
         "id": "en_as12",
         "hidden": true,
         "sound": "OWL",
-        "text": "The owl says hoo-hoo!",
+        "text": "",
         "emoji": "🦉",
         "colorBg": "#F5F0E6",
         "colorAccent": "#8B7355",
@@ -471,7 +460,7 @@
       {
         "id": "en_as13",
         "sound": "WOLF",
-        "text": "The wolf says ow-oooo!",
+        "text": "",
         "emoji": "🐺",
         "colorBg": "#F0F0F5",
         "colorAccent": "#7F8C8D",
@@ -482,7 +471,7 @@
       {
         "id": "en_as14",
         "sound": "BEE",
-        "text": "The bee says buzz!",
+        "text": "",
         "emoji": "🐝",
         "colorBg": "#FFFFF0",
         "colorAccent": "#F5B041",
@@ -493,7 +482,7 @@
       {
         "id": "en_as15",
         "sound": "LION",
-        "text": "The lion says roar!",
+        "text": "",
         "emoji": "🦁",
         "colorBg": "#FFFFF0",
         "colorAccent": "#DAA520",
@@ -507,7 +496,7 @@
         "colorBg": "#FFF3E0",
         "colorAccent": "#E67E22",
         "id": "en_as16",
-        "text": "The tiger says grr!",
+        "text": "",
         "emoji": "🐯",
         "image": "ph_tiger",
         "audio": "en_snd_tiger"
@@ -515,7 +504,7 @@
       {
         "id": "en_as17",
         "sound": "BEAR",
-        "text": "The bear says grr!",
+        "text": "",
         "emoji": "🐻",
         "colorBg": "#FFF0E6",
         "colorAccent": "#CD853F",
@@ -526,7 +515,7 @@
       {
         "id": "en_as18",
         "sound": "ELEPHANT",
-        "text": "The elephant says toot!",
+        "text": "",
         "emoji": "🐘",
         "colorBg": "#F0F0F5",
         "colorAccent": "#95A5A6",
@@ -537,7 +526,7 @@
       {
         "id": "en_as19",
         "sound": "MONKEY",
-        "text": "The monkey says ooh-ooh!",
+        "text": "",
         "emoji": "🐒",
         "colorBg": "#FFF5E6",
         "colorAccent": "#A0522D",
@@ -548,7 +537,7 @@
       {
         "id": "en_as20",
         "sound": "DEER",
-        "text": "The deer calls in the forest!",
+        "text": "",
         "emoji": "🦌",
         "colorBg": "#FFF5E6",
         "colorAccent": "#A0522D",
@@ -559,7 +548,7 @@
       {
         "id": "en_as21",
         "sound": "BUNNY",
-        "text": "The bunny squeaks!",
+        "text": "",
         "emoji": "🐰",
         "colorBg": "#F5F0FF",
         "colorAccent": "#A78BFA",
@@ -570,7 +559,7 @@
       {
         "id": "en_as22",
         "sound": "DOLPHIN",
-        "text": "The dolphin whistles and clicks!",
+        "text": "",
         "emoji": "🐬",
         "colorBg": "#E6F0FF",
         "colorAccent": "#5DADE2",
@@ -584,7 +573,7 @@
         "colorBg": "#E3F2FD",
         "colorAccent": "#1E88E5",
         "id": "en_as23",
-        "text": "The whale sings a deep song!",
+        "text": "",
         "emoji": "🐋",
         "image": "ph_whale",
         "audio": "en_snd_whale"
@@ -592,7 +581,7 @@
       {
         "id": "en_as24",
         "sound": "CROCODILE",
-        "text": "The crocodile bellows!",
+        "text": "",
         "emoji": "🐊",
         "colorBg": "#E6FFE6",
         "colorAccent": "#228B22",
@@ -606,7 +595,7 @@
         "colorBg": "#E8F5E9",
         "colorAccent": "#43A047",
         "id": "en_as25",
-        "text": "The snake says sss!",
+        "text": "",
         "emoji": "🐍",
         "image": "ph_snake",
         "audio": "en_snd_snake"

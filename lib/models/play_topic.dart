@@ -95,7 +95,7 @@ class PlayTopic {
       'sound_farm',
       'Голоси ферми',
       'Farm voices',
-      ['ph_pig', 'ph_hen', 'ph_sheep'],
+      ['ph_pig', 'ph_hen', 'ph_rooster'],
       packIds: _sounds,
       withSounds: true,
     ),
@@ -136,14 +136,6 @@ class PlayTopic {
       'butterfly',
       'bee',
     ]),
-    PlayTopic(
-      'sheep_voices',
-      'Бе-е, вівечка!',
-      'Baa, little sheep!',
-      ['ph_sheep', 'ph_pig', 'ph_cow'],
-      packIds: _sounds,
-      withSounds: true,
-    ),
   ];
 
   /// The lesson that brings the friend [key] (a farm animal), if one can be

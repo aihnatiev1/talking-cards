@@ -30,9 +30,8 @@ import '../widgets/meadow_world.dart';
 /// row on the meadow, the front row by the pond and in the mud — placed so
 /// no two overlap.
 const farmSpots = <String, (double x, double y, double size)>{
-  'horse': (.33, .62, .25),
-  'cow': (.50, .62, .25),
-  'sheep': (.67, .62, .25),
+  'horse': (.38, .62, .25),
+  'cow': (.60, .62, .25),
   'bird': (.62, .35, .16),
   'owl': (.79, .44, .19),
   'chicken': (.10, .83, .21),

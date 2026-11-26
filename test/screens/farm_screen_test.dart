@@ -30,7 +30,7 @@ CardModel sound(String key) => CardModel(
 
 PackModel soundPack({required bool locked}) => PackModel(
   id: 'animal_sounds',
-  title: 'Звуки тварин',
+  title: 'Тварини і звуки',
   icon: '',
   color: Colors.teal,
   isLocked: locked,
@@ -106,8 +106,8 @@ void main() {
         rewards: const {},
         withLocked: true,
       );
-      expect(animals, hasLength(12));
-      expect(animals.where((a) => a.locked), hasLength(7));
+      expect(animals, hasLength(11));
+      expect(animals.where((a) => a.locked), hasLength(6));
     });
 
     test(
@@ -123,16 +123,16 @@ void main() {
       },
     );
 
-    test('with Pro: all twelve awake', () {
+    test('with Pro: all eleven awake', () {
       final animals = meadowAnimals(
         packs: [soundPack(locked: false)],
         rewards: const {},
         withLocked: true,
       );
-      expect(animals.where((a) => !a.locked), hasLength(12));
+      expect(animals.where((a) => !a.locked), hasLength(11));
     });
 
-    test('the real catalogues: all twelve on the Ukrainian farm; the '
+    test('the real catalogues: all eleven on the Ukrainian farm; the '
         'English one without the owl, whose English recording is pulled '
         '(hidden_cards_test) — no farm animal speaks with a pulled voice', () {
       Set<String> farm(String file) {
@@ -258,7 +258,7 @@ void main() {
   testWidgets('a sleeping animal says nothing and offers to play the '
       'lesson that wakes it — no grown-up screen', (tester) async {
     await pumpFarm(tester);
-    await tester.tap(find.byKey(const ValueKey('farm-sheep')));
+    await tester.tap(find.byKey(const ValueKey('farm-frog')));
     await tester.pumpAndSettle();
     expect(spoken, isEmpty);
     expect(find.byType(Dialog), findsNothing);
@@ -267,8 +267,8 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('wake-no')));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('wake-yes')), findsNothing);
-    // «Yes»: the sheep's lesson.
-    await tester.tap(find.byKey(const ValueKey('farm-sheep')));
+    // «Yes»: the frog's lesson.
+    await tester.tap(find.byKey(const ValueKey('farm-frog')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('wake-yes')));
     for (var i = 0; i < 10; i++) {
@@ -280,7 +280,7 @@ void main() {
       isA<PlayLessonScreen>().having(
         (w) => w.topic.id,
         'topic',
-        'sheep_voices',
+        'sound_pond',
       ),
     );
     await leave(tester);
@@ -362,7 +362,7 @@ void main() {
     await pumpFarm(tester);
     expect(
       find.descendant(
-        of: find.byKey(const ValueKey('farm-sheep')),
+        of: find.byKey(const ValueKey('farm-frog')),
         matching: find.text('z z Z'),
       ),
       findsOneWidget,
