@@ -21,7 +21,7 @@ DEVICE="${1:-$(xcrun simctl list devices available | grep 'iPhone 17 Pro Max' | 
 xcrun simctl boot "$DEVICE" 2>/dev/null || true
 export SHOTS_DIR="${SHOTS_DIR:-marketing/public/screenshots/auto}"
 OUT="$SHOTS_DIR"
-SCREENS=(home sounds cards game draw fill quest)
+SCREENS=(home lesson games world sounds cards game draw fill quest farm)
 LOG_DIR="${TMPDIR:-/tmp}/store-shots"; mkdir -p "$LOG_DIR"
 
 fresh_set() {  # $1 locale, $2 epoch the run started
@@ -49,6 +49,6 @@ for lang in uk en; do
       && { echo "[$lang] the rig itself failed — see $LOG_DIR/$lang-$attempt.log"; break; }
     echo "[$lang] transfer dropped, retrying"
   done
-  if [ "$ok" = 1 ]; then echo "[$lang] 7/7 captured"; else echo "[$lang] FAILED"; status=1; fi
+  if [ "$ok" = 1 ]; then echo "[$lang] ${#SCREENS[@]} captured"; else echo "[$lang] FAILED"; status=1; fi
 done
 exit $status

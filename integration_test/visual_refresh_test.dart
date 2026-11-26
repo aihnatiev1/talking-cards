@@ -9,9 +9,11 @@ import 'package:talking_cards/main.dart' as app;
 import 'package:talking_cards/providers/packs_provider.dart';
 import 'package:talking_cards/screens/cards_screen.dart';
 import 'package:talking_cards/screens/coloring_hub_screen.dart';
+import 'package:talking_cards/screens/farm_screen.dart';
 import 'package:talking_cards/screens/fill_coloring_screen.dart';
 import 'package:talking_cards/screens/guess_screen.dart';
 import 'package:talking_cards/screens/home_screen.dart';
+import 'package:talking_cards/screens/play_lesson_screen.dart';
 import 'package:talking_cards/screens/quest_map_screen.dart';
 import 'package:talking_cards/utils/motion.dart';
 
@@ -42,6 +44,34 @@ void main() {
       'notifications_permission_asked': true,
       'whats_new_seen_v2_0': true,
       'active_profile_id': 'store_preview',
+      // A child a week in: a lesson half done (at «find the picture») and
+      // the lessons that woke the farm's paid animals already played — the
+      // farm shows them awake the way a free child earns them.
+      'store_preview_play_journal_${lang}_v1': jsonEncode({
+        'version': 1,
+        'lastTopic': 'animal_friends',
+        'rewards': [
+          'coop_friends',
+          'pond_friends',
+          'sound_pond',
+          'yard_friends',
+          'forest_friends',
+          'sky_friends',
+          'bee_voices',
+        ],
+        'sessions': {
+          'animal_friends': {
+            'topic': 'animal_friends',
+            'cards': lang == 'en'
+                ? ['en_a03', 'en_a01', 'en_a02']
+                : ['a03', 'a01', 'a02'],
+            'step': 3,
+            'assisted': <int>[],
+            'misses': 0,
+            'hint': false,
+          },
+        },
+      }),
       'app_profiles': [
         jsonEncode({
           'id': 'store_preview',
@@ -75,13 +105,36 @@ void main() {
     }
 
     await shot('home');
+    final nav = tester.state<NavigatorState>(find.byType(Navigator).first);
+
+    // The lesson, from the home card, at «where is the cow?».
+    await tester.tap(find.text(lang == 'en' ? 'Continue' : 'Продовжити'));
+    await frames(tester, 25);
+    expect(find.byType(PlayLessonScreen), findsOneWidget);
+    await shot('lesson');
+    nav.pop();
+    await frames(tester, 10);
+
+    await tester.tap(find.text(lang == 'en' ? 'Games' : 'Ігри').first);
+    await frames(tester, 20);
+    await shot('games');
+    nav.pop();
+    await frames(tester, 10);
+
+    await tester.tap(find.byKey(const ValueKey('main-tab-2')));
+    await frames(tester, 20);
+    await shot('world');
+
+    await tester.tap(find.byKey(const ValueKey('main-tab-1')));
+    await frames(tester, 20);
     final sounds = find.text(lang == 'en' ? 'Sounds' : 'Звуки');
     expect(sounds, findsWidgets);
     await tester.tap(sounds.first);
     await frames(tester);
     await shot('sounds');
+    await tester.tap(find.byKey(const ValueKey('main-tab-0')));
+    await frames(tester, 10);
 
-    final nav = tester.state<NavigatorState>(find.byType(Navigator).first);
     final container = ProviderScope.containerOf(
       tester.element(find.byType(MaterialApp).first),
     );
@@ -131,5 +184,19 @@ void main() {
         onCardOfDayTap: () {},
       ),
     );
+
+    // Last: the farm turns the phone on its side, and nothing may be shot
+    // while it turns back. The cow talks — her cloud and open mouth.
+    nav.push(MaterialPageRoute<void>(builder: (_) => const FarmScreen()));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(seconds: 2)),
+    );
+    await frames(tester, 20);
+    await tester.tap(find.byKey(const ValueKey('farm-cow')));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 900)),
+    );
+    await frames(tester, 6);
+    await shot('farm');
   });
 }
