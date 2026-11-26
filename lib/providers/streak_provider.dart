@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/profile_service.dart';
-import '../utils/app_icons.dart';
 
 class StreakState {
   final int currentStreak;
@@ -33,34 +32,56 @@ class StreakState {
   );
 }
 
-/// One streak milestone: the day count that earns it, the sticker the
-/// child sticks into the album, and its name in both languages.
+/// One streak milestone: the day count that earns it, the farm guest it
+/// brings and its name in both languages.
 ///
-/// [id] is the persisted key (and the glyph the parent-facing share card
-/// and the milestone overlay still print). It stays an emoji because it is
+/// [id] is the persisted key. It stays the old sticker emoji because it is
 /// what is already in `SharedPreferences` under `streak_rewards` for every
-/// installed user — the album shows [sticker], never [id] (ux-gap-audit
-/// G14: the medal/emoji tiles became drawn stickers).
+/// installed user: a child who had the unicorn now has the hedgehog.
+/// [badge] is what the celebration prints.
+///
+/// The stickers were a dead end — a picture that hopped and played a note.
+/// A guest comes to the farm: it says its word, the child puts it where it
+/// likes, and it can be asked for in a riddle when it has a voice.
 class Milestone {
   final int days;
   final String id;
-  final AppIcon sticker;
+
+  /// The farm animal it brings (`assets/images/friends/<guest>.webp`).
+  final String guest;
+  final String badge;
   final String label;
   final String labelEn;
 
-  const Milestone(this.days, this.id, this.sticker, this.label, this.labelEn);
+  const Milestone(
+    this.days,
+    this.id,
+    this.guest,
+    this.badge,
+    this.label,
+    this.labelEn,
+  );
 
-  /// The sticker's name in [isEn]'s language — the one word of text the
-  /// album shows under a sticker.
+  /// The guest's name in [isEn]'s language — the one word of text the
+  /// album shows under it.
   String name(bool isEn) => isEn ? labelEn : label;
 }
 
 const milestones = [
-  Milestone(3, '🦄', AppIcon.stickerUnicorn, 'Єдиноріг', 'Unicorn'),
-  Milestone(7, '🐉', AppIcon.stickerDragon, 'Дракончик', 'Dragon'),
-  Milestone(14, '🌈', AppIcon.stickerRainbow, 'Веселка', 'Rainbow'),
-  Milestone(30, '🦋', AppIcon.stickerButterfly, 'Метелик', 'Butterfly'),
+  Milestone(3, '🦄', 'hedgehog', '🦔', 'Їжачок', 'Hedgehog'),
+  Milestone(7, '🐉', 'fox', '🦊', 'Лисиця', 'Fox'),
+  Milestone(14, '🌈', 'bear', '🐻', 'Ведмідь', 'Bear'),
+  Milestone(30, '🦋', 'squirrel', '🐿️', 'Білочка', 'Squirrel'),
 ];
+
+/// Testing builds (`--dart-define=UNLOCK_ALL=true`) have every guest.
+const _unlockAll = bool.fromEnvironment('UNLOCK_ALL');
+
+/// The farm guests this streak has brought.
+Set<String> farmGuestsOf(StreakState streak) => {
+  for (final m in milestones)
+    if (_unlockAll || streak.unlockedRewards.contains(m.id)) m.guest,
+};
 
 final streakProvider = StateNotifierProvider<StreakNotifier, StreakState>(
   (ref) => StreakNotifier(),

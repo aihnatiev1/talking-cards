@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talking_cards/models/card_model.dart';
 import 'package:talking_cards/models/pack_model.dart';
+import 'package:talking_cards/providers/farm_layout_provider.dart';
 import 'package:talking_cards/providers/packs_provider.dart';
 import 'package:talking_cards/screens/farm_screen.dart';
 import 'package:talking_cards/screens/play_lesson_screen.dart';
@@ -46,6 +47,16 @@ const animalsPack = PackModel(
   isLocked: false,
   isFree: true,
   cards: [
+    CardModel(
+      id: 'a20',
+      sound: 'ЇЖАЧОК',
+      text: '',
+      emoji: '',
+      image: 'hedgehog',
+      audioKey: 'ijachok',
+      colorBg: Colors.white,
+      colorAccent: Colors.teal,
+    ),
     CardModel(
       id: 'a10',
       sound: 'РИБКА',
@@ -277,11 +288,7 @@ void main() {
     expect(find.byType(PlayLessonScreen), findsOneWidget);
     expect(
       find.byType(PlayLessonScreen).evaluate().single.widget,
-      isA<PlayLessonScreen>().having(
-        (w) => w.topic.id,
-        'topic',
-        'sound_pond',
-      ),
+      isA<PlayLessonScreen>().having((w) => w.topic.id, 'topic', 'sound_pond'),
     );
     await leave(tester);
   });
@@ -395,5 +402,106 @@ void main() {
     expect(cloud.scale, 1);
     expect(find.text('А ти скажи: «рибка»!'), findsOneWidget);
     await leave(tester);
+  });
+
+  group('the barn: the child arranges the farm', () {
+    String today() {
+      final now = DateTime.now();
+      return '${now.year}-${now.month.toString().padLeft(2, '0')}'
+          '-${now.day.toString().padLeft(2, '0')}';
+    }
+
+    /// Three days in a row: the hedgehog has come.
+    void withHedgehog() => SharedPreferences.setMockInitialValues({
+      'streak_current': 3,
+      'streak_last_date': today(),
+      'streak_rewards': const ['🦄'],
+    });
+
+    FarmLayout layoutOf(WidgetTester tester) => ProviderScope.containerOf(
+      tester.element(find.byType(FarmScreen)),
+    ).read(farmLayoutProvider);
+
+    testWidgets('a guest the streak brought waits in the barn, and the '
+        'barn door says so', (tester) async {
+      withHedgehog();
+      await pumpFarm(tester, locked: false);
+      await tester.pump();
+      expect(find.byKey(const ValueKey('farm-hedgehog')), findsNothing);
+      expect(find.byKey(const ValueKey('farm-barn-new')), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('farm-barn')));
+      await tester.pump();
+      expect(find.byKey(const ValueKey('barn-hedgehog')), findsOneWidget);
+      expect(find.byKey(const ValueKey('farm-barn-new')), findsNothing);
+      // A tap on the shelf says its name.
+      await tester.tap(find.byKey(const ValueKey('barn-hedgehog')));
+      await tester.pump();
+      expect(words, contains('ijachok'));
+      await leave(tester);
+    });
+
+    testWidgets('dragged up from the shelf, the guest stands on the farm, '
+        'says its name and stays there', (tester) async {
+      withHedgehog();
+      await pumpFarm(tester, locked: false);
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('farm-barn')));
+      await tester.pump();
+      await tester.drag(
+        find.byKey(const ValueKey('barn-hedgehog')),
+        const Offset(0, -160),
+      );
+      await tester.pump();
+      expect(find.byKey(const ValueKey('farm-hedgehog')), findsOneWidget);
+      expect(spoken, contains('ijachok'));
+      expect(layoutOf(tester).spotOf('hedgehog'), isNotNull);
+      await leave(tester);
+    });
+
+    testWidgets('an animal carried across the farm stays where it was put', (
+      tester,
+    ) async {
+      await pumpFarm(tester, locked: false);
+      final before = tester.getCenter(find.byKey(const ValueKey('farm-cat')));
+      await tester.drag(
+        find.byKey(const ValueKey('farm-cat')),
+        const Offset(-120, -20),
+      );
+      await tester.pump();
+      final after = tester.getCenter(find.byKey(const ValueKey('farm-cat')));
+      expect(after.dx, lessThan(before.dx - 80));
+      final spot = layoutOf(tester).spotOf('cat')!;
+      expect(spot.x, lessThan(farmSpots['cat']!.$1));
+      // A drag is not a tap: the cat did not speak.
+      expect(spoken, isEmpty);
+      await leave(tester);
+    });
+
+    testWidgets('an animal dragged onto the open shelf rests in the barn, '
+        'and a riddle never asks for it', (tester) async {
+      await pumpFarm(tester, locked: false);
+      await tester.tap(find.byKey(const ValueKey('farm-barn')));
+      await tester.pump();
+      // Everyone is on the farm: the shelf is empty and says what it is.
+      final shelf = tester.getCenter(find.textContaining('Тут відпочивають'));
+      final cow = tester.getCenter(find.byKey(const ValueKey('farm-cow')));
+      await tester.dragFrom(cow, shelf - cow);
+      await tester.pump();
+      expect(find.byKey(const ValueKey('farm-cow')), findsNothing);
+      expect(find.byKey(const ValueKey('barn-cow')), findsOneWidget);
+      expect(layoutOf(tester).has('cow'), isTrue);
+      expect(layoutOf(tester).spotOf('cow'), isNull);
+
+      await tester.tap(find.byKey(const ValueKey('farm-barn')));
+      await tester.pump();
+      for (var i = 0; i < 12; i++) {
+        await tester.tap(find.byKey(const ValueKey('farm-listen')));
+        await tester.pump();
+        await tester.tap(find.byKey(const ValueKey('farm-riddle')));
+        await tester.pump();
+      }
+      expect(riddles, isNot(contains('snd_cow')));
+      await leave(tester);
+    });
   });
 }

@@ -302,7 +302,7 @@ class _TreasureTabs extends StatelessWidget {
             child: _TreasureTab(
               key: const ValueKey('treasure_tab_stickers'),
               icon: AppIcon.stickerAlbum,
-              label: s('Наліпки', 'Stickers'),
+              label: s('Гості', 'Guests'),
               accent: DT.peach,
               selected: selected == TreasureTab.stickers,
               onTap: () => onSelect(TreasureTab.stickers),

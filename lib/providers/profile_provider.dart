@@ -1,3 +1,4 @@
+import 'farm_layout_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/profile_model.dart';
@@ -124,6 +125,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     _ref.invalidate(srsProvider);
     _ref.invalidate(weakWordsProvider);
     _ref.invalidate(wordEvidenceProvider);
+    _ref.invalidate(farmLayoutProvider);
   }
 }
 

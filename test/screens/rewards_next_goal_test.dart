@@ -74,7 +74,7 @@ void main() {
     );
     await tester.tap(find.byKey(const ValueKey('next-goal')));
     await tester.pumpAndSettle();
-    expect(find.text('Ще 7 днів гри — і Веселка чекає'), findsOneWidget);
+    expect(find.text('Ще 7 днів гри — і Ведмідь чекає'), findsOneWidget);
   });
 
   testWidgets('a brand-new album points at the first sticker', (tester) async {

@@ -8,7 +8,6 @@ import 'package:talking_cards/screens/kid_word_wall_screen.dart';
 import 'package:talking_cards/screens/rewards_screen.dart';
 import 'package:talking_cards/screens/stats_screen.dart';
 import 'package:talking_cards/services/feedback_service.dart';
-import 'package:talking_cards/utils/app_icons.dart';
 
 import '../helpers/motion.dart';
 
@@ -59,7 +58,7 @@ void main() {
 
   Finder stickerArt(int days) => find.descendant(
     of: find.byKey(ValueKey('sticker_$days')),
-    matching: find.byType(AppIconView),
+    matching: find.byType(Image),
   );
 
   group('RewardsAlbum', () {
